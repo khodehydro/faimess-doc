@@ -129,8 +129,24 @@ export function HeroBanner() {
             <Photo src={banner.photo} className="scale-[1.03]" />
           </motion.div>
 
-          {/* the artwork is the whole slide; only its accessible name is left */}
-          <span className="sr-only">{banner.title}</span>
+          {/* the only thing on the artwork: a black gradient rising from the
+              bottom edge, which is what makes the two lines below legible */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/78 via-black/38 to-transparent" />
+
+          {/* title + subtitle — demo copy, so it lives in the data, not i18n */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.08, ease: EASE }}
+            className="pointer-events-none absolute bottom-6 start-6 max-w-[44%]"
+          >
+            <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.018em] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
+              {banner.title}
+            </h2>
+            <p className="mt-1 text-[14px] font-medium leading-snug text-white/80 drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
+              {banner.subtitle}
+            </p>
+          </motion.div>
         </motion.div>
       </AnimatePresence>
 

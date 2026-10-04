@@ -136,9 +136,24 @@ for (const title of ["Artists you follow", "Newest songs", "Trending now", "Late
 /* the banner is artwork + two glass rails, and nothing else (v17) */
 const heroSrc = readFileSync("src/sections/HeroBanner.tsx", "utf8");
 check(
-  "hero banner still shows its art",
-  home.includes(banners[0].photo) && home.includes(banners[0].title),
-  `${banners.length} slides in the data, the live one on screen (sr-only title)`,
+  "hero banner shows its art and its two lines",
+  home.includes(banners[0].photo) &&
+    home.includes(banners[0].title) &&
+    home.includes(banners[0].subtitle),
+  `${banners.length} slides, the live one on screen`,
+);
+check(
+  "every slide carries a title and a subtitle",
+  banners.every((b) => b.title.trim().length > 0 && b.subtitle.trim().length > 0),
+  "demo copy lives in the data, not in the string table",
+);
+check(
+  "a black gradient rises from the banner's bottom edge",
+  heroSrc.includes("bg-gradient-to-t") &&
+    /from-black\/[6-9][0-9]/.test(heroSrc) &&
+    heroSrc.includes("banner.title") &&
+    heroSrc.includes("banner.subtitle"),
+  "the scrim is what the title and subtitle sit on",
 );
 check(
   "the banner's only chrome is an indicator, centred on the bottom edge",
