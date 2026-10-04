@@ -10,8 +10,8 @@ import { spring } from "../../lib/motion";
  *  can be reordered, added or removed without touching one another.
  * ------------------------------------------------------------------ */
 
-/** shelf headers stick to the top edge of the scroll port */
-export const SHELF_STICKY_TOP = 0;
+/** shelf headers stick right below the chip strip (CHIP_STRIP_HEIGHT) */
+export const SHELF_STICKY_TOP = 48;
 
 export function Shelf({
   id,
@@ -31,7 +31,7 @@ export function Shelf({
   className?: string;
 }) {
   return (
-    <section id={id} className={cn("relative", className)}>
+    <section id={id} className={cn("relative scroll-mt-[56px]", className)}>
       <header
         className="sticky z-20 -mx-5 flex items-center gap-2.5 bg-surface/94 px-5 py-2.5 backdrop-blur-md"
         style={{ top: SHELF_STICKY_TOP }}

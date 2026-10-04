@@ -11,7 +11,12 @@ import { cn } from "../../lib/cn";
 import { spring } from "../../lib/motion";
 
 /* ------------------------------------------------------------------ *
- *  The home feed — a vertically scrollable column of shelves.
+ *  The home feed — a stack of shelves.
+ *
+ *  The feed itself does NOT scroll: on the home page it lives inside the
+ *  left column, which owns a single scrollbar shared with the hero banner
+ *  above it. The chip strip and the shelf headers stick to the top of that
+ *  scroller while the feed is in view.
  *
  *  Reordering or removing a shelf is a one-line change to FEED_SHELVES;
  *  adding one is: build the component in this folder, add it here, done.
@@ -33,43 +38,50 @@ export const FEED_SHELVES: ShelfEntry[] = [
   { id: "feed-users", label: "Fans", icon: "activity", Component: ActiveUsers },
 ];
 
+/** height of the chip strip — shelf headers stick right under it */
+export const CHIP_STRIP_HEIGHT = 48;
+
 export function FeedSection() {
-  const scrollerRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const [active, setActive] = useState(FEED_SHELVES[0].id);
 
-  /* highlight the chip of the shelf currently under the strip */
+  /* track which shelf is under the strip, whichever ancestor scrolls */
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
     const onScroll = () => {
-      const top = el.getBoundingClientRect().top + 60;
+      const root = rootRef.current;
+      if (!root) return;
+      const line = root.getBoundingClientRect().top + CHIP_STRIP_HEIGHT + 24;
       let current = FEED_SHELVES[0].id;
       for (const shelf of FEED_SHELVES) {
         const node = sectionRefs.current[shelf.id];
-        if (node && node.getBoundingClientRect().top <= top) current = shelf.id;
+        if (node && node.getBoundingClientRect().top <= line) current = shelf.id;
       }
       setActive(current);
     };
-    el.addEventListener("scroll", onScroll, { passive: true });
+
     onScroll();
-    return () => el.removeEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll, { capture: true });
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   const jumpTo = (id: string) => {
     const node = sectionRefs.current[id];
-    const el = scrollerRef.current;
-    if (!node || !el) return;
-    el.scrollTo({ top: node.offsetTop - 44, behavior: "smooth" });
+    if (!node) return;
+    node.scrollIntoView({ behavior: "smooth", block: "start" });
     setActive(id);
   };
 
   const chips = useMemo(() => FEED_SHELVES, []);
 
   return (
-    <section className="relative flex h-full w-full flex-col overflow-hidden rounded-card bg-surface shadow-card">
-      {/* quick-jump strip */}
-      <div className="relative z-30 flex shrink-0 items-center gap-1.5 border-b border-line/70 bg-surface px-5 py-2.5">
+    <section ref={rootRef} className="relative w-full rounded-card bg-surface shadow-card">
+      {/* quick-jump strip — sticks to the top of the page scroller */}
+      <div className="sticky top-0 z-30 flex items-center gap-1.5 rounded-t-card border-b border-line/70 bg-surface/95 px-5 py-2.5 backdrop-blur-md">
         {chips.map((shelf) => {
           const isActive = active === shelf.id;
           return (
@@ -77,27 +89,33 @@ export function FeedSection() {
               key={shelf.id}
               onClick={() => jumpTo(shelf.id)}
               className={cn(
-                "relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13.5px] font-semibold transition-colors",
+                "relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] font-semibold transition-colors",
                 isActive ? "text-white" : "text-ink-muted hover:text-ink",
               )}
             >
-              {isActive && <motion.span layoutId="feed-chip" transition={spring} className="absolute inset-0 rounded-full bg-primary shadow-primary" />}
+              {isActive && (
+                <motion.span
+                  layoutId="feed-chip"
+                  transition={spring}
+                  className="absolute inset-0 rounded-full bg-primary shadow-primary"
+                />
+              )}
               <span className="relative flex items-center gap-1.5">
-                <Icon name={shelf.icon} size={12.5} strokeWidth={isActive ? 2 : 1.7} />
+                <Icon name={shelf.icon} size={13.5} strokeWidth={isActive ? 2 : 1.7} />
                 {shelf.label}
               </span>
             </button>
           );
         })}
 
-        <span className="ml-auto flex items-center gap-1.5 text-[13px] font-medium text-ink-faint">
-          <Icon name="waveform" size={14.5} />
+        <span className="ml-auto flex items-center gap-1.5 text-[12px] font-medium text-ink-faint">
+          <Icon name="waveform" size={14} />
           scroll for more
         </span>
       </div>
 
-      {/* the shelves */}
-      <div ref={scrollerRef} className="scroll-slim relative min-h-0 flex-1 overflow-y-auto px-5 pb-10">
+      {/* the shelves — full height, no inner scroller */}
+      <div className="px-5 pb-8 pt-1">
         {chips.map((shelf, i) => (
           <div
             key={shelf.id}
@@ -110,9 +128,6 @@ export function FeedSection() {
           </div>
         ))}
       </div>
-
-      {/* scroll hint — fades the last visible row into the card edge */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 rounded-b-card bg-gradient-to-t from-white to-transparent" />
     </section>
   );
 }
