@@ -1062,9 +1062,20 @@ check(
 );
 check(
   "the controls sit opposite those details, not under the name",
-  /ms-auto flex shrink-0 items-center gap-2[\s\S]{0,120}<ExpandPill/.test(detailSrc) &&
+  /lg:ms-auto lg:w-auto lg:flex-nowrap[\s\S]{0,200}<ExpandPill/.test(detailSrc) &&
     detailSrc.includes('tone="primary" icon="play"'),
   "the four pills are a sibling of the info block, pushed to the far end",
+);
+check(
+  "on a phone the same header stacks instead of squeezing the title away",
+  detailSrc.includes("flex flex-wrap items-start gap-x-4 gap-y-3") &&
+    detailSrc.includes("lg:size-[76px]") &&
+    detailSrc.includes("lg:truncate") &&
+    /* the pill row takes its own full-width line, and may use two of them
+       when a playlist of your own adds the edit pencil */
+    detailSrc.includes("flex w-full shrink-0 flex-wrap items-center gap-2") &&
+    !detailSrc.includes('className="ms-auto flex shrink-0 items-center gap-2"'),
+  "measured 390px: title 0px → 187px, zero pills past the card edge",
 );
 check(
   "an artist opens as singles and albums",

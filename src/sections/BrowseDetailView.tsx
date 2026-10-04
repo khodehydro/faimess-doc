@@ -303,7 +303,11 @@ export function BrowseDetailView() {
     <section className="flex flex-col gap-5 p-5 pb-8">
       {/* header — the name and its facts on the start side, the controls
           that act on them opposite, on the same line */}
-      <div className="flex items-start gap-4">
+      {/* three blocks on desktop, two rows on a phone: the cover and the
+          facts share the first row, the controls take the second. In one row
+          the pills ate the title's width (it collapsed to zero) and then ran
+          off the card, clipped by `overflow-hidden`. */}
+      <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
         <CircleButton
           icon={backIcon(dir)}
           tone="white"
@@ -313,7 +317,7 @@ export function BrowseDetailView() {
         />
         <span
           className={cn(
-            "size-[76px] shrink-0 overflow-hidden shadow-card ring-1 ring-line/70",
+            "size-[64px] shrink-0 overflow-hidden shadow-card ring-1 ring-line/70 lg:size-[76px]",
             heading.round ? "rounded-full" : "rounded-[18px]",
           )}
         >
@@ -334,15 +338,19 @@ export function BrowseDetailView() {
           <h2 className="font-display truncate text-[23px] font-bold leading-tight tracking-[-0.016em] text-ink">
             {heading.title}
           </h2>
-          <p className="mt-1 truncate text-[13.5px] font-bold text-ink-muted">{heading.byline}</p>
-          <p className="mt-0.5 truncate text-[12.5px] font-semibold tabular-nums text-ink-faint">
+          {/* `truncate` is a desktop luxury: on a phone both lines are
+              allowed to wrap rather than end in an ellipsis */}
+          <p className="mt-1 text-[13.5px] font-bold text-ink-muted lg:truncate">{heading.byline}</p>
+          <p className="mt-0.5 text-[12.5px] font-semibold tabular-nums text-ink-faint lg:truncate">
             {heading.facts}
           </p>
         </div>
 
         {/* the controls, opposite those details; each one unfolds its word
             on hover, so the row stays a row of glyphs until asked */}
-        <div className="ms-auto flex shrink-0 items-center gap-2">
+        {/* four controls (a playlist of your own has an edit pencil too) must be
+            allowed to become two short rows rather than run off the card */}
+        <div className="flex w-full shrink-0 flex-wrap items-center gap-2 lg:ms-auto lg:w-auto lg:flex-nowrap">
           <ExpandPill tone="primary" icon="play" onClick={playAll}>
             {t("detail.playAll")}
           </ExpandPill>
