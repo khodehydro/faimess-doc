@@ -114,7 +114,7 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
       </div>
       <div className="flex items-center gap-2 p-3">
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] font-bold text-ink">{artist.name}</span>
+          <span className="font-display block truncate text-[13.5px] font-bold text-ink">{artist.name}</span>
           <Meta icon="headphones" iconSize={11} className="text-[10px]">
             {artist.listeners}
           </Meta>
@@ -150,7 +150,7 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
       </div>
       <div className="flex items-center gap-2 p-3">
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] font-bold text-ink">{album.title}</span>
+          <span className="font-display block truncate text-[13.5px] font-bold text-ink">{album.title}</span>
           <Meta icon="mic" iconSize={11} className="text-[10px]">
             {album.artist} · {album.tracks} tracks
           </Meta>
@@ -177,7 +177,7 @@ function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
         <Cover seed={playlist.seed} className="h-full w-full" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-bold text-ink">{playlist.name}</span>
+        <span className="font-display block truncate text-[13.5px] font-bold text-ink">{playlist.name}</span>
         <Meta icon="users" iconSize={11} className="text-[10px]">
           {playlist.curator}
         </Meta>
@@ -209,7 +209,7 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
       {/* header */}
       <div className="flex items-center gap-3 pb-3.5">
         <div className="min-w-0">
-          <h2 className="text-[24px] font-bold leading-tight tracking-[-0.035em] text-ink">{copy.title}</h2>
+          <h2 className="font-display text-[24px] font-bold leading-tight tracking-[-0.035em] text-ink">{copy.title}</h2>
           <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">{copy.subtitle}</p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">

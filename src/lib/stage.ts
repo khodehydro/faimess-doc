@@ -3,21 +3,27 @@
  *  Everything inside is authored in these exact pixels; the stage is
  *  then uniformly scaled to fit the viewport, so the composition never
  *  reflows and the page never scrolls on desktop.
+ *
+ *  The board is deliberately wide (≈16:9): on typical desktop screens the
+ *  width is what fills first, which keeps the side gutters tiny while the
+ *  right-hand column keeps its own fixed width.
  * ------------------------------------------------------------------ */
 
 export const STAGE = {
-  width: 1320,
+  width: 1680,
   height: 930,
   /** outer breathing room kept around the frame (px, viewport space) */
-  padding: 36,
+  padding: 20,
   /** never scale above this — keeps the UI at a comfortable size on 4K */
-  maxScale: 1.4,
+  maxScale: 1.5,
 } as const;
 
-/** Vertical rhythm of the home page (px, stage space). */
+/** Vertical rhythm + column widths of the home page (px, stage space). */
 export const HOME_METRICS = {
   topBar: 84,
   gutter: 18,
   hero: 372,
   greeting: 330,
+  /** the right column (greeting + messages) keeps this fixed width */
+  rightColumn: 520,
 } as const;

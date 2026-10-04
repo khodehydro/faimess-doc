@@ -26,14 +26,14 @@ main.tsx                →  App (Provider + Stage + Shell)
 `src/lib/stage.ts` اندازهٔ آرت‌بورد و متریک‌های چیدمان را نگه می‌دارد:
 
 ```ts
-export const STAGE = { width: 1320, height: 930, padding: 36, maxScale: 1.4 };
-export const HOME_METRICS = { topBar: 84, gutter: 18, hero: 372, greeting: 330 };
+export const STAGE = { width: 1680, height: 930, padding: 20, maxScale: 1.5 };
+export const HOME_METRICS = { topBar: 84, gutter: 18, hero: 372, greeting: 330, rightColumn: 520 };
 ```
 
 `useStageScale` نسبت مقیاس را حساب می‌کند:
 
 ```
-scale = min((vw − 2·padding)/1320, (vh − 2·padding)/930, maxScale)
+scale = min((vw − 2·padding)/1680, (vh − 2·padding)/930, maxScale)
 ```
 
 - **دسکتاپ (≥1024px):** صفحه `h-dvh overflow-hidden` است؛ محتوا هرگز سرریز نمی‌کند، فقط مقیاس عوض می‌شود.
@@ -45,13 +45,13 @@ scale = min((vw − 2·padding)/1320, (vh − 2·padding)/930, maxScale)
 | بخش | ارتفاع |
 |---|---|
 | TopBar | محتوا‌محور (≈۷۰) |
-| Hero (چپ) | ۳۷۲ |
-| Schedule (چپ) | `flex-1` (≈۴۵۴) |
+| Hero (چپ) | ۳۷۲ (عرض `flex-1`) |
+| Schedule (چپ) | `flex-1` (≈۴۳۶) |
 | Greeting (راست) | ۳۳۰ |
-| Messages (راست) | `flex-1` (≈۴۹۶) |
+| Messages (راست) | `flex-1` (≈۴۷۸) |
 | فاصله‌ها | ۱۸ بین بخش‌ها، ۲۰ پدینگ صفحه |
 
-نسبت ستون‌ها: چپ `1.38fr` / راست `1fr` (برگرفته از تصویر مرجع).
+عرض ستون‌ها: **چپ `flex-1` (کشسان)** / **راست ثابت ۵۲۰px** (`HOME_METRICS.rightColumn`). ارتفاع‌ها با تصویر مرجع هم‌تراز است؛ فقط عرض ستون چپ با فریم کشیده می‌شود.
 
 ## ۳. رجیستری بخش‌ها
 
@@ -121,3 +121,19 @@ export const routes = [
 - نام: `TopBar.tsx` (وردمارک) + `index.html` (title).
 - رنگ لهجه: فقط `--color-primary*` را در `src/index.css` عوض کن؛ همهٔ دکمه‌ها/بج‌ها/پین‌ها/روز فعال خودکار عوض می‌شوند.
 - لوگو: `src/ui/Logo.tsx`.
+
+
+---
+
+## ۸. تایپوگرافی
+
+| نقش | فونت | کاربرد |
+|---|---|---|
+| نمایشی | `Outfit Variable` (`font-display`) | برند، تیتر بخش‌ها، خوش‌آمد، نام کارت‌ها، مونوگرام کاورها |
+| بدنه/UI | `Figtree Variable` (`font-sans`) | متن‌ها، متادیتا، دکمه‌ها، ورودی‌ها |
+
+برای عوض کردن فونت‌ها فقط دو متغیر `--font-sans` و `--font-display` در `src/index.css` را تغییر بده و پکیج `@fontsource-variable/<font>` را اضافه/جایگزین کن.
+
+## ۹. تصویرسازی‌ها
+
+`src/ui/Scenes.tsx` سه صحنهٔ قهرمان دارد (`SunsetScene`, `CampingScene`, `CoastScene`) که همه روی **بوم ۱۲۰۰×۴۰۰** طراحی شده‌اند تا بنر پانورامای سمت چپ را بدون برش بد پر کنند. برای صحنهٔ جدید: یک کامپوننت با همان امضا بساز (پراپ `className`)، به `SCENES` در `HeroBanner.tsx` و به `SceneKey` اضافه کن، بعد در `data/banners.ts` استفاده کن.

@@ -152,18 +152,18 @@ export function HeroBanner() {
             <motion.div
               whileHover={{ y: -4 }}
               transition={spring}
-              className="w-[268px] rounded-[20px] bg-white/93 p-3 shadow-float backdrop-blur-md"
+              className="w-[296px] rounded-[20px] bg-white/93 p-3 shadow-float backdrop-blur-md"
             >
               <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-primary-deep">
                 <Icon name="sparkle" size={10} strokeWidth={2.2} />
                 {banner.eyebrow}
               </span>
-              <h3 className="text-[15px] font-bold leading-tight tracking-[-0.02em] text-ink">{banner.title}</h3>
+              <h3 className="font-display text-[16px] font-bold leading-tight tracking-[-0.02em] text-ink">{banner.title}</h3>
               <div className="mt-1.5 flex items-center gap-3 text-[11px] font-medium">
                 <Meta icon="calendar">{banner.dateRange}</Meta>
                 <Meta icon="clock">{banner.time}</Meta>
               </div>
-              <div className="mt-2.5 h-[100px] overflow-hidden rounded-[14px] ring-1 ring-line">
+              <div className="mt-2.5 h-[108px] overflow-hidden rounded-[14px] ring-1 ring-line">
                 <MapScene tone={banner.mapTone} className="h-full w-full" />
               </div>
             </motion.div>

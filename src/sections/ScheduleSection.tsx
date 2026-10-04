@@ -39,21 +39,21 @@ function EventChip({ event, onOpen }: { event: ScheduleEvent; onOpen: (title: st
   if (event.kind === "rich") {
     return (
       <motion.button
-        whileHover={{ y: -3, scale: 1.01 }}
+        whileHover={{ y: -3, scale: 1.005 }}
         transition={spring}
         onClick={() => onOpen(event.title)}
-        className="flex h-full w-full flex-col rounded-[12px] bg-white p-1.5 text-left shadow-card ring-1 ring-line/70"
+        className="flex h-full w-full items-center gap-2.5 rounded-[12px] bg-white p-1.5 pr-2.5 text-left shadow-card ring-1 ring-line/70"
       >
-        <span className="block h-[38px] overflow-hidden rounded-[8px]">
+        <span className="block size-[36px] shrink-0 overflow-hidden rounded-[10px]">
           <Thumb scene={event.scene ?? "forest"} className="h-full w-full" />
         </span>
-        <span className="mt-1.5 block px-0.5 text-[10.5px] font-bold leading-tight text-ink">{event.title}</span>
-        <span className="mt-auto flex items-center justify-between px-0.5">
-          <Meta icon="clock" iconSize={10} className="text-[9px]">
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[11.5px] font-bold leading-tight text-ink">{event.title}</span>
+          <Meta icon="clock" iconSize={10} className="mt-0.5 text-[9.5px]">
             {event.meta}
           </Meta>
-          <AvatarStack seeds={[2, 4, 5]} more={event.guests ?? 0} size={15} />
         </span>
+        <AvatarStack seeds={[2, 4, 5]} more={event.guests ?? 0} size={18} />
       </motion.button>
     );
   }
@@ -90,7 +90,7 @@ export function ScheduleSection() {
     <section ref={panelRef} className="relative h-full w-full overflow-hidden rounded-card bg-surface p-5 shadow-card">
       {/* header */}
       <div className="flex items-start justify-between gap-3">
-        <h2 className="text-[22px] font-bold leading-tight tracking-[-0.03em] text-ink">Upcoming Schedule</h2>
+        <h2 className="font-display text-[22px] font-bold leading-tight tracking-[-0.03em] text-ink">Upcoming Schedule</h2>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-0.5 rounded-full border border-line bg-surface p-1">

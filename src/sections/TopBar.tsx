@@ -61,7 +61,7 @@ export function TopBar() {
         aria-label="FAIMESS home"
       >
         <Logo size={32} />
-        <span className="text-[18px] font-extrabold tracking-[-0.045em] text-ink">FAIMESS</span>
+        <span className="font-display text-[19px] font-extrabold tracking-[-0.04em] text-ink">FAIMESS</span>
       </motion.button>
 
       {/* page switcher */}
@@ -102,7 +102,7 @@ export function TopBar() {
         {/* search */}
         <div ref={searchRef} className="relative">
           <motion.div
-            animate={{ width: focused || query ? 296 : 244 }}
+            animate={{ width: focused || query ? 336 : 276 }}
             transition={spring}
             className={cn(
               "flex items-center gap-2 rounded-full border bg-surface px-3.5 py-2 transition-colors",
@@ -138,7 +138,7 @@ export function TopBar() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.98 }}
                 transition={{ duration: 0.22, ease: EASE }}
-                className="absolute right-0 top-[calc(100%+10px)] z-40 w-[296px] overflow-hidden rounded-panel border border-line bg-surface p-1.5 shadow-float"
+                className="absolute right-0 top-[calc(100%+10px)] z-40 w-[336px] overflow-hidden rounded-panel border border-line bg-surface p-1.5 shadow-float"
               >
                 <p className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-faint">
                   {query ? "Results" : "Quick jump"}

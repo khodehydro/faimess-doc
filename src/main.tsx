@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "@fontsource-variable/plus-jakarta-sans";
+import "@fontsource-variable/figtree";
+import "@fontsource-variable/outfit";
 import "./index.css";
 import App from "./app/App";
 
