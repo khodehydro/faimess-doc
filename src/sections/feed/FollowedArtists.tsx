@@ -16,7 +16,7 @@ import { useT } from "../../app/PreferencesContext";
 
 export function FollowedArtists() {
   const t = useT();
-  const { notify } = useApp();
+  const { notify, openDetail } = useApp();
   const player = usePlayer();
 
   return (
@@ -48,7 +48,7 @@ export function FollowedArtists() {
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.96 }}
               transition={spring}
-              onClick={() => notify(t("toast.opening", { name: artist.name }))}
+              onClick={() => openDetail({ kind: "artist", id: artist.id })}
               className="relative"
               aria-label={`Open ${artist.name}`}
             >

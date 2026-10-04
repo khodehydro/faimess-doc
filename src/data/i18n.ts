@@ -137,6 +137,19 @@ export const STRINGS: Record<string, Entry> = {
   "points.head.invites": { en: "Invites", fa: "دعوت", ko: "초대" },
   "points.head.days": { en: "Days", fa: "روز", ko: "일수" },
   "points.head.lyrics": { en: "Lyrics", fa: "لیریک", ko: "가사" },
+  /* ------------------------- the detail card ------------------------- */
+  "detail.back": { en: "Back", fa: "بازگشت", ko: "뒤로" },
+  "detail.playAll": { en: "Play all", fa: "پخش همه", ko: "전체 재생" },
+  "detail.edit": { en: "Edit", fa: "ویرایش", ko: "편집" },
+  "detail.minutes": { en: "{n} min", fa: "{n} دقیقه", ko: "{n}분" },
+  "detail.empty": { en: "Nothing here yet", fa: "هنوز چیزی اینجا نیست", ko: "아직 아무것도 없어요" },
+  "detail.emptyBody": {
+    en: "Add a few songs and this list starts playing like any other.",
+    fa: "چند آهنگ اضافه کن تا این لیست هم مثل بقیه پخش شود.",
+    ko: "곡을 몇 개 담으면 다른 리스트처럼 재생돼요.",
+  },
+  "detail.addSongs": { en: "Add songs", fa: "افزودن آهنگ", ko: "곡 추가" },
+
   "leader.title": { en: "Leaderboard", fa: "جدول امتیازها", ko: "리더보드" },
   "leader.subtitle": {
     en: "Every balance here is the same five rules, added up.",

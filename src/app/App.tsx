@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AppProvider, useApp } from "./AppContext";
 import { PlayerProvider } from "./PlayerContext";
@@ -8,6 +9,9 @@ import { PreferencesProvider, usePreferences } from "./PreferencesContext";
 import { Stage } from "./Stage";
 import { ToastHost } from "./ToastHost";
 import { SectionSlot } from "../sections/registry";
+import { SurfaceCard } from "../ui/primitives";
+import { BrowseDetailView } from "../sections/BrowseDetailView";
+import { cn } from "../lib/cn";
 import { HomePage } from "../pages/HomePage";
 import { ArtistsPage } from "../pages/ArtistsPage";
 import { AlbumsPage } from "../pages/AlbumsPage";
@@ -42,9 +46,11 @@ const PAGES = {
  *  cards keep the normal card radius.
  * ------------------------------------------------------------------ */
 
-function Shell() {
-  const { route } = useApp();
+export function Shell() {
+  const { route, detail } = useApp();
   const { dir } = usePreferences();
+  /** the player card's expand button — its width is shared by every route */
+  const [wide, setWide] = useState(false);
   const Page = PAGES[route];
 
   return (
@@ -61,24 +67,59 @@ function Shell() {
         </div>
       </div>
 
-      {/* Content row — the pages own their cards. The row follows the
-          interface direction, so the home page mirrors as a whole in Persian:
-          the feed takes the right-hand column and the player the left one.
-          Each card re-declares `dir` for its own text, so nothing inside them
-          depends on where the card itself landed. */}
-      <div dir={dir} className="flex min-h-0 flex-1 flex-col">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={route}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.34, ease: EASE }}
-            className="flex min-h-0 flex-1 flex-col"
+      {/* Content row — the content card on one side, the player on the other,
+          on *every* route. Opening a playlist, an artist or an album swaps
+          what the content card shows; it never takes the player away, which
+          is the whole point of the layout. The row follows the interface
+          direction, so in Persian the content card takes the right-hand
+          column and the player the left one. Each card re-declares `dir` for
+          its own text, so nothing inside depends on where it landed. */}
+      <div
+        dir={dir}
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-4 lg:flex-row",
+          wide && "home-split-wide",
+        )}
+      >
+        <SurfaceCard dir={dir} className="home-split-left lg:min-h-0">
+          <div
+            data-content-scroll
+            className="scroll-slim flex min-h-0 flex-1 flex-col lg:overflow-y-auto"
           >
-            <Page />
-          </motion.div>
-        </AnimatePresence>
+            <AnimatePresence mode="wait" initial={false}>
+              {detail ? (
+                <motion.div
+                  key={`detail:${detail.kind}:${detail.id}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.28, ease: EASE }}
+                  className="flex min-h-0 flex-col"
+                >
+                  <BrowseDetailView />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={route}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.34, ease: EASE }}
+                  className="flex min-h-0 flex-1 flex-col"
+                >
+                  <Page />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </SurfaceCard>
+
+        <SurfaceCard dir={dir} className="home-split-right lg:min-h-0">
+          <SectionSlot
+            id="player"
+            params={{ expanded: wide, onToggleExpand: () => setWide((w) => !w) }}
+          />
+        </SurfaceCard>
       </div>
     </div>
   );

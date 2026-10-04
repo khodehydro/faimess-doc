@@ -87,11 +87,8 @@ export function PlayerSection({
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex shrink-0 items-center gap-2.5 px-4 pb-2.5 pt-4">
-          <span className="flex size-7 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
-            <Icon name="waveform" size={15} strokeWidth={2.2} />
-          </span>
-          {/* this slot used to hold the word "Player"; it now holds the one
-              number a listener looks for on a track — how often it is played */}
+          {/* no title, no icon: the header opens with the number a listener
+              looks for on a track — how often it is played */}
           {track && (
             <span
               className="flex items-center gap-1.5 rounded-full bg-primary-faint px-2.5 py-1.5 text-[12.5px] font-bold tabular-nums text-primary-deep"
@@ -248,10 +245,17 @@ function PlayerRail({
 function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void }) {
   const { t, dir } = usePreferences();
   const player = usePlayer();
-  const { navigate, notify } = useApp();
+  const { navigate, notify, openDetail } = useApp();
   const { mine } = usePlaylists();
   /* "new playlist" from the panel — the same sheet the Playlists page opens */
   const [creating, setCreating] = useState(false);
+
+  /* a row opens the list inside the content card — the drawer just steps out
+     of the way, and the player keeps playing behind it */
+  const openList = (id: string) => {
+    openDetail({ kind: "playlist", id });
+    onClose();
+  };
 
   const rows: PlayerTrack[] =
     panel === "liked" ? QUEUE.filter((t) => player.liked.includes(t.id)) : QUEUE;
@@ -289,14 +293,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
               return (
                 <button
                   key={list.id}
-                  onClick={() => {
-                    if (!lead) {
-                      notify(t("playlist.emptyNote", { name: list.name }));
-                      return;
-                    }
-                    player.play(lead);
-                    notify(t("player.playing", { artist: lead.artist, title: lead.title }));
-                  }}
+                  onClick={() => openList(list.id)}
                   className="group flex items-center gap-3 rounded-[12px] px-2.5 py-2 text-start transition-colors hover:bg-primary-faint"
                 >
                   <span className="size-[34px] shrink-0 overflow-hidden rounded-[10px] shadow-xs">
@@ -332,11 +329,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
             {playlists.map((list) => (
               <button
                 key={list.id}
-                onClick={() => {
-                  navigate("playlists");
-                  onClose();
-                  notify(t("player.opening", { name: list.name }));
-                }}
+                onClick={() => openList(list.id)}
                 className="group flex items-center gap-2.5 rounded-[12px] px-2 py-1.5 text-start transition-colors hover:bg-primary-faint"
               >
                 <span className="size-[34px] shrink-0 overflow-hidden rounded-[10px] shadow-xs">

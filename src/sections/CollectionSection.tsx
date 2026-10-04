@@ -124,12 +124,15 @@ function CardShell({
 
 function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
   const t = useT();
-  const { notify } = useApp();
+  const { notify, openDetail } = useApp();
   const player = usePlayer();
   const [following, setFollowing] = useState(artist.following);
 
   return (
-    <CardShell onClick={() => notify(t("toast.opening", { name: artist.name }))} label={t("page.openArtist", { name: artist.name })}>
+    <CardShell
+      onClick={() => openDetail({ kind: "artist", id: artist.id })}
+      label={t("page.openArtist", { name: artist.name })}
+    >
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <ArtistCover src={artist.photo} seed={artist.seed} initials={artist.initials} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
         <PlayFab
@@ -175,10 +178,13 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
 
 function AlbumCard({ album }: { album: (typeof albums)[number] }) {
   const t = useT();
-  const { notify } = useApp();
+  const { notify, openDetail } = useApp();
   const player = usePlayer();
   return (
-    <CardShell onClick={() => notify(t("toast.openingName", { name: album.title }))} label={t("page.openAlbum", { name: album.title })}>
+    <CardShell
+      onClick={() => openDetail({ kind: "album", id: album.id })}
+      label={t("page.openAlbum", { name: album.title })}
+    >
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <Cover src={album.photo} seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
         <PlayFab
@@ -211,11 +217,11 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
 
 function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
   const t = useT();
-  const { notify } = useApp();
+  const { openDetail } = useApp();
   return (
     <motion.button
       variants={popChild}
-      onClick={() => notify(t("toast.openingName", { name: playlist.name }))}
+      onClick={() => openDetail({ kind: "playlist", id: playlist.id })}
       whileHover={{ y: -3 }}
       transition={spring}
       className="group flex min-h-0 items-center gap-3.5 overflow-hidden rounded-card bg-surface p-3 text-start shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float"

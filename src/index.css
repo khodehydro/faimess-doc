@@ -374,11 +374,12 @@
 }
 
 /* ------------------------------------------------------------------ *
- *  Home layout — the 75 / 25 card split.
+ *  The card split — 75 / 25 on every route (v26 moved the two cards up
+ *  into the shell), not just on home.
  *  Unlayered rules, so they win over the `flex-1` that SurfaceCard carries.
  *  Widths only: which card lands on which side is the row's own direction
- *  (the feed is the wide one, on the right in Persian). Kept in sync with
- *  HOME_METRICS.split in src/lib/stage.ts.
+ *  (the content card is the wide one, on the right in Persian). Kept in sync
+ *  with HOME_METRICS.split in src/lib/stage.ts.
  * ------------------------------------------------------------------ */
 @media (min-width: 1024px) {
   .home-split-left {

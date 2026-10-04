@@ -25,7 +25,7 @@ import { EASE, spring } from "../lib/motion";
  * ------------------------------------------------------------------ */
 
 export function AccountCard() {
-  const { route, navigate, notify } = useApp();
+  const { route, navigate, notify, openDetail } = useApp();
   const { t, has, dir } = usePreferences();
   /** nav labels are translated where we have them, otherwise the data label stands */
   const label = (key: string, fallback: string) =>
@@ -113,8 +113,14 @@ export function AccountCard() {
     return pool.filter((p) => p.label.toLowerCase().includes(q)).slice(0, 5);
   }, [query, quick]);
 
-  const go = (r: { label: string; route?: string }) => {
+  /** a search hit for a playlist / artist / album opens it in the content
+      *  card — only the plain pages still change route */
+  const go = (r: { label: string; route?: string; id?: string; kind?: string }) => {
     setSearchOpen(false);
+    if ((r.kind === "artist" || r.kind === "album" || r.kind === "playlist") && r.id) {
+      openDetail({ kind: r.kind, id: r.id });
+      return;
+    }
     if (r.route) {
       if (route !== r.route) navigate(r.route as typeof route);
     } else {

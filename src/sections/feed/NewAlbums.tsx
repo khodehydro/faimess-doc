@@ -17,7 +17,7 @@ import { usePreferences } from "../../app/PreferencesContext";
 
 export function NewAlbums() {
   const { t, dir } = usePreferences();
-  const { navigate, notify } = useApp();
+  const { navigate, notify, openDetail } = useApp();
   const player = usePlayer();
 
   return (
@@ -40,11 +40,11 @@ export function NewAlbums() {
             animate={{ opacity: 1, y: 0, transition: { duration: 0.45, delay: i * 0.04 } }}
             whileHover={{ y: -4 }}
             transition={spring}
-            onClick={() => notify(t("toast.openingName", { name: album.title }))}
+            onClick={() => openDetail({ kind: "album", id: album.id })}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                notify(t("toast.openingName", { name: album.title }));
+                openDetail({ kind: "album", id: album.id });
               }
             }}
             role="button"

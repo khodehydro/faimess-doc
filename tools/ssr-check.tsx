@@ -22,6 +22,8 @@ import { LANGS, STRINGS, THEMES, fill, type Lang, type Theme } from "../src/data
 import { PlayerSection } from "../src/sections/PlayerSection";
 import { DownloadPage } from "../src/pages/DownloadPage";
 import { HomePage } from "../src/pages/HomePage";
+import { Shell } from "../src/app/App";
+import type { Detail } from "../src/app/AppContext";
 import { ArtistsPage } from "../src/pages/ArtistsPage";
 import { AlbumsPage } from "../src/pages/AlbumsPage";
 import { PlaylistsPage } from "../src/pages/PlaylistsPage";
@@ -102,11 +104,13 @@ type RenderOpts = {
   trackId?: string;
   /** playlists the listener already built */
   playlists?: UserPlaylist[];
+  /** open the frame with this detail card already showing */
+  detail?: Detail;
 };
 
 const render = (Page: () => ReactElement, opts: RenderOpts = {}) =>
   renderToString(
-    <AppProvider>
+    <AppProvider initialDetail={opts.detail ?? null}>
       <PlayerProvider initialTrackId={opts.trackId}>
         <CommentsProvider>
           <ContributionsProvider>
@@ -130,6 +134,8 @@ const ProfileMenu = () => (
 /* ------------------------------- pages ------------------------------- */
 
 const home = render(HomePage);
+/** the whole frame: content card + the player, which now lives on every route */
+const shell = render(Shell);
 check("home renders", home.length > 2000, `${home.length} chars`);
 check("home shows photography", (home.split(".webp").length - 1) >= 20, `${home.split(".webp").length - 1} images`);
 for (const title of ["Artists you follow", "Newest songs", "Trending now", "Latest news", "Fresh albums", "Active listeners"]) {
@@ -219,10 +225,10 @@ check(
 
 check(
   "right card is the player",
-  home.includes('aria-label="Music management"') && !home.includes("Enter Text..."),
+  shell.includes('aria-label="Music management"') && !shell.includes("Enter Text..."),
   "the rail's label is the player's own — messages composer must be gone",
 );
-check("player opens empty", home.includes("nothing playing yet"));
+check("player opens empty", shell.includes("nothing playing yet"));
 check(
   "the player header shows the play count, not the word “Player”",
   readFileSync("src/sections/PlayerSection.tsx", "utf8").includes('t("player.plays"') &&
@@ -258,7 +264,7 @@ const fontFiles = [
 check("korean + persian faces ship locally", fontFiles.every((f) => existsSync(f)), `${fontFiles.length} files`);
 check("korean faces are declared", css.includes("pretendard-ko-") && css.includes("unicode-range: U+AC00-D7A3"));
 check("persian token + utility", css.includes("--font-fa:") && css.includes('"Vazirmatn"'));
-check("empty player invites a first play", home.includes("Start with") && home.includes("دوست داری"));
+check("empty player invites a first play", shell.includes("Start with") && shell.includes("دوست داری"));
 
 /* ---------------------------- preferences ---------------------------- */
 /* language + appearance live on <html>; the SSR pass checks the tables and
@@ -374,6 +380,54 @@ const mineSeed: UserPlaylist[] = [
     createdAt: 1_700_000_000_000,
   },
 ];
+
+/* ------------------- the detail card (playlists / artists / albums) --- */
+
+const detailAlbum = render(Shell, { detail: { kind: "album", id: "al-afterglow" } });
+const detailArtist = render(Shell, { detail: { kind: "artist", id: "ar-novae" } });
+const detailMine = render(Shell, { detail: { kind: "playlist", id: mineSeed[0].id }, playlists: mineSeed });
+check(
+  "an album opens inside the content card, next to the player",
+  plain(detailAlbum).includes("Afterglow") &&
+    plain(detailAlbum).includes("Play all") &&
+    !plain(detailAlbum).includes(STRINGS["detail.edit"].en) &&
+    detailAlbum.includes('aria-label="Music management"'),
+  "the detail card and the player are on screen at the same time",
+);
+check(
+  "an artist opens the same way",
+  plain(detailArtist).includes("NOVAE") && detailArtist.includes('aria-label="Music management"'),
+);
+check(
+  "a saved playlist opens with its own tracks and an edit affordance",
+  plain(detailMine).includes(mineSeed[0].name) &&
+    plain(detailMine).includes("Afterglow") &&
+    plain(detailMine).includes(STRINGS["detail.edit"].en),
+  "the list plays; editing is a button inside it, not a page",
+);
+check(
+  "the player card is the shell's, so it survives every route",
+  readFileSync("src/app/App.tsx", "utf8").includes('id="player"') &&
+    ["ArtistsPage", "AlbumsPage", "PlaylistsPage", "NewsPage", "DownloadPage"].every(
+      (page) =>
+        !readFileSync(`src/pages/${page}.tsx`, "utf8").includes("SurfaceCard") &&
+        !readFileSync(`src/pages/${page}.tsx`, "utf8").includes("SectionSlot id=\"player\""),
+    ),
+  "pages render content only; the frame owns the cards",
+);
+check(
+  "clicking a card opens a detail instead of leaving the layout",
+  ["src/sections/CollectionSection.tsx", "src/sections/feed/FollowedArtists.tsx", "src/sections/feed/NewAlbums.tsx"].every(
+    (file) => readFileSync(file, "utf8").includes("openDetail("),
+  ) &&
+    !readFileSync("src/sections/CollectionSection.tsx", "utf8").includes('navigate("playlists")'),
+);
+check(
+  "a chip holds its highlight while its own scroll is running",
+  readFileSync("src/sections/feed/index.tsx", "utf8").includes("jumpLock"),
+  "one click moves the strip; the scroll listener can't win the race",
+);
+
 
 /* ------------------------ fan points (five rules) -------------------- */
 
@@ -557,23 +611,29 @@ const pressed = (html: string, label: string) =>
 
 const homeFa = render(HomePage, { lang: "fa" });
 const homeKo = render(HomePage, { lang: "ko" });
-check("persian home is right-to-left", homeFa.includes('dir="rtl"'));
+const shellFa = render(Shell, { lang: "fa" });
+const shellKo = render(Shell, { lang: "ko" });
+check(
+  "persian frame is right-to-left",
+  shellFa.includes('dir="rtl"') && shellKo.includes('dir="ltr"'),
+  "the whole shell mirrors, not just the text inside the cards",
+);
 const faWords = ["آهنگ‌های تازه", "هنوز چیزی پخش نمی‌شود", "جدیدترین آهنگ‌ها", "الان پرطرفدار"];
 check(
   "persian chrome is translated",
-  faWords.every((word) => plain(homeFa).includes(word)),
-  `missing: ${faWords.filter((word) => !plain(homeFa).includes(word)).join(" ")}`,
+  faWords.every((word) => plain(shellFa).includes(word)),
+  `missing: ${faWords.filter((word) => !plain(shellFa).includes(word)).join(" ")}`,
 );
 const koWords = ["신곡", "아직 재생 중인 곡이 없어요", "최신 곡", "지금 인기"];
 check(
   "korean chrome is translated",
-  koWords.every((word) => plain(homeKo).includes(word)),
-  `missing: ${koWords.filter((word) => !plain(homeKo).includes(word)).join(" ")}`,
+  koWords.every((word) => plain(shellKo).includes(word)),
+  `missing: ${koWords.filter((word) => !plain(shellKo).includes(word)).join(" ")}`,
 );
 check("the shelves keep their photography in persian", plain(homeFa).split(".webp").length - 1 >= 20);
 check(
   "no raw key leaks into the markup",
-  [homeFa, homeKo].every(
+  [shellFa, shellKo].every(
     (html) => !/(player|comments|submit|contrib|pref|shelf|lyrics)\.[a-z][A-Za-z]+/.test(plain(html)),
   ),
 );

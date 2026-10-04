@@ -9,8 +9,8 @@
 ```
 main.tsx                →  App (Provider + Stage + Shell)
 ├── app/AppContext.tsx  →  route, navigate, notify (toast)   ← تنها وابستگی مشترک بخش‌ها
-├── app/Stage.tsx       →  مقیاس‌دهی آرت‌بورد ثابت ۱۳۲۰×۹۳۰
-└── app/App.tsx         →  Shell: TopBar + صفحهٔ فعال
+├── app/Stage.tsx       →  مقیاس‌دهی آرت‌بورد ثابت ۱۵۸۰×۸۸۹
+└── app/App.tsx         →  Shell: TopBar + دو کارت (محتوا، پلیر)
     ├── sections/*      →  بخش‌ها (مستقل، فقط از useApp استفاده می‌کنند)
     ├── pages/*         →  ترکیب بخش‌ها در یک چیدمان
     └── data/*          →  محتوا (بدون منطق رندر)
@@ -27,7 +27,10 @@ main.tsx                →  App (Provider + Stage + Shell)
 
 ```ts
 export const STAGE = { width: 1580, height: 889, padding: 26, maxScale: 1.5 };
-export const HOME_METRICS = { topBar: 84, gutter: 18, hero: 356, greeting: 344, rightColumn: 520 };
+export const HOME_METRICS = {
+  topBar: 84, gutter: 18, hero: 356, greeting: 344,
+  split: { leftShare: 0.75, rightShare: 0.25, gutter: 14 },
+};
 ```
 
 `useStageScale` نسبت مقیاس را حساب می‌کند:
@@ -184,6 +187,36 @@ export const routes = [
 
 افزودن صفحه: یک آیتم در یکی از این دو لیست + یک کامپوننت در `pages/` + یک خط در `PAGES` در `app/App.tsx`.
 ناوبری، پنل جست‌وجو و «Quick jump» **خودکار** از همین لیست‌ها تغذیه می‌شوند.
+
+### ۴.۱ کارت جزئیات — پلی‌لیست، آرتیست، آلبوم (v26)
+
+**قانون:** هیچ صفحهٔ جداگانه‌ای برای پلی‌لیست/آرتیست/آلبوم وجود ندارد. کلیک روی هر کارت
+در `CollectionSection`، در شلف‌های «Followed artists»/«New albums»، در نوار
+«Your playlists» و در کشوی پلیر، فقط **کارت محتوای وسط** را عوض می‌کند؛ کارت پلیر سرِ جایش
+می‌ماند و موسیقی قطع نمی‌شود.
+
+```
+Shell (app/App.tsx)          ← مالک هر دو کارت در همهٔ مسیرها
+├── کارت محتوا                → pages/* یا <BrowseDetailView/> (AnimatePresence، key یکتا)
+└── کارت پلیر                 → <SectionSlot id="player"/> (ثابت)
+```
+
+- وضعیت در `AppContext`: `detail: {kind: "playlist" | "artist" | "album", id} | null`
+  با `openDetail(detail)` و `closeDetail()`. `openDetail` خودش ناحیهٔ `[data-content-scroll]`
+  را به بالا اسکرول می‌کند؛ `navigate()` همیشه اول `detail` را می‌بندد.
+- `BrowseDetailView` داده را از `data/library.ts` + `QUEUE` حل می‌کند: آرتیست با نام،
+  آلبوم با `album === title` یا `startsWith(title + " ·")`، پلی‌لیست کاربر با `trackIds`
+  (کانال `usePlaylists().mine`) و پلی‌لیست ادیتوری با یک برش چرخشی از `QUEUE`.
+- هدر: دکمهٔ بازگشت (`backIcon(dir)`)، کاور ۷۶px (دایره برای آرتیست)، تیتر، پیل «پخش همه»،
+  پیل «ویرایش» فقط برای پلی‌لیست خودِ کاربر (همان `CreatePlaylistDialog` با `playlistId`)
+  و دقیقه‌ها. یعنی «ویرایش» یک دکمه **داخل** لیست است، نه صفحهٔ مقصد کلیک.
+- اگر `detail` به چیزی حل نشود (مثلاً لیست خالی شده باشد) یک `useEffect` خودش
+  `closeDetail()` می‌زند تا کارت خالی نماند.
+- صفحات محتوا-تنها شدند: `Home/Artists/Albums/Playlists/News/Download` هیچ `SurfaceCard`
+  و هیچ `SectionSlot id="player"` ندارند. `Shell` این دو کارت و state `wide` (باز/بستهٔ پلیر)
+  را نگه می‌دارد و کلید `dir` را روی ردیف می‌گذارد.
+- برای تست/دیپ‌لینک: `<AppProvider initialDetail={…}>` کارت جزئیات را از همان ابتدا باز می‌کند
+  (در `tools/ssr-check.tsx` سه اَسِرشن روی همین سوار شده‌اند).
 
 ## ۵. بنر چرخشی
 

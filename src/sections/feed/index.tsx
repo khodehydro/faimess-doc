@@ -63,6 +63,14 @@ export function FeedSection() {
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const [active, setActive] = useState(FEED_SHELVES[0].id);
   const [stripHeight, setStripHeight] = useState(CHIP_STRIP_HEIGHT);
+  /**
+   * While a chip's smooth scroll is running the scroll listener keeps
+   * recomputing which shelf is "at the line" — and until the animation
+   * lands, that is still the shelf we just left. The highlight used to
+   * snap back and the chip needed a second click. The lock holds the
+   * chosen chip for as long as the scroll can plausibly take.
+   */
+  const jumpLock = useRef(0);
 
   /* the strip is measured, not guessed: its height is what every shelf
      header sticks under, and the two must agree to the pixel */
@@ -81,7 +89,10 @@ export function FeedSection() {
     const onScroll = () => {
       const root = rootRef.current;
       if (!root) return;
-      const line = root.getBoundingClientRect().top + stripHeight + 20;
+      if (Date.now() < jumpLock.current) return;
+      /* +1px of slack: a shelf that landed exactly on the line is *at* it,
+         and floating-point rounding must not flip the highlight back */
+      const line = root.getBoundingClientRect().top + stripHeight + 20 + 1;
       let current = FEED_SHELVES[0].id;
       for (const shelf of FEED_SHELVES) {
         const node = sectionRefs.current[shelf.id];
@@ -102,8 +113,9 @@ export function FeedSection() {
   const jumpTo = (id: string) => {
     const node = sectionRefs.current[id];
     if (!node) return;
-    node.scrollIntoView({ behavior: "smooth", block: "start" });
     setActive(id);
+    jumpLock.current = Date.now() + 900;
+    node.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const chips = useMemo(() => FEED_SHELVES, []);

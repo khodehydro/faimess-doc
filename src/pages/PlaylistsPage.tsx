@@ -1,12 +1,14 @@
 import { SectionSlot } from "../sections/registry";
-import { SurfaceCard } from "../ui/primitives";
-import { usePreferences } from "../app/PreferencesContext";
 
+/**
+ * The library, in the same content card the feed uses — the player stays
+ * beside it (see `Shell` in app/App.tsx). Clicking a card opens its detail
+ * inside this card instead of leaving the layout.
+ */
 export function PlaylistsPage() {
-  const { dir } = usePreferences();
   return (
-    <SurfaceCard dir={dir} className="p-6">
+    <div className="flex min-h-0 flex-1 flex-col p-6">
       <SectionSlot id="collection" params={{ kind: "playlists" }} />
-    </SurfaceCard>
+    </div>
   );
 }

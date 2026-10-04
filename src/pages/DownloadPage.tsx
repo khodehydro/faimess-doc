@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { SurfaceCard } from "../ui/primitives";
 import { Icon } from "../ui/Icon";
 import { Logo } from "../ui/Logo";
 import { useApp } from "../app/AppContext";
@@ -41,8 +40,8 @@ export function DownloadPage() {
   const { t, dir } = usePreferences();
 
   return (
-    <SurfaceCard dir={dir} className="min-h-0">
-      <div className="scroll-slim min-h-0 flex-1 overflow-y-auto p-6">
+    /* content only: the Shell owns the card and its scrollbar */
+    <div className="p-6">
       <div className="flex items-center gap-2.5">
         <span className="flex size-9 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
           <Icon name="download" size={17} strokeWidth={2.1} />
@@ -132,7 +131,6 @@ export function DownloadPage() {
           ))}
         </motion.ul>
       </div>
-      </div>
-    </SurfaceCard>
+    </div>
   );
 }

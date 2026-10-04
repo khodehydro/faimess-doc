@@ -8,7 +8,6 @@ import { useApp } from "../app/AppContext";
 import { cn } from "../lib/cn";
 import { EASE, popChild, staggerParent } from "../lib/motion";
 import { useState } from "react";
-import { SurfaceCard } from "../ui/primitives";
 import { usePreferences } from "../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
@@ -41,7 +40,8 @@ export function NewsPage() {
   const items = tag === "All" ? newsItems : newsItems.filter((n) => n.tag === tag);
 
   return (
-    <SurfaceCard dir={dir} className="p-6">
+    /* content only: the Shell owns the card, so the player stays beside it */
+    <div className="flex min-h-0 flex-1 flex-col p-6">
       <div className="flex items-center gap-4 pb-5">
         <div className="min-w-0">
           <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.018em] text-ink">
@@ -112,6 +112,6 @@ export function NewsPage() {
           ))}
         </motion.div>
       </AnimatePresence>
-    </SurfaceCard>
+    </div>
   );
 }

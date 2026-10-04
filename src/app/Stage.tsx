@@ -4,7 +4,7 @@ import { STAGE } from "../lib/stage";
 import { useStageScale } from "../hooks/useStageScale";
 
 /**
- * Desktop: the app is drawn on one fixed 1680×930 art-board that is
+ * Desktop: the app is drawn on one fixed 1580×889 art-board that is
  * uniformly scaled to fit the viewport — so the composition never
  * reflows and the page never scrolls.
  *
