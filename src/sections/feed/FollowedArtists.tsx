@@ -5,6 +5,8 @@ import { Icon } from "../../ui/Icon";
 import { PillButton } from "../../ui/primitives";
 import { followedArtists } from "../../data/feed";
 import { useApp } from "../../app/AppContext";
+import { usePlayer } from "../../app/PlayerContext";
+import { leadTrackFor } from "../../data/player";
 import { spring } from "../../lib/motion";
 
 /* ------------------------------------------------------------------ *
@@ -13,6 +15,7 @@ import { spring } from "../../lib/motion";
 
 export function FollowedArtists() {
   const { notify } = useApp();
+  const player = usePlayer();
 
   return (
     <Shelf
@@ -64,7 +67,10 @@ export function FollowedArtists() {
               <PlayDot
                 onClick={(e) => {
                   e.stopPropagation();
-                  notify(`Playing ${artist.name}`);
+                  const lead = leadTrackFor(artist.name);
+                  if (!lead) return;
+                  player.play(lead);
+                  notify(`Playing ${artist.name} — “${lead.title}”`);
                 }}
                 className="absolute inset-0 m-auto opacity-0 transition-opacity duration-300 group-hover:opacity-100"
               />

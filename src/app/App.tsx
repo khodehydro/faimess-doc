@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { AppProvider, useApp } from "./AppContext";
+import { PlayerProvider } from "./PlayerContext";
 import { Stage } from "./Stage";
 import { ToastHost } from "./ToastHost";
 import { SectionSlot } from "../sections/registry";
@@ -72,10 +73,12 @@ function Shell() {
 export default function App() {
   return (
     <AppProvider>
-      <Stage>
-        <Shell />
-      </Stage>
-      <ToastHost />
+      <PlayerProvider>
+        <Stage>
+          <Shell />
+        </Stage>
+        <ToastHost />
+      </PlayerProvider>
     </AppProvider>
   );
 }

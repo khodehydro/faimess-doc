@@ -5,6 +5,8 @@ import { Icon } from "../../ui/Icon";
 import { PillButton } from "../../ui/primitives";
 import { freshAlbums } from "../../data/library";
 import { useApp } from "../../app/AppContext";
+import { usePlayer } from "../../app/PlayerContext";
+import { leadTrackFor } from "../../data/player";
 import { spring } from "../../lib/motion";
 
 /* ------------------------------------------------------------------ *
@@ -13,6 +15,7 @@ import { spring } from "../../lib/motion";
 
 export function NewAlbums() {
   const { navigate, notify } = useApp();
+  const player = usePlayer();
 
   return (
     <Shelf
@@ -54,7 +57,10 @@ export function NewAlbums() {
               <PlayDot
                 onClick={(e) => {
                   e.stopPropagation();
-                  notify(`Playing “${album.title}”`);
+                  const lead = leadTrackFor(album.artist);
+                  if (!lead) return;
+                  player.play(lead);
+                  notify(`Playing “${album.title}” — starting with “${lead.title}”`);
                 }}
                 className="absolute bottom-2 right-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
               />

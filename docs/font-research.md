@@ -75,8 +75,32 @@ for w in 400 500 600 700 800; do
 done
 ```
 
-### افزودن کره‌ای (در آینده)
-اگر متن هانگول اضافه شد، همان دستور را بدون `--unicodes` (یعنی فونت کامل) یا با بازهٔ هانگول اجرا کن و کنار فایل‌های لاتین به‌عنوان یک `@font-face` دیگر با `unicode-range` معرفی کن؛ چون مرورگر فقط برای گلیف‌های لازم دانلود می‌کند، بار اضافه‌ای تحمیل نمی‌شود.
+### کره‌ای — انجام شد (لیریک پلیر)
+لیریک‌ها هانگول دارند، پس یک subset کر‌ه‌ای هم ساخته شد. منبع، نسخهٔ رسمی بستهٔ `pretendard` است (npm، شامل فایل‌های کامل کره‌ای؛ داخل `node_modules` نمی‌ماند):
+
+```bash
+npm pack pretendard && tar xzf pretendard-1.3.9.tgz          # dist/web/static/woff2/Pretendard-<Weight>.woff2
+
+# فهرست کاراکترهای هانگولِ واقعاً استفاده‌شده در اپ (لیریک + برچسب‌ها)
+grep -rhoP '[\x{ac00}-\x{d7a3}]' src | tr -d '\n' | fold -w1 | sort -u | tr -d '\n' > /tmp/ko_chars.txt
+
+for pair in 400:Regular 500:Medium 600:SemiBold 700:Bold 800:ExtraBold; do
+  w=${pair%%:*}; n=${pair##*:}
+  /tmp/fontenv/bin/pyftsubset "…/dist/web/static/woff2/Pretendard-$n.woff2" \
+    --text-file=/tmp/ko_chars.txt --layout-features='' --flavor=woff2 \
+    --no-hinting --desubroutinize --output-file="src/assets/fonts/pretendard-ko-$w.woff2"
+done
+```
+
+- نتیجه: **~۱۱KB هر وزن** (۱۵۳ سیلاب هانگول) به‌جای ~۵۸۰KB برای کل بلوک هانگول و ~۷۵۰KB فونت کامل.
+- `@font-face`ها در `src/index.css` همان خانوادهٔ `"Pretendard"` هستند با `unicode-range: U+AC00-D7A3`؛ مرورگر خودش برای متن لاتین فایل لاتین و برای هانگول فایل کره‌ای را می‌گیرد.
+- اگر متن کره‌ای تازه‌ای اضافه شد که سیلاب‌هایش در subset نیست، همان یک کاراکتر به فونت سیستم برمی‌گردد؛ برای پوشش کامل، دستور بالا را دوباره با فهرست کاراکترهای تازه اجرا کن.
+
+### فارسی (لیریک) — Vazirmatn
+ترجمهٔ فارسی زیر هر خط لیریک با **Vazirmatn** رندر می‌شود (`--font-fa`، کلاس `font-fa`، `dir="rtl"`):
+
+- منبع: `npm i -D @fontsource/vazirmatn` → فایل‌های subset عربی (`vazirmatn-arabic-{400,500,600,700}-normal.woff2`، ~۲۴KB هر وزن) در `src/assets/fonts/vazirmatn-<weight>.woff2` کپی شده‌اند + `LICENSE-Vazirmatn.txt` (OFL).
+- زیرمجموعهٔ عربی شامل حروف فارسی (پ چ ژ گ) است و فقط برای متن RTL استفاده می‌شود؛ پس قاعدهٔ «یک خانواده برای لاتین» دست‌نخورده می‌ماند.
 
 ### عوض کردن فونت در ۲ خط
 ```css

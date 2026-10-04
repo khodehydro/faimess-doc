@@ -8,6 +8,8 @@
 import type { ReactElement } from "react";
 import { renderToString } from "react-dom/server";
 import { AppProvider } from "../src/app/AppContext";
+import { PlayerProvider } from "../src/app/PlayerContext";
+import { PlayerSection } from "../src/sections/PlayerSection";
 import { HomePage } from "../src/pages/HomePage";
 import { ArtistsPage } from "../src/pages/ArtistsPage";
 import { AlbumsPage } from "../src/pages/AlbumsPage";
@@ -18,6 +20,9 @@ import { banners } from "../src/data/banners";
 import { activeUsers, newestTracks, trendingTracks } from "../src/data/feed";
 import { conversations } from "../src/data/messages";
 import { me } from "../src/data/account";
+import { QUEUE, lyricsFor, trackById } from "../src/data/player";
+import { LYRICS } from "../src/data/lyrics";
+import { existsSync, readFileSync } from "node:fs";
 
 /* minimal browser surface for React + framer-motion */
 const g = globalThis as unknown as Record<string, unknown>;
@@ -59,7 +64,14 @@ function check(name: string, ok: boolean, detail = "") {
   }
 }
 
-const render = (Page: () => ReactElement) => renderToString(<AppProvider><Page /></AppProvider>);
+const render = (Page: () => ReactElement) =>
+  renderToString(
+    <AppProvider>
+      <PlayerProvider>
+        <Page />
+      </PlayerProvider>
+    </AppProvider>,
+  );
 
 /* ------------------------------- pages ------------------------------- */
 
@@ -70,6 +82,53 @@ for (const title of ["Artists you follow", "Newest songs", "Trending now", "Late
   check(`shelf “${title}”`, home.includes(title));
 }
 check("hero banner wired", banners.every((b) => home.includes(b.title) || true) && home.includes(banners[0].title));
+
+/* ------------------------------ the player ---------------------------- */
+
+check("right card is the player", home.includes("Player") && !home.includes("Enter Text..."), "messages composer must be gone");
+check("player opens empty", home.includes("nothing playing yet"));
+
+check("queue has every feed song, once", new Set(QUEUE.map((t) => `${t.title}|${t.artist}`)).size === QUEUE.length, `${QUEUE.length} tracks`);
+check("queue entries carry a length", QUEUE.every((t) => t.seconds > 60), `${QUEUE.map((t) => t.seconds).join(", ")}`);
+check("every queue track has lyrics", QUEUE.every((t) => (lyricsFor(t)?.length ?? 0) >= 4));
+check("lyrics keys all resolve to queue ids", Object.keys(LYRICS).every((id) => QUEUE.some((t) => t.id === id)), Object.keys(LYRICS).join(", "));
+check("every lyric line is bilingual", Object.values(LYRICS).every((lines) => lines.every((l) => l.ko.length > 0 && l.fa.length > 0)));
+check("lyric timings ascend", Object.values(LYRICS).every((lines) => lines.every((l, i) => i === 0 || l.at > lines[i - 1].at)));
+check("trending aliases resolve", trackById("tr1")?.id === "nt2" && trackById("tr2")?.id === "nt1" && trackById("tr4")?.id === "nt3");
+check("every feed row maps to a playable track", [...newestTracks, ...trendingTracks].every((t) => trackById(t.id) !== null));
+
+/* ------------------------------ typography ---------------------------- */
+
+const css = readFileSync("src/index.css", "utf8");
+const fontFiles = [
+  ...[400, 500, 600, 700, 800].map((w) => `src/assets/fonts/pretendard-ko-${w}.woff2`),
+  ...[400, 500, 600, 700].map((w) => `src/assets/fonts/vazirmatn-${w}.woff2`),
+];
+check("korean + persian faces ship locally", fontFiles.every((f) => existsSync(f)), `${fontFiles.length} files`);
+check("korean faces are declared", css.includes("pretendard-ko-") && css.includes("unicode-range: U+AC00-D7A3"));
+check("persian token + utility", css.includes("--font-fa:") && css.includes('"Vazirmatn"'));
+check("empty player invites a first play", home.includes("Start with") && home.includes("دوست داری"));
+
+/* the loaded state — a real render of the card with a track in it */
+const playingCard = renderToString(
+  <AppProvider>
+    <PlayerProvider initialTrackId="nt1">
+      <PlayerSection />
+    </PlayerProvider>
+  </AppProvider>,
+);
+check("loaded player shows the track", playingCard.includes("Afterglow") && playingCard.includes("NOVAE"));
+check("loaded player shows details", playingCard.includes("Afterglow") && playingCard.includes("Lyrics"));
+check("korean lyrics render", /[\uac00-\ud7a3]/.test(playingCard) && playingCard.includes("한국어"));
+check("persian translation renders", playingCard.includes("نور"));
+check("seek bar is a slider", playingCard.includes('role="slider"') && playingCard.includes("aria-valuetext"));
+check("download is android-only", playingCard.includes("Download") && playingCard.includes("Android"));
+check("management rail ships", ["Play queue", "Liked songs", "Playlists"].every((l) => playingCard.includes(l)));
+check("the playing track can be liked", playingCard.includes("Remove from Liked songs") && playingCard.includes('aria-pressed="true"'));
+{
+  const liked = ["nt1", "tr3", "tr5"];
+  check("liked ids come from the queue", liked.every((id) => QUEUE.some((t) => t.id === id)));
+}
 
 const artistsPage = render(ArtistsPage);
 check("artists page renders", artistsPage.includes("Artists"));

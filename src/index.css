@@ -47,6 +47,92 @@
   src: url("./assets/fonts/pretendard-800.woff2") format("woff2");
 }
 
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  /* Hangul only: the demo's Korean glyph set (lyrics + UI strings), 11 KB a
+     weight. Anything outside it falls through to the system Korean face. */
+  unicode-range: U+AC00-D7A3;
+  src: url("./assets/fonts/pretendard-ko-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  /* Hangul only: the demo's Korean glyph set (lyrics + UI strings), 11 KB a
+     weight. Anything outside it falls through to the system Korean face. */
+  unicode-range: U+AC00-D7A3;
+  src: url("./assets/fonts/pretendard-ko-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  /* Hangul only: the demo's Korean glyph set (lyrics + UI strings), 11 KB a
+     weight. Anything outside it falls through to the system Korean face. */
+  unicode-range: U+AC00-D7A3;
+  src: url("./assets/fonts/pretendard-ko-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  /* Hangul only: the demo's Korean glyph set (lyrics + UI strings), 11 KB a
+     weight. Anything outside it falls through to the system Korean face. */
+  unicode-range: U+AC00-D7A3;
+  src: url("./assets/fonts/pretendard-ko-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  /* Hangul only: the demo's Korean glyph set (lyrics + UI strings), 11 KB a
+     weight. Anything outside it falls through to the system Korean face. */
+  unicode-range: U+AC00-D7A3;
+  src: url("./assets/fonts/pretendard-ko-800.woff2") format("woff2");
+}
+
+/* ------------------------------------------------------------------ *
+ *  Vazirmatn — the Persian face for lyrics and any RTL copy. A separate
+ *  family on purpose: Pretendard has no Arabic script, and the Weverse
+ *  "one family" rule is about not mixing two *Latin* faces.
+ *  Arabic subset (24 KB a weight), SIL Open Font License.
+ * ------------------------------------------------------------------ */
+@font-face {
+  font-family: "Vazirmatn";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/vazirmatn-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Vazirmatn";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/vazirmatn-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Vazirmatn";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/vazirmatn-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Vazirmatn";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/vazirmatn-700.woff2") format("woff2");
+}
+
 /* ------------------------------------------------------------------ *
  *  FAIMESS — design tokens
  *  Soft-minimal system: light neutrals + one violet accent (+ teal/mint
@@ -63,6 +149,9 @@
   --font-display: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto,
     "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR",
     "Malgun Gothic", sans-serif;
+  /* Persian/RTL copy — lyrics, and any future RTL string */
+  --font-fa: "Vazirmatn", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
+    "Segoe UI", Tahoma, sans-serif;
 
   /* surfaces */
   --color-canvas: #eaeaec;
@@ -182,6 +271,12 @@
   &::-webkit-scrollbar-thumb:hover {
     background: #c9ced6;
   }
+}
+
+/* fades the bottom edge of a scroll area, so a cut-off lyric line reads as
+   "there is more underneath" instead of as a hard stop */
+@utility mask-fade-b {
+  mask-image: linear-gradient(180deg, #000 0%, #000 calc(100% - 26px), transparent 100%);
 }
 
 /* keeps the frame from ever adding scrollbars to the page */

@@ -6,6 +6,8 @@ import { Icon } from "../../ui/Icon";
 import { PillButton } from "../../ui/primitives";
 import { newestTracks } from "../../data/feed";
 import { useApp } from "../../app/AppContext";
+import { usePlayer } from "../../app/PlayerContext";
+import { trackById } from "../../data/player";
 import { cn } from "../../lib/cn";
 import { spring } from "../../lib/motion";
 
@@ -22,23 +24,40 @@ function TrackRow({
   index: number;
 }) {
   const { notify } = useApp();
-  const [playing, setPlaying] = useState(false);
+  const player = usePlayer();
+  /* this row is the one the player card is holding */
+  const playable = trackById(track.id);
+  const mine = !!playable && playable.id === player.track?.id;
+  const playing = mine && player.playing;
 
   return (
     <motion.div
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4, delay: index * 0.04 }}
-      className="group flex items-center gap-3 rounded-[14px] border border-line/80 bg-surface px-2.5 py-2 transition-colors hover:border-primary/25 hover:bg-primary-faint/60"
+      className={cn(
+        "group flex items-center gap-3 rounded-[14px] border bg-surface px-2.5 py-2 transition-colors",
+        mine ? "border-primary/35 bg-primary-faint/60" : "border-line/80 hover:border-primary/25 hover:bg-primary-faint/60",
+      )}
     >
       <span className="relative size-[42px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
         <Cover src={track.photo} seed={track.seed} className="h-full w-full" />
         <span
-          onClick={() => {
-            setPlaying((v) => !v);
-            notify(playing ? `Paused “${track.title}”` : `Playing “${track.title}”`);
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!playable) return;
+            if (mine) {
+              player.toggle();
+              notify(playing ? `Paused “${track.title}”` : `Playing “${track.title}”`);
+            } else {
+              player.play(playable);
+              notify(`Playing “${track.title}” — it's in the player card`);
+            }
           }}
-          className="absolute inset-0 flex items-center justify-center bg-ink/45 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          className={cn(
+            "absolute inset-0 flex cursor-pointer items-center justify-center bg-ink/45 text-white transition-opacity duration-300",
+            mine ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+          )}
         >
           <Icon name={playing ? "pause" : "play"} size={17.5} strokeWidth={2} />
         </span>

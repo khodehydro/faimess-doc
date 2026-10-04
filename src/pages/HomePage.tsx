@@ -7,8 +7,9 @@ import { SectionSlot } from "../sections/registry";
  * Left card (75%):  ONE scroll surface — the hero carousel and the music feed
  *                   scroll together, so the banner leaves the viewport naturally
  *                   as you read down the feed.
- * Right card (25%): greeting + messages. Deliberately narrower than the left
- *                   card so the feed keeps the visual weight.
+ * Right card (25%): the player — cover + seek bar on top (40%), bilingual
+ *                   lyrics with their own scroll below (60%). Deliberately
+ *                   narrower than the left card so the feed keeps the weight.
  *
  * The split lives in `home-split-left` / `home-split-right` (src/index.css) so it
  * also cancels the base `flex-1` that SurfaceCard carries; below `lg` the two
@@ -37,15 +38,7 @@ export function HomePage() {
 
       {/* ── right content card ──────────────────────────────────────── */}
       <SurfaceCard className="home-split-right lg:min-h-0">
-        <div className="h-[300px] shrink-0">
-          <SectionSlot id="greeting" params={undefined} />
-        </div>
-
-        <span className="mx-5 block h-px shrink-0 bg-line" />
-
-        <div className="flex min-h-0 flex-1 flex-col">
-          <SectionSlot id="messages" params={undefined} />
-        </div>
+        <SectionSlot id="player" params={undefined} />
       </SurfaceCard>
     </div>
   );

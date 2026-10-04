@@ -5,6 +5,8 @@ import { Icon } from "../ui/Icon";
 import { Meta, PillButton, CircleButton } from "../ui/primitives";
 import { albums, artists, playlists } from "../data/library";
 import { useApp } from "../app/AppContext";
+import { usePlayer } from "../app/PlayerContext";
+import { leadTrackFor } from "../data/player";
 import { cn } from "../lib/cn";
 import { EASE, spring, staggerParent, popChild } from "../lib/motion";
 
@@ -101,13 +103,22 @@ function CardShell({
 
 function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
   const { notify } = useApp();
+  const player = usePlayer();
   const [following, setFollowing] = useState(artist.following);
 
   return (
     <CardShell onClick={() => notify(`Opening ${artist.name}`)} label={`Open ${artist.name}`}>
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <ArtistCover src={artist.photo} seed={artist.seed} initials={artist.initials} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
-        <PlayFab onClick={() => notify(`Playing ${artist.name}`)} className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <PlayFab
+          onClick={() => {
+            const lead = leadTrackFor(artist.name);
+            if (!lead) return;
+            player.play(lead);
+            notify(`Playing ${artist.name} — “${lead.title}”`);
+          }}
+          className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        />
         <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[12px] font-bold text-ink backdrop-blur">
           {artist.genre}
         </span>
@@ -139,11 +150,20 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
 
 function AlbumCard({ album }: { album: (typeof albums)[number] }) {
   const { notify } = useApp();
+  const player = usePlayer();
   return (
     <CardShell onClick={() => notify(`Opening “${album.title}”`)} label={`Open ${album.title}`}>
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <Cover src={album.photo} seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
-        <PlayFab onClick={() => notify(`Playing “${album.title}”`)} className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <PlayFab
+          onClick={() => {
+            const lead = leadTrackFor(album.artist);
+            if (!lead) return;
+            player.play(lead);
+            notify(`Playing “${album.title}” — starting with “${lead.title}”`);
+          }}
+          className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        />
         <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[12px] font-bold text-ink backdrop-blur">
           {album.year}
         </span>

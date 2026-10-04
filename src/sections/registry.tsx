@@ -6,6 +6,7 @@ import { HeroBanner } from "./HeroBanner";
 import { ScheduleSection } from "./ScheduleSection";
 import { GreetingSection } from "./GreetingSection";
 import { MessagesSection } from "./MessagesSection";
+import { PlayerSection } from "./PlayerSection";
 import { CollectionSection, type LibraryKind } from "./CollectionSection";
 import { FeedSection } from "./feed";
 
@@ -33,6 +34,7 @@ export type SectionParams = {
   feed: undefined;
   greeting: undefined;
   messages: undefined;
+  player: undefined;
   collection: { kind: LibraryKind };
 };
 
@@ -47,6 +49,7 @@ export const sections = {
   feed: FeedSection,
   greeting: GreetingSection,
   messages: MessagesSection,
+  player: PlayerSection,
   collection: CollectionSection,
 } as const;
 

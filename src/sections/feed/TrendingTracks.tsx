@@ -6,6 +6,8 @@ import { Icon } from "../../ui/Icon";
 import { PillButton } from "../../ui/primitives";
 import { trendingTracks } from "../../data/feed";
 import { useApp } from "../../app/AppContext";
+import { usePlayer } from "../../app/PlayerContext";
+import { trackById } from "../../data/player";
 import { compactNumber } from "../../lib/format";
 import { cn } from "../../lib/cn";
 import { spring } from "../../lib/motion";
@@ -19,6 +21,10 @@ type Row = (typeof trendingTracks)[number] & { fired: boolean; fires: number };
 
 function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: number }) {
   const { notify } = useApp();
+  const player = usePlayer();
+  /* the queue may hold this song under its newest-release id */
+  const playable = trackById(row.id);
+  const mine = !!playable && playable.id === player.track?.id;
   const [fired, setFired] = useState(row.fired);
   const [fires, setFires] = useState(row.fires);
   const [pop, setPop] = useState(0);
@@ -52,8 +58,22 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
 
       <span className="relative size-[38px] shrink-0 overflow-hidden rounded-[11px] shadow-xs">
         <Cover src={row.photo} seed={row.seed} className="h-full w-full" />
-        <span className="absolute inset-0 flex items-center justify-center bg-ink/45 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-          <Icon name="play" size={15.5} strokeWidth={2} />
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!playable) return;
+            if (mine) player.toggle();
+            else {
+              player.play(playable);
+              notify(`Playing “${row.title}” — it's in the player card`);
+            }
+          }}
+          className={cn(
+            "absolute inset-0 flex cursor-pointer items-center justify-center bg-ink/45 text-white transition-opacity duration-300",
+            mine ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+          )}
+        >
+          <Icon name={mine && player.playing ? "pause" : "play"} size={15.5} strokeWidth={2} />
         </span>
       </span>
 
