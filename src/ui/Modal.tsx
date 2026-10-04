@@ -67,7 +67,7 @@ export function Modal({
             transition={{ duration: 0.24, ease: EASE }}
             className={cn(
               "relative w-full rounded-card bg-surface shadow-float",
-              bare ? "overflow-hidden" : "scroll-slim max-h-[calc(100vh-48px)] overflow-y-auto p-5",
+              bare ? "overflow-hidden" : "scroll-slim max-h-[calc(100vh-48px)] overflow-y-auto p-6",
             )}
             style={{ maxWidth: width }}
           >

@@ -28,14 +28,14 @@ export function HomePage() {
   return (
     <div
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-3.5 lg:flex-row",
+        "flex min-h-0 flex-1 flex-col gap-4 lg:flex-row",
         wide && "home-split-wide",
       )}
     >
       {/* ── left content card ───────────────────────────────────────── */}
       <SurfaceCard dir={dir} className="home-split-left lg:min-h-0">
         <div className="scroll-slim flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
-          <div className="shrink-0 p-3.5">
+          <div className="shrink-0 p-4 pb-2">
             <div className="h-[300px] sm:h-[330px] lg:h-[340px]">
               <SectionSlot id="hero" params={undefined} />
             </div>
@@ -46,7 +46,7 @@ export function HomePage() {
           </div>
 
           {/* keeps the last shelf clear of the card's bottom edge when scrolled */}
-          <div className="h-5 shrink-0" />
+          <div className="h-7 shrink-0" />
         </div>
       </SurfaceCard>
 

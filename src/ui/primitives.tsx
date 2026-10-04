@@ -120,7 +120,7 @@ export function PillButton({
       whileTap={{ scale: 0.97 }}
       transition={spring}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13.5px] font-semibold transition-colors",
+        "inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[13.5px] font-semibold transition-colors",
         tone === "primary" && "bg-primary text-white shadow-primary",
         tone === "outline" &&
           (active
@@ -149,7 +149,7 @@ export function Meta({
   iconSize?: number;
 }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-ink-muted", className)}>
+    <span className={cn("inline-flex items-center gap-2 text-ink-muted", className)}>
       <Icon name={icon} size={iconSize} />
       {children}
     </span>

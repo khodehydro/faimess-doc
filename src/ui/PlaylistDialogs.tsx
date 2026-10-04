@@ -43,7 +43,7 @@ function search(query: string): PlayerTrack[] {
 
 function FieldLabel({ children, trailing }: { children: string; trailing?: React.ReactNode }) {
   return (
-    <div className="mt-4 flex items-baseline justify-between gap-2">
+    <div className="mt-4 flex items-baseline justify-between gap-2.5">
       <span className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">{children}</span>
       {trailing}
     </div>
@@ -67,7 +67,7 @@ function HitRow({
       aria-pressed={picked}
       aria-label={`${picked ? t("playlist.picked") : t("playlist.pick")} — ${track.title}`}
       className={cn(
-        "flex w-full items-center gap-2.5 rounded-[13px] p-1.5 pe-2.5 text-start transition-colors",
+        "flex w-full items-center gap-3 rounded-[13px] p-2 pe-2.5 text-start transition-colors",
         picked ? "bg-primary-faint" : "hover:bg-subtle",
       )}
     >
@@ -166,10 +166,10 @@ export function CreatePlaylistDialog({
         <Icon name={editing ? "folder" : "folderPlus"} size={20} strokeWidth={2} />
       </span>
 
-      <h2 className="font-display mt-3 text-[17.5px] font-bold leading-snug text-ink">
+      <h2 className="font-display mt-3.5 text-[17.5px] font-bold leading-snug text-ink">
         {editing ? t("playlist.editTitle", { name: editing.name }) : t("playlist.createTitle")}
       </h2>
-      <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-muted">
+      <p className="mt-2 text-[13.5px] leading-relaxed text-ink-muted">
         {editing ? t("playlist.editBody") : t("playlist.createBody")}
       </p>
 
@@ -184,12 +184,12 @@ export function CreatePlaylistDialog({
         maxLength={MAX_NAME_LENGTH}
         placeholder={t("playlist.namePlaceholder")}
         aria-label={t("playlist.nameLabel")}
-        className="mt-1.5 w-full rounded-[14px] border border-line bg-subtle/60 px-3.5 py-2.5 text-[13.5px] font-semibold text-ink transition-colors placeholder:text-ink-faint focus:border-primary/45 focus:outline-none"
+        className="mt-2 w-full rounded-[14px] border border-line bg-subtle/60 px-4 py-3 text-[13.5px] font-semibold text-ink transition-colors placeholder:text-ink-faint focus:border-primary/45 focus:outline-none"
       />
 
       {/* cover — the six bundled crops, and only those */}
       <FieldLabel>{t("playlist.coverLabel")}</FieldLabel>
-      <div className="mt-1.5 grid grid-cols-6 gap-2">
+      <div className="mt-2 grid grid-cols-6 gap-2.5">
         {PLAYLIST_COVERS.map((option) => {
           const on = option.id === cover;
           return (
@@ -215,13 +215,13 @@ export function CreatePlaylistDialog({
           );
         })}
       </div>
-      <p className="mt-1.5 text-[12px] leading-relaxed text-ink-faint">{t("playlist.coverNote")}</p>
+      <p className="mt-2 text-[12px] leading-relaxed text-ink-faint">{t("playlist.coverNote")}</p>
 
       {/* songs */}
       <FieldLabel trailing={<span className="text-[12px] font-semibold text-ink-faint">{t("playlist.selected", { count: picked.length })}</span>}>
         {t("playlist.songsLabel")}
       </FieldLabel>
-      <div className="relative mt-1.5">
+      <div className="relative mt-2">
         <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-faint">
           <Icon name="search" size={15} strokeWidth={2} />
         </span>
@@ -230,13 +230,13 @@ export function CreatePlaylistDialog({
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("playlist.searchPlaceholder")}
           aria-label={t("playlist.searchPlaceholder")}
-          className="w-full rounded-[14px] border border-line bg-subtle/60 py-2.5 pe-3.5 ps-9 text-[13.5px] font-semibold text-ink transition-colors placeholder:text-ink-faint focus:border-primary/45 focus:outline-none"
+          className="w-full rounded-[14px] border border-line bg-subtle/60 py-3 pe-3.5 ps-9 text-[13.5px] font-semibold text-ink transition-colors placeholder:text-ink-faint focus:border-primary/45 focus:outline-none"
         />
       </div>
 
       {query.trim() ? (
         hits.length ? (
-          <ul className="mt-2 flex flex-col gap-1">
+          <ul className="mt-2.5 flex flex-col gap-1.5">
             {hits.map((track) => (
               <li key={track.id}>
                 <HitRow track={track} picked={picked.includes(track.id)} onToggle={() => toggle(track.id)} />
@@ -244,18 +244,18 @@ export function CreatePlaylistDialog({
             ))}
           </ul>
         ) : (
-          <p className="mt-2 rounded-[12px] bg-subtle px-3 py-2.5 text-[12.5px] text-ink-muted">
+          <p className="mt-2.5 rounded-[12px] bg-subtle px-3.5 py-3 text-[12.5px] text-ink-muted">
             {t("playlist.noResults", { query: query.trim() })}
           </p>
         )
       ) : (
-        <p className="mt-1.5 text-[12px] text-ink-faint">{t("playlist.searchHint", { count: QUEUE.length })}</p>
+        <p className="mt-2 text-[12px] text-ink-faint">{t("playlist.searchHint", { count: QUEUE.length })}</p>
       )}
 
       {chosen.length ? (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap gap-2">
           {chosen.map((track) => (
-            <span key={track.id} className="flex items-center gap-1.5 rounded-full bg-subtle py-1 pe-1.5 ps-1">
+            <span key={track.id} className="flex items-center gap-2 rounded-full bg-subtle py-1.5 pe-2 ps-1.5">
               <span className="size-[22px] shrink-0 overflow-hidden rounded-full">
                 <Photo src={track.photo} alt="" />
               </span>
@@ -272,13 +272,13 @@ export function CreatePlaylistDialog({
           ))}
         </div>
       ) : (
-        <p className="mt-2.5 rounded-[12px] border border-dashed border-line px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-faint">
+        <p className="mt-3 rounded-[12px] border border-dashed border-line px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-faint">
           {t("playlist.empty")}
         </p>
       )}
 
       {/* actions */}
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-4 flex items-center gap-2.5">
         <motion.button
           whileHover={ready ? { y: -1.5 } : undefined}
           whileTap={ready ? { scale: 0.97 } : undefined}
@@ -286,7 +286,7 @@ export function CreatePlaylistDialog({
           onClick={submit}
           disabled={!ready}
           className={cn(
-            "flex items-center gap-2 rounded-[14px] bg-primary px-3.5 py-2.5 text-[13.5px] font-bold text-white shadow-primary",
+            "flex items-center gap-2.5 rounded-[14px] bg-primary px-4 py-3 text-[13.5px] font-bold text-white shadow-primary",
             !ready && "cursor-not-allowed opacity-45",
           )}
         >
@@ -297,7 +297,7 @@ export function CreatePlaylistDialog({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-[14px] px-3 py-2.5 text-[13.5px] font-bold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
+          className="rounded-[14px] px-3.5 py-3 text-[13.5px] font-bold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
         >
           {t("ui.cancel")}
         </button>
@@ -306,7 +306,7 @@ export function CreatePlaylistDialog({
           <button
             type="button"
             onClick={discard}
-            className="ms-auto flex items-center gap-1.5 rounded-[14px] px-2.5 py-2.5 text-[13.5px] font-bold text-ink-faint transition-colors hover:bg-subtle hover:text-primary-deep"
+            className="ms-auto flex items-center gap-2 rounded-[14px] px-3 py-3 text-[13.5px] font-bold text-ink-faint transition-colors hover:bg-subtle hover:text-primary-deep"
           >
             <Icon name="close" size={14} strokeWidth={2.2} />
             {t("playlist.delete")}
@@ -341,12 +341,12 @@ export function AddToPlaylistDialog({
         <Icon name="folderPlus" size={20} strokeWidth={2} />
       </span>
 
-      <h2 className="font-display mt-3 text-[17.5px] font-bold leading-snug text-ink">
+      <h2 className="font-display mt-3.5 text-[17.5px] font-bold leading-snug text-ink">
         {track ? t("playlist.addTitle", { title: track.title }) : t("playlist.add")}
       </h2>
 
       {mine.length ? (
-        <div className="scroll-slim mt-3.5 flex max-h-[300px] flex-col gap-1 overflow-y-auto pe-0.5">
+        <div className="scroll-slim mt-3.5 flex max-h-[300px] flex-col gap-1.5 overflow-y-auto pe-0.5">
           {mine.map((list) => {
             const has = !!track && contains(list.id, track.id);
             return (
@@ -359,7 +359,7 @@ export function AddToPlaylistDialog({
                   notify(added ? t("playlist.added", { name: list.name }) : t("playlist.already", { name: list.name }), added ? "primary" : "mint");
                   onClose();
                 }}
-                className="flex items-center gap-2.5 rounded-[14px] p-1.5 pe-2.5 text-start transition-colors hover:bg-subtle"
+                className="flex items-center gap-3 rounded-[14px] p-2 pe-2.5 text-start transition-colors hover:bg-subtle"
               >
                 <span className="size-[40px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
                   <Photo src={coverPhoto(list.cover)} alt="" />
@@ -383,19 +383,19 @@ export function AddToPlaylistDialog({
           })}
         </div>
       ) : (
-        <div className="mt-3.5 rounded-[16px] bg-subtle px-3.5 py-3.5">
+        <div className="mt-3.5 rounded-[16px] bg-subtle px-4 py-3.5">
           <p className="text-[13.5px] font-bold text-ink">{t("playlist.noLists")}</p>
-          <p className="mt-1 text-[12.5px] leading-relaxed text-ink-muted">{t("playlist.noListsBody")}</p>
+          <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-muted">{t("playlist.noListsBody")}</p>
         </div>
       )}
 
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-4 flex items-center gap-2.5">
         <motion.button
           whileHover={{ y: -1.5 }}
           whileTap={{ scale: 0.97 }}
           transition={spring}
           onClick={onNewPlaylist}
-          className="flex items-center gap-2 rounded-[14px] bg-primary px-3.5 py-2.5 text-[13.5px] font-bold text-white shadow-primary"
+          className="flex items-center gap-2.5 rounded-[14px] bg-primary px-4 py-3 text-[13.5px] font-bold text-white shadow-primary"
         >
           <Icon name="plus" size={15} strokeWidth={2.5} />
           {t("playlist.new")}
@@ -403,7 +403,7 @@ export function AddToPlaylistDialog({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-[14px] px-3 py-2.5 text-[13.5px] font-bold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
+          className="rounded-[14px] px-3.5 py-3 text-[13.5px] font-bold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
         >
           {t("ui.close")}
         </button>

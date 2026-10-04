@@ -26,7 +26,7 @@ export function ContributionsModal({ open, onClose }: { open: boolean; onClose: 
 
   return (
     <Modal open={open} onClose={onClose} width={430}>
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         <span className="flex size-10 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
           <Icon name="medal" size={19} strokeWidth={2.1} />
         </span>
@@ -41,7 +41,7 @@ export function ContributionsModal({ open, onClose }: { open: boolean; onClose: 
       </div>
 
       {/* points */}
-      <div className="mt-3 flex items-center gap-3 rounded-panel bg-primary-faint/70 px-3.5 py-3">
+      <div className="mt-3.5 flex items-center gap-3.5 rounded-panel bg-primary-faint/70 px-4 py-3.5">
         <span className="flex size-9 items-center justify-center rounded-full bg-primary text-white shadow-primary">
           <Icon name="star" size={17} strokeWidth={2.1} />
         </span>
@@ -53,15 +53,15 @@ export function ContributionsModal({ open, onClose }: { open: boolean; onClose: 
             {points.toLocaleString(locale)}
           </span>
         </span>
-        <span className="ms-auto shrink-0 rounded-full bg-surface px-2.5 py-1 text-[12px] font-bold text-primary-deep ring-1 ring-primary/15">
+        <span className="ms-auto shrink-0 rounded-full bg-surface px-3 py-1.5 text-[12px] font-bold text-primary-deep ring-1 ring-primary/15">
           {t("contrib.reward", { n: LYRIC_REWARD })}
         </span>
       </div>
 
       {/* sheets */}
-      <div className="scroll-slim mt-3 max-h-[264px] overflow-y-auto pe-0.5">
+      <div className="scroll-slim mt-3.5 max-h-[264px] overflow-y-auto pe-0.5">
         {submissions.length === 0 ? (
-          <p className="rounded-panel bg-subtle px-3 py-5 text-center text-[12.5px] leading-relaxed text-ink-muted">
+          <p className="rounded-panel bg-subtle px-3.5 py-5 text-center text-[12.5px] leading-relaxed text-ink-muted">
             {t("contrib.empty")}
           </p>
         ) : (
@@ -81,16 +81,16 @@ export function ContributionsModal({ open, onClose }: { open: boolean; onClose: 
             );
 
             return (
-              <div key={s.id} className="mb-1.5 rounded-panel bg-surface px-3 py-2.5 ring-1 ring-line">
-                <div className="flex items-center gap-2">
+              <div key={s.id} className="mb-2 rounded-panel bg-surface px-3.5 py-3 ring-1 ring-line">
+                <div className="flex items-center gap-2.5">
                   <span className="min-w-0 truncate text-[13.5px] font-bold text-ink">{s.trackTitle}</span>
-                  <span className={cn("ms-auto shrink-0 rounded-full px-2 py-0.5 text-[11.5px] font-extrabold", tone)}>
+                  <span className={cn("ms-auto shrink-0 rounded-full px-2.5 py-1 text-[12px] font-extrabold", tone)}>
                     {label}
                   </span>
                 </div>
 
-                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-semibold text-ink-muted">
-                  <span className="rounded-full bg-subtle px-2 py-0.5">{s.language}</span>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-semibold text-ink-muted">
+                  <span className="rounded-full bg-subtle px-2.5 py-1">{s.language}</span>
                   <span>{t("contrib.lines", { n: s.lines })}</span>
                   <span className="text-ink-faint">· {s.sentAt}</span>
                   {s.status === "approved" && (
@@ -99,12 +99,12 @@ export function ContributionsModal({ open, onClose }: { open: boolean; onClose: 
                 </div>
 
                 {s.status === "pending" && (
-                  <div className="mt-2 flex items-center gap-2 rounded-[14px] border border-dashed border-line-strong px-2.5 py-2">
-                    <span className="flex min-w-0 items-center gap-1.5 text-[11.5px] font-bold uppercase tracking-wider text-ink-faint">
+                  <div className="mt-2.5 flex items-center gap-2.5 rounded-[14px] border border-dashed border-line-strong px-3 py-2.5">
+                    <span className="flex min-w-0 items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
                       <Icon name="lock" size={11.5} />
                       {t("contrib.moderatorView")}
                     </span>
-                    <span className="ms-auto flex shrink-0 items-center gap-1.5">
+                    <span className="ms-auto flex shrink-0 items-center gap-2">
                       <motion.button
                         whileHover={{ y: -1 }}
                         whileTap={{ scale: 0.96 }}
@@ -113,7 +113,7 @@ export function ContributionsModal({ open, onClose }: { open: boolean; onClose: 
                           approve(s.id);
                           notify(t("contrib.approvedToast", { n: LYRIC_REWARD }), "mint");
                         }}
-                        className="flex items-center gap-1 rounded-full bg-primary px-2.5 py-1.5 text-[12px] font-bold text-white shadow-primary"
+                        className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-[12px] font-bold text-white shadow-primary"
                       >
                         <Icon name="check" size={12} strokeWidth={2.8} />
                         {t("contrib.approve")}
@@ -123,7 +123,7 @@ export function ContributionsModal({ open, onClose }: { open: boolean; onClose: 
                           reject(s.id);
                           notify(t("contrib.returnedToast"), "teal");
                         }}
-                        className="rounded-full px-2 py-1.5 text-[12px] font-bold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
+                        className="rounded-full px-2.5 py-2 text-[12px] font-bold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
                       >
                         {t("contrib.sendBack")}
                       </button>
@@ -136,7 +136,7 @@ export function ContributionsModal({ open, onClose }: { open: boolean; onClose: 
         )}
       </div>
 
-      <p className="mt-2.5 text-[11.5px] leading-relaxed text-ink-faint">
+      <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">
         {t("contrib.footnote")}
       </p>
 
@@ -145,7 +145,7 @@ export function ContributionsModal({ open, onClose }: { open: boolean; onClose: 
         whileTap={{ scale: 0.97 }}
         transition={spring}
         onClick={onClose}
-        className="mt-3 rounded-[14px] bg-primary px-3.5 py-2.5 text-[13.5px] font-bold text-white shadow-primary"
+        className="mt-3.5 rounded-[14px] bg-primary px-4 py-3 text-[13.5px] font-bold text-white shadow-primary"
       >
         {t("contrib.done")}
       </motion.button>

@@ -49,7 +49,7 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4, delay: index * 0.04 }}
-      className="group flex items-center gap-2.5 rounded-[14px] border border-line/80 bg-surface px-2.5 py-2 transition-colors hover:border-primary/25 hover:bg-primary-faint/50"
+      className="group flex items-center gap-3 rounded-[16px] border border-line/80 bg-surface px-3 py-2.5 transition-colors hover:border-primary/25 hover:bg-primary-faint/50"
     >
       {/* rank */}
       <span
@@ -61,7 +61,7 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
         {rank}
       </span>
 
-      <span className="relative size-[38px] shrink-0 overflow-hidden rounded-[11px] shadow-xs">
+      <span className="relative size-[40px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
         <Cover src={row.photo} seed={row.seed} className="h-full w-full" />
         <span
           onClick={(e) => {
@@ -84,10 +84,10 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
 
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[14.5px] font-bold text-ink">{row.title}</span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-muted">
+        <span className="mt-1 flex items-center gap-1.5 text-[12.5px] text-ink-muted">
           <span className="font-semibold text-ink-body">{row.artist}</span>
           <span className="text-ink-faint">·</span>
-          <span className="flex items-center gap-0.5 text-teal-deep">
+          <span className="flex items-center gap-1 text-teal-deep">
             <Icon name="trend" size={12.5} strokeWidth={2} />+{row.delta}%
           </span>
         </span>
@@ -152,7 +152,7 @@ export function TrendingTracks() {
       hint={t("shelf.hintFires")}
       action={
         <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-0.5 rounded-full bg-subtle p-0.5">
+          <div className="flex items-center gap-1 rounded-full bg-subtle p-0.5">
             {([
               { id: "day", label: "24h" },
               { id: "week", label: "Week" },
@@ -161,7 +161,7 @@ export function TrendingTracks() {
                 key={r.id}
                 onClick={() => setRange(r.id)}
                 className={cn(
-                  "relative rounded-full px-2.5 py-1 text-[13px] font-semibold transition-colors",
+                  "relative rounded-full px-2.5 py-1.5 text-[13px] font-semibold transition-colors",
                   range === r.id ? "text-ink" : "text-ink-faint hover:text-ink-muted",
                 )}
               >
@@ -178,7 +178,7 @@ export function TrendingTracks() {
         </div>
       }
     >
-      <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-2">
         {rows.map((row, i) => (
           <TrendingRow key={row.id} row={row} rank={i + 1} index={i} />
         ))}

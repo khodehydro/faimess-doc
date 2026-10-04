@@ -134,7 +134,7 @@ export function AccountCard() {
           animate={{ width: focused || query ? 330 : 268 }}
           transition={spring}
           className={cn(
-            "flex items-center gap-2 rounded-full bg-subtle px-3.5 py-2.5 transition-colors",
+            "flex items-center gap-2.5 rounded-full bg-subtle px-4 py-2.5 transition-colors",
             focused || searchOpen
               ? "bg-primary-faint ring-1 ring-primary/25"
               : "ring-1 ring-transparent hover:ring-line",
@@ -173,16 +173,16 @@ export function AccountCard() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.98 }}
               transition={{ duration: 0.22, ease: EASE }}
-              className="absolute start-0 top-[calc(100%+12px)] z-40 w-[336px] overflow-hidden rounded-panel border border-line bg-surface p-1.5 shadow-float"
+              className="absolute start-0 top-[calc(100%+12px)] z-40 w-[336px] overflow-hidden rounded-panel border border-line bg-surface p-2.5 shadow-float"
             >
-              <p className="px-2.5 py-1.5 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
+              <p className="px-3 py-2 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
                 {query ? t("account.results") : t("account.quickJump")}
               </p>
               {(query ? results : quick).map((r) => (
                 <button
                   key={r.id}
                   onClick={() => go(r)}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-start transition-colors hover:bg-subtle"
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start transition-colors hover:bg-subtle"
                 >
                   <span className="flex size-7 items-center justify-center rounded-full bg-subtle text-ink-body">
                     <Icon name={r.icon} size={15} />
@@ -190,7 +190,7 @@ export function AccountCard() {
                   <span className="text-[14px] font-semibold text-ink">
                     {r.labelKey ? label(r.labelKey, r.label) : r.label}
                   </span>
-                  <span className="ms-auto rounded-full bg-muted px-2 py-0.5 text-[12px] font-semibold text-ink-muted">
+                  <span className="ms-auto rounded-full bg-muted px-2.5 py-1 text-[12px] font-semibold text-ink-muted">
                     {t(`account.kind.${r.kind}`)}
                   </span>
                 </button>
@@ -222,9 +222,9 @@ export function AccountCard() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.98 }}
               transition={{ duration: 0.22, ease: EASE }}
-              className="absolute end-0 top-[calc(100%+12px)] z-40 w-[286px] rounded-panel border border-line bg-surface p-2 shadow-float"
+              className="absolute end-0 top-[calc(100%+12px)] z-40 w-[292px] rounded-panel border border-line bg-surface p-2.5 shadow-float"
             >
-              <p className="px-2 py-1.5 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
+              <p className="px-2.5 py-1.5 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
                 {t("account.notifications")}
               </p>
               {notifications.map((n, i) => (
@@ -237,7 +237,7 @@ export function AccountCard() {
                     setBellOpen(false);
                     notify(n.title, n.tone);
                   }}
-                  className="flex w-full items-start gap-2.5 rounded-xl px-2 py-2 text-start transition-colors hover:bg-subtle"
+                  className="flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-start transition-colors hover:bg-subtle"
                 >
                   <span
                     className={cn(
@@ -350,8 +350,8 @@ export function ProfileMenuContent({
   ).length;
 
   return (
-    <div className="w-[248px] rounded-panel border border-line bg-surface p-1.5 shadow-float">
-      <div className="flex items-center gap-2.5 px-2 py-2">
+    <div className="w-[252px] rounded-panel border border-line bg-surface p-2.5 shadow-float">
+      <div className="flex items-center gap-3 px-2.5 py-2.5">
         <Avatar src={me.photo} seed={0} size={34} />
         <span className="min-w-0">
           <span className="block truncate text-[14px] font-bold text-ink">
@@ -366,14 +366,14 @@ export function ProfileMenuContent({
         onClick={onPoints}
         aria-label={t("points.open")}
         title={t("points.open")}
-        className="mx-1 mb-1 flex w-[calc(100%-8px)] items-center gap-2 rounded-[13px] bg-primary-faint/70 px-2.5 py-2 text-start transition-colors hover:bg-primary-faint"
+        className="mx-1.5 mb-1.5 flex w-[calc(100%-12px)] items-center gap-2.5 rounded-[13px] bg-primary-faint/70 px-3 py-2.5 text-start transition-colors hover:bg-primary-faint"
       >
         <Icon name="star" size={14} className="shrink-0 text-primary-deep" />
         <span className="text-[12.5px] font-bold text-ink">
           {t("account.points", { n: points.toLocaleString(locale) })}
         </span>
         {pendingSheets > 0 && (
-          <span className="ms-auto rounded-full bg-primary px-1.5 py-[1px] text-[11px] font-extrabold text-white">
+          <span className="ms-auto rounded-full bg-primary px-2 py-[1px] text-[12px] font-extrabold text-white">
             {pendingSheets}
           </span>
         )}
@@ -387,12 +387,12 @@ export function ProfileMenuContent({
       </button>
 
       {/* preferences — language + appearance, both kept in the browser */}
-      <div className="mt-1.5 rounded-[13px] bg-subtle px-2 py-2">
-        <p className="flex items-center gap-1.5 px-0.5 pb-1.5 text-[11.5px] font-bold uppercase tracking-wider text-ink-faint">
+      <div className="mt-2 rounded-[13px] bg-subtle px-2.5 py-2.5">
+        <p className="flex items-center gap-2 px-1 pb-2 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
           <Icon name="globe" size={12} strokeWidth={2} />
           {t("pref.language")}
         </p>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {LANGS.map((option) => (
             <button
               key={option.id}
@@ -400,7 +400,7 @@ export function ProfileMenuContent({
               aria-pressed={lang === option.id}
               title={option.label}
               className={cn(
-                "flex-1 rounded-[10px] px-1 py-1.5 text-[12.5px] font-bold transition-colors",
+                "flex-1 rounded-[10px] px-2 py-2 text-[12.5px] font-bold transition-colors",
                 lang === option.id
                   ? "bg-primary text-white shadow-primary"
                   : "bg-surface text-ink-muted hover:text-ink",
@@ -411,7 +411,7 @@ export function ProfileMenuContent({
           ))}
         </div>
 
-        <p className="flex items-center gap-1.5 px-0.5 pb-1.5 pt-2.5 text-[11.5px] font-bold uppercase tracking-wider text-ink-faint">
+        <p className="flex items-center gap-2 px-1 pb-2 pt-3 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
           <Icon
             name={theme === "dark" ? "moon" : "sun"}
             size={12}
@@ -419,14 +419,14 @@ export function ProfileMenuContent({
           />
           {t("pref.appearance")}
         </p>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {THEMES.map((option) => (
             <button
               key={option.id}
               onClick={() => setTheme(option.id)}
               aria-pressed={theme === option.id}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-[10px] px-1 py-1.5 text-[12.5px] font-bold transition-colors",
+                "flex flex-1 items-center justify-center gap-2 rounded-[10px] px-2 py-2 text-[12.5px] font-bold transition-colors",
                 theme === option.id
                   ? "bg-primary text-white shadow-primary"
                   : "bg-surface text-ink-muted hover:text-ink",
@@ -438,7 +438,7 @@ export function ProfileMenuContent({
           ))}
         </div>
 
-        <p className="px-0.5 pt-1.5 text-[11px] leading-relaxed text-ink-faint">
+        <p className="px-0.5 pt-1.5 text-[12px] leading-relaxed text-ink-faint">
           {lang === "fa" ? t("pref.persianNote") : t("pref.note")}
         </p>
       </div>
@@ -461,7 +461,7 @@ export function ProfileMenuContent({
             if (r.contributions) onContributions();
             else notify(t(r.labelKey));
           }}
-          className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-start text-[14px] font-semibold text-ink-body transition-colors hover:bg-subtle hover:text-ink"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-[14px] font-semibold text-ink-body transition-colors hover:bg-subtle hover:text-ink"
         >
           <Icon name={r.icon} size={15} />
           {t(r.labelKey)}

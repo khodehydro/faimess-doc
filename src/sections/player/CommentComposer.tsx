@@ -36,7 +36,7 @@ function Input({
   const canSend = value.trim().length > 0;
 
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-1 rounded-full bg-subtle py-1 ps-3 pe-1 ring-1 ring-transparent transition-colors focus-within:ring-primary/25">
+    <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-full bg-subtle py-1.5 ps-3 pe-1.5 ring-1 ring-transparent transition-colors focus-within:ring-primary/25">
       <input
         value={value}
         autoFocus={autoFocus}
@@ -55,7 +55,7 @@ function Input({
         className="min-w-0 flex-1 bg-transparent text-[12.5px] text-ink placeholder:text-ink-faint focus:outline-none"
       />
       {value.length > LIMIT - 40 && (
-        <span className="shrink-0 text-[10.5px] font-bold tabular-nums text-ink-faint">
+        <span className="shrink-0 text-[12px] font-bold tabular-nums text-ink-faint">
           {LIMIT - value.length}
         </span>
       )}
@@ -100,7 +100,7 @@ export function CommentComposer({
   };
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex items-center gap-2.5", className)}>
       <Avatar src={me.photo} size={26} badge={me.badge} />
       <Input value={text} onChange={setText} onSend={send} placeholder={t("comments.placeholder")} />
     </div>
@@ -132,7 +132,7 @@ export function ReplyComposer({
   };
 
   return (
-    <div className="mt-2 flex items-center gap-2">
+    <div className="mt-2.5 flex items-center gap-2.5">
       <Avatar src={me.photo} size={24} badge={me.badge} />
       <Input
         value={text}
@@ -144,7 +144,7 @@ export function ReplyComposer({
       />
       <button
         onClick={onDone}
-        className="shrink-0 text-[11.5px] font-bold text-ink-faint transition-colors hover:text-ink"
+        className="shrink-0 text-[12px] font-bold text-ink-faint transition-colors hover:text-ink"
       >
         {t("comments.cancel")}
       </button>

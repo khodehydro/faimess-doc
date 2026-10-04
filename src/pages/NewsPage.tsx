@@ -40,15 +40,15 @@ export function NewsPage() {
   const items = tag === "All" ? newsItems : newsItems.filter((n) => n.tag === tag);
 
   return (
-    <SurfaceCard dir={dir} className="p-5">
-      <div className="flex items-center gap-3 pb-3.5">
+    <SurfaceCard dir={dir} className="p-6">
+      <div className="flex items-center gap-4 pb-5">
         <div className="min-w-0">
           <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.018em] text-ink">
             {t("news.title")}
           </h2>
-          <p className="mt-0.5 text-[13.5px] text-ink-muted">{t("news.subtitle")}</p>
+          <p className="mt-1.5 text-[13.5px] text-ink-muted">{t("news.subtitle")}</p>
         </div>
-        <div className="ms-auto flex items-center gap-1.5">
+        <div className="ms-auto flex items-center gap-2">
           {TAGS.map((tagName) => (
             <PillButton key={tagName} active={tag === tagName} onClick={() => setTag(tagName)}>
               {t(TAG_KEY[tagName] ?? "news.tag.all")}
@@ -67,7 +67,7 @@ export function NewsPage() {
           initial="initial"
           animate="animate"
           exit={{ opacity: 0, y: -8, transition: { duration: 0.18, ease: EASE } }}
-          className="grid min-h-0 flex-1 grid-cols-1 content-start gap-3.5 lg:grid-cols-3"
+          className="grid min-h-0 flex-1 grid-cols-1 content-start gap-4 lg:grid-cols-3"
         >
           {items.map((item, i) => (
             <motion.div
@@ -90,13 +90,13 @@ export function NewsPage() {
             >
               <span className={cn("relative block overflow-hidden", i === 0 ? "h-[150px] lg:h-auto lg:w-[380px]" : "h-[124px]")}>
                 <Thumb scene={item.scene} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
-                <span className={cn("absolute start-3 top-3 rounded-full px-2 py-[3px] text-[12px] font-bold uppercase tracking-wide backdrop-blur", TAG_TONE[item.tag])}>
+                <span className={cn("absolute start-3 top-3 rounded-full px-2.5 py-[3px] text-[12px] font-bold uppercase tracking-wide backdrop-blur", TAG_TONE[item.tag])}>
                   {item.tag}
                 </span>
               </span>
-              <span className="flex min-w-0 flex-1 flex-col p-3.5">
+              <span className="flex min-w-0 flex-1 flex-col p-4">
                 <span className="font-display text-[16px] font-bold leading-snug tracking-[-0.008em] text-ink">{item.title}</span>
-                <span className="mt-1.5 line-clamp-2 text-[13.5px] leading-relaxed text-ink-muted">{item.excerpt}</span>
+                <span className="mt-2 line-clamp-2 text-[13.5px] leading-relaxed text-ink-muted">{item.excerpt}</span>
                 <span className="mt-auto flex items-center gap-2 pt-3 text-[12.5px] text-ink-faint">
                   <Icon name="news" size={12.5} />
                   {item.source}

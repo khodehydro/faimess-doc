@@ -156,6 +156,22 @@
   --font-fa: "Vazirmatn", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
     "Segoe UI", Tahoma, sans-serif;
 
+  /* ------------------------------------------------------------------ *
+   *  Density — the one knob behind how much air the product gets.
+   *
+   *  Tailwind multiplies every numeric spacing/size utility (p-, m-, gap-,
+   *  size-, w-, h-, inset-) by this token, so 0.28rem instead of the 0.25rem
+   *  default lifts every padding, gap and icon by 12% **everywhere at once**
+   *  — no class has to be touched and no surface can fall out of step.
+   *
+   *  It was raised while auditing the two tightest budgets in the app: the
+   *  381px player column (its transport row still fits with room to spare)
+   *  and the 1580×889 art-board (which only ever scales). Anything that
+   *  must stay a fixed size is authored in `px` (e.g. `size-[34px]`), so it
+   *  deliberately ignores this knob. See docs/architecture.md §۱۵.
+   * ------------------------------------------------------------------ */
+  --spacing: 0.28rem;
+
   /* surfaces */
   --color-canvas: #eaeaec;
   --color-canvas-deep: #e2e3e7;

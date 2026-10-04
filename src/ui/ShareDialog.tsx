@@ -63,12 +63,12 @@ export function ShareDialog({
         <Icon name="share" size={19} strokeWidth={2} />
       </span>
 
-      <h2 className="font-display mt-3 text-[17.5px] font-bold leading-snug text-ink">
+      <h2 className="font-display mt-3.5 text-[17.5px] font-bold leading-snug text-ink">
         {t("share.title", { title: track.title })}
       </h2>
-      <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-muted">{t("share.body")}</p>
+      <p className="mt-2 text-[13.5px] leading-relaxed text-ink-muted">{t("share.body")}</p>
 
-      <div className="mt-3.5 flex items-center gap-3 rounded-[16px] bg-subtle p-2.5">
+      <div className="mt-3.5 flex items-center gap-3.5 rounded-[16px] bg-subtle p-3">
         <span className="size-[46px] shrink-0 overflow-hidden rounded-[13px] shadow-xs">
           <Photo src={track.photo} alt="" />
         </span>
@@ -83,7 +83,7 @@ export function ShareDialog({
       {/* the link itself — always readable, always selectable */}
       <p
         dir="ltr"
-        className="mt-2.5 truncate rounded-[12px] bg-subtle px-3 py-2 text-[12.5px] font-semibold text-ink-muted"
+        className="mt-3 truncate rounded-[12px] bg-subtle px-3.5 py-2.5 text-[12.5px] font-semibold text-ink-muted"
       >
         {trackUrlLabel(track.id)}
       </p>
@@ -93,20 +93,20 @@ export function ShareDialog({
         whileTap={{ scale: 0.97 }}
         transition={spring}
         onClick={copy}
-        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-[14px] bg-primary px-3.5 py-2.5 text-[13.5px] font-bold text-white shadow-primary"
+        className="mt-3 flex w-full items-center justify-center gap-2.5 rounded-[14px] bg-primary px-4 py-3 text-[13.5px] font-bold text-white shadow-primary"
       >
         <Icon name={copied ? "check" : "copy"} size={15} strokeWidth={2.2} />
         {copied ? t("share.copied") : t("share.copyLink")}
       </motion.button>
 
       <p className="mt-4 text-[12px] font-bold uppercase tracking-wider text-ink-faint">{t("share.via")}</p>
-      <div className="mt-2 flex flex-wrap gap-1.5">
+      <div className="mt-2.5 flex flex-wrap gap-2">
         {SHARE_TARGETS.map((target) => (
           <button
             key={target.id}
             type="button"
             onClick={() => send(target.href(url, blurb))}
-            className="flex items-center gap-1.5 rounded-full border border-line/80 px-3 py-2 text-[12.5px] font-bold text-ink-body transition-colors hover:border-primary/30 hover:bg-primary-faint hover:text-primary-deep"
+            className="flex items-center gap-2 rounded-full border border-line/80 px-3.5 py-2.5 text-[12.5px] font-bold text-ink-body transition-colors hover:border-primary/30 hover:bg-primary-faint hover:text-primary-deep"
           >
             {t(target.labelKey)}
             {/* the "opens elsewhere" arrow follows the text, so it mirrors in RTL */}

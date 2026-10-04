@@ -5,7 +5,7 @@ import { usePreferences } from "../app/PreferencesContext";
 export function AlbumsPage() {
   const { dir } = usePreferences();
   return (
-    <SurfaceCard dir={dir} className="p-5">
+    <SurfaceCard dir={dir} className="p-6">
       <SectionSlot id="collection" params={{ kind: "albums" }} />
     </SurfaceCard>
   );

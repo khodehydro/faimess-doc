@@ -38,11 +38,11 @@ function TrackRow({
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4, delay: index * 0.04 }}
       className={cn(
-        "group flex items-center gap-3 rounded-[14px] border bg-surface px-2.5 py-2 transition-colors",
+        "group flex items-center gap-3 rounded-[16px] border bg-surface px-3 py-2.5 transition-colors",
         mine ? "border-primary/35 bg-primary-faint/60" : "border-line/80 hover:border-primary/25 hover:bg-primary-faint/60",
       )}
     >
-      <span className="relative size-[42px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
+      <span className="relative size-[44px] shrink-0 overflow-hidden rounded-[13px] shadow-xs">
         <Cover src={track.photo} seed={track.seed} className="h-full w-full" />
         <span
           onClick={(e) => {
@@ -69,12 +69,12 @@ function TrackRow({
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[14.5px] font-bold text-ink">{track.title}</span>
           {track.isNew && (
-            <span className="shrink-0 rounded-full bg-primary px-1.5 py-[1px] text-[12px] font-bold uppercase tracking-wide text-white">
+            <span className="shrink-0 rounded-full bg-primary px-2 py-[1px] text-[12px] font-bold uppercase tracking-wide text-white">
               {t("shelf.new")}
             </span>
           )}
         </span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-muted">
+        <span className="mt-1 flex items-center gap-1.5 text-[12.5px] text-ink-muted">
           <span className="font-semibold text-ink-body">{track.artist}</span>
           <span className="text-ink-faint">·</span>
           <span>{track.ago}</span>
@@ -113,7 +113,7 @@ export function NewestTracks() {
         </PillButton>
       }
     >
-      <div className={cn("grid grid-cols-1 gap-2 xl:grid-cols-2")}>
+      <div className={cn("grid grid-cols-1 gap-2.5 xl:grid-cols-2")}>
         {newestTracks.map((t, i) => (
           <TrackRow key={t.id} track={t} index={i} />
         ))}

@@ -42,7 +42,7 @@ export function FollowedArtists() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.03, ease: [0.22, 1, 0.36, 1] }}
-            className="group flex w-[96px] shrink-0 snap-start flex-col items-center gap-1.5 pt-0.5"
+            className="group flex w-[102px] shrink-0 snap-start flex-col items-center gap-2 pt-1.5"
           >
             <motion.button
               whileHover={{ y: -4 }}
@@ -53,7 +53,7 @@ export function FollowedArtists() {
               aria-label={`Open ${artist.name}`}
             >
               {/* circular cover */}
-              <span className="relative block size-[70px] overflow-hidden rounded-full ring-[2.5px] ring-surface shadow-card">
+              <span className="relative block size-[72px] overflow-hidden rounded-full ring-[2.5px] ring-surface shadow-card">
                 <Cover src={artist.photo} seed={artist.seed} className="h-full w-full" />
               </span>
 
@@ -78,7 +78,7 @@ export function FollowedArtists() {
               />
             </motion.button>
 
-            <span className="flex max-w-full items-center gap-0.5">
+            <span className="flex max-w-full items-center gap-1">
               <span className="truncate text-[13px] font-bold leading-tight text-ink">{artist.name}</span>
               {artist.verified && (
                 <span className="shrink-0 text-primary" title={t("shelf.verifiedArtist")}>
@@ -86,7 +86,7 @@ export function FollowedArtists() {
                 </span>
               )}
             </span>
-            <span className="text-[12px] font-medium leading-none text-ink-faint">{artist.kind}</span>
+            <span className="text-[12px] font-medium text-ink-faint">{artist.kind}</span>
           </motion.div>
         ))}
       </Row>

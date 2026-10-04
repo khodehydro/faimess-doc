@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+  type CSSProperties,
+} from "react";
 import { motion } from "framer-motion";
 import { Icon, type IconName } from "../../ui/Icon";
 import { FollowedArtists } from "./FollowedArtists";
@@ -7,6 +14,7 @@ import { TrendingTracks } from "./TrendingTracks";
 import { NewsShelf } from "./NewsShelf";
 import { NewAlbums } from "./NewAlbums";
 import { ActiveUsers } from "./ActiveUsers";
+import { SHELF_STICKY_VAR } from "./Shelf";
 import { cn } from "../../lib/cn";
 import { useT } from "../../app/PreferencesContext";
 import { spring } from "../../lib/motion";
@@ -40,21 +48,40 @@ export const FEED_SHELVES: ShelfEntry[] = [
   { id: "feed-users", label: "feed.fans", icon: "activity", Component: ActiveUsers },
 ];
 
-/** height of the chip strip — shelf headers stick right under it */
+/**
+ * Where the chip strip sits before it has measured itself: shelf headers
+ * stick under it. The strip publishes its real height as
+ * `SHELF_STICKY_VAR`, so padding, font or chip changes can never leave a
+ * seam (or hide the top of a shelf header) behind.
+ */
 export const CHIP_STRIP_HEIGHT = 48;
 
 export function FeedSection() {
   const t = useT();
   const rootRef = useRef<HTMLElement>(null);
+  const stripRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const [active, setActive] = useState(FEED_SHELVES[0].id);
+  const [stripHeight, setStripHeight] = useState(CHIP_STRIP_HEIGHT);
+
+  /* the strip is measured, not guessed: its height is what every shelf
+     header sticks under, and the two must agree to the pixel */
+  useEffect(() => {
+    const node = stripRef.current;
+    if (!node) return;
+    const measure = () => setStripHeight(Math.round(node.getBoundingClientRect().height));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   /* track which shelf is under the strip, whichever ancestor scrolls */
   useEffect(() => {
     const onScroll = () => {
       const root = rootRef.current;
       if (!root) return;
-      const line = root.getBoundingClientRect().top + CHIP_STRIP_HEIGHT + 24;
+      const line = root.getBoundingClientRect().top + stripHeight + 20;
       let current = FEED_SHELVES[0].id;
       for (const shelf of FEED_SHELVES) {
         const node = sectionRefs.current[shelf.id];
@@ -70,7 +97,7 @@ export function FeedSection() {
       window.removeEventListener("scroll", onScroll, { capture: true });
       window.removeEventListener("resize", onScroll);
     };
-  }, []);
+  }, [stripHeight]);
 
   const jumpTo = (id: string) => {
     const node = sectionRefs.current[id];
@@ -82,43 +109,53 @@ export function FeedSection() {
   const chips = useMemo(() => FEED_SHELVES, []);
 
   return (
-    <section ref={rootRef} className="relative w-full">
-      {/* quick-jump strip — sticks to the top of the page scroller */}
-      <div className="sticky top-0 z-30 flex items-center gap-1.5 border-b border-line/70 bg-surface/95 px-3.5 py-2.5 backdrop-blur-md">
-        {chips.map((shelf) => {
-          const isActive = active === shelf.id;
-          return (
-            <button
-              key={shelf.id}
-              onClick={() => jumpTo(shelf.id)}
-              className={cn(
-                "relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] font-semibold transition-colors",
-                isActive ? "text-white" : "text-ink-muted hover:text-ink",
-              )}
-            >
-              {isActive && (
-                <motion.span
-                  layoutId="feed-chip"
-                  transition={spring}
-                  className="absolute inset-0 rounded-full bg-primary shadow-primary"
-                />
-              )}
-              <span className="relative flex items-center gap-1.5">
-                <Icon name={shelf.icon} size={13.5} strokeWidth={isActive ? 2 : 1.7} />
-                {t(shelf.label)}
-              </span>
-            </button>
-          );
-        })}
+    <section
+      ref={rootRef}
+      className="relative w-full"
+      style={{ [SHELF_STICKY_VAR]: `${stripHeight}px` } as CSSProperties}
+    >
+      {/* quick-jump strip — sticks to the top of the page scroller, and
+          hands its measured height to the shelf headers below */}
+      <div
+        ref={stripRef}
+        className="sticky top-0 z-30 flex items-center gap-2 border-b border-line/70 bg-surface/95 px-4 py-3 backdrop-blur-md"
+      >
+        <div className="scroll-slim -my-1 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1">
+          {chips.map((shelf) => {
+            const isActive = active === shelf.id;
+            return (
+              <button
+                key={shelf.id}
+                onClick={() => jumpTo(shelf.id)}
+                className={cn(
+                  "relative flex items-center gap-2 rounded-full px-3 py-2 text-[13px] font-semibold transition-colors",
+                  isActive ? "text-white" : "text-ink-muted hover:text-ink",
+                )}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="feed-chip"
+                    transition={spring}
+                    className="absolute inset-0 rounded-full bg-primary shadow-primary"
+                  />
+                )}
+                <span className="relative flex items-center gap-2">
+                  <Icon name={shelf.icon} size={13.5} strokeWidth={isActive ? 2 : 1.7} />
+                  {t(shelf.label)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-        <span className="ms-auto flex items-center gap-1.5 text-[12px] font-medium text-ink-faint">
+        <span className="flex shrink-0 items-center gap-2 pe-1 text-[12px] font-medium text-ink-faint">
           <Icon name="waveform" size={14} />
           {t("feed.scrollMore")}
         </span>
       </div>
 
       {/* the shelves — full height, no inner scroller */}
-      <div className="px-3.5 pb-6 pt-1">
+      <div className="px-4 pb-7 pt-1.5">
         {chips.map((shelf, i) => (
           <div
             key={shelf.id}
@@ -127,7 +164,9 @@ export function FeedSection() {
             }}
           >
             <shelf.Component />
-            {i < chips.length - 1 && <span className="mb-1 block h-px w-full bg-line/80" />}
+            {i < chips.length - 1 && (
+              <span className="mt-1 mb-1.5 block h-px w-full bg-line/80" />
+            )}
           </div>
         ))}
       </div>

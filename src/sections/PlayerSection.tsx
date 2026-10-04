@@ -85,14 +85,14 @@ export function PlayerSection({
       />
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="flex shrink-0 items-center gap-2 px-3.5 pb-2 pt-3.5">
+        <header className="flex shrink-0 items-center gap-2.5 px-4 pb-2.5 pt-4">
           <span className="flex size-7 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
             <Icon name="waveform" size={15} strokeWidth={2.2} />
           </span>
           <span className="font-display text-[15px] font-bold text-ink">{t("player.title")}</span>
           <span className="ms-auto flex items-center gap-1.5">
             {track && (
-              <span className="flex items-center gap-1.5 rounded-full bg-subtle px-2 py-1 text-[12px] font-bold tabular-nums text-ink-muted">
+              <span className="flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1.5 text-[12px] font-bold tabular-nums text-ink-muted">
                 <Icon name="list" size={12} />
                 {QUEUE.findIndex((t) => t.id === track.id) + 1}/{QUEUE.length}
               </span>
@@ -207,7 +207,7 @@ function PlayerRail({
       aria-label={t("player.musicManagement")}
       className={cn("shrink-0 overflow-hidden", open && "border-e border-line")}
     >
-      <div className="flex h-full w-[46px] flex-col items-center gap-1 py-3">
+      <div className="flex h-full w-[48px] flex-col items-center gap-1.5 py-3.5">
       {items.map((item) => (
         <motion.button
           key={item.id}
@@ -253,9 +253,9 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
       transition={{ duration: 0.24, ease: EASE }}
       className="absolute inset-0 z-20 flex flex-col bg-surface"
     >
-      <header className="flex shrink-0 items-center gap-2 border-b border-line px-3.5 py-2.5">
+      <header className="flex shrink-0 items-center gap-2.5 border-b border-line px-4 py-3">
         <span className="text-[13.5px] font-bold text-ink">{t(PANEL_TITLE[panel])}</span>
-        <span className="rounded-full bg-subtle px-1.5 py-[1px] text-[11.5px] font-bold text-ink-muted">
+        <span className="rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold text-ink-muted">
           {panel === "playlists" ? playlists.length + mine.length : rows.length}
         </span>
         <button
@@ -267,9 +267,9 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
         </button>
       </header>
 
-      <div className="scroll-slim min-h-0 flex-1 overflow-y-auto px-2 py-2">
+      <div className="scroll-slim min-h-0 flex-1 overflow-y-auto px-2.5 py-2.5">
         {panel === "playlists" ? (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             {/* the listener's own lists first — they are the ones being used */}
             {mine.map((list) => {
               const lead = list.trackIds[0] ? trackById(list.trackIds[0]) : null;
@@ -284,7 +284,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
                     player.play(lead);
                     notify(t("player.playing", { artist: lead.artist, title: lead.title }));
                   }}
-                  className="group flex items-center gap-2.5 rounded-[12px] px-1.5 py-1.5 text-start transition-colors hover:bg-primary-faint"
+                  className="group flex items-center gap-3 rounded-[12px] px-2.5 py-2 text-start transition-colors hover:bg-primary-faint"
                 >
                   <span className="size-[34px] shrink-0 overflow-hidden rounded-[10px] shadow-xs">
                     <Photo src={coverPhoto(list.cover)} alt="" />
@@ -295,7 +295,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
                       {t("playlist.trackCount", { count: list.trackIds.length })}
                     </span>
                   </span>
-                  <span className="shrink-0 rounded-full bg-primary-faint px-1.5 py-[1px] text-[11px] font-bold text-primary-deep">
+                  <span className="shrink-0 rounded-full bg-primary-faint px-2 py-[1px] text-[12px] font-bold text-primary-deep">
                     {t("playlist.yours")}
                   </span>
                 </button>
@@ -304,7 +304,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
 
             <button
               onClick={() => setCreating(true)}
-              className="flex items-center gap-2.5 rounded-[12px] px-1.5 py-1.5 text-start transition-colors hover:bg-primary-faint"
+              className="flex items-center gap-3 rounded-[12px] px-2.5 py-2 text-start transition-colors hover:bg-primary-faint"
             >
               <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-dashed border-primary/40 bg-primary-faint/60 text-primary-deep">
                 <Icon name="plus" size={15} strokeWidth={2.4} />
@@ -312,7 +312,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
               <span className="text-[13px] font-bold text-primary-deep">{t("playlist.new")}</span>
             </button>
 
-            <p className="px-1.5 pb-0.5 pt-2 text-[11.5px] font-bold uppercase tracking-wider text-ink-faint">
+            <p className="px-2.5 pb-1.5 pt-2.5 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
               {t("playlist.curated")}
             </p>
 
@@ -324,7 +324,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
                   onClose();
                   notify(t("player.opening", { name: list.name }));
                 }}
-                className="group flex items-center gap-2.5 rounded-[12px] px-1.5 py-1.5 text-start transition-colors hover:bg-primary-faint"
+                className="group flex items-center gap-2.5 rounded-[12px] px-2 py-1.5 text-start transition-colors hover:bg-primary-faint"
               >
                 <span className="size-[34px] shrink-0 overflow-hidden rounded-[10px] shadow-xs">
                   <Photo src={list.photo} alt="" />
@@ -340,16 +340,16 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
                 </span>
               </button>
             ))}
-            <p className="px-1.5 pt-1 text-[12px] leading-relaxed text-ink-faint">
+            <p className="px-2 pt-1.5 text-[12px] leading-relaxed text-ink-faint">
               {t("player.ownsPlaylists")}
             </p>
           </div>
         ) : rows.length === 0 ? (
-          <p className="px-2 py-6 text-center text-[13px] leading-relaxed text-ink-faint">
+          <p className="px-2.5 py-6 text-center text-[13px] leading-relaxed text-ink-faint">
             {t("player.likedEmpty")}
           </p>
         ) : (
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-1.5">
             {rows.map((row, i) => {
               const mine = player.track?.id === row.id;
               return (
@@ -357,7 +357,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
                   key={row.id}
                   onClick={() => player.play(row)}
                   className={cn(
-                    "group flex items-center gap-2.5 rounded-[12px] px-1.5 py-1.5 text-start transition-colors",
+                    "group flex items-center gap-2.5 rounded-[12px] px-2 py-1.5 text-start transition-colors",
                     mine ? "bg-primary-faint" : "hover:bg-subtle",
                   )}
                 >
@@ -386,7 +386,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
               );
             })}
             {panel === "liked" && (
-              <p className="px-1.5 pt-1 text-[12px] leading-relaxed text-ink-faint">
+              <p className="px-2 pt-1.5 text-[12px] leading-relaxed text-ink-faint">
                 {t("player.sessionOnly")}
               </p>
             )}
@@ -410,7 +410,7 @@ function EmptyState({ onPick }: { onPick: (track: PlayerTrack) => void }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.3, ease: EASE }}
-      className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-5 text-center"
+      className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3.5 px-6 text-center"
     >
       <motion.span
         animate={{ rotate: [0, 16, -8, 14, 0] }}
@@ -443,7 +443,7 @@ function EmptyState({ onPick }: { onPick: (track: PlayerTrack) => void }) {
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.98 }}
             transition={spring}
-            className="group flex items-center gap-2.5 rounded-[14px] border border-line/80 bg-surface p-1.5 pe-3 text-start transition-colors hover:border-primary/25 hover:bg-primary-faint/50"
+            className="group flex items-center gap-2.5 rounded-[14px] border border-line/80 bg-surface p-2 pe-3 text-start transition-colors hover:border-primary/25 hover:bg-primary-faint/50"
           >
             <span className="size-[36px] shrink-0 overflow-hidden rounded-[11px] shadow-xs">
               <Photo src={pick.photo} alt="" />
@@ -493,7 +493,7 @@ function TrackPanel({
   };
 
   return (
-    <section className="relative flex shrink-0 flex-col items-center justify-center gap-1.5 px-3.5 py-3 lg:h-[40%] lg:min-h-0 lg:py-1">
+    <section className="relative flex shrink-0 flex-col items-center justify-center gap-1.5 px-3.5 py-3 lg:h-[40%] lg:min-h-0 lg:py-1.5">
       {/* cover */}
       <motion.div
         animate={{ scale: playing ? 1 : 0.97, opacity: playing ? 1 : 0.86 }}
@@ -521,9 +521,9 @@ function TrackPanel({
         >
           {track.title}
         </h3>
-        <p className="mt-0.5 truncate text-[12.5px] font-semibold text-ink-muted">
+        <p className="mt-1 truncate text-[12.5px] font-semibold text-ink-muted">
           {track.artist}
-          <span className="px-1.5 text-ink-faint">·</span>
+          <span className="px-2 text-ink-faint">·</span>
           {track.album}
         </p>
       </div>
@@ -565,7 +565,7 @@ function TrackPanel({
             transition={spring}
           />
         </div>
-        <div className="mt-0.5 flex items-center justify-between text-[12px] font-semibold tabular-nums text-ink-faint">
+        <div className="mt-1 flex items-center justify-between text-[12px] font-semibold tabular-nums text-ink-faint">
           <span>{mmss(position)}</span>
           <span>-{mmss(Math.max(0, duration - position))}</span>
         </div>
@@ -837,20 +837,20 @@ function LyricsPanel({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col border-t border-line">
-      <header className="flex shrink-0 items-center gap-1.5 px-3.5 py-2">
+      <header className="flex shrink-0 items-center gap-2 px-4 py-2.5">
         <span className="text-ink-faint">
           <Icon name="mic" size={13.5} />
         </span>
         <span className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">{t("lyrics.title")}</span>
-        <span className="ms-auto flex items-center gap-1">
-          <span className="rounded-full bg-subtle px-1.5 py-[1px] text-[11.5px] font-bold text-ink-muted">한국어</span>
-          <span className="rounded-full bg-subtle px-1.5 py-[1px] text-[11.5px] font-bold text-ink-muted">EN</span>
-          <span className="rounded-full bg-primary-soft px-1.5 py-[1px] text-[11.5px] font-bold text-primary-deep">فارسی</span>
+        <span className="ms-auto flex items-center gap-1.5">
+          <span className="rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold text-ink-muted">한국어</span>
+          <span className="rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold text-ink-muted">EN</span>
+          <span className="rounded-full bg-primary-soft px-2 py-[1px] text-[12px] font-bold text-primary-deep">فارسی</span>
         </span>
       </header>
 
       {by && (
-        <p className="mx-2.5 mb-1.5 flex items-center gap-1.5 rounded-panel bg-mint-soft/70 px-2.5 py-1.5 text-[12px] font-semibold text-teal-deep">
+        <p className="mx-3 mb-2 flex items-center gap-2 rounded-panel bg-mint-soft/70 px-3 py-2 text-[12px] font-semibold text-teal-deep">
           <Icon name="check" size={13} strokeWidth={2.6} />
           {t("lyrics.credit", {
             who: by === "you" ? t("lyrics.creditYou") : `@${by}`,
@@ -864,23 +864,23 @@ function LyricsPanel({
         onScroll={() => {
           touchedAt.current = Date.now();
         }}
-        className="scroll-slim mask-fade-b min-h-0 flex-1 overflow-y-auto px-2.5 pb-7 pt-0.5"
+        className="scroll-slim mask-fade-b min-h-0 flex-1 overflow-y-auto px-3 pb-8 pt-1.5"
       >
         {!lines ? (
-          <div className="flex flex-col items-center px-3 py-6 text-center">
+          <div className="flex flex-col items-center px-3 py-8 text-center">
             <span className="flex size-10 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
               <Icon name="mic" size={18} strokeWidth={2.1} />
             </span>
-            <p className="font-display mt-2.5 text-[14px] font-bold text-ink">
+            <p className="font-display mt-3 text-[14px] font-bold text-ink">
               {t("lyrics.emptyTitle")}
             </p>
-            <p className="mt-1 max-w-[290px] text-[12.5px] leading-relaxed text-ink-muted">
+            <p className="mt-1.5 max-w-[290px] text-[12.5px] leading-relaxed text-ink-muted">
               {pending
                 ? t("lyrics.emptyBodyPending")
                 : t("lyrics.emptyBody")}
             </p>
             {pending ? (
-              <span className="mt-2.5 flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1 text-[12px] font-bold text-ink-muted">
+              <span className="mt-2.5 flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1.5 text-[12px] font-bold text-ink-muted">
                 <Icon name="clock" size={13} />
                 {t("lyrics.pending")}
               </span>
@@ -903,7 +903,7 @@ function LyricsPanel({
             </span>
           </div>
         ) : (
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-1.5">
             {lines.map((line, i) => {
               const isActive = i === active;
               return (
@@ -913,7 +913,7 @@ function LyricsPanel({
                   /* centred like a lyric sheet: the original line and its
                      translation both hang off the middle of the panel */
                   className={cn(
-                    "rounded-[12px] px-2.5 py-2 text-center transition-colors duration-300",
+                    "rounded-[12px] px-3 py-2.5 text-center transition-colors duration-300",
                     isActive ? "bg-primary-faint" : "bg-transparent",
                   )}
                 >
@@ -929,7 +929,7 @@ function LyricsPanel({
                     dir="rtl"
                     lang="fa"
                     className={cn(
-                      "font-fa mt-0.5 text-[12.5px] leading-relaxed transition-colors duration-300",
+                      "font-fa mt-1 text-[12.5px] leading-relaxed transition-colors duration-300",
                       isActive ? "font-semibold text-primary-deep" : "text-ink-faint",
                     )}
                   >

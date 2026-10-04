@@ -11,8 +11,15 @@ import { useT } from "../../app/PreferencesContext";
  *  can be reordered, added or removed without touching one another.
  * ------------------------------------------------------------------ */
 
-/** shelf headers stick right below the chip strip (CHIP_STRIP_HEIGHT) */
-export const SHELF_STICKY_TOP = 48;
+/**
+ * The chip strip writes its measured height into this custom property on
+ * the feed's root element; a shelf header reads it back so the two stick
+ * as one block. The fallback is only used before the first measurement
+ * (and on the server, where nothing is sticky anyway).
+ */
+export const SHELF_STICKY_VAR = "--chip-strip-top";
+export const SHELF_STICKY_FALLBACK = "48px";
+const STICKY_TOP = `var(${SHELF_STICKY_VAR}, ${SHELF_STICKY_FALLBACK})`;
 
 export function Shelf({
   id,
@@ -32,20 +39,24 @@ export function Shelf({
   className?: string;
 }) {
   return (
-    <section id={id} className={cn("relative scroll-mt-[56px]", className)}>
+    <section
+      id={id}
+      className={cn("relative", className)}
+      style={{ scrollMarginTop: STICKY_TOP }}
+    >
       <header
-        className="sticky z-20 -mx-3.5 flex items-center gap-2.5 bg-surface/94 px-3.5 py-2.5 backdrop-blur-md"
-        style={{ top: SHELF_STICKY_TOP }}
+        className="sticky z-20 -mx-4 flex items-center gap-3 bg-surface/94 px-4 py-3 backdrop-blur-md"
+        style={{ top: STICKY_TOP }}
       >
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-faint text-primary-deep">
-          <Icon name={icon} size={15.5} strokeWidth={1.9} />
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-faint text-primary-deep">
+          <Icon name={icon} size={16} strokeWidth={1.9} />
         </span>
-        <h3 className="font-display text-[17px] font-bold tracking-[-0.012em] text-ink">{title}</h3>
+        <h3 className="font-display text-[18px] font-bold tracking-[-0.012em] text-ink">{title}</h3>
         {hint && <span className="text-[13px] font-medium text-ink-muted">{hint}</span>}
         {action && <span className="ms-auto">{action}</span>}
       </header>
 
-      <div className="pb-5">{children}</div>
+      <div className="pb-6">{children}</div>
     </section>
   );
 }
@@ -53,7 +64,7 @@ export function Shelf({
 /** horizontal, snapping row used by the artists / albums / fans shelves */
 export function Row({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("scroll-slim flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1", className)}>
+    <div className={cn("scroll-slim flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-2", className)}>
       {children}
     </div>
   );

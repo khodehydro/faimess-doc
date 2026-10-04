@@ -138,12 +138,12 @@ export function HeroBanner() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.08, ease: EASE }}
-            className="pointer-events-none absolute bottom-6 start-6 max-w-[44%]"
+            className="pointer-events-none absolute bottom-7 start-7 max-w-[46%]"
           >
-            <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.018em] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
+            <h2 className="font-display text-[27px] font-bold leading-[1.15] tracking-[-0.018em] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
               {banner.title}
             </h2>
-            <p className="mt-1 text-[14px] font-medium leading-snug text-white/80 drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
+            <p className="mt-2 text-[14px] font-medium leading-relaxed text-white/82 drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
               {banner.subtitle}
             </p>
           </motion.div>
@@ -154,7 +154,7 @@ export function HeroBanner() {
           bottom edge. Physical centring on purpose — `inset-x-0` + flex
           mirrors cleanly in RTL, while a logical half-offset would not. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center">
-        <div className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-surface/92 px-2.5 py-2 shadow-sm">
+        <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-surface/92 px-3 py-2.5 shadow-sm">
           {banners.map((b, i) => (
             <button
               key={b.id}

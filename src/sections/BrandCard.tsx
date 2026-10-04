@@ -22,7 +22,7 @@ export function BrandCard() {
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
       aria-label={t("brand.home")}
-      className="flex h-[62px] shrink-0 items-center gap-2.5 rounded-full bg-surface px-4 shadow-card ring-1 ring-black/[0.03] dark:ring-white/[0.05]"
+      className="flex h-[62px] shrink-0 items-center gap-3 rounded-full bg-surface px-4.5 shadow-card ring-1 ring-black/[0.03] dark:ring-white/[0.05]"
     >
       <Logo size={34} />
       <span className="font-display text-[21px] font-extrabold tracking-[-0.022em] text-ink">FAIMESS</span>

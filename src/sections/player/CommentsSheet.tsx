@@ -56,20 +56,20 @@ export function CommentsSheet({
     <Modal open={open} onClose={onClose} width={470} bare>
       <div className="flex max-h-[min(660px,84vh)] flex-col">
         {/* header */}
-        <header className="flex shrink-0 items-start gap-2 border-b border-line px-4 py-3">
+        <header className="flex shrink-0 items-start gap-2.5 border-b border-line px-4.5 py-3.5">
           {reportTarget ? (
             <button
               onClick={() => {
                 setReportTarget(null);
                 setReason(null);
               }}
-              className="mt-0.5 flex items-center gap-1 rounded-full bg-subtle px-2 py-1 text-[12px] font-bold text-ink-body transition-colors hover:bg-muted"
+              className="mt-1 flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1.5 text-[12px] font-bold text-ink-body transition-colors hover:bg-muted"
             >
               <Icon name="chevronLeft" size={13} strokeWidth={2.2} />
               {t("comments.back")}
             </button>
           ) : (
-            <span className="mt-0.5 flex size-8 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
+            <span className="mt-1 flex size-8 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
               <Icon name="message" size={15} strokeWidth={2.1} />
             </span>
           )}
@@ -122,32 +122,32 @@ export function CommentsSheet({
               className="flex min-h-0 flex-1 flex-col"
             >
               {/* sorting */}
-              <div className="flex shrink-0 items-center gap-1.5 px-4 py-2.5">
+              <div className="flex shrink-0 items-center gap-2 px-4.5 py-3">
                 {(["newest", "top"] as Sort[]).map((s) => (
                   <button
                     key={s}
                     onClick={() => setSort(s)}
                     className={cn(
-                      "rounded-full px-2.5 py-1 text-[12px] font-bold transition-colors",
+                      "rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors",
                       sort === s ? "bg-primary text-white shadow-primary" : "bg-subtle text-ink-muted hover:text-ink",
                     )}
                   >
                     {t(s === "newest" ? "comments.newest" : "comments.topFired")}
                   </button>
                 ))}
-                <span className="ms-auto text-[11.5px] font-semibold text-ink-faint">
+                <span className="ms-auto text-[12px] font-semibold text-ink-faint">
                   {comments.total > 0 && `${list.length} shown`}
                 </span>
               </div>
 
-              <div className="scroll-slim mask-fade-b min-h-0 flex-1 overflow-y-auto px-4 pb-3">
+              <div className="scroll-slim mask-fade-b min-h-0 flex-1 overflow-y-auto px-4.5 pb-3.5">
                 {comments.total === 0 && (
                   <p className="py-10 text-center text-[13px] text-ink-faint">
                     {t("comments.empty")}
                   </p>
                 )}
 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3.5">
                   {list.map((comment) => (
                     <CommentRow
                       key={comment.id}
@@ -170,13 +170,13 @@ export function CommentsSheet({
                         whileTap={{ scale: 0.97 }}
                         transition={spring}
                         onClick={comments.loadMore}
-                        className="flex items-center gap-1.5 rounded-full border border-line-strong bg-surface px-3.5 py-2 text-[12.5px] font-bold text-ink-body transition-colors hover:border-primary/30 hover:text-primary-deep"
+                        className="flex items-center gap-2 rounded-full border border-line-strong bg-surface px-4 py-2.5 text-[12.5px] font-bold text-ink-body transition-colors hover:border-primary/30 hover:text-primary-deep"
                       >
                         <Icon name="plus" size={14} strokeWidth={2.2} />
                         {t("comments.loadMore", { n: Math.min(comments.hidden, 6) })}
                       </motion.button>
                     ) : (
-                      <p className="py-1 text-[12px] font-semibold text-ink-faint">
+                      <p className="py-1.5 text-[12px] font-semibold text-ink-faint">
                         {t("comments.end")}
                       </p>
                     )}
@@ -184,7 +184,7 @@ export function CommentsSheet({
                 )}
               </div>
 
-              <footer className="shrink-0 border-t border-line px-4 py-2.5">
+              <footer className="shrink-0 border-t border-line px-4.5 py-3">
                 <CommentComposer trackId={trackId} />
               </footer>
             </motion.div>
@@ -220,7 +220,7 @@ function CommentRow({
 
   if (reported) {
     return (
-      <div className="flex items-center gap-2 rounded-panel border border-dashed border-line-strong bg-subtle/60 px-3 py-2.5">
+      <div className="flex items-center gap-2.5 rounded-panel border border-dashed border-line-strong bg-subtle/60 px-3.5 py-3">
         <span className="text-ink-faint">
           <Icon name="lock" size={14} />
         </span>
@@ -232,7 +232,7 @@ function CommentRow({
             comments.undoReport(comment.id);
             notify(t("comments.reportWithdrawn"), "teal");
           }}
-          className="shrink-0 text-[11.5px] font-bold text-primary-deep"
+          className="shrink-0 text-[12px] font-bold text-primary-deep"
         >
           {t("comments.undo")}
         </button>
@@ -244,14 +244,14 @@ function CommentRow({
     <article
       className={cn(
         "relative min-w-0",
-        comment.fromArtist && "rounded-panel bg-primary-faint/50 p-2.5",
+        comment.fromArtist && "rounded-panel bg-primary-faint/50 p-3",
       )}
     >
-      <header className="flex min-w-0 items-start gap-2.5">
+      <header className="flex min-w-0 items-start gap-3">
         <Avatar src={comment.photo} size={34} badge={comment.badge} ring={comment.fromArtist} />
 
         <div className="min-w-0 flex-1">
-          <p className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <p className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="min-w-0 truncate text-[13px] font-bold text-ink">{comment.author}</span>
             {comment.verified && (
               <span className="text-primary" title={t("comments.verified")}>
@@ -259,33 +259,33 @@ function CommentRow({
               </span>
             )}
             {comment.fromArtist && (
-              <span className="rounded-full bg-primary px-1.5 py-[1px] text-[10.5px] font-extrabold uppercase tracking-wide text-white">
+              <span className="rounded-full bg-primary px-2 py-[1px] text-[12px] font-extrabold uppercase tracking-wide text-white">
                 {t("comments.artist")}
               </span>
             )}
-            <span className="text-[11.5px] font-semibold text-ink-faint">{comment.handle}</span>
-            <span className="text-[11.5px] text-ink-faint">·</span>
-            <span className="text-[11.5px] font-semibold text-ink-faint">{comment.time}</span>
+            <span className="text-[12px] font-semibold text-ink-faint">{comment.handle}</span>
+            <span className="text-[12px] text-ink-faint">·</span>
+            <span className="text-[12px] font-semibold text-ink-faint">{comment.time}</span>
             {comment.badge && (
-              <span className="max-w-[150px] truncate rounded-full bg-subtle px-1.5 py-[1px] text-[10.5px] font-bold text-ink-muted">
+              <span className="max-w-[150px] truncate rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold text-ink-muted">
                 {comment.badge.label}
               </span>
             )}
           </p>
 
-          <p dir="auto" className="mt-1 text-[13px] leading-relaxed text-ink-body [overflow-wrap:anywhere]">
+          <p dir="auto" className="mt-1.5 text-[13px] leading-relaxed text-ink-body [overflow-wrap:anywhere]">
             {comment.text}
           </p>
 
           {/* actions */}
-          <div className="mt-1.5 flex items-center gap-1">
+          <div className="mt-2 flex items-center gap-1.5">
             <motion.button
               whileTap={{ scale: 0.92 }}
               transition={spring}
               onClick={() => comments.toggleFire(comment.id)}
               aria-pressed={!!comment.fired}
               className={cn(
-                "flex items-center gap-1 rounded-full px-2 py-1 text-[11.5px] font-bold tabular-nums transition-colors",
+                "flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[12px] font-bold tabular-nums transition-colors",
                 comment.fired ? "bg-flame-soft text-flame-deep" : "text-ink-faint hover:bg-subtle hover:text-flame-deep",
               )}
             >
@@ -295,7 +295,7 @@ function CommentRow({
 
             <button
               onClick={() => setReplyOpen((v) => !v)}
-              className="rounded-full px-2 py-1 text-[11.5px] font-bold text-ink-faint transition-colors hover:bg-subtle hover:text-ink"
+              className="rounded-full px-2.5 py-1.5 text-[12px] font-bold text-ink-faint transition-colors hover:bg-subtle hover:text-ink"
             >
               {t("comments.reply")}
             </button>
@@ -376,10 +376,10 @@ function CommentRow({
 
           {/* replies */}
           {comment.replies.length > 0 && (
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2.5 flex items-center gap-2.5">
               <button
                 onClick={() => setShowReplies((v) => !v)}
-                className="text-[11.5px] font-bold text-primary-deep"
+                className="text-[12px] font-bold text-primary-deep"
               >
                 {showReplies ? "Hide" : t("comments.view")} {comment.replies.length}{" "}
                 {comment.replies.length === 1 ? "reply" : "replies"}
@@ -396,7 +396,7 @@ function CommentRow({
                 transition={{ duration: 0.22, ease: EASE }}
                 className="overflow-hidden"
               >
-                <div className="mt-2 flex flex-col gap-2.5 border-s-2 border-line ps-3">
+                <div className="mt-2.5 flex flex-col gap-3 border-s-2 border-line ps-3">
                   {comment.replies.map((reply) => (
                     <ReplyRow
                       key={reply.id}
@@ -441,29 +441,29 @@ function ReplyRow({
   }
 
   return (
-    <div className="flex items-start gap-2">
+    <div className="flex items-start gap-2.5">
       <Avatar src={reply.photo} size={26} badge={reply.badge} ring={reply.fromArtist} />
       <div className="min-w-0 flex-1">
-        <p className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <p className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="min-w-0 truncate text-[12.5px] font-bold text-ink">{reply.author}</span>
           {reply.verified && (
             <span className="text-primary">
               <Icon name="verified" size={12} strokeWidth={2.2} />
             </span>
           )}
-          <span className="text-[11px] font-semibold text-ink-faint">{reply.handle}</span>
-          <span className="text-[11px] text-ink-faint">·</span>
-          <span className="text-[11px] font-semibold text-ink-faint">{reply.time}</span>
+          <span className="text-[12px] font-semibold text-ink-faint">{reply.handle}</span>
+          <span className="text-[12px] text-ink-faint">·</span>
+          <span className="text-[12px] font-semibold text-ink-faint">{reply.time}</span>
         </p>
-        <p dir="auto" className="mt-0.5 text-[12.5px] leading-relaxed text-ink-body [overflow-wrap:anywhere]">
+        <p dir="auto" className="mt-1 text-[12.5px] leading-relaxed text-ink-body [overflow-wrap:anywhere]">
           {reply.text}
         </p>
-        <div className="mt-1 flex items-center gap-1">
+        <div className="mt-1.5 flex items-center gap-1.5">
           <button
             onClick={() => comments.toggleFire(reply.id, reply.id)}
             aria-pressed={!!reply.fired}
             className={cn(
-              "flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums transition-colors",
+              "flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-bold tabular-nums transition-colors",
               reply.fired ? "bg-flame-soft text-flame-deep" : "text-ink-faint hover:text-flame-deep",
             )}
           >
@@ -472,7 +472,7 @@ function ReplyRow({
           </button>
           <button
             onClick={() => onReport({ id: reply.id, replyId: reply.id, handle: reply.handle, text: reply.text })}
-            className="rounded-full px-2 py-0.5 text-[11px] font-bold text-ink-faint transition-colors hover:text-flame-deep"
+            className="rounded-full px-2.5 py-0.5 text-[12px] font-bold text-ink-faint transition-colors hover:text-flame-deep"
           >
             {t("comments.report")}
           </button>
@@ -498,7 +498,7 @@ function MenuItem({
     <button
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-2 rounded-[10px] px-2 py-1.5 text-start text-[12.5px] font-bold transition-colors",
+        "flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-start text-[12.5px] font-bold transition-colors",
         tone === "flame" ? "text-flame-deep hover:bg-flame-soft" : "text-ink-body hover:bg-subtle",
       )}
     >
@@ -531,16 +531,16 @@ function ReportBody({
       transition={{ duration: 0.22, ease: EASE }}
       className="flex min-h-0 flex-1 flex-col"
     >
-      <div className="scroll-slim min-h-0 flex-1 overflow-y-auto px-4 py-3">
+      <div className="scroll-slim min-h-0 flex-1 overflow-y-auto px-4.5 py-3.5">
         <p className="text-[12.5px] leading-relaxed text-ink-muted">{t("report.note")}</p>
 
-        <div className="mt-3 flex flex-col gap-1.5">
+        <div className="mt-3.5 flex flex-col gap-2">
           {REPORT_REASONS.map((r) => (
             <button
               key={r.id}
               onClick={() => onPick(r.id)}
               className={cn(
-                "flex items-start gap-2.5 rounded-panel border p-2.5 text-start transition-colors",
+                "flex items-start gap-3 rounded-panel border p-3 text-start transition-colors",
                 reason === r.id
                   ? "border-primary/40 bg-primary-faint"
                   : "border-line hover:border-primary/25 hover:bg-subtle",
@@ -548,7 +548,7 @@ function ReportBody({
             >
               <span
                 className={cn(
-                  "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                  "mt-1 flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
                   reason === r.id ? "border-primary bg-primary text-white" : "border-line-strong text-transparent",
                 )}
               >
@@ -556,14 +556,14 @@ function ReportBody({
               </span>
               <span className="min-w-0">
                 <span className="block text-[13px] font-bold text-ink">{t(`report.label.${r.id}`)}</span>
-                <span className="mt-0.5 block text-[12px] leading-relaxed text-ink-muted">{t(`report.hint.${r.id}`)}</span>
+                <span className="mt-1 block text-[12px] leading-relaxed text-ink-muted">{t(`report.hint.${r.id}`)}</span>
               </span>
             </button>
           ))}
         </div>
       </div>
 
-      <footer className="flex shrink-0 items-center gap-2 border-t border-line px-4 py-3">
+      <footer className="flex shrink-0 items-center gap-2.5 border-t border-line px-4.5 py-3.5">
         <motion.button
           whileHover={{ y: -1.5 }}
           whileTap={{ scale: 0.97 }}
@@ -571,7 +571,7 @@ function ReportBody({
           onClick={onSubmit}
           disabled={!reason}
           className={cn(
-            "flex items-center gap-2 rounded-[14px] px-3.5 py-2.5 text-[13px] font-bold transition-colors",
+            "flex items-center gap-2.5 rounded-[14px] px-4 py-3 text-[13px] font-bold transition-colors",
             reason ? "bg-primary text-white shadow-primary" : "bg-muted text-ink-faint",
           )}
         >
@@ -580,7 +580,7 @@ function ReportBody({
         </motion.button>
         <button
           onClick={onCancel}
-          className="rounded-[14px] px-3 py-2.5 text-[13px] font-bold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
+          className="rounded-[14px] px-3.5 py-3 text-[13px] font-bold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
         >
           {t("comments.cancel")}
         </button>

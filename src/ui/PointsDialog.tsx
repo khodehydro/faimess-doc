@@ -65,7 +65,7 @@ export function PointsDialog({
   return (
     <Modal open={open} onClose={onClose} width={404}>
       {/* who this balance belongs to */}
-      <div className="flex items-center gap-3 pe-8">
+      <div className="flex items-center gap-3.5 pe-8">
         <Avatar src={subject.photo} seed={subject.seed} size={44} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[15px] font-bold text-ink">{subject.name}</span>
@@ -73,7 +73,7 @@ export function PointsDialog({
             {subject.meta ?? subject.handle}
           </span>
         </span>
-        <span className="flex shrink-0 items-center gap-1 rounded-full bg-flame-soft px-2 py-1 text-[13px] font-extrabold tabular-nums text-flame-deep">
+        <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-flame-soft px-2.5 py-1.5 text-[13px] font-extrabold tabular-nums text-flame-deep">
           <Icon name="flame" size={12.5} strokeWidth={2} />
           {n(total)}
         </span>
@@ -82,13 +82,13 @@ export function PointsDialog({
       <h2 className="font-display mt-3.5 text-[17.5px] font-bold leading-snug text-ink">
         {t("points.title")}
       </h2>
-      <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">{t("points.subtitle")}</p>
+      <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">{t("points.subtitle")}</p>
 
-      <ul className="mt-3 flex flex-col gap-1">
+      <ul className="mt-3.5 flex flex-col gap-1.5">
         {lines.map((line) => (
           <li
             key={line.rule.id}
-            className="flex items-center gap-2.5 rounded-[14px] bg-subtle/60 px-2 py-2"
+            className="flex items-center gap-3 rounded-[14px] bg-subtle/60 px-2.5 py-2.5"
           >
             <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-surface text-primary-deep shadow-xs">
               <Icon name={line.rule.icon} size={16} strokeWidth={1.9} />
@@ -96,11 +96,11 @@ export function PointsDialog({
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-baseline gap-x-1.5">
                 <span className="text-[13px] font-bold text-ink">{t(line.rule.labelKey)}</span>
-                <span className="text-[11.5px] font-semibold text-ink-faint">
+                <span className="text-[12px] font-semibold text-ink-faint">
                   {t(line.rule.rateKey, { n: n(line.rule.value) })}
                 </span>
               </span>
-              <span className="mt-0.5 block truncate text-[12px] font-semibold text-ink-muted">
+              <span className="mt-1 block truncate text-[12px] font-semibold text-ink-muted">
                 {counted(line.rule.id, line.count)}
               </span>
             </span>
@@ -111,7 +111,7 @@ export function PointsDialog({
         ))}
       </ul>
 
-      <div className="mt-2 flex items-center justify-between rounded-[14px] bg-primary-faint/70 px-3 py-2.5">
+      <div className="mt-2.5 flex items-center justify-between rounded-[14px] bg-primary-faint/70 px-3.5 py-3">
         <span className="text-[13px] font-bold text-ink">{t("points.total")}</span>
         <span className="text-[15px] font-extrabold tabular-nums text-primary-deep">
           {t("account.points", { n: n(total) })}
@@ -119,7 +119,7 @@ export function PointsDialog({
       </div>
 
       {subject.note && (
-        <p className="mt-2.5 text-[12px] leading-relaxed text-ink-faint">{subject.note}</p>
+        <p className="mt-3 text-[12px] leading-relaxed text-ink-faint">{subject.note}</p>
       )}
     </Modal>
   );

@@ -136,6 +136,43 @@ for (const title of ["Artists you follow", "Newest songs", "Trending now", "Late
   check(`shelf “${title}”`, home.includes(title));
 }
 /* the banner is artwork + two glass rails, and nothing else (v17) */
+/* ------------------------------- density (v21) ------------------------ */
+
+const cssSrc = readFileSync("src/index.css", "utf8");
+const feedSrc = readFileSync("src/sections/feed/index.tsx", "utf8");
+const shelfSrc = readFileSync("src/sections/feed/Shelf.tsx", "utf8");
+check(
+  "one density token drives every padding and gap",
+  cssSrc.includes("--spacing: 0.28rem"),
+  "raised from Tailwind's 0.25rem default — see docs §15",
+);
+check(
+  "shelf headers stick to a measured strip, not to a guess",
+  feedSrc.includes("SHELF_STICKY_VAR") &&
+    feedSrc.includes("ResizeObserver") &&
+    shelfSrc.includes("SHELF_STICKY_VAR") &&
+    shelfSrc.includes("scrollMarginTop"),
+  "the strip publishes its height; the header and the scroll offset read it",
+);
+/** every .tsx under a folder, so the sweep can't miss a surface */
+function sweep(dir: string, out: string[] = []): string[] {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) sweep(path, out);
+    else if (entry.name.endsWith(".tsx")) out.push(path);
+  }
+  return out;
+}
+
+const TYPE_FLOOR = /text-\[(\d+(?:\.\d+)?)px\]/g;
+check(
+  "nothing under 12px is left in the interface",
+  sweep("src").every((file) =>
+    [...readFileSync(file, "utf8").matchAll(TYPE_FLOOR)].every((m) => Number(m[1]) >= 12),
+  ),
+  "12px is the floor the type scale settled on (docs §8)",
+);
+
 const heroSrc = readFileSync("src/sections/HeroBanner.tsx", "utf8");
 check(
   "hero banner shows its art and its two lines",

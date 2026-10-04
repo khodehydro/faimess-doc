@@ -30,7 +30,7 @@ export function NavCard() {
             whileHover={{ y: -1 }}
             whileTap={{ scale: 0.97 }}
             className={cn(
-              "relative flex items-center gap-2 rounded-full px-4 py-2.5 text-[14.5px] font-semibold transition-colors",
+              "relative flex items-center gap-2.5 rounded-full px-4.5 py-2.5 text-[14.5px] font-semibold transition-colors",
               isActive ? "text-white" : "text-ink-body hover:text-ink",
             )}
           >
@@ -41,7 +41,7 @@ export function NavCard() {
                 className="absolute inset-0 rounded-full bg-primary shadow-primary"
               />
             )}
-            <span className="relative flex items-center gap-2">
+            <span className="relative flex items-center gap-2.5">
               <Icon name={item.icon} size={16} strokeWidth={isActive ? 1.9 : 1.6} />
               {t(`nav.${item.id}`)}
             </span>

@@ -87,46 +87,46 @@ export function LeaderboardDialog({ open, onClose }: { open: boolean; onClose: (
         <Icon name="crown" size={17} strokeWidth={2} />
       </span>
 
-      <h2 className="font-display mt-2.5 text-[18px] font-bold leading-snug text-ink">
+      <h2 className="font-display mt-3 text-[18px] font-bold leading-snug text-ink">
         {t("leader.title")}
       </h2>
-      <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">{t("leader.subtitle")}</p>
+      <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">{t("leader.subtitle")}</p>
 
-      <div className="scroll-slim mt-3 overflow-x-auto">
+      <div className="scroll-slim mt-3.5 overflow-x-auto">
         <div className="min-w-[540px]">
           {/* the heads */}
-          <div className="flex items-center gap-2 px-2 pb-1.5">
-            <span className="flex-1 text-[11.5px] font-bold text-ink-faint">
+          <div className="flex items-center gap-2.5 px-2.5 pb-2">
+            <span className="flex-1 text-[12px] font-bold text-ink-faint">
               {t("leader.listener")}
             </span>
             {COLUMNS.map((column) => (
               <span
                 key={column.rule.id}
-                className={cn(column.width, "text-end text-[11.5px] font-bold text-ink-faint")}
+                className={cn(column.width, "text-end text-[12px] font-bold text-ink-faint")}
               >
                 {t(column.rule.headKey)}
               </span>
             ))}
-            <span className="w-[64px] text-end text-[11.5px] font-bold text-ink-faint">
+            <span className="w-[64px] text-end text-[12px] font-bold text-ink-faint">
               {t("points.total")}
             </span>
           </div>
 
-          <ul className="flex flex-col gap-1">
+          <ul className="flex flex-col gap-1.5">
             {rows.map((row, i) => {
               const total = fanPoints(row.activity);
               return (
                 <li
                   key={row.id}
                   className={cn(
-                    "flex items-center gap-2 rounded-[14px] px-2 py-1.5",
+                    "flex items-center gap-2.5 rounded-[14px] px-2.5 py-2",
                     row.you ? "bg-primary-faint/80 ring-1 ring-primary/20" : "hover:bg-subtle/70",
                   )}
                 >
-                  <span className="flex min-w-0 flex-1 items-center gap-2">
+                  <span className="flex min-w-0 flex-1 items-center gap-2.5">
                     <span
                       className={cn(
-                        "w-4 shrink-0 text-[11.5px] font-extrabold tabular-nums",
+                        "w-4 shrink-0 text-[12px] font-extrabold tabular-nums",
                         i < 3 ? "text-primary-deep" : "text-ink-faint",
                       )}
                     >
@@ -134,15 +134,15 @@ export function LeaderboardDialog({ open, onClose }: { open: boolean; onClose: (
                     </span>
                     <Avatar src={row.photo} seed={row.seed} size={26} />
                     <span className="min-w-0">
-                      <span className="flex items-center gap-1.5">
+                      <span className="flex items-center gap-2">
                         <span className="truncate text-[13px] font-bold text-ink">{row.name}</span>
                         {row.you && (
-                          <span className="shrink-0 rounded-full bg-primary px-1.5 py-[1px] text-[10.5px] font-extrabold text-white">
+                          <span className="shrink-0 rounded-full bg-primary px-2 py-[1px] text-[12px] font-extrabold text-white">
                             {t("leader.you")}
                           </span>
                         )}
                       </span>
-                      <span className="block truncate text-[11.5px] font-semibold text-ink-faint">
+                      <span className="block truncate text-[12px] font-semibold text-ink-faint">
                         {row.handle}
                         {row.online ? ` · ${t("shelf.onlineNow")}` : ""}
                       </span>
@@ -171,7 +171,7 @@ export function LeaderboardDialog({ open, onClose }: { open: boolean; onClose: (
                     </span>
                   ))}
 
-                  <span className="flex w-[64px] shrink-0 items-center justify-end gap-1 text-[13px] font-extrabold tabular-nums text-flame-deep">
+                  <span className="flex w-[64px] shrink-0 items-center justify-end gap-1.5 text-[13px] font-extrabold tabular-nums text-flame-deep">
                     <Icon name="flame" size={12} strokeWidth={2} />
                     {total.toLocaleString(locale, { maximumFractionDigits: 2 })}
                   </span>
@@ -182,12 +182,12 @@ export function LeaderboardDialog({ open, onClose }: { open: boolean; onClose: (
         </div>
       </div>
 
-      <div className="mt-3 flex items-start gap-2 rounded-[14px] bg-subtle/70 px-3 py-2.5">
+      <div className="mt-3.5 flex items-start gap-2.5 rounded-[14px] bg-subtle/70 px-3.5 py-3">
         <Icon name="star" size={13} className="mt-[1px] shrink-0 text-primary-deep" />
-        <p className="text-[11.5px] leading-relaxed text-ink-muted">{t("leader.rulesNote")}</p>
+        <p className="text-[12px] leading-relaxed text-ink-muted">{t("leader.rulesNote")}</p>
       </div>
 
-      <p className="mt-2 text-[11.5px] leading-relaxed text-ink-faint">{t("leader.tapNote")}</p>
+      <p className="mt-2.5 text-[12px] leading-relaxed text-ink-faint">{t("leader.tapNote")}</p>
     </Modal>
   );
 }
