@@ -253,7 +253,8 @@ PlayerProvider  (src/app/PlayerContext.tsx)      ← در app/App.tsx دور She
     ├── TrackPanel   lg:h-[40%]  کاور ۸۸/۱۱۸px · عنوان/آرتیست/آلبوم · نوار پیشرفت · ♥ + قبلی/پخش/بعدی + ⤓
     ├── LyricsPanel  flex-1      تنها ناحیهٔ اسکرول کارت — خطوط دوزبانه با هایلایت خط فعال
     ├── PlayerDrawer absolute    پنل تب‌ها روی کارت (صف / لایک‌شده‌ها / پلی‌لیست‌ها)
-    └── DownloadDialog portal    «دانلود مخصوص اندروید» + دکمهٔ صفحهٔ `#/download`
+    ├── DownloadDialog portal    «دانلود مخصوص اندروید» + دکمهٔ صفحهٔ `#/download`
+    └── CommentsBar + Sheet      کامنت‌ها: کامپوزر پایین کارت · شیت کامل گفت‌وگو
 ```
 
 - **صف پخش:** `src/data/player.ts` آن را از `newestTracks` + `trendingTracks` می‌سازد؛ ترک‌های تکراری فید با `SAME_SONG` (`tr1→nt2`, `tr2→nt1`, `tr4→nt3`) به یک آیتم نگاشت می‌شوند تا `trackById` برای هر ردیف فید جواب بدهد. `leadTrackFor(artist)` هم دکمهٔ پخش هر آرتیست/آلبوم را به یک لید سینگل وصل می‌کند.
@@ -265,6 +266,20 @@ PlayerProvider  (src/app/PlayerContext.tsx)      ← در app/App.tsx دور She
 - **اگزپند/کولپس:** `HomePage` یک state (`wide`) دارد، کلاس `home-split-wide` را به ردیف می‌دهد و `{ expanded, onToggleExpand }` را به‌عنوان `params` بخش `player` پاس می‌دهد؛ قاعدهٔ CSS در `src/index.css` سهم کارت‌ها را ۲۵/۷۵ ↔ ۵۵/۴۵ می‌برد (transition روی `flex-basis`، با احترام به `prefers-reduced-motion`).
 - **دانلود:** `DownloadButton` در ردیف کنترل‌ها آینهٔ ♥ است (تک‌رنگ، هم‌اندازه) و فقط یک `Modal` باز می‌کند: «Downloads live in the Android app» + دکمهٔ رفتن به `#/download`. وب چیزی ذخیره نمی‌کند؛ `Modal` (در `src/ui/Modal.tsx`) با `createPortal` روی `document.body` می‌نشیند تا `overflow-hidden` کارت‌ها و اسکیل صحنه به آن دست نزنند (و در SSR چیزی رندر نمی‌کند).
 - **پیش‌بارگذاری:** `PlayerProvider initialTrackId="nt1"` کارت را پاز‌شده با یک ترک بالا می‌آورد (هوک دیپ‌لینک؛ `check:ssr` هم با همین حالتِ پخش‌دار رندر می‌گیرد).
+
+### ۱۰.۱ کامنت‌ها
+
+```
+CommentsProvider (src/app/CommentsContext.tsx)      ← دور Shell، کنار PlayerProvider
+└── useTrackComments(trackId)                        ← هر کامپوننت به ترد همان ترک وصل می‌شود
+    ├── CommentsBar     پایین کارت: شمارش · تیزر تازه‌ترین کامنت · کامپوزر
+    └── CommentsSheet   مودال (Modal با width={470} و bare): سورت · ترد · ریپلای · گزارش · Load more
+```
+
+- **داده:** `src/data/comments.ts` تریدهای سید‌شده برای `nt1`/`nt2`/`nt3`/`tr3` و یک `fallbackThread` برای بقیهٔ ترک‌ها؛ `PAGE_SIZE = 6` تعیین می‌کند اول چند کامنت دیده شود و `Load more` بقیه را باز می‌کند.
+- **نشان‌ها:** `src/data/badges.ts` کاتالوگ `BADGES` است؛ `Avatar` پراپ `badge` را می‌گیرد و کرست را گوشهٔ آواتار می‌کشد (`title` = برچسب کامل). حساب خودِ کاربر (`data/account.ts`) هم نشانش را دارد.
+- **وضعیت:** همهٔ نوشتن‌ها در `CommentsProvider` می‌نشینند (`list`، `visible`، `reported`) تا نوار پایین کارت و شیت همیشه یکی باشند؛ رفرش صفحه سید را برمی‌گرداند (دمو بک‌اند ندارد).
+- **گزارش:** هر گزارش با کلید `commentId:replyId` نگه داشته می‌شود؛ کامنت گزارش‌شده از دید کاربر «Hidden» می‌شود و با `Undo` برمی‌گردد (حذف واقعی سمت سرور نیست).
 
 ## ۱۱. تصویرسازی‌ها
 

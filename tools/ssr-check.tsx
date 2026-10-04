@@ -9,6 +9,7 @@ import type { ReactElement } from "react";
 import { renderToString } from "react-dom/server";
 import { AppProvider } from "../src/app/AppContext";
 import { PlayerProvider } from "../src/app/PlayerContext";
+import { CommentsProvider } from "../src/app/CommentsContext";
 import { PlayerSection } from "../src/sections/PlayerSection";
 import { DownloadPage } from "../src/pages/DownloadPage";
 import { HomePage } from "../src/pages/HomePage";
@@ -69,7 +70,9 @@ const render = (Page: () => ReactElement) =>
   renderToString(
     <AppProvider>
       <PlayerProvider>
-        <Page />
+        <CommentsProvider>
+          <Page />
+        </CommentsProvider>
       </PlayerProvider>
     </AppProvider>,
   );
@@ -114,7 +117,9 @@ check("empty player invites a first play", home.includes("Start with") && home.i
 const playingCard = renderToString(
   <AppProvider>
     <PlayerProvider initialTrackId="nt1">
-      <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />
+      <CommentsProvider>
+        <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />
+      </CommentsProvider>
     </PlayerProvider>
   </AppProvider>,
 );
@@ -141,6 +146,13 @@ check("rail ships behind more", playingCard.includes("More — queue, liked song
 check("rail labels are in the markup", ["Play queue", "Liked songs", "Playlists"].every((l) => playingCard.includes(l)));
 check("rail starts hidden", playingCard.includes("inert=") || playingCard.includes("inert"));
 check("the playing track can be liked", playingCard.includes("Remove from Liked songs") && playingCard.includes('aria-pressed="true"'));
+
+/* ------------------------------- comments ----------------------------- */
+
+check("composer sits at the bottom of the card", playingCard.includes("Add a comment…"));
+check("comments show a count and a see-all", playingCard.includes("See all") && playingCard.includes("Comments"));
+check("the newest comment previews", playingCard.includes("the fan thread" ) || playingCard.includes("4am in the tour van"));
+check("avatars carry their latest award", playingCard.includes("Top listener · Season 12"));
 {
   const liked = ["nt1", "tr3", "tr5"];
   check("liked ids come from the queue", liked.every((id) => QUEUE.some((t) => t.id === id)));

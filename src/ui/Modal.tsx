@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "./Icon";
+import { cn } from "../lib/cn";
 import { EASE } from "../lib/motion";
 
 /* ------------------------------------------------------------------ *
@@ -16,10 +17,16 @@ export function Modal({
   open,
   onClose,
   children,
+  width = 392,
+  bare = false,
 }: {
   open: boolean;
   onClose: () => void;
   children: ReactNode;
+  /** max panel width in px */
+  width?: number;
+  /** drop the default padding + close button — the caller brings its own chrome */
+  bare?: boolean;
 }) {
   const [mounted, setMounted] = useState(false);
 
@@ -56,15 +63,21 @@ export function Modal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.24, ease: EASE }}
-            className="relative w-full max-w-[392px] rounded-card bg-surface p-5 shadow-float"
+            className={cn(
+              "relative w-full rounded-card bg-surface shadow-float",
+              bare ? "overflow-hidden" : "p-5",
+            )}
+            style={{ maxWidth: width }}
           >
-            <button
-              onClick={onClose}
-              aria-label="Close"
-              className="absolute right-3.5 top-3.5 flex size-7 items-center justify-center rounded-full text-ink-faint transition-colors hover:bg-subtle hover:text-ink"
-            >
-              <Icon name="close" size={15} strokeWidth={2} />
-            </button>
+            {!bare && (
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="absolute right-3.5 top-3.5 flex size-7 items-center justify-center rounded-full text-ink-faint transition-colors hover:bg-subtle hover:text-ink"
+              >
+                <Icon name="close" size={15} strokeWidth={2} />
+              </button>
+            )}
             {children}
           </motion.div>
         </motion.div>

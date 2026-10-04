@@ -7,6 +7,8 @@ import { usePlayer } from "../app/PlayerContext";
 import { useApp } from "../app/AppContext";
 import { activeLineIndex, lyricsFor, mmss, QUEUE, type PlayerTrack } from "../data/player";
 import { playlists } from "../data/library";
+import { CommentsBar } from "./player/CommentsBar";
+import { CommentsSheet } from "./player/CommentsSheet";
 import { me } from "../data/account";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
@@ -19,7 +21,8 @@ import { EASE, spring } from "../lib/motion";
  *    card          Player · feed position · expand/collapse
  *      top 40%     cover · title/artist/album · seek bar · transport
  *      bottom 60%  bilingual lyrics (original + فارسی), one scroll surface,
- *                  with the line being sung highlighted
+ *                  with the line being sung highlighted … and the comments
+ *                  strip (count · newest · composer) pinned underneath
  *
  *  Nothing loaded yet? The card becomes a greeting with three quick picks.
  * ------------------------------------------------------------------ */
@@ -47,6 +50,7 @@ export function PlayerSection({
   /* the management rail is a drawer now — hidden until "more" asks for it */
   const [railOpen, setRailOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const lines = lyricsFor(track);
   const { expanded, onToggleExpand } = params;
 
@@ -127,6 +131,7 @@ export function PlayerSection({
                 onDownload={() => setDownloadOpen(true)}
               />
               <LyricsPanel lines={lines} position={player.position} playing={player.playing} />
+              <CommentsBar trackId={track.id} onOpen={() => setCommentsOpen(true)} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -137,6 +142,15 @@ export function PlayerSection({
       </div>
 
       <DownloadDialog open={downloadOpen} onClose={() => setDownloadOpen(false)} />
+
+      {track && (
+        <CommentsSheet
+          trackId={track.id}
+          trackTitle={track.title}
+          open={commentsOpen}
+          onClose={() => setCommentsOpen(false)}
+        />
+      )}
     </div>
   );
 }

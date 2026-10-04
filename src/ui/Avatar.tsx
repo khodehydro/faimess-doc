@@ -1,3 +1,5 @@
+import type { BadgeTone, CommentBadge } from "../data/badges";
+import { Icon } from "./Icon";
 import { cn } from "../lib/cn";
 
 /* ------------------------------------------------------------------ *
@@ -23,9 +25,19 @@ type AvatarProps = {
   className?: string;
   /** violet ring, like the top-bar profile chip */
   ring?: boolean;
+  /** the last award this account won — drawn as a crest on the corner */
+  badge?: CommentBadge;
 };
 
-export function Avatar({ src, seed = 0, size = 36, className, ring }: AvatarProps) {
+/** crest tones — one solid colour each, never a gradient */
+const BADGE_TONE: Record<BadgeTone, string> = {
+  primary: "bg-primary text-white",
+  mint: "bg-mint text-white",
+  flame: "bg-flame text-white",
+  teal: "bg-teal text-white",
+};
+
+export function Avatar({ src, seed = 0, size = 36, className, ring, badge }: AvatarProps) {
   const p = PALETTE[Math.abs(seed) % PALETTE.length];
   const variant = Math.abs(seed) % 3;
   const id = `av-${seed}`;
@@ -50,6 +62,20 @@ export function Avatar({ src, seed = 0, size = 36, className, ring }: AvatarProp
         />
       ) : (
         <PhotoSvg size={size} p={p} variant={variant} id={id} />
+      )}
+
+      {badge && (
+        <span
+          title={badge.label}
+          aria-label={badge.label}
+          className={cn(
+            "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full ring-2 ring-white",
+            BADGE_TONE[badge.tone],
+          )}
+          style={{ width: Math.max(14, size * 0.42), height: Math.max(14, size * 0.42) }}
+        >
+          <Icon name={badge.icon} size={Math.max(8, size * 0.26)} strokeWidth={2.4} />
+        </span>
       )}
     </span>
   );

@@ -67,7 +67,8 @@ src/
 │   ├── App.tsx          قاب اصلی + مسیریابی صفحه‌ها + ترنزیشن بین صفحه‌ها
 │   ├── Stage.tsx        مقیاس‌دهی صحنه + تصحیح مختصات اشاره‌گر
 │   ├── AppContext.tsx   کانتکست مشترک: route / navigate / notify (toast)
-│   ├── PlayerContext.tsx  حالت پخش: ترک فعلی · play/pause/next/prev/seek · زمان شبیه‌سازی‌شده
+│   ├── PlayerContext.tsx  حالت پخش: ترک فعلی · play/pause/next/prev/seek · صدای واقعی
+│   ├── CommentsContext.tsx  ترد کامنت هر ترک: ارسال · ریپلای · فایر · گزارش · حذف
 │   ├── router.ts        روتر hash مینیمال (بدون وابستگی) — Home/Artists/Albums/Playlists
 │   └── ToastHost.tsx    نمایش اعلان‌های گذرا
 ├── sections/            ← همهٔ بخش‌ها اینجا؛ هر بخش یک ماژول مستقل
@@ -75,7 +76,8 @@ src/
 │   ├── BrandCard.tsx    کارت ۱ — پیل برند
 │   ├── NavCard.tsx      کارت ۲ — پیل منوی اصلی
 │   ├── AccountCard.tsx  کارت ۳ — پیل سرچ/اعلان/پروفایل
-│   ├── PlayerSection.tsx  کارت ۵ — پلیر (TrackPanel ۴۰٪ + LyricsPanel ۶۰٪ + دانلود اندروید)
+│   ├── PlayerSection.tsx  کارت ۵ — پلیر (TrackPanel ۴۰٪ + LyricsPanel ۶۰٪ + نوار کامنت)
+│   ├── player/            CommentsBar · CommentComposer · CommentsSheet
 │   ├── GreetingSection.tsx · MessagesSection.tsx   (در رجیستری می‌مانند، روی Home سوار نیستند)
 │   ├── HeroBanner.tsx   بنر چرخشی با دکمه‌های قبلی/بعدی
 │   ├── ScheduleSection.tsx     (آماده برای صفحات دیگر)
@@ -94,6 +96,7 @@ src/
 ├── assets/              fonts/ (Pretendard لاتین + subset کرهای + Vazirmatn فارسی) · photos/ (۴۲ WebP) · audio/ (مستر دمو)
 ├── data/                بنرها · پیام‌ها · کتابخانه · فید · حساب کاربری · ناوبری
 │                        player.ts (صف پخش) · lyrics.ts (لیریک دوزبانهٔ ۹ ترک)
+│                        comments.ts (تردها) · badges.ts (کاتالوگ نشان‌ها)
 ├── hooks/               useStageScale · useClickOutside
 └── lib/                 stage (اندازهٔ صحنه و متریک‌ها) · motion · cn
 ```
@@ -135,6 +138,27 @@ src/
 **همهٔ دکمه‌های پخش اپ به همین کارت وصل‌اند** — «Newest songs» و «Trending now» در فید و دکمه‌های پخش آرتیست/آلبوم در صفحه‌های Artists/Albums. دو آهنگ هم در «جدیدترین» و هم در «ترند» هستند و صف فقط یک نسخه از هرکدام را نگه می‌دارد (`SAME_SONG`).
 
 صدا واقعی است: `PlayerContext` یک `HTMLAudioElement` می‌سازد و `position`/`duration` را از خودش می‌خواند (`timeupdate`/`durationchange`) و با رویداد `ended` خودکار به ترک بعد می‌رود؛ جای صدا هم دقیقاً همان فایل دموی ریپو است. اگر جایی `Audio` در دسترس نباشد (مثل رندر SSR) همان یک کنترل با زمان شبیه‌سازی‌شدهٔ ۲۵۰ms کار می‌کند. `PlayerProvider` پراپ اختیاری `initialTrackId` هم دارد (کارت را پاز‌شده با یک ترک بالا می‌آورد؛ هوک دیپ‌لینک و همان چیزی که `check:ssr` برای تست حالت پخش استفاده می‌کند).
+
+## کامنت‌ها (پایین کارت راست)
+
+پایین کارت پلیر یک نوار کامنت نشسته است و زیر آن گفت‌وگو کامل باز می‌شود:
+
+- **باکس ارسال کامنت:** آواتار خودت (با نشان آخرین جایزه‌ات) + اینپوت + دکمهٔ ارسال؛ `Enter` می‌فرستد، `Escape` انصراف، شمارندهٔ ۲۴۰ کاراکتر، و متن با `dir="auto"` رندر می‌شود تا کامنت فارسی درست راست‌چین بیفتد.
+- **نمای تیزر:** تازه‌ترین کامنت + تعداد ریپلای‌های انجمن، و دکمهٔ **See all** (بالای نوار) که گفت‌وگوی کامل را باز می‌کند.
+- **شیت کامنت‌ها:** هدر با تعداد + سورت (`Newest` / `Top fired`)، کامنت پین‌شدهٔ آرتیست بالای لیست، ترد ریپلای‌ها (نمایش/مخفی)، دکمهٔ **Load N more comments** و در انتها پیام «همهٔ کامنت‌های این بیلد دمو».
+- **ریپلای و بحث:** زیر هر کامنت دکمهٔ Reply → باکس ریپلای درجا (`Reply to @handle…`)، ریپلای‌ها تودرتو با خط راهنما، و پاسخ‌های خود آرتیست با حلقهٔ بنفش + بج `ARTIST`.
+- **گزارش:** منوی ⋯ هر کامنت → `Report comment` → خود شیت به حالت گزارش می‌رود (۵ دلیل: Spam / Harassment / Spoiler / Misinformation / Something else) → ثبت = کامنت به‌شکل «Hidden — you reported this as …» جمع می‌شود با دکمهٔ **Undo**.
+- **نشان کاربران:** هر آواتار می‌تواند کرستِ **آخرین جایزه** را گوشه‌اش داشته باشد (👑 Top listener · Season 12، 📈 Weekly chart #1، ⭐ Fan of the month، ⚡ 30-day streak، 🏅 Community moderator، ✨ Rookie of the week) — با tooltip و چیپ برچسب کنار نام.
+- **بقیهٔ موارد:** فایر/لایک روی کامنت و ریپلای (با انیمیشن و شمارنده)، منوی ⋯ (`Reply` / `Copy link` / `Report` / `Delete` برای کامنت خودت)، کارت خالی «No comments yet»، و بسته‌شدن با Esc یا کلیک روی پس‌زمینه.
+
+| فایل | نقش |
+|---|---|
+| `src/data/comments.ts` | سید تردها (nt1 / nt2 / nt3 / tr3 + fallback)، تایپ `Comment`، دلایل گزارش |
+| `src/data/badges.ts` | کاتالوگ نشان‌ها (`BADGES`) + تایپ `CommentBadge` |
+| `src/app/CommentsContext.tsx` | `useTrackComments(trackId)`: ترید، ارسال، ریپلای، فایر، گزارش/لغو، حذف، Load more |
+| `src/sections/player/CommentsBar.tsx` | نوار پایین کارت (شمارش + تیزر + کامپوزر) |
+| `src/sections/player/CommentComposer.tsx` | کامپوزر کامنت و ریپلای (مشترک) |
+| `src/sections/player/CommentsSheet.tsx` | شیت کامل: سورت، ترد، ریپلای، گزارش، Load more |
 
 ## سیستم طراحی (FAIMESS)
 
