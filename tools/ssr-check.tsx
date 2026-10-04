@@ -664,6 +664,59 @@ const mixed = sources.filter((file) => {
 });
 check("no logical inset is centred with a physical translate", mixed.length === 0, mixed.join(", "));
 
+/* ------------------------- right-to-left layout (v22) -----------------
+   Two families of RTL bug the app can't afford: a physical direction
+   utility (it simply never mirrors), and an arrow that was chosen once for
+   a left-to-right world. Both are scanned for across every source file. */
+const PHYSICAL = /^-?(?:ml|mr|pl|pr|left|right|border-l|border-r|rounded-l|rounded-r|rounded-tl|rounded-tr|rounded-bl|rounded-br|text-left|text-right|origin-left|origin-right)(-|$)/;
+/** the only two files allowed to place something physically, on purpose */
+const PHYSICAL_OK = new Set(["src/app/Stage.tsx", "src/app/ToastHost.tsx"]);
+const physicalHits: string[] = [];
+for (const file of sources) {
+  const classes = [...readFileSync(file, "utf8").matchAll(/className="([^"]*)"/g)].flatMap((m) =>
+    m[1].split(/\s+/),
+  );
+  for (const cls of classes) {
+    const base = cls.split(":").pop() ?? "";
+    if (PHYSICAL.test(base) && !PHYSICAL_OK.has(file)) physicalHits.push(`${file}: ${cls}`);
+  }
+}
+check(
+  "no physical direction utility, anywhere but the two documented ones",
+  physicalHits.length === 0,
+  physicalHits.join(", "),
+);
+
+/** arrows whose whole shape flips must be picked per direction, not hard-coded */
+const LITERAL_ARROWS = /(?:name|icon)=["'](?:arrowRight|arrowLeft|chevronRight|chevronLeft)["']/;
+const literalArrows = sources.filter((file) => LITERAL_ARROWS.test(readFileSync(file, "utf8")));
+check(
+  "every back/next arrow comes from backIcon() or forwardIcon()",
+  literalArrows.length === 0,
+  literalArrows.join(", "),
+);
+
+const iconSrc = readFileSync("src/ui/Icon.tsx", "utf8");
+check(
+  "the up-and-away glyphs mirror themselves in RTL",
+  cssSrc.includes('[dir="rtl"] .dir-flip') &&
+    iconSrc.includes("MIRRORED_IN_RTL") &&
+    iconSrc.includes('"arrowUpRight"') &&
+    iconSrc.includes('"send"'),
+  "one rule in index.css, one list in Icon.tsx",
+);
+
+check(
+  "the page row follows the interface direction",
+  !readFileSync("src/app/App.tsx", "utf8").includes('dir="ltr"'),
+  "so the feed takes the right-hand column in Persian and the player the left",
+);
+
+check(
+  "the ambient glow follows the writing direction too",
+  cssSrc.includes("--glow-x") && cssSrc.includes('[dir="rtl"] .studio-backdrop'),
+);
+
 /* v17 keeps artwork inside the FAIMESS set: no file input, no object URLs */
 const uploads = sources.filter((file) =>
   /type="file"|createObjectURL|FileReader|new Blob\(/.test(readFileSync(file, "utf8")),

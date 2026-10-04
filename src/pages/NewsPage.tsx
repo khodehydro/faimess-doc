@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { PillButton } from "../ui/primitives";
+import { forwardIcon } from "../lib/rtl";
 import { Thumb } from "../ui/Scenes";
 import { Icon } from "../ui/Icon";
 import { newsItems, type NewsItem } from "../data/feed";
@@ -54,7 +55,7 @@ export function NewsPage() {
               {t(TAG_KEY[tagName] ?? "news.tag.all")}
             </PillButton>
           ))}
-          <PillButton tone="soft" icon="arrowLeft" onClick={() => navigate("home")}>
+          <PillButton tone="soft" icon={forwardIcon(dir)} onClick={() => navigate("home")}>
             {t("news.backHome")}
           </PillButton>
         </div>

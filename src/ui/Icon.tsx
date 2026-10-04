@@ -1,4 +1,5 @@
 import type { SVGProps } from "react";
+import { cn } from "../lib/cn";
 
 /* ------------------------------------------------------------------ *
  *  Icon set — thin linear strokes with round caps. Inlined so the app
@@ -144,7 +145,16 @@ type Props = SVGProps<SVGSVGElement> & {
   strokeWidth?: number;
 };
 
-export function Icon({ name, size = 18, strokeWidth = 1.6, ...rest }: Props) {
+/**
+ * Glyphs that only ever point "up and away" — there is no logical
+ * counterpart to swap them for, so in a right-to-left interface they are
+ * mirrored whole (`dir-flip`, src/index.css). Arrows that mean back / next
+ * are NOT here: those are picked per direction with `backIcon` /
+ * `forwardIcon`, because in RTL "back" is the arrow that points right.
+ */
+const MIRRORED_IN_RTL: IconName[] = ["arrowUpRight", "send"];
+
+export function Icon({ name, size = 18, strokeWidth = 1.6, className, ...rest }: Props) {
   const d = paths[name as string] ?? [];
   return (
     <svg
@@ -157,6 +167,7 @@ export function Icon({ name, size = 18, strokeWidth = 1.6, ...rest }: Props) {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
+      className={cn(MIRRORED_IN_RTL.includes(name) && "dir-flip", className)}
       {...rest}
     >
       {d.map((p) => (

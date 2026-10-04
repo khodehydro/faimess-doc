@@ -7,7 +7,8 @@ import { newsItems } from "../../data/feed";
 import { useApp } from "../../app/AppContext";
 import { cn } from "../../lib/cn";
 import { spring } from "../../lib/motion";
-import { useT } from "../../app/PreferencesContext";
+import { usePreferences } from "../../app/PreferencesContext";
+import { forwardIcon } from "../../lib/rtl";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 4 — latest news, with a link through to the full news page.
@@ -22,7 +23,7 @@ const TAG_TONE: Record<string, string> = {
 };
 
 export function NewsShelf() {
-  const t = useT();
+  const { t, dir } = usePreferences();
   const { navigate, notify } = useApp();
 
   return (
@@ -77,7 +78,7 @@ export function NewsShelf() {
               transition={spring}
               className="me-0.5 shrink-0 text-ink-faint transition-colors group-hover:text-primary"
             >
-              <Icon name="chevronRight" size={16.5} strokeWidth={2} />
+              <Icon name={forwardIcon(dir)} size={16.5} strokeWidth={2} />
             </motion.span>
           </motion.div>
         ))}

@@ -54,7 +54,7 @@ export function PlayerSection({
 }: {
   params: { expanded: boolean; onToggleExpand: () => void };
 }) {
-  const { t } = usePreferences();
+  const { t, dir } = usePreferences();
   const player = usePlayer();
   const { track } = player;
   const [panel, setPanel] = useState<PanelId | null>(null);
@@ -235,7 +235,7 @@ function PlayerRail({
 /* ------------------------------- drawers ------------------------------- */
 
 function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void }) {
-  const { t } = usePreferences();
+  const { t, dir } = usePreferences();
   const player = usePlayer();
   const { navigate, notify } = useApp();
   const { mine } = usePlaylists();
@@ -247,7 +247,9 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
 
   return (
     <motion.aside
-      initial={{ x: -16, opacity: 0 }}
+      /* the drawer slides in from the card's inline end, so the offset is
+         physical and has to follow the writing direction */
+      initial={{ x: -16 * dirSign(dir), opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -16, opacity: 0 }}
       transition={{ duration: 0.24, ease: EASE }}
@@ -336,7 +338,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
                   </span>
                 </span>
                 <span className="text-ink-faint opacity-0 transition-opacity group-hover:opacity-100">
-                  <Icon name="arrowRight" size={14} strokeWidth={2} />
+                  <Icon name={forwardIcon(dir)} size={14} strokeWidth={2} />
                 </span>
               </button>
             ))}
@@ -729,7 +731,7 @@ function DownloadButton({ onOpen }: { onOpen: () => void }) {
 /* ------------------------------ download note --------------------------- */
 
 function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = usePreferences();
+  const { t, dir } = usePreferences();
   const { navigate } = useApp();
 
   return (
@@ -755,7 +757,7 @@ function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void 
           className="flex items-center gap-2 rounded-[14px] bg-primary px-3.5 py-2.5 text-[13.5px] font-bold text-white shadow-primary"
         >
           {t("player.androidPage")}
-          <Icon name="arrowRight" size={15} strokeWidth={2.2} />
+          <Icon name={forwardIcon(dir)} size={15} strokeWidth={2.2} />
         </motion.button>
 
         <button

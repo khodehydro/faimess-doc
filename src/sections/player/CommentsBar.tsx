@@ -4,7 +4,8 @@ import { Icon } from "../../ui/Icon";
 import { useTrackComments } from "../../app/CommentsContext";
 import { CommentComposer } from "./CommentComposer";
 import { spring } from "../../lib/motion";
-import { useT } from "../../app/PreferencesContext";
+import { usePreferences } from "../../app/PreferencesContext";
+import { forwardIcon } from "../../lib/rtl";
 
 /* ------------------------------------------------------------------ *
  *  The comments strip pinned to the bottom of the player card:
@@ -13,7 +14,7 @@ import { useT } from "../../app/PreferencesContext";
  * ------------------------------------------------------------------ */
 
 export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () => void }) {
-  const t = useT();
+  const { t, dir } = usePreferences();
   const comments = useTrackComments(trackId);
   const latest = comments.thread[0];
   const second = comments.thread.find((c) => c.replies.length > 0);
@@ -36,7 +37,7 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
           className="ms-auto flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1.5 text-[12px] font-bold text-primary-deep"
         >
           {t("comments.seeAll")}
-          <Icon name="arrowRight" size={12} strokeWidth={2.2} />
+          <Icon name={forwardIcon(dir)} size={12} strokeWidth={2.2} />
         </motion.button>
       </header>
 

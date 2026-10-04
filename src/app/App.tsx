@@ -61,11 +61,12 @@ function Shell() {
         </div>
       </div>
 
-      {/* content row — pages own their cards. Locked to LTR so the two content
-          cards keep their physical places (and the player stays on the right)
-          even when the interface is Persian; each card re-declares `dir`
-          for its own text. */}
-      <div dir="ltr" className="flex min-h-0 flex-1 flex-col">
+      {/* Content row — the pages own their cards. The row follows the
+          interface direction, so the home page mirrors as a whole in Persian:
+          the feed takes the right-hand column and the player the left one.
+          Each card re-declares `dir` for its own text, so nothing inside them
+          depends on where the card itself landed. */}
+      <div dir={dir} className="flex min-h-0 flex-1 flex-col">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={route}

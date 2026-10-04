@@ -350,6 +350,21 @@
   mask-image: linear-gradient(180deg, #000 0%, #000 calc(100% - 26px), transparent 100%);
 }
 
+/* ------------------------------------------------------------------ *
+ *  Direction — one place that mirrors a glyph in a right-to-left UI.
+ *
+ *  Arrows that mean "back" and "next" are chosen logically at the call site
+ *  (`backIcon` / `forwardIcon` in src/lib/rtl.ts) because their whole shape
+ *  flips. The few glyphs that merely point up-and-away — the "opens
+ *  elsewhere" arrow and the paper plane — have no logical counterpart, so
+ *  they carry a `dir-flip` class and this rule turns them around. It is
+ *  scoped to `[dir="rtl"]` ancestors, so it works inside every card, dialog
+ *  and portal that re-declares its own direction.
+ * ------------------------------------------------------------------ */
+[dir="rtl"] .dir-flip {
+  transform: scaleX(-1);
+}
+
 /* keeps the frame from ever adding scrollbars to the page */
 @utility no-scrollbar {
   scrollbar-width: none;
@@ -361,7 +376,9 @@
 /* ------------------------------------------------------------------ *
  *  Home layout — the 75 / 25 card split.
  *  Unlayered rules, so they win over the `flex-1` that SurfaceCard carries.
- *  Kept in sync with HOME_METRICS.split in src/lib/stage.ts.
+ *  Widths only: which card lands on which side is the row's own direction
+ *  (the feed is the wide one, on the right in Persian). Kept in sync with
+ *  HOME_METRICS.split in src/lib/stage.ts.
  * ------------------------------------------------------------------ */
 @media (min-width: 1024px) {
   .home-split-left {
@@ -391,12 +408,19 @@
   }
 }
 
-/* the studio the app frame floats on — light grey by day, near-black at night */
+/* The studio the app frame floats on — light grey by day, near-black at night.
+   The lower glow sits at the inline end of the frame (`--glow-x`), so it moves
+   with the writing direction instead of staying stuck in one corner. */
 .studio-backdrop {
+  --glow-x: 88%;
   background:
     radial-gradient(120% 90% at 50% -10%, #f6f6f8 0%, rgba(246, 246, 248, 0) 55%),
-    radial-gradient(80% 60% at 88% 108%, #e4e5e9 0%, rgba(228, 229, 233, 0) 60%),
+    radial-gradient(80% 60% at var(--glow-x) 108%, #e4e5e9 0%, rgba(228, 229, 233, 0) 60%),
     linear-gradient(180deg, #eaeaec 0%, #e5e6ea 100%);
+}
+
+[dir="rtl"] .studio-backdrop {
+  --glow-x: 12%;
 }
 
 /* Persian switches the whole app to Vazirmatn: the self-hosted Pretendard
@@ -411,7 +435,7 @@ html:lang(fa) {
 [data-theme="dark"] .studio-backdrop {
   background:
     radial-gradient(120% 90% at 50% -10%, #1c1e26 0%, rgba(28, 30, 38, 0) 55%),
-    radial-gradient(80% 60% at 88% 108%, #14161c 0%, rgba(20, 22, 28, 0) 60%),
+    radial-gradient(80% 60% at var(--glow-x) 108%, #14161c 0%, rgba(20, 22, 28, 0) 60%),
     linear-gradient(180deg, var(--color-canvas) 0%, var(--color-canvas-deep) 100%);
 }
 

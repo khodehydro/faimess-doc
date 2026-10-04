@@ -109,13 +109,8 @@ export function ShareDialog({
             className="flex items-center gap-2 rounded-full border border-line/80 px-3.5 py-2.5 text-[12.5px] font-bold text-ink-body transition-colors hover:border-primary/30 hover:bg-primary-faint hover:text-primary-deep"
           >
             {t(target.labelKey)}
-            {/* the "opens elsewhere" arrow follows the text, so it mirrors in RTL */}
-            <Icon
-              name="arrowUpRight"
-              size={12.5}
-              strokeWidth={2.2}
-              className={cn(dir === "rtl" && "-scale-x-100")}
-            />
+            {/* the "opens elsewhere" arrow mirrors itself in RTL — see Icon */}
+            <Icon name="arrowUpRight" size={12.5} strokeWidth={2.2} />
           </button>
         ))}
       </div>

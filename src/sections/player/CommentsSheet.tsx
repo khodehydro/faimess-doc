@@ -5,6 +5,7 @@ import { Icon } from "../../ui/Icon";
 import { Modal } from "../../ui/Modal";
 import { useApp } from "../../app/AppContext";
 import { usePreferences } from "../../app/PreferencesContext";
+import { backIcon } from "../../lib/rtl";
 import { useTrackComments } from "../../app/CommentsContext";
 import { REPORT_REASONS, type Comment } from "../../data/comments";
 import { useClickOutside } from "../../hooks/useClickOutside";
@@ -33,7 +34,7 @@ export function CommentsSheet({
   open: boolean;
   onClose: () => void;
 }) {
-  const { t } = usePreferences();
+  const { t, dir } = usePreferences();
   const comments = useTrackComments(trackId);
   const [sort, setSort] = useState<Sort>("newest");
   const [reportTarget, setReportTarget] = useState<Target | null>(null);
@@ -65,7 +66,7 @@ export function CommentsSheet({
               }}
               className="mt-1 flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1.5 text-[12px] font-bold text-ink-body transition-colors hover:bg-muted"
             >
-              <Icon name="chevronLeft" size={13} strokeWidth={2.2} />
+              <Icon name={backIcon(dir)} size={13} strokeWidth={2.2} />
               {t("comments.back")}
             </button>
           ) : (

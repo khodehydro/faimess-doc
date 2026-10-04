@@ -6,16 +6,17 @@ import { PillButton } from "../../ui/primitives";
 import { freshAlbums } from "../../data/library";
 import { useApp } from "../../app/AppContext";
 import { usePlayer } from "../../app/PlayerContext";
+import { forwardIcon } from "../../lib/rtl";
 import { leadTrackFor } from "../../data/player";
 import { spring } from "../../lib/motion";
-import { useT } from "../../app/PreferencesContext";
+import { usePreferences } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 5 — the freshest albums: square art, title and release age.
  * ------------------------------------------------------------------ */
 
 export function NewAlbums() {
-  const t = useT();
+  const { t, dir } = usePreferences();
   const { navigate, notify } = useApp();
   const player = usePlayer();
 
@@ -26,7 +27,7 @@ export function NewAlbums() {
       title={t("shelf.freshAlbums")}
       hint={t("shelf.hintWeek")}
       action={
-        <PillButton tone="soft" icon="arrowRight" onClick={() => navigate("albums")}>
+        <PillButton tone="soft" icon={forwardIcon(dir)} onClick={() => navigate("albums")}>
           {t("shelf.allAlbums")}
         </PillButton>
       }

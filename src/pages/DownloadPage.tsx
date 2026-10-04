@@ -4,6 +4,7 @@ import { Icon } from "../ui/Icon";
 import { Logo } from "../ui/Logo";
 import { useApp } from "../app/AppContext";
 import { spring, staggerParent, popChild } from "../lib/motion";
+import { forwardIcon } from "../lib/rtl";
 import { usePreferences } from "../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
@@ -101,7 +102,7 @@ export function DownloadPage() {
               onClick={() => navigate("home")}
               className="ms-auto flex items-center gap-1.5 text-[13px] font-bold text-ink-muted transition-colors hover:text-primary-deep"
             >
-              <Icon name="arrowLeft" size={15} strokeWidth={2} />
+              <Icon name={forwardIcon(dir)} size={15} strokeWidth={2} />
               {t("download.back")}
             </button>
           </div>
