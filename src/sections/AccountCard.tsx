@@ -8,6 +8,7 @@ import { useApp } from "../app/AppContext";
 import { navItems, notifications } from "../data/navigation";
 import { allRoutes } from "../app/router";
 import { artists, albums, playlists } from "../data/library";
+import { me } from "../data/account";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
 
@@ -201,7 +202,7 @@ export function AccountCard() {
           className="relative ml-0.5"
           aria-label="Account"
         >
-          <Avatar seed={0} size={40} ring />
+          <Avatar src={me.photo} seed={0} size={40} ring />
           <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-mint ring-2 ring-white">
             <Icon name="check" size={10} strokeWidth={3} className="text-white" />
           </span>
@@ -216,10 +217,10 @@ export function AccountCard() {
               className="absolute right-0 top-[calc(100%+14px)] z-40 w-[214px] rounded-panel border border-line bg-surface p-1.5 shadow-float"
             >
               <div className="flex items-center gap-2.5 px-2 py-2">
-                <Avatar seed={0} size={34} />
+                <Avatar src={me.photo} seed={0} size={34} />
                 <span>
-                  <span className="block text-[14px] font-bold text-ink">Wendy</span>
-                  <span className="text-[12px] text-ink-muted">Listener · Premium</span>
+                  <span className="block text-[14px] font-bold text-ink">{me.name}</span>
+                  <span className="text-[12px] text-ink-muted">{me.tier}</span>
                 </span>
               </div>
               <span className="my-1 block h-px w-full bg-line" />

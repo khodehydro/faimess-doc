@@ -1,5 +1,10 @@
 import type { SceneKey } from "../ui/Scenes";
 
+import jinahPhoto from "../assets/photos/users/jinah.webp";
+import soraPhoto from "../assets/photos/users/sora.webp";
+import junPhoto from "../assets/photos/users/jun.webp";
+import yunaPhoto from "../assets/photos/users/yuna.webp";
+
 export type Message =
   | { id: string; kind: "text"; from: "me" | "them"; text: string; at: string }
   | {
@@ -20,99 +25,77 @@ export type Conversation = {
   status: string;
   online?: boolean;
   unread?: number;
+  photo: string;
   messages: Message[];
 };
 
+/** Fan-to-fan messages, so the right column reads like a real community. */
 export const conversations: Conversation[] = [
   {
-    id: "jane",
-    name: "Jane Cooper",
+    id: "jinah",
+    name: "Jinah",
     seed: 0,
     status: "Online",
     online: true,
     unread: 1,
+    photo: jinahPhoto,
     messages: [
-      { id: "m1", kind: "text", from: "them", text: "Morning", at: "12:41" },
-      { id: "m2", kind: "text", from: "them", text: "Let's join us Wendy!", at: "12:30" },
-      { id: "m3", kind: "text", from: "me", text: "Sure Jenny :)", at: "12:35" },
+      { id: "m1", kind: "text", from: "them", text: "Did you see the Afterglow teaser? 👀", at: "12:41" },
+      { id: "m2", kind: "text", from: "them", text: "Forty seconds and I've replayed it twenty times", at: "12:42" },
+      { id: "m3", kind: "text", from: "me", text: "Same. Pre-ordered the album already 🎧", at: "12:44" },
       {
         id: "m4",
         kind: "invite",
-        title: "Sunset at Jimbaron",
-        when: "16 Nov · 16:30 hrs",
-        at: "13:05",
-        scene: "coast",
+        title: "NOVAE — Afterglow Tour · Seoul",
+        when: "11 Nov · 20:00 hrs",
+        at: "12:46",
+        scene: "sunset",
         status: "pending",
       },
-      { id: "m5", kind: "text", from: "them", text: "That's cool, see you soon!", at: "13:20" },
+      { id: "m5", kind: "text", from: "them", text: "That's the one. See you at the barrier!", at: "12:52" },
     ],
   },
   {
-    id: "jenny",
-    name: "Jenny Wilson",
+    id: "sora",
+    name: "Sora",
     seed: 1,
     status: "5 minutes ago",
     unread: 2,
+    photo: soraPhoto,
     messages: [
-      { id: "j1", kind: "text", from: "them", text: "Hey! Are we still on for the trip?", at: "09:12" },
-      { id: "j2", kind: "text", from: "me", text: "Yes! I'll lock the dates tonight 🌿", at: "09:20" },
-      {
-        id: "j3",
-        kind: "invite",
-        title: "Brunch at Kaum",
-        when: "18 Nov · 10:00 hrs",
-        at: "09:24",
-        scene: "forest",
-        status: "pending",
-      },
+      { id: "s1", kind: "text", from: "them", text: "Midnight Seoul is on repeat 🔁", at: "09:12" },
+      { id: "s2", kind: "text", from: "them", text: "The bridge at 2:10 is unreal, right?", at: "09:13" },
+      { id: "s3", kind: "text", from: "me", text: "I've had it on all morning", at: "09:20" },
     ],
   },
   {
-    id: "broklyn",
-    name: "Broklyn Simon",
+    id: "jun",
+    name: "Jun",
     seed: 2,
     status: "10 minutes ago",
     unread: 3,
+    photo: junPhoto,
     messages: [
-      { id: "b1", kind: "text", from: "them", text: "Sent you the sunrise route 🗺️", at: "08:02" },
-      { id: "b2", kind: "text", from: "me", text: "Perfect, adding it to the schedule", at: "08:15" },
+      { id: "j1", kind: "text", from: "them", text: "Fire counter just passed 18K 🔥", at: "08:02" },
+      { id: "j2", kind: "text", from: "me", text: "Pushing it to 20K tonight, we can take #1", at: "08:15" },
     ],
   },
   {
-    id: "theresa",
-    name: "Theresa Angel",
+    id: "yuna",
+    name: "Yuna",
     seed: 3,
-    status: "56 minutes ago",
-    messages: [
-      { id: "t1", kind: "text", from: "them", text: "The cabin photos look unreal!", at: "07:41" },
-      { id: "t2", kind: "text", from: "me", text: "Wait until you see the lake at dawn", at: "07:55" },
-    ],
-  },
-  {
-    id: "minji",
-    name: "Kim Minji",
-    seed: 4,
-    status: "8 minutes ago",
-    messages: [
-      { id: "k1", kind: "text", from: "them", text: "Packing list is ready ✅", at: "11:30" },
-      { id: "k2", kind: "text", from: "me", text: "Send it over, I'll merge with mine", at: "11:36" },
-    ],
-  },
-  {
-    id: "brian",
-    name: "Brian Tracy",
-    seed: 5,
     status: "Sunday",
+    photo: yunaPhoto,
     messages: [
-      { id: "r1", kind: "text", from: "them", text: "Sunday hike still on?", at: "Sun" },
-      { id: "r2", kind: "text", from: "me", text: "Count me in 🥾", at: "Sun" },
+      { id: "y1", kind: "text", from: "them", text: "Fan meeting tickets drop at 8 PM 🎟️", at: "Sun" },
+      { id: "y2", kind: "text", from: "me", text: "Alarm set, card ready", at: "Sun" },
     ],
   },
 ];
 
 export const cannedReplies = [
-  "Noted! I'll add it to our plan 🌿",
-  "Sounds good — putting it on the schedule.",
-  "Nice one! Let's confirm tomorrow morning 🙂",
-  "On it. Anything else you want to fit in?",
+  "Noted! Queueing it up now 🎧",
+  "Sounds good — adding it to the playlist.",
+  "Yes! Let's lock the tickets tonight.",
+  "On it. Anything else from the comeback?",
 ];

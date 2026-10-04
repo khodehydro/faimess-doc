@@ -32,7 +32,7 @@ function TrackRow({
       className="group flex items-center gap-3 rounded-[14px] border border-line/80 bg-surface px-2.5 py-2 transition-colors hover:border-primary/25 hover:bg-primary-faint/60"
     >
       <span className="relative size-[42px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
-        <Cover seed={track.seed} className="h-full w-full" />
+        <Cover src={track.photo} seed={track.seed} className="h-full w-full" />
         <span
           onClick={() => {
             setPlaying((v) => !v);

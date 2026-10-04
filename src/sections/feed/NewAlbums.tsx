@@ -3,7 +3,7 @@ import { Shelf, Row, PlayDot } from "./Shelf";
 import { Cover } from "../../ui/Cover";
 import { Icon } from "../../ui/Icon";
 import { PillButton } from "../../ui/primitives";
-import { newestAlbums } from "../../data/feed";
+import { freshAlbums } from "../../data/library";
 import { useApp } from "../../app/AppContext";
 import { spring } from "../../lib/motion";
 
@@ -27,7 +27,7 @@ export function NewAlbums() {
       }
     >
       <Row>
-        {newestAlbums.map((album, i) => (
+        {freshAlbums.map((album, i) => (
           <motion.div
             key={album.id}
             initial={{ opacity: 0, y: 12 }}
@@ -47,7 +47,7 @@ export function NewAlbums() {
             className="group w-[142px] shrink-0 cursor-pointer snap-start"
           >
             <span className="relative block aspect-square overflow-hidden rounded-[16px] shadow-card ring-1 ring-line/70">
-              <Cover seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.06]" />
+              <Cover src={album.photo} seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.06]" />
               <span className="absolute left-2 top-2 rounded-full bg-white/88 px-1.5 py-[2px] text-[12px] font-bold text-ink backdrop-blur">
                 {album.released}
               </span>

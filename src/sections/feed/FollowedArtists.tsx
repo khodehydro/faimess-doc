@@ -49,7 +49,7 @@ export function FollowedArtists() {
             >
               {/* circular cover */}
               <span className="relative block size-[70px] overflow-hidden rounded-full ring-[2.5px] ring-white shadow-card">
-                <Cover seed={artist.seed} className="h-full w-full" />
+                <Cover src={artist.photo} seed={artist.seed} className="h-full w-full" />
               </span>
 
               {/* brand ring on hover */}

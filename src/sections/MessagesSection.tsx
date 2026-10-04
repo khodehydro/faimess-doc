@@ -20,7 +20,7 @@ function ConversationRow({ convo, active, onSelect }: { convo: Conversation; act
         <motion.span layoutId="convo-active" transition={spring} className="absolute inset-x-1 inset-y-0.5 rounded-[14px] bg-subtle" />
       )}
       <span className="relative">
-        <Avatar seed={convo.seed} size={34} />
+        <Avatar src={convo.photo} seed={convo.seed} size={34} />
         {convo.online && <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-mint ring-2 ring-white" />}
       </span>
       <span className="relative min-w-0 flex-1">
@@ -76,7 +76,7 @@ function InviteCard({
         </div>
         <div className="min-w-0">
           <p className="text-[12px] font-semibold leading-snug text-ink-body">{message.when}</p>
-          <p className="mt-0.5 text-[12px] text-ink-muted">with 4 explorers</p>
+          <p className="mt-0.5 text-[12px] text-ink-muted">4 friends going</p>
         </div>
       </div>
 

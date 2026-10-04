@@ -1,10 +1,12 @@
-import type { SceneKey } from "../ui/Scenes";
-import type { MapTone } from "../ui/Scenes";
-
 /* ------------------------------------------------------------------ *
  *  Home banners — the hero rotates through these.
- *  Add an object here and it appears as the next slide, no code change.
+ *  Add an object here and it becomes the next slide, no code change.
+ *  Each slide is a real photograph with a tour / release story on top.
  * ------------------------------------------------------------------ */
+
+import afterglowTourPhoto from "../assets/photos/banners/tour-afterglow.webp";
+import asiaLegPhoto from "../assets/photos/banners/asia-leg.webp";
+import midnightSeoulPhoto from "../assets/photos/banners/midnight-seoul.webp";
 
 export type Banner = {
   id: string;
@@ -12,50 +14,55 @@ export type Banner = {
   eyebrow: string;
   title: string;
   dateRange: string;
-  time: string;
   location: string;
-  guests: number;
-  scene: SceneKey;
-  mapTone: MapTone;
-  /** travellers shown in the stacked avatars */
-  travellers: number[];
+  /** fans who hit “going” on this event */
+  going: number;
+  photo: string;
+  /** the three stops listed inside the detail card */
+  stops: { city: string; date: string }[];
 };
 
 export const banners: Banner[] = [
   {
-    id: "switzerland",
-    eyebrow: "Active trip",
-    title: "Traveling to Switzerland",
-    dateRange: "11 Nov - 16 Nov",
-    time: "11:00 AM",
-    location: "Lauterbrunnen Valley",
-    guests: 2,
-    scene: "sunset",
-    mapTone: "teal",
-    travellers: [1, 3, 4],
+    id: "afterglow-tour",
+    eyebrow: "World tour",
+    title: "NOVAE — Afterglow World Tour",
+    dateRange: "11 Nov – 16 Nov",
+    location: "Seoul · KSPO Dome",
+    going: 12480,
+    photo: afterglowTourPhoto,
+    stops: [
+      { city: "Seoul", date: "11 Nov" },
+      { city: "Tokyo", date: "13 Nov" },
+      { city: "Milan", date: "16 Nov" },
+    ],
   },
   {
-    id: "ranca-upas",
-    eyebrow: "Next up",
-    title: "Camping at Ranca Upas",
-    dateRange: "11 Dec - 12 Dec",
-    time: "06:30 PM",
-    location: "Ranca Upas Highland",
-    guests: 3,
-    scene: "camping",
-    mapTone: "violet",
-    travellers: [0, 2, 5],
+    id: "prism9-asia",
+    eyebrow: "New dates",
+    title: "PRISM9 — Velvet Static Asia leg",
+    dateRange: "11 Dec – 14 Dec",
+    location: "Tokyo · Saitama Arena",
+    going: 8920,
+    photo: asiaLegPhoto,
+    stops: [
+      { city: "Tokyo", date: "11 Dec" },
+      { city: "Manila", date: "13 Dec" },
+      { city: "Bangkok", date: "14 Dec" },
+    ],
   },
   {
-    id: "jimbaron",
-    eyebrow: "Saved idea",
-    title: "Sunset at Jimbaron",
-    dateRange: "16 Nov - 18 Nov",
-    time: "04:30 PM",
-    location: "Jimbaron Coast",
-    guests: 4,
-    scene: "coast",
-    mapTone: "amber",
-    travellers: [4, 1, 0],
+    id: "midnight-seoul",
+    eyebrow: "Out now",
+    title: "AXION — “Midnight Seoul”",
+    dateRange: "Listening party tonight",
+    location: "Seoul · FAIMESS Live Room",
+    going: 15260,
+    photo: midnightSeoulPhoto,
+    stops: [
+      { city: "Seoul", date: "20:00" },
+      { city: "Tokyo", date: "21:00" },
+      { city: "Milan", date: "22:00" },
+    ],
   },
 ];

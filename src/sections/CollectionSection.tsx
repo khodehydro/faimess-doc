@@ -106,7 +106,7 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
   return (
     <CardShell onClick={() => notify(`Opening ${artist.name}`)} label={`Open ${artist.name}`}>
       <div className="relative min-h-0 flex-1 overflow-hidden">
-        <ArtistCover seed={artist.seed} initials={artist.initials} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
+        <ArtistCover src={artist.photo} seed={artist.seed} initials={artist.initials} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
         <PlayFab onClick={() => notify(`Playing ${artist.name}`)} className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[12px] font-bold text-ink backdrop-blur">
           {artist.genre}
@@ -142,7 +142,7 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
   return (
     <CardShell onClick={() => notify(`Opening “${album.title}”`)} label={`Open ${album.title}`}>
       <div className="relative min-h-0 flex-1 overflow-hidden">
-        <Cover seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
+        <Cover src={album.photo} seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
         <PlayFab onClick={() => notify(`Playing “${album.title}”`)} className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[12px] font-bold text-ink backdrop-blur">
           {album.year}
@@ -174,7 +174,7 @@ function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
       className="group flex min-h-0 items-center gap-3 overflow-hidden rounded-card bg-surface p-2.5 text-left shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float"
     >
       <span className="relative size-[68px] shrink-0 overflow-hidden rounded-[16px]">
-        <Cover seed={playlist.seed} className="h-full w-full" />
+        <Cover src={playlist.photo} seed={playlist.seed} className="h-full w-full" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="font-display block truncate text-[15.5px] font-bold text-ink">{playlist.name}</span>

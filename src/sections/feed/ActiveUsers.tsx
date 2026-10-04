@@ -71,7 +71,7 @@ export function ActiveUsers() {
 
               {/* circular profile */}
               <span className="relative mt-3">
-                <Avatar seed={user.seed} size={56} className={medal ? "ring-2 ring-primary ring-offset-2" : ""} />
+                <Avatar src={user.photo} seed={user.seed} size={56} className={medal ? "ring-2 ring-primary ring-offset-2" : ""} />
               </span>
 
               <span className="w-full">

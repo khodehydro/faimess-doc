@@ -51,7 +51,7 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
       </span>
 
       <span className="relative size-[38px] shrink-0 overflow-hidden rounded-[11px] shadow-xs">
-        <Cover seed={row.seed} className="h-full w-full" />
+        <Cover src={row.photo} seed={row.seed} className="h-full w-full" />
         <span className="absolute inset-0 flex items-center justify-center bg-ink/45 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <Icon name="play" size={15.5} strokeWidth={2} />
         </span>

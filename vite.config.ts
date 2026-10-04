@@ -3,6 +3,10 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
+  build: {
+    /* keep every bundled photo as its own cacheable file */
+    assetsInlineLimit: 2048,
+  },
   plugins: [react(), tailwindcss()],
   server: {
     host: "0.0.0.0",

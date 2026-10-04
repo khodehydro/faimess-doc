@@ -1,9 +1,9 @@
 import { cn } from "../lib/cn";
 
 /* ------------------------------------------------------------------ *
- *  Illustrated avatars — flat vector people generated from a seed, so
- *  the app ships with zero external image requests. Swap for <img>
- *  later; the component API stays the same.
+ *  Avatars — a real profile photo when the data carries `src`, and the
+ *  flat vector person generated from the seed as the fallback. Both are
+ *  round and fill the box, so callers only ever set the size.
  * ------------------------------------------------------------------ */
 
 const PALETTE = [
@@ -16,6 +16,8 @@ const PALETTE = [
 ];
 
 type AvatarProps = {
+  /** a real profile photo — takes precedence over the drawn person */
+  src?: string;
   seed?: number;
   size?: number;
   className?: string;
@@ -23,7 +25,7 @@ type AvatarProps = {
   ring?: boolean;
 };
 
-export function Avatar({ seed = 0, size = 36, className, ring }: AvatarProps) {
+export function Avatar({ src, seed = 0, size = 36, className, ring }: AvatarProps) {
   const p = PALETTE[Math.abs(seed) % PALETTE.length];
   const variant = Math.abs(seed) % 3;
   const id = `av-${seed}`;
@@ -37,6 +39,34 @@ export function Avatar({ seed = 0, size = 36, className, ring }: AvatarProps) {
       )}
       style={{ width: size, height: size }}
     >
+      {src ? (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="h-full w-full rounded-full object-cover"
+        />
+      ) : (
+        <PhotoSvg size={size} p={p} variant={variant} id={id} />
+      )}
+    </span>
+  );
+}
+
+function PhotoSvg({
+  size,
+  p,
+  variant,
+  id,
+}: {
+  size: number;
+  p: (typeof PALETTE)[number];
+  variant: number;
+  id: string;
+}) {
+  return (
       <svg viewBox="0 0 40 40" width={size} height={size} aria-hidden="true">
         <defs>
           <clipPath id={`${id}-clip`}>
@@ -90,7 +120,6 @@ export function Avatar({ seed = 0, size = 36, className, ring }: AvatarProps) {
           <circle cx="24.9" cy="19.9" r="1.15" fill="#8267F0" opacity="0.28" />
         </g>
       </svg>
-    </span>
   );
 }
 

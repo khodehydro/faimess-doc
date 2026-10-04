@@ -1,7 +1,26 @@
+import { cn } from "../lib/cn";
+
 /* ------------------------------------------------------------------ *
- *  Cover art — procedural artwork for albums / playlists / artists.
- *  Deterministic from a seed, so the library needs no image assets.
+ *  Cover art — real photography when the data carries a `src`, and a
+ *  procedural fallback drawn from the seed when it does not.
+ *
+ *  Both paths fill the space they are given, so any caller can swap a
+ *  photo in by adding one field to data/library.ts.
  * ------------------------------------------------------------------ */
+
+/** Shared <img> wrapper: cover-crops a photo to whatever box it sits in. */
+export function Photo({ src, alt = "", className }: { src: string; alt?: string; className?: string }) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      draggable={false}
+      className={cn("h-full w-full object-cover", className)}
+    />
+  );
+}
 
 const TONES = [
   { a: "#A78BFA", b: "#6B4FDD", ink: "#FFFFFF" },
@@ -15,6 +34,8 @@ const TONES = [
 ];
 
 type CoverProps = {
+  /** a real cover photo — takes precedence over the generated artwork */
+  src?: string;
   seed?: number;
   variant?: 0 | 1 | 2 | 3 | 4 | 5;
   className?: string;
@@ -22,7 +43,9 @@ type CoverProps = {
   sheen?: boolean;
 };
 
-export function Cover({ seed = 0, variant, className, sheen = true }: CoverProps) {
+export function Cover({ src, seed = 0, variant, className, sheen = true }: CoverProps) {
+  if (src) return <Photo src={src} className={className} />;
+
   const tone = TONES[Math.abs(seed) % TONES.length];
   const v = (variant ?? Math.abs(seed * 7 + 3) % 6) as 0 | 1 | 2 | 3 | 4 | 5;
   const id = `cv-${seed}-${v}`;
@@ -135,8 +158,20 @@ export function Cover({ seed = 0, variant, className, sheen = true }: CoverProps
   );
 }
 
-/** Artist portrait — a soft cover with a big monogram, used in artist cards. */
-export function ArtistCover({ seed = 0, initials, className }: { seed?: number; initials: string; className?: string }) {
+/** Artist portrait — the artist photo, or a soft cover with a monogram. */
+export function ArtistCover({
+  src,
+  seed = 0,
+  initials,
+  className,
+}: {
+  src?: string;
+  seed?: number;
+  initials: string;
+  className?: string;
+}) {
+  if (src) return <Photo src={src} className={className} />;
+
   const tone = TONES[Math.abs(seed) % TONES.length];
   const id = `ar-${seed}`;
   return (
@@ -160,7 +195,7 @@ export function ArtistCover({ seed = 0, initials, className }: { seed?: number; 
           x="100"
           y="176"
           textAnchor="middle"
-          fontFamily="Poppins, sans-serif"
+          fontFamily="Pretendard, sans-serif"
           fontWeight="800"
           fontSize="54"
           fill="#FFFFFF"

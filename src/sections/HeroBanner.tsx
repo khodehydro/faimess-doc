@@ -1,26 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { MapScene, SunsetScene, CampingScene, CoastScene } from "../ui/Scenes";
-import { AvatarStack } from "../ui/Avatar";
+import { Photo } from "../ui/Cover";
 import { CircleButton, Meta } from "../ui/primitives";
 import { Icon } from "../ui/Icon";
-import { banners, type Banner } from "../data/banners";
+import { banners } from "../data/banners";
 import { useApp } from "../app/AppContext";
 import { cn } from "../lib/cn";
+import { withThousands } from "../lib/format";
 import { EASE, spring } from "../lib/motion";
 
 const AUTOPLAY_MS = 7000;
 
-const SCENES = {
-  sunset: SunsetScene,
-  camping: CampingScene,
-  coast: CoastScene,
-  forest: SunsetScene,
-} as const;
-
 /* ------------------------------------------------------------------ *
  *  Home hero — a banner carousel with previous / next controls.
- *  Add another entry to data/banners.ts and it becomes a new slide.
+ *  Each slide is a real photograph (data/banners.ts) with its event
+ *  card floating on top. Add an entry there and it becomes a new slide.
  * ------------------------------------------------------------------ */
 
 export function HeroBanner() {
@@ -56,7 +50,7 @@ export function HeroBanner() {
     return () => window.removeEventListener("keydown", onKey);
   }, [go]);
 
-  /* pointer parallax on the illustration */
+  /* pointer parallax on the photograph */
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const x = useSpring(useTransform(mx, [-1, 1], [-12, 12]), { stiffness: 90, damping: 20 });
@@ -78,8 +72,6 @@ export function HeroBanner() {
     [],
   );
 
-  const Scene = SCENES[banner.scene];
-
   return (
     <div
       ref={ref}
@@ -90,7 +82,7 @@ export function HeroBanner() {
         mx.set(0);
         my.set(0);
       }}
-      className="relative h-full w-full select-none overflow-hidden rounded-[18px] bg-primary-faint shadow-card ring-1 ring-line/60"
+      className="relative h-full w-full select-none overflow-hidden rounded-[18px] bg-ink shadow-card ring-1 ring-line/60"
     >
       {/* slides */}
       <AnimatePresence initial={false} custom={dir} mode="popLayout">
@@ -113,36 +105,39 @@ export function HeroBanner() {
           className="absolute inset-0 cursor-grab active:cursor-grabbing"
         >
           <motion.div style={{ x, y }} className="absolute -inset-6">
-            <Scene className="h-full w-full" />
+            <Photo src={banner.photo} className="scale-[1.03]" />
           </motion.div>
 
           {/* legibility scrims */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/12 to-transparent" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/18 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/50 via-black/12 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/28 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/45 to-transparent" />
 
-          {/* travellers + alerts */}
+          {/* fans going + alerts */}
           <motion.div
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.25, ease: EASE }}
             className="absolute right-5 top-5 flex items-center gap-3"
           >
-            <div className="flex items-center rounded-full bg-white/72 p-1.5 pl-2 backdrop-blur-md">
-              <AvatarStack seeds={banner.travellers} more={banner.guests} size={28} />
+            <div className="flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-2 backdrop-blur-md">
+              <Icon name="flame" size={14} className="text-flame" />
+              <span className="text-[13.5px] font-extrabold tabular-nums text-ink">{withThousands(banner.going)}</span>
+              <span className="text-[12.5px] font-semibold text-ink-muted">going</span>
             </div>
             <div className="group">
               <CircleButton
                 icon="bell"
                 tone="white"
-                label="Trip alerts"
+                label="Show alerts"
                 iconClassName="anim-bell"
                 className="bg-white/85 backdrop-blur-md"
-                onClick={() => notify("Trip alerts are up to date")}
+                onClick={() => notify("You're all caught up ✨")}
               />
             </div>
           </motion.div>
 
-          {/* floating detail card */}
+          {/* floating event card */}
           <motion.div
             initial={{ opacity: 0, y: 22, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -152,33 +147,48 @@ export function HeroBanner() {
             <motion.div
               whileHover={{ y: -4 }}
               transition={spring}
-              className="w-[296px] rounded-[20px] bg-white/93 p-3 shadow-float backdrop-blur-md"
+              className="w-[302px] rounded-[20px] bg-white/94 p-3 shadow-float backdrop-blur-md"
             >
               <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[12px] font-bold uppercase tracking-wide text-primary-deep">
                 <Icon name="sparkle" size={12} strokeWidth={2.2} />
                 {banner.eyebrow}
               </span>
               <h3 className="font-display text-[18px] font-bold leading-tight tracking-[-0.01em] text-ink">{banner.title}</h3>
-              <div className="mt-1.5 flex items-center gap-3 text-[13.5px] font-medium">
-                <Meta icon="calendar">{banner.dateRange}</Meta>
-                <Meta icon="clock">{banner.time}</Meta>
+              <div className="mt-1.5 flex items-center gap-3 text-[13px] font-medium">
+                <Meta icon="calendar" iconSize={13}>
+                  {banner.dateRange}
+                </Meta>
+                <Meta icon="pin" iconSize={13} className="max-w-[130px] overflow-hidden whitespace-nowrap">
+                  {banner.location}
+                </Meta>
               </div>
-              <div className="mt-2.5 h-[108px] overflow-hidden rounded-[14px] ring-1 ring-line">
-                <MapScene tone={banner.mapTone} className="h-full w-full" />
-              </div>
+              <ul className="mt-2.5 flex flex-col gap-1.5">
+                {banner.stops.map((stop) => (
+                  <li
+                    key={stop.city}
+                    className="flex items-center justify-between rounded-[12px] bg-subtle/75 px-2.5 py-1.5 text-[12.5px] font-semibold text-ink-body"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Icon name="compass" size={12} className="text-primary" />
+                      {stop.city}
+                    </span>
+                    <span className="tabular-nums text-ink-muted">{stop.date}</span>
+                  </li>
+                ))}
+              </ul>
             </motion.div>
 
             <motion.button
               whileHover={{ y: -3, rotate: -4 }}
               whileTap={{ scale: 0.92 }}
               transition={spring}
-              onClick={() => notify(`${banner.title} · folder`)}
-              aria-label="Open trip folder"
-              title="Open trip folder"
+              onClick={() => notify(`${banner.title} · tickets`)}
+              aria-label="Open tickets"
+              title="Open tickets"
               className="mb-7 flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-primary"
             >
               <motion.span animate={{ y: [0, -2, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}>
-                <Icon name="folder" size={18.5} />
+                <Icon name="star" size={18.5} />
               </motion.span>
             </motion.button>
           </motion.div>

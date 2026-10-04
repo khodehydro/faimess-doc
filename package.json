@@ -3,12 +3,13 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Fiplan — travel planner dashboard, pixel-styled recreation of the reference home screen",
+  "description": "FAIMESS — K-pop streaming dashboard (Vite + React + TypeScript + Tailwind v4)",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "check:ssr": "vite build --ssr tools/ssr-check.tsx --outDir .ssrcheck --emptyOutDir && node .ssrcheck/ssr-check.js"
   },
   "dependencies": {
     "clsx": "^2.1.1",

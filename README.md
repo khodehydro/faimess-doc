@@ -1,7 +1,7 @@
 # FAIMESS
 
 داشبورد وب **FAIMESS** — بازسازیِ دقیق صفحهٔ Home از طراحی مرجع، با معماری ماژولار.
-**Vite + React 19 + TypeScript + Tailwind CSS v4 + Framer Motion**، بدون هیچ تصویر خارجی (تمام تصویرسازی‌ها و کاورها SVG تولیدشده هستند).
+**Vite + React 19 + TypeScript + Tailwind CSS v4 + Framer Motion** — همهٔ تصویرها داخل خود اپ سرو می‌شوند: **عکس‌های واقعی self-hosted** (آرتیست، کاور، پلی‌لیست، شنونده، بنر) به‌همراه تصویرسازی برداری به‌عنوان fallback و برای کارت‌های خبر.
 
 ---
 
@@ -75,7 +75,6 @@ src/
 │   ├── AccountCard.tsx  کارت ۳ — پیل سرچ/اعلان/پروفایل
 │   ├── GreetingSection.tsx · MessagesSection.tsx   داخل کارت راست
 │   ├── HeroBanner.tsx                              داخل کارت چپ
-│   ├── TopBar.tsx
 │   ├── HeroBanner.tsx   بنر چرخشی با دکمه‌های قبلی/بعدی
 │   ├── ScheduleSection.tsx     (آماده برای صفحات دیگر)
 │   ├── feed/                   فید موسیقی خانه — شش شلف مستقل + Shelf مشترک
@@ -90,7 +89,8 @@ src/
 │   └── CollectionSection.tsx   (Artists / Albums / Playlists با یک پارامتر)
 ├── pages/               HomePage · ArtistsPage · AlbumsPage · PlaylistsPage · NewsPage
 ├── ui/                  Icon · Logo · Avatar · Cover · Scenes · primitives
-├── data/                بنرها · تقویم · پیام‌ها · کتابخانه · ناوبری
+├── assets/              fonts/ (Pretendard) · photos/ (۴۲ WebP: artists · albums · playlists · users · banners)
+├── data/                بنرها · پیام‌ها · کتابخانه · فید · حساب کاربری · ناوبری
 ├── hooks/               useStageScale · useClickOutside
 └── lib/                 stage (اندازهٔ صحنه و متریک‌ها) · motion · cn
 ```
@@ -104,7 +104,7 @@ src/
 یک کامپوننت در `src/sections/feed/` بساز (داخلش از `Shelf` استفاده کن) و یک خط به آرایهٔ `FEED_SHELVES` در `src/sections/feed/index.tsx` اضافه کن — همین. ترتیب آرایه = ترتیب نمایش، و چیپ میان‌بر بالای باکس خودکار ساخته می‌شود.
 
 ### افزودن بنر جدید
-فقط یک آبجکت به `src/data/banners.ts` اضافه کن (عنوان، تاریخ، مکان، صحنه، رنگ مپ) — خودش به‌عنوان اسلاید بعدی با دکمه‌های قبلی/بعدی نمایش داده می‌شود.
+فقط یک آبجکت به `src/data/banners.ts` اضافه کن (عنوان، تاریخ، مکان، شمارندهٔ «going»، مسیر عکس و سه ایستگاه) — خودش به‌عنوان اسلاید بعدی با دکمه‌های قبلی/بعدی نمایش داده می‌شود.
 
 ### افزودن صفحهٔ جدید
 یک کلید در `app/router.ts` + یک کامپوننت در `pages/` + یک خط در `PAGES` داخل `app/App.tsx`. اگر می‌خواهی در منو **نباشد** ولی از داخل اپ قابل رفتن باشد (مثل صفحهٔ `News`)، آن را به `contextualRoutes` اضافه کن.
@@ -132,7 +132,12 @@ src/
 - دستور ساخت مجدد subsetها + افزودن کاور کره‌ای در [`docs/font-research.md`](docs/font-research.md)
 
 **مقیاس تایپ:** هیچ متنی کوچک‌تر از **۱۲px** نیست؛ متن‌های اصلی ۱۳–۱۵px، تیترهای بخش ۱۷px، تیتر صفحه ۲۶px و تیتر خوش‌آمد ۳۴px. آیکون‌ها هم یک‌درجه بزرگ‌تر شده‌اند (۱۴–۱۸px).
-تصویرسازی‌ها: صحنهٔ غروب/کمپینگ/ساحل با پالت «گرگ‌ومیش بنفش» هماهنگ با برند + کاورهای تولیدشده برای کتابخانه.
+## تصاویر
+- **عکس واقعی self-hosted** در `src/assets/photos/`: ۸ آرتیست (۲۸۰px)، ۱۲ کاور آلبوم/سینگل (۴۲۰px)، ۶ پلی‌لیست، ۱۳ آواتار شنونده/پیام/پروفایل (۱۶۰px) و ۳ بنر ۱۴۰۰×۴۶۰ — جمعاً ۴۲ فایل WebP و ~۸۴۴KB، همه با گرید رنگی برند یکدست شده‌اند.
+- بدون هیچ درخواست تصویر به بیرون؛ `build.assetsInlineLimit = 2048` تا هر عکس فایل جدا و cacheable بماند.
+- `Cover`/`ArtistCover`/`Avatar` پراپ `src` می‌گیرند و در نبود عکس، همان هنر تولیدشده با `seed` را می‌کشند (fallback).
+- کارت‌های خبر عمداً تصویرسازی‌شده مانده‌اند؛ رستر مشترک آرتیست/آلبوم در `src/data/library.ts` است.
+- جزئیات + منابع + هشدار لایسنس: [`docs/photos.md`](docs/photos.md).
 
 ## تعامل‌ها و انیمیشن‌ها
 
@@ -148,7 +153,8 @@ src/
 آرتیست‌های فالو‌شده، جدیدترین آهنگ‌ها، ترندها با مقدار آتش، آخرین اخبار (با صفحهٔ `#/news`)، تازه‌ترین آلبوم‌ها و کاربران فعال با امتیاز/سطح — همه در `src/data/feed.ts`.
 
 ## مستندات
-- [`docs/font-research.md`](docs/font-research.md) — تحلیل فونت‌ها بر پایهٔ فهرست Figma و انتخاب نهایی
+- [`docs/font-research.md`](docs/font-research.md) — تحلیل فونت‌ها بر پایهٔ فهرست Figma و انتخاب نهایی (Pretendard)
+- [`docs/photos.md`](docs/photos.md) — خط لولهٔ عکس‌ها: ابعاد، دستور ImageMagick، منابع و هشدار لایسنس
 - [`docs/design-home-scan.md`](docs/design-home-scan.md) — اسکن طراحی صفحهٔ مرجع
 - [`docs/architecture.md`](docs/architecture.md) — راهنمای معماری و توسعهٔ ماژولار
 - [`docs/design-tokens.json`](docs/design-tokens.json) — توکن‌های ماشین‌خوان

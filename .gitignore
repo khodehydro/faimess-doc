@@ -33,3 +33,6 @@ pnpm-debug.log*
 
 # local ssr check
 .ssrcheck/
+
+# raw image-search candidates (working files, not shipped)
+image-search/

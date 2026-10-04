@@ -187,14 +187,14 @@ export const routes = [
 
 `src/sections/HeroBanner.tsx` + `src/data/banners.ts`
 
-هر بنر: `eyebrow, title, dateRange, time, location, guests, scene, mapTone, travellers`.
+هر بنر: `eyebrow, title, dateRange, location, going, photo, stops[{city,date}]` — یک **عکس واقعی** به‌عنوان پس‌زمینه + کارت رویداد شناور با لیست سه ایستگاه (شهر/تاریخ). تصویر با گرید بنفش (`deepviolet`) در `src/assets/photos/banners/` است؛ سایه‌های گرادیانی برای خوانایی متن روی عکس اضافه شده‌اند.
 اسلایدها با `AnimatePresence` جهت‌دار جابه‌جا می‌شوند؛ کنترل‌ها: دکمه‌های گرد قبلی/بعدی، دات‌ها، پخش خودکار ۷s (توقف روی هاور)، کلیدهای ←/→ و سوایپ با درگ.
 
 ## ۶. سیستم طراحی
 
 - توکن‌ها به‌صورت متغیرهای `@theme` در `src/index.css` (رنگ، شعاع، سایه، فونت) → همه به‌صورت یوتیلیتی تیلویند (`bg-primary`, `rounded-card`, `shadow-float`) در دسترس‌اند.
 - کامپوننت‌های پایه در `src/ui/primitives.tsx`: `Card`, `CircleButton`, `PillButton`, `Meta`, `Divider`, `Dot`.
-- تصویرسازی‌ها در `src/ui/Scenes.tsx` (صحنه‌ها و بندانگشتی‌ها) و `src/ui/Cover.tsx` (کاورهای تولیدشده با seed).
+- تصویرها: عکس‌های واقعی self-hosted در `src/assets/photos/` (کاور/آواتار/بنر) + `src/ui/Cover.tsx` که هم `<Photo>` را می‌دهد و هم در نبود عکس، کاور تولیدشده با `seed` را می‌کشد. `src/ui/Scenes.tsx` فقط برای تصویرسازی کارت‌های خبر مانده است.
 - انیمیشن‌های محیطی (پرنده، موج، ستاره، شعله، برگ) به‌صورت کی‌فریم‌های CSS در `index.css` تعریف شده‌اند تا داخل SVG هم کار کنند.
 
 ## ۷. تغییر برند
@@ -230,6 +230,17 @@ export const routes = [
 
 برای عوض کردن فونت‌ها فقط دو متغیر `--font-sans` و `--font-display` در `src/index.css` را تغییر بده و ایمپورت مربوطه را در `src/main.tsx` عوض کن (`@fontsource-variable/<font>` یا `@fontsource/<font>/latin-<weight>.css`).
 
-## ۹. تصویرسازی‌ها
+## ۱۰. تصویرسازی‌ها
+
+## ۹. عکس‌ها (تصاویر واقعی)
+
+سطح‌های تصویری اپ با **عکس واقعی** پر شده‌اند: ۸ آرتیست، ۱۲ کاور (آلبوم + سینگل)، ۶ پلی‌لیست، ۱۳ چهرهٔ شنونده/پیام/پروفایل و ۳ بنر هیرو — همه self-hosted در `src/assets/photos/` (۴۲ فایل WebP، ~۸۴۴KB).
+
+- تایپ‌های داده یک فیلد `photo: string` دارند؛ `Cover`, `ArtistCover` و `Avatar` پراپ `src` را می‌گیرند و در نبودش به هنر تولیدشده با seed برمی‌گردند.
+- یک رستر مشترک (`data/library.ts`) هم شلف فالو، هم صفحهٔ Artists/Albums و هم سرچ را تغذیه می‌کند تا عکس و اسم فقط در یک‌جا عوض شوند.
+- `npm run check:ssr` اتصال همهٔ عکس‌ها را می‌سنجد.
+- جزئیات خط لوله، ابعاد، دستور ImageMagick، منابع و هشدار لایسنس: [`photos.md`](./photos.md).
+
+## ۱۱. تصویرسازی‌ها
 
 `src/ui/Scenes.tsx` سه صحنهٔ قهرمان دارد (`SunsetScene`, `CampingScene`, `CoastScene`) که همه روی **بوم ۱۲۰۰×۴۰۰** طراحی شده‌اند تا بنر پانورامای سمت چپ را بدون برش بد پر کنند. برای صحنهٔ جدید: یک کامپوننت با همان امضا بساز (پراپ `className`)، به `SCENES` در `HeroBanner.tsx` و به `SceneKey` اضافه کن، بعد در `data/banners.ts` استفاده کن.
