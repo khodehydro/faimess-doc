@@ -13,9 +13,8 @@ import { EASE, spring } from "../lib/motion";
 /* ------------------------------------------------------------------ *
  *  Card 5 (right) — the player.
  *
- *    rail (46px)   the music-management sidebar: queue · liked · playlists,
- *                  and the Android-only download at the foot
- *    card          Player · feed position
+ *    rail (46px)   the music-management sidebar: queue · liked · playlists
+ *    card          Player · feed position · expand/collapse
  *      top 40%     cover · title/artist/album · seek bar · transport
  *      bottom 60%  bilingual lyrics (original + فارسی), one scroll surface,
  *                  with the line being sung highlighted
@@ -35,11 +34,16 @@ const PANEL_TITLE: Record<PanelId, string> = {
   playlists: "Your playlists",
 };
 
-export function PlayerSection() {
+export function PlayerSection({
+  params,
+}: {
+  params: { expanded: boolean; onToggleExpand: () => void };
+}) {
   const player = usePlayer();
   const { track } = player;
   const [panel, setPanel] = useState<PanelId | null>(null);
   const lines = lyricsFor(track);
+  const { expanded, onToggleExpand } = params;
 
   return (
     <div className="flex min-h-0 flex-1">
@@ -51,12 +55,28 @@ export function PlayerSection() {
             <Icon name="waveform" size={15} strokeWidth={2.2} />
           </span>
           <span className="font-display text-[15px] font-bold text-ink">Player</span>
-          {track && (
-            <span className="ml-auto flex items-center gap-1.5 rounded-full bg-subtle px-2 py-1 text-[12px] font-bold tabular-nums text-ink-muted">
-              <Icon name="list" size={12} />
-              {QUEUE.findIndex((t) => t.id === track.id) + 1}/{QUEUE.length}
-            </span>
-          )}
+          <span className="ml-auto flex items-center gap-1.5">
+            {track && (
+              <span className="flex items-center gap-1.5 rounded-full bg-subtle px-2 py-1 text-[12px] font-bold tabular-nums text-ink-muted">
+                <Icon name="list" size={12} />
+                {QUEUE.findIndex((t) => t.id === track.id) + 1}/{QUEUE.length}
+              </span>
+            )}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              transition={spring}
+              onClick={onToggleExpand}
+              aria-pressed={expanded}
+              title={expanded ? "Collapse the player" : "Expand the player"}
+              aria-label={expanded ? "Collapse the player" : "Expand the player"}
+              className={cn(
+                "flex size-7 items-center justify-center rounded-full transition-colors",
+                expanded ? "bg-primary text-white shadow-primary" : "text-ink-muted hover:bg-subtle hover:text-ink",
+              )}
+            >
+              <Icon name={expanded ? "collapse" : "expand"} size={14} strokeWidth={2.1} />
+            </motion.button>
+          </span>
         </header>
 
         <AnimatePresence mode="wait" initial={false}>
@@ -71,7 +91,7 @@ export function PlayerSection() {
               transition={{ duration: 0.28, ease: EASE }}
               className="flex min-h-0 flex-1 flex-col"
             >
-              <TrackPanel player={player} />
+              <TrackPanel player={player} expanded={expanded} />
               <LyricsPanel lines={lines} position={player.position} playing={player.playing} />
             </motion.div>
           )}
@@ -88,8 +108,6 @@ export function PlayerSection() {
 /* --------------------------- management rail --------------------------- */
 
 function PlayerRail({ active, onSelect }: { active: PanelId | null; onSelect: (id: PanelId) => void }) {
-  const { notify } = useApp();
-
   const items: { id: PanelId; icon: IconName; label: string }[] = [
     { id: "queue", icon: "list", label: "Play queue" },
     { id: "liked", icon: "heart", label: "Liked songs" },
@@ -118,18 +136,6 @@ function PlayerRail({ active, onSelect }: { active: PanelId | null; onSelect: (i
         </motion.button>
       ))}
 
-      {/* downloads ship with the Android app — the rail keeps the door shut */}
-      <motion.button
-        whileHover={{ y: -1.5 }}
-        whileTap={{ scale: 0.92 }}
-        transition={spring}
-        onClick={() => notify("Downloads live in the FAIMESS Android app", "teal")}
-        title="Download — FAIMESS Android app only"
-        aria-label="Download — FAIMESS Android app only"
-        className="mt-auto flex size-9 items-center justify-center rounded-[12px] bg-mint-soft text-teal-deep transition-colors hover:bg-teal-soft"
-      >
-        <Icon name="download" size={16.5} strokeWidth={2.2} />
-      </motion.button>
     </nav>
   );
 }
@@ -311,7 +317,7 @@ function EmptyState({ onPick }: { onPick: (track: PlayerTrack) => void }) {
 
 /* ------------------------------ track panel ----------------------------- */
 
-function TrackPanel({ player }: { player: PlayerApi }) {
+function TrackPanel({ player, expanded }: { player: PlayerApi; expanded: boolean }) {
   const { track, playing, position, duration, progress, toggle, next, prev, seek } = player;
   const barRef = useRef<HTMLDivElement>(null);
   const [scrubbing, setScrubbing] = useState(false);
@@ -337,7 +343,10 @@ function TrackPanel({ player }: { player: PlayerApi }) {
       <motion.div
         animate={{ scale: playing ? 1 : 0.97, opacity: playing ? 1 : 0.86 }}
         transition={spring}
-        className="relative size-[88px] shrink-0 overflow-hidden rounded-[16px] shadow-float ring-1 ring-black/[0.05]"
+        className={cn(
+          "relative shrink-0 overflow-hidden rounded-[16px] shadow-float ring-1 ring-black/[0.05]",
+          expanded ? "size-[118px]" : "size-[88px]",
+        )}
       >
         <Photo src={track.photo} alt="" />
         {!playing && (
@@ -349,7 +358,14 @@ function TrackPanel({ player }: { player: PlayerApi }) {
 
       {/* title + details */}
       <div className="w-full text-center">
-        <h3 className="font-display truncate text-[16px] font-bold leading-tight text-ink">{track.title}</h3>
+        <h3
+          className={cn(
+            "font-display truncate font-bold leading-tight text-ink",
+            expanded ? "text-[18px]" : "text-[16px]",
+          )}
+        >
+          {track.title}
+        </h3>
         <p className="mt-0.5 truncate text-[12.5px] font-semibold text-ink-muted">
           {track.artist}
           <span className="px-1.5 text-ink-faint">·</span>
@@ -436,10 +452,46 @@ function TrackPanel({ player }: { player: PlayerApi }) {
           </motion.button>
         </div>
 
-        {/* keeps the transport dead-centre against the heart */}
-        <span className="size-9 shrink-0" aria-hidden="true" />
+        <DownloadButton track={track} />
       </div>
     </section>
+  );
+}
+
+/* -------------------------------- download ------------------------------ */
+
+/**
+ * Saves the file the card is playing. The demo master is the only audio that
+ * ships, so this is what lands on disk — full, master-quality downloads belong
+ * to the Android app (docs/audio.md). Sits opposite the heart: the transport
+ * row is a mirror — like · prev · play · next · download.
+ */
+function DownloadButton({ track }: { track: PlayerTrack }) {
+  const { notify } = useApp();
+
+  const save = () => {
+    if (typeof document === "undefined") return;
+    const link = document.createElement("a");
+    link.href = track.audio;
+    link.download = `${track.title} — FAIMESS demo.mp3`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    notify("Saved the demo take — full downloads ship with the Android app", "teal");
+  };
+
+  return (
+    <motion.button
+      whileHover={{ y: -1.5 }}
+      whileTap={{ scale: 0.9 }}
+      transition={spring}
+      onClick={save}
+      title="Download this take — the Android app gets the full-quality files"
+      aria-label={`Download ${track.title}`}
+      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-mint-soft text-teal-deep transition-colors hover:bg-teal-soft"
+    >
+      <Icon name="download" size={17} strokeWidth={2.1} />
+    </motion.button>
   );
 }
 

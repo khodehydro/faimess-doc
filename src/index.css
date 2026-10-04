@@ -299,6 +299,25 @@
   .home-split-right {
     flex: 0 1 calc(25% - 7px);
   }
+
+  /* the player card's expand button: 25% → 55% (the feed gives up the room) */
+  .home-split-left,
+  .home-split-right {
+    transition: flex-basis 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .home-split-wide .home-split-left {
+    flex: 0 1 calc(45% - 7px);
+  }
+  .home-split-wide .home-split-right {
+    flex: 0 1 calc(55% - 7px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-split-left,
+  .home-split-right {
+    transition: none;
+  }
 }
 
 /* the grey studio the app frame floats on */

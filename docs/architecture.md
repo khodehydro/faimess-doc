@@ -250,7 +250,7 @@ export const routes = [
 PlayerProvider  (src/app/PlayerContext.tsx)      ← در app/App.tsx دور Shell
 └── PlayerSection (src/sections/PlayerSection.tsx)
     ├── PlayerRail   46px        سایدبار مدیریت: queue · liked · playlists + دانلود اندروید
-    ├── TrackPanel   lg:h-[40%]  کاور ۸۸px · عنوان/آرتیست/آلبوم · نوار پیشرفت · ♥ + قبلی/پخش/بعدی
+    ├── TrackPanel   lg:h-[40%]  کاور ۸۸/۱۱۸px · عنوان/آرتیست/آلبوم · نوار پیشرفت · ♥ + قبلی/پخش/بعدی + ⤓
     ├── LyricsPanel  flex-1      تنها ناحیهٔ اسکرول کارت — خطوط دوزبانه با هایلایت خط فعال
     └── PlayerDrawer absolute    پنل تب‌ها روی کارت (صف / لایک‌شده‌ها / پلی‌لیست‌ها)
 ```
@@ -260,7 +260,9 @@ PlayerProvider  (src/app/PlayerContext.tsx)      ← در app/App.tsx دور She
 - **سایدبار مدیریت:** `PlayerRail` سه تب دارد؛ تب فعال یک `PlayerDrawer` روی کارت می‌کشد (`absolute inset-0 z-20`). تب صف همهٔ `QUEUE` را با شماره/کاور/زمان نشان می‌دهد و با کلیک پخش می‌کند، تب لایک‌شده‌ها همان لیست فیلترشده با `player.liked` است (دکمهٔ ♥ در نوار پخش، `aria-pressed`) و تب پلی‌لیست‌ها شش لیست `data/library.ts` را می‌آورد و به صفحهٔ Playlists می‌برد. دکمهٔ دانلود اندروید پایین همین ریل است تا هدر کارت شلوغ نشود.
 - **حالت خالی:** بدون ترک، کارت 👋 + «یه آهنگ که دوست داری رو پخش کن» + سه پیشنهاد سریع نشان می‌دهد.
 - **دانلود:** پیل `Android` در هدر؛ فقط توست می‌دهد — دانلود مال نسخهٔ اندروید است.
-- **صدا در دمو نیست:** `position` با اینتروال ۲۵۰ms جلو می‌رود و پایان ترک خودکار به ترک بعد می‌رود. جای وصل‌کردن `<audio>` همین یک افکت است.
+- **صدا:** `PlayerTrack.audio` (فعلاً همه = `src/assets/audio/faimess-demo.mp3`) در یک `HTMLAudioElement` پخش می‌شود؛ `position` از `timeupdate`، `duration` از `durationchange`، و `ended` با `advance` ref ترک را جلو می‌برد. نبود `Audio` (مثل SSR) → همان کنترل‌ها با پالس شبیه‌سازی‌شدهٔ ۲۵۰ms. جزئیات: [`audio.md`](./audio.md).
+- **اگزپند/کولپس:** `HomePage` یک state (`wide`) دارد، کلاس `home-split-wide` را به ردیف می‌دهد و `{ expanded, onToggleExpand }` را به‌عنوان `params` بخش `player` پاس می‌دهد؛ قاعدهٔ CSS در `src/index.css` سهم کارت‌ها را ۲۵/۷۵ ↔ ۵۵/۴۵ می‌برد (transition روی `flex-basis`، با احترام به `prefers-reduced-motion`).
+- **دانلود:** `DownloadButton` در ردیف کنترل‌ها (آینهٔ ♥) فایل ترک را با `<a download>` ذخیره می‌کند.
 - **پیش‌بارگذاری:** `PlayerProvider initialTrackId="nt1"` کارت را پاز‌شده با یک ترک بالا می‌آورد (هوک دیپ‌لینک؛ `check:ssr` هم با همین حالتِ پخش‌دار رندر می‌گیرد).
 
 ## ۱۱. تصویرسازی‌ها

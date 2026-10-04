@@ -91,7 +91,7 @@ src/
 │   └── CollectionSection.tsx   (Artists / Albums / Playlists با یک پارامتر)
 ├── pages/               HomePage · ArtistsPage · AlbumsPage · PlaylistsPage · NewsPage
 ├── ui/                  Icon · Logo · Avatar · Cover · Scenes · primitives
-├── assets/              fonts/ (Pretendard لاتین + subset کرهای + Vazirmatn فارسی) · photos/ (۴۲ WebP)
+├── assets/              fonts/ (Pretendard لاتین + subset کرهای + Vazirmatn فارسی) · photos/ (۴۲ WebP) · audio/ (مستر دمو)
 ├── data/                بنرها · پیام‌ها · کتابخانه · فید · حساب کاربری · ناوبری
 │                        player.ts (صف پخش) · lyrics.ts (لیریک دوزبانهٔ ۹ ترک)
 ├── hooks/               useStageScale · useClickOutside
@@ -117,21 +117,24 @@ src/
 کارت سمت راست دیگر چت‌باکس نیست؛ یک **پلیر** است:
 
 - **سایدبار مدیریت موسیقی (ریل چپ کارت):** سه تب که پنلشان روی کارت باز می‌شود — `Up next` (کل صف با شماره، کاور، مدت و پخش با یک کلیک، ترک در حال پخش هایلایت)، `Liked songs` (با دکمهٔ ♥ روی نوار پخش پر/خالی می‌شود) و `Playlists` (شش لیست ادیتوریال → صفحهٔ Playlists). پایین ریل، دکمهٔ دانلود اندروید نشسته است.
-- **۴۰٪ بالا — مشخصات آهنگ:** کاور، نام ترک، آرتیست و آلبوم، نوار پیشرفت (کلیک/درگ + کلید ←/→، با `role="slider"` و `aria-valuetext`) و کنترل‌های قبلی / پخش / بعدی.
+- **۴۰٪ بالا — مشخصات آهنگ:** کاور، نام ترک، آرتیست و آلبوم، نوار پیشرفت (کلیک/درگ + کلید ←/→، با `role="slider"` و `aria-valuetext`) و ردیف کنترل‌ها به‌صورت **آینه**: ♥ سمت چپ، قبلی/پخش/بعدی وسط، ⤓ دانلود سمت راست (هم‌اندازه و هم‌شکلِ ♥).
+- **اگزپند / کولپس:** دکمهٔ گوشهٔ هدر کارت را بین دو حالت می‌برد — باریک (۲۵٪، حالت پیش‌فرض) و باز (**۵۵٪**؛ کارت چپ به ۴۵٪ می‌رسد) با انیمیشن ۴۲۰ms؛ در حالت باز کاور و تیتر آهنگ هم بزرگ‌تر می‌شوند.
+- **صدای واقعی:** یک مستر دموی ۲:۴۰ در `src/assets/audio/faimess-demo.mp3` — پخش/توقف/بعدی/قبلی/درگ نوار پیشرفت روی همین فایل کار می‌کنند (جزئیات: [`docs/audio.md`](docs/audio.md)).
 - **۶۰٪ پایین — لیریک دوزبانه:** هر خط متن اصلی (کره‌ای/انگلیسی) و زیرش **ترجمهٔ فارسی RTL**؛ خط در حال پخش هایلایت می‌شود و اسکرول خودکار آن را وسط نگه می‌دارد (اگر خودت اسکرول نکرده باشی). این ناحیه **تنها سطح اسکرول کارت** است.
 - **حالت خالی:** تا آهنگی انتخاب نشده، کارت با 👋 سلام می‌دهد — «Hey Sori, nothing playing yet» + «یه آهنگ که دوست داری رو پخش کن 🎧» — و سه پیشنهاد سریع برای شروع.
-- **دکمهٔ دانلود فقط اندروید:** پیل `Android` در هدر کارت؛ کلیک فقط پیام «Downloads live in the FAIMESS Android app» می‌دهد. نسخهٔ وب چیزی دانلود نمی‌کند.
+- **دکمهٔ دانلود:** فایلِ ترکِ در حال پخش را واقعاً ذخیره می‌کند (`<a download>`) و توست می‌دهد که فایل دموست/دانلود کیفیت اصلی مال اپ اندروید است.
 
 | فایل | نقش |
 |---|---|
 | `src/data/player.ts` | صف پخش `QUEUE` از همان آیتم‌های فید + `trackById` · `leadTrackFor` · `lyricsFor` · `mmss` |
 | `src/data/lyrics.ts` | لیریک ۹ ترک با شکل `{ at, ko, fa }` — زمان (ثانیه)، متن اصلی، ترجمهٔ فارسی |
-| `src/app/PlayerContext.tsx` | `usePlayer()`: ترک فعلی، `playing`، `position`، `progress`، `queue`، `liked` و `play/toggle/next/prev/seek/stop/toggleLike` |
-| `src/sections/PlayerSection.tsx` | UI کارت: `TrackPanel` + `LyricsPanel` + `DownloadButton` + حالت خالی |
+| `src/app/PlayerContext.tsx` | `usePlayer()`: ترک فعلی، `playing`، `position`، `progress`، `queue`، `liked`، `realAudio` و `play/toggle/next/prev/seek/stop/toggleLike` |
+| `src/assets/audio/faimess-demo.mp3` | مستر دمو (۲:۴۰، مونو) که همهٔ ترک‌ها فعلاً پخش می‌کنند — ساخته‌شده با `tools/make-demo-audio.py` |
+| `src/sections/PlayerSection.tsx` | UI کارت: ریل مدیریت + `TrackPanel` (۴۰٪) + `LyricsPanel` (۶۰٪) + `PlayerDrawer` + `DownloadButton` + حالت خالی |
 
 **همهٔ دکمه‌های پخش اپ به همین کارت وصل‌اند** — «Newest songs» و «Trending now» در فید و دکمه‌های پخش آرتیست/آلبوم در صفحه‌های Artists/Albums. دو آهنگ هم در «جدیدترین» و هم در «ترند» هستند و صف فقط یک نسخه از هرکدام را نگه می‌دارد (`SAME_SONG`).
 
-انجین صوتی در دمو وجود ندارد: `position` با یک اینتروال ۲۵۰ms جلو می‌رود و در پایان ترک خودکار به ترک بعد می‌رود. برای وصل‌کردن صدای واقعی فقط همان یک افکت را با `<audio>` عوض کن — بقیهٔ UI دست‌نخورده می‌ماند. `PlayerProvider` پراپ اختیاری `initialTrackId` هم دارد (کارت را پاز‌شده با یک ترک بالا می‌آورد؛ هوک دیپ‌لینک و همان چیزی که `check:ssr` برای تست حالت پخش استفاده می‌کند).
+صدا واقعی است: `PlayerContext` یک `HTMLAudioElement` می‌سازد و `position`/`duration` را از خودش می‌خواند (`timeupdate`/`durationchange`) و با رویداد `ended` خودکار به ترک بعد می‌رود؛ جای صدا هم دقیقاً همان فایل دموی ریپو است. اگر جایی `Audio` در دسترس نباشد (مثل رندر SSR) همان یک کنترل با زمان شبیه‌سازی‌شدهٔ ۲۵۰ms کار می‌کند. `PlayerProvider` پراپ اختیاری `initialTrackId` هم دارد (کارت را پاز‌شده با یک ترک بالا می‌آورد؛ هوک دیپ‌لینک و همان چیزی که `check:ssr` برای تست حالت پخش استفاده می‌کند).
 
 ## سیستم طراحی (FAIMESS)
 
@@ -181,6 +184,7 @@ src/
 ## مستندات
 - [`docs/font-research.md`](docs/font-research.md) — تحلیل فونت‌ها بر پایهٔ فهرست Figma و انتخاب نهایی (Pretendard)
 - [`docs/photos.md`](docs/photos.md) — خط لولهٔ عکس‌ها: ابعاد، دستور ImageMagick، منابع و هشدار لایسنس
+- [`docs/audio.md`](docs/audio.md) — مستر دموی ۲:۴۰: چرا سنتز شد، دستور ساخت، و جای اتصال صدای لایسنس‌دار
 - [`docs/design-home-scan.md`](docs/design-home-scan.md) — اسکن طراحی صفحهٔ مرجع
 - [`docs/architecture.md`](docs/architecture.md) — راهنمای معماری و توسعهٔ ماژولار
 - [`docs/design-tokens.json`](docs/design-tokens.json) — توکن‌های ماشین‌خوان

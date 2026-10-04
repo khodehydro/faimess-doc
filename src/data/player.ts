@@ -7,6 +7,7 @@
  *  new release and once as a trend — and the queue keeps one of each.
  * ------------------------------------------------------------------ */
 
+import demoAudio from "../assets/audio/faimess-demo.mp3";
 import { albums } from "./library";
 import { newestTracks, trendingTracks } from "./feed";
 import { LYRICS, type LyricLine } from "./lyrics";
@@ -19,6 +20,8 @@ export type PlayerTrack = {
   album: string;
   seconds: number;
   photo: string;
+  /** the file the <audio> element plays — one demo master for every track */
+  audio: string;
 };
 
 /** "3:12" → 192 */
@@ -52,6 +55,8 @@ const fromTrack = (t: FeedTrack): PlayerTrack => ({
   album: ALBUM_OF[t.id] ?? "FAIMESS",
   seconds: toSeconds(t.duration),
   photo: t.photo,
+  /* one synthesised master stands in for the whole queue — docs/audio.md */
+  audio: demoAudio,
 });
 
 const isSameSong = (a: FeedTrack, b: FeedTrack) => a.title === b.title && a.artist === b.artist;

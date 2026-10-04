@@ -34,7 +34,7 @@ export type SectionParams = {
   feed: undefined;
   greeting: undefined;
   messages: undefined;
-  player: undefined;
+  player: { expanded: boolean; onToggleExpand: () => void };
   collection: { kind: LibraryKind };
 };
 

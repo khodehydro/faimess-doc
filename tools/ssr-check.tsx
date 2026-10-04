@@ -22,7 +22,7 @@ import { conversations } from "../src/data/messages";
 import { me } from "../src/data/account";
 import { QUEUE, lyricsFor, trackById } from "../src/data/player";
 import { LYRICS } from "../src/data/lyrics";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 
 /* minimal browser surface for React + framer-motion */
 const g = globalThis as unknown as Record<string, unknown>;
@@ -113,7 +113,7 @@ check("empty player invites a first play", home.includes("Start with") && home.i
 const playingCard = renderToString(
   <AppProvider>
     <PlayerProvider initialTrackId="nt1">
-      <PlayerSection />
+      <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />
     </PlayerProvider>
   </AppProvider>,
 );
@@ -122,7 +122,16 @@ check("loaded player shows details", playingCard.includes("Afterglow") && playin
 check("korean lyrics render", /[\uac00-\ud7a3]/.test(playingCard) && playingCard.includes("한국어"));
 check("persian translation renders", playingCard.includes("نور"));
 check("seek bar is a slider", playingCard.includes('role="slider"') && playingCard.includes("aria-valuetext"));
-check("download is android-only", playingCard.includes("Download") && playingCard.includes("Android"));
+check("download button ships", playingCard.includes("Download Afterglow"));
+check("expand button ships", playingCard.includes("Expand the player"));
+check("every track carries the demo audio", QUEUE.every((t) => typeof t.audio === "string" && t.audio.length > 0));
+{
+  const size = existsSync("src/assets/audio/faimess-demo.mp3")
+    ? statSync("src/assets/audio/faimess-demo.mp3").size
+    : 0;
+  check("demo master is on disk", size > 500_000, `${(size / 1048576).toFixed(2)}MB`);
+}
+check("expanded player has a layout rule", readFileSync("src/index.css", "utf8").includes("home-split-wide"));
 check("management rail ships", ["Play queue", "Liked songs", "Playlists"].every((l) => playingCard.includes(l)));
 check("the playing track can be liked", playingCard.includes("Remove from Liked songs") && playingCard.includes('aria-pressed="true"'));
 {
