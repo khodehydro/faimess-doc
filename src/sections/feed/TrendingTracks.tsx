@@ -151,8 +151,8 @@ export function TrendingTracks() {
       title={t("shelf.trendingNow")}
       hint={t("shelf.hintFires")}
       action={
-        <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-1 rounded-full bg-subtle p-0.5">
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1 rounded-full bg-subtle p-0.5">
             {([
               { id: "day", label: "24h" },
               { id: "week", label: "Week" },
@@ -161,7 +161,8 @@ export function TrendingTracks() {
                 key={r.id}
                 onClick={() => setRange(r.id)}
                 className={cn(
-                  "relative rounded-full px-2.5 py-1.5 text-[13px] font-semibold transition-colors",
+                  "relative shrink-0 whitespace-nowrap rounded-full px-2.5 py-1.5 text-[13px] font-semibold transition-colors",
+                  r.id === "day" ? "min-w-[44px]" : "min-w-[52px]",
                   range === r.id ? "text-ink" : "text-ink-faint hover:text-ink-muted",
                 )}
               >
@@ -172,7 +173,11 @@ export function TrendingTracks() {
               </button>
             ))}
           </div>
-          <PillButton tone="soft" onClick={() => notify(t("toast.allTrending"))}>
+          <PillButton
+            tone="soft"
+            className="shrink-0 whitespace-nowrap"
+            onClick={() => notify(t("toast.allTrending"))}
+          >
             {t("shelf.seeAll")}
           </PillButton>
         </div>

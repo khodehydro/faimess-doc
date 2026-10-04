@@ -23,7 +23,7 @@ export function MobileNav() {
   return (
     <nav
       aria-label={t("nav.primary")}
-      className="pointer-events-auto w-full rounded-full bg-white/80 p-1.5 shadow-float ring-1 ring-white/70 backdrop-blur-xl dark:bg-surface/80 dark:ring-white/[0.06]"
+      className="pointer-events-auto relative z-10 w-full rounded-full bg-white/80 p-1.5 shadow-float ring-1 ring-white/70 backdrop-blur-xl dark:bg-surface/80 dark:ring-white/[0.06]"
     >
       <div className="flex items-stretch">
         {navItems.map((item) => {

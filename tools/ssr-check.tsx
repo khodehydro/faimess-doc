@@ -517,6 +517,7 @@ check(
 const compactSrc = readFileSync("src/app/CompactShell.tsx", "utf8");
 const mobileNavSrc = readFileSync("src/sections/MobileNav.tsx", "utf8");
 const miniSrc = readFileSync("src/sections/MiniPlayer.tsx", "utf8");
+const trendingTracksSrc = readFileSync("src/sections/feed/TrendingTracks.tsx", "utf8");
 const sheetSrc = readFileSync("src/sections/PlayerSheet.tsx", "utf8");
 const compactHookSrc = readFileSync("src/hooks/useCompact.ts", "utf8");
 /* also read further down (shop section) — declared once, here, because the
@@ -586,12 +587,27 @@ check(
   "the sheet renders PlayerSection itself — the desktop card, not a copy",
 );
 check(
-  "the mini player is purple without a status/progress strip",
-  miniSrc.includes("bg-primary shadow-[0_18px_36px_-14px") &&
-    miniSrc.includes("const { track, playing, toggle, next } = player") &&
-    !miniSrc.includes("absolute inset-x-4 bottom-1.5") &&
-    !miniSrc.includes("progress : 0"),
+  "the mini player appears only for a selected track and rises from below the nav",
+  miniSrc.includes("{track && (") &&
+    miniSrc.includes('key="mini-player"') &&
+    miniSrc.includes("initial={{ opacity: 0, y: 36 }}") &&
+    mobileNavSrc.includes("relative z-10") &&
+    miniSrc.includes("bg-primary shadow-[0_18px_36px_-14px"),
+  "hidden when idle; animated upward behind the navigation capsule",
+);
+check(
+  "the mini player has no status/progress strip",
+  !miniSrc.includes("absolute inset-x-4 bottom-1.5") && !miniSrc.includes("progress : 0"),
   "a clean violet bar with no progress indicator",
+);
+check(
+  "trending shelf controls wrap cleanly on narrow screens",
+  shelfSrc.includes("flex flex-wrap items-center gap-x-3 gap-y-2") &&
+    shelfSrc.includes("flex w-full shrink-0 justify-end sm:ms-auto sm:w-auto") &&
+    shelfSrc.includes("truncate whitespace-nowrap") &&
+    trendingTracksSrc.includes("shrink-0 whitespace-nowrap") &&
+    trendingTracksSrc.includes("min-w-[52px]"),
+  "title and subtitle stay together; filters and See all move to a clear second row",
 );
 check(
   "comments and nested dialogs sit above the full player sheet",

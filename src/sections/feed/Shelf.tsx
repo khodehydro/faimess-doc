@@ -45,15 +45,27 @@ export function Shelf({
       style={{ scrollMarginTop: STICKY_TOP }}
     >
       <header
-        className="sticky z-20 -mx-4 flex items-center gap-3 bg-surface/94 px-4 py-3 backdrop-blur-md"
+        className="sticky z-20 -mx-4 flex flex-wrap items-center gap-x-3 gap-y-2 bg-surface/94 px-4 py-3 backdrop-blur-md"
         style={{ top: STICKY_TOP }}
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-faint text-primary-deep">
           <Icon name={icon} size={16} strokeWidth={1.9} />
         </span>
-        <h3 className="font-display text-[18px] font-bold tracking-[-0.012em] text-ink">{title}</h3>
-        {hint && <span className="text-[13px] font-medium text-ink-muted">{hint}</span>}
-        {action && <span className="ms-auto">{action}</span>}
+        <div className={cn("min-w-0 flex-1", hint && "sm:flex sm:items-center sm:gap-3")}>
+          <h3 className="min-w-0 truncate whitespace-nowrap font-display text-[18px] font-bold tracking-[-0.012em] text-ink">
+            {title}
+          </h3>
+          {hint && (
+            <span className="mt-0.5 block min-w-0 truncate whitespace-nowrap text-[12.5px] font-medium text-ink-muted sm:mt-0 sm:text-[13px]">
+              {hint}
+            </span>
+          )}
+        </div>
+        {action && (
+          <span className="flex w-full shrink-0 justify-end sm:ms-auto sm:w-auto">
+            {action}
+          </span>
+        )}
       </header>
 
       <div className="pb-6">{children}</div>

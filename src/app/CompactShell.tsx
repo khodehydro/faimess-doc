@@ -25,12 +25,12 @@ import { EASE } from "../lib/motion";
  *    │ │  page or detail, scrolling│ │   translucent white content card
  *    │ └───────────────────────────┘ │
  *    ├───────────────────────────────┤
- *    │ ▶  playing               ⏭   │   purple mini player (fixed)
+ *    │ [▶  playing               ⏭] │   purple mini player after a track
  *    │ Home Artists Albums Lists Shop│   white capsule navigation
  *    └───────────────────────────────┘
  *
- *  The player never leaves: it is a purple bar above the menu until you tap
- *  it, then the full card (PlayerSection itself) slides over the screen.
+ *  The mini player stays hidden until a track is selected, then rises from
+ *  below the navigation (which paints above it) and opens the full card on tap.
  *  The feed's quick-jump strip is not rendered here at all — on a phone the
  *  shelves are meant to be scrolled, not jumped between.
  *
