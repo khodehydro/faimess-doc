@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArtistCover, Cover } from "../ui/Cover";
 import { Icon } from "../ui/Icon";
@@ -56,28 +56,44 @@ function PlayFab({ onClick, className }: { onClick: () => void; className?: stri
   );
 }
 
+/**
+ * Card container. Deliberately a div with a button role (not <button>) so
+ * inner controls — play, follow, save — stay valid, focusable HTML.
+ */
 function CardShell({
   children,
   onClick,
+  label,
   className,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   onClick: () => void;
+  label: string;
   className?: string;
 }) {
   return (
-    <motion.button
+    <motion.div
       variants={popChild}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return; // let inner controls handle their own keys
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={label}
       whileHover={{ y: -5 }}
       transition={spring}
       className={cn(
-        "group relative flex min-h-0 flex-col overflow-hidden rounded-card bg-surface text-left shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float",
+        "group relative flex min-h-0 cursor-pointer flex-col overflow-hidden rounded-card bg-surface text-left shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float",
         className,
       )}
     >
       {children}
-    </motion.button>
+    </motion.div>
   );
 }
 
@@ -88,7 +104,7 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
   const [following, setFollowing] = useState(artist.following);
 
   return (
-    <CardShell onClick={() => notify(`Opening ${artist.name}`)}>
+    <CardShell onClick={() => notify(`Opening ${artist.name}`)} label={`Open ${artist.name}`}>
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <ArtistCover seed={artist.seed} initials={artist.initials} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
         <PlayFab onClick={() => notify(`Playing ${artist.name}`)} className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -103,6 +119,7 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
             {artist.listeners}
           </Meta>
         </span>
+        <span onClick={(e) => e.stopPropagation()} className="shrink-0">
         <PillButton
           tone={following ? "primary" : "outline"}
           icon={following ? "check" : "plus"}
@@ -114,6 +131,7 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
         >
           {following ? "Following" : "Follow"}
         </PillButton>
+        </span>
       </div>
     </CardShell>
   );
@@ -122,7 +140,7 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
 function AlbumCard({ album }: { album: (typeof albums)[number] }) {
   const { notify } = useApp();
   return (
-    <CardShell onClick={() => notify(`Opening “${album.title}”`)}>
+    <CardShell onClick={() => notify(`Opening “${album.title}”`)} label={`Open ${album.title}`}>
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <Cover seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
         <PlayFab onClick={() => notify(`Playing “${album.title}”`)} className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -137,7 +155,9 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
             {album.artist} · {album.tracks} tracks
           </Meta>
         </span>
-        <CircleButton icon="heart" size="sm" tone="ghost" label="Save album" onClick={() => notify(`Saved “${album.title}”`, "mint")} />
+        <span onClick={(e) => e.stopPropagation()} className="shrink-0">
+          <CircleButton icon="heart" size="sm" tone="ghost" label="Save album" onClick={() => notify(`Saved “${album.title}”`, "mint")} />
+        </span>
       </div>
     </CardShell>
   );
