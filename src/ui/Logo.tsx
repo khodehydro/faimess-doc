@@ -39,7 +39,7 @@ export function Logo({ size = 32 }: { size?: number }) {
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={className}>
-      <span className="font-extrabold tracking-[-0.04em]">FAIMESS</span>
+      <span className="font-extrabold tracking-[-0.02em]">FAIMESS</span>
     </span>
   );
 }

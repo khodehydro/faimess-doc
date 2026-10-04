@@ -209,7 +209,7 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
       {/* header */}
       <div className="flex items-center gap-3 pb-3.5">
         <div className="min-w-0">
-          <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.035em] text-ink">{copy.title}</h2>
+          <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.018em] text-ink">{copy.title}</h2>
           <p className="mt-0.5 truncate text-[13.5px] text-ink-muted">{copy.subtitle}</p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">

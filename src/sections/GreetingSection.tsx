@@ -65,7 +65,7 @@ export function GreetingSection() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.12, ease: EASE }}
-          className="font-display text-[29px] font-bold leading-[1.16] tracking-[-0.03em] text-ink"
+          className="font-display text-[29px] font-bold leading-[1.16] tracking-[-0.015em] text-ink"
         >
           {GREETING.line1}
           <br />

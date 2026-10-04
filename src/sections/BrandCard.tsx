@@ -23,7 +23,7 @@ export function BrandCard() {
       className="flex h-[62px] shrink-0 items-center gap-2.5 rounded-full bg-surface px-4 shadow-card ring-1 ring-black/[0.03]"
     >
       <Logo size={34} />
-      <span className="font-display text-[21px] font-extrabold tracking-[-0.045em] text-ink">FAIMESS</span>
+      <span className="font-display text-[21px] font-extrabold tracking-[-0.022em] text-ink">FAIMESS</span>
     </motion.button>
   );
 }

@@ -90,7 +90,7 @@ export function ScheduleSection() {
     <section ref={panelRef} className="relative h-full w-full overflow-hidden rounded-card bg-surface p-5 shadow-card">
       {/* header */}
       <div className="flex items-start justify-between gap-3">
-        <h2 className="font-display text-[24px] font-bold leading-tight tracking-[-0.03em] text-ink">Upcoming Schedule</h2>
+        <h2 className="font-display text-[24px] font-bold leading-tight tracking-[-0.015em] text-ink">Upcoming Schedule</h2>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-0.5 rounded-full border border-line bg-surface p-1">
@@ -288,7 +288,7 @@ export function ScheduleSection() {
         </div>
         <div className="px-1 pb-0.5 pt-2">
           <div className="flex items-start justify-between gap-2">
-            <h4 className="text-[15px] font-bold leading-tight tracking-[-0.01em] text-ink">{featuredEvent.title}</h4>
+            <h4 className="text-[15px] font-bold leading-tight tracking-[-0.005em] text-ink">{featuredEvent.title}</h4>
             <span className="mt-0.5 text-ink-faint">
               <Icon name="more" size={14.5} strokeWidth={2.4} />
             </span>

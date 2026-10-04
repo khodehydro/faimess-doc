@@ -1,20 +1,68 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------ *
+ *  Pretendard — the typeface Weverse uses across its whole product.
+ *  A Korean neo-grotesque (built on Inter + Source Han Sans); the design
+ *  carries its hierarchy with WEIGHT alone, never with a second family.
+ *
+ *  These files are self-hosted latin subsets (≈32 KB per weight) produced
+ *  from the official release with pyftsubset — see
+ *  docs/font-research.md → “Pretendard: how the subsets were built”.
+ *  Licensed under the SIL Open Font License; license text ships next to
+ *  the files in src/assets/fonts/.
+ * ------------------------------------------------------------------ */
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/pretendard-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/pretendard-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/pretendard-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/pretendard-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("./assets/fonts/pretendard-800.woff2") format("woff2");
+}
+
+/* ------------------------------------------------------------------ *
  *  FAIMESS — design tokens
  *  Soft-minimal system: light neutrals + one violet accent (+ teal/mint
  *  support hues), wide airy shadows, generous radii. Values mirror
  *  docs/design-tokens.json.
  * ------------------------------------------------------------------ */
 @theme {
-  /* Body / UI — DM Sans: built for small screen sizes, geometric but warm.
-     Carries every list, label, counter and message in the interface. */
-  --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", sans-serif;
-  /* Display — Poppins: the geometric sans K-pop and Gen-Z brands lean on.
-     Used for the wordmark, headings, card titles and big numbers. */
-  --font-display: "Poppins", "DM Sans Variable", ui-sans-serif, system-ui,
-    sans-serif;
+  /* Pretendard does every job. Hierarchy comes from weight (800 / 700 / 600 /
+     500 / 400), never from switching family — the rule Weverse follows.
+     Both tokens point at it so swapping the display face later is a one-liner. */
+  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+    "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR",
+    "Malgun Gothic", sans-serif;
+  --font-display: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+    "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR",
+    "Malgun Gothic", sans-serif;
 
   /* surfaces */
   --color-canvas: #eaeaec;

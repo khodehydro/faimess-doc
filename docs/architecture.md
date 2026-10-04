@@ -210,10 +210,10 @@ export const routes = [
 
 | نقش | فونت | کاربرد |
 |---|---|---|
-| نمایشی | `Poppins` (`font-display`) | برند، تیتر بخش‌ها، خوش‌آ‌مد، نام کارت‌ها، مونوگرام کاورها |
-| بدنه/UI | `DM Sans Variable` (`font-sans`) | متن‌ها، متادیتا، دکمه‌ها، ورودی‌ها |
+| نمایشی | `Pretendard` (`font-display`) | برند، تیتر بخش‌ها، خوش‌آ‌مد، نام کارت‌ها، مونوگرام کاورها |
+| بدنه/UI | `Pretendard` (`font-sans`) | متن‌ها، متادیتا، دکمه‌ها، ورودی‌ها |
 
-مبنای انتخاب و بررسی گزینه‌ها: [`font-research.md`](./font-research.md) — بر پایهٔ مقالهٔ «۲۴ فونت برتر وب» از Figma. فقط زیرمجموعهٔ latin از Poppins و در چهار وزن ایمپورت می‌شود؛ اعداد شمارنده‌ای با `tabular-nums` رندر می‌شوند.
+**یک خانواده، سلسله‌مراتب با وزن** — همان قاعدهٔ Weverse. Pretendard self-hosted است (`src/assets/fonts/`، subset لاتین ~۲۹KB هر وزن) و `@font-face`ها در `src/index.css` تعریف شده‌اند؛ هیچ ایمپورت فونتی در `main.tsx` نیست. مبنای انتخاب: [`font-research.md`](./font-research.md). اعداد شمارنده‌ای با `tabular-nums` رندر می‌شوند.
 
 ### مقیاس تایپ (authoring در فضای صحنه)
 

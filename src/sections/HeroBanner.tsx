@@ -158,7 +158,7 @@ export function HeroBanner() {
                 <Icon name="sparkle" size={12} strokeWidth={2.2} />
                 {banner.eyebrow}
               </span>
-              <h3 className="font-display text-[18px] font-bold leading-tight tracking-[-0.02em] text-ink">{banner.title}</h3>
+              <h3 className="font-display text-[18px] font-bold leading-tight tracking-[-0.01em] text-ink">{banner.title}</h3>
               <div className="mt-1.5 flex items-center gap-3 text-[13.5px] font-medium">
                 <Meta icon="calendar">{banner.dateRange}</Meta>
                 <Meta icon="clock">{banner.time}</Meta>

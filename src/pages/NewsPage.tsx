@@ -33,7 +33,7 @@ export function NewsPage() {
     <SurfaceCard className="p-5">
       <div className="flex items-center gap-3 pb-3.5">
         <div className="min-w-0">
-          <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.035em] text-ink">News</h2>
+          <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.018em] text-ink">News</h2>
           <p className="mt-0.5 text-[13.5px] text-ink-muted">Comebacks, tours, charts and everything the K-pop desk is tracking</p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">
@@ -83,7 +83,7 @@ export function NewsPage() {
                 </span>
               </span>
               <span className="flex min-w-0 flex-1 flex-col p-3.5">
-                <span className="font-display text-[16px] font-bold leading-snug tracking-[-0.015em] text-ink">{item.title}</span>
+                <span className="font-display text-[16px] font-bold leading-snug tracking-[-0.008em] text-ink">{item.title}</span>
                 <span className="mt-1.5 line-clamp-2 text-[13.5px] leading-relaxed text-ink-muted">{item.excerpt}</span>
                 <span className="mt-auto flex items-center gap-2 pt-3 text-[12.5px] text-ink-faint">
                   <Icon name="news" size={12.5} />
