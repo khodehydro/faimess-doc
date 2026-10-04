@@ -205,6 +205,17 @@ check("expanded player has a layout rule", readFileSync("src/index.css", "utf8")
 check("rail ships behind more", playingCard.includes("More — queue, liked songs, playlists"));
 check("rail labels are in the markup", ["Play queue", "Liked songs", "Your playlists"].every((l) => playingCard.includes(l)));
 check("rail starts hidden", playingCard.includes("inert=") || playingCard.includes("inert"));
+{
+  /* the lyric sheet is centred: find the first line and look back for the class */
+  const plainCard = plain(playingCard);
+  const firstLine = plainCard.indexOf(LYRICS["nt1"][0].ko);
+  const before = firstLine > 0 ? plainCard.slice(Math.max(0, firstLine - 400), firstLine) : "";
+  check(
+    "lyric lines are centred",
+    firstLine > 0 && before.includes("text-center"),
+    firstLine > 0 ? "class not on the line wrapper" : "first lyric line missing",
+  );
+}
 check("the playing track can be liked", playingCard.includes("Remove from Liked songs") && playingCard.includes('aria-pressed="true"'));
 
 /* a track with no editorial sheet — the fan submission loop */

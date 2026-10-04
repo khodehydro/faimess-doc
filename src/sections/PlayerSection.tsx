@@ -772,8 +772,10 @@ function LyricsPanel({
                 <div
                   key={`${line.at}-${i}`}
                   ref={isActive ? activeRef : undefined}
+                  /* centred like a lyric sheet: the original line and its
+                     translation both hang off the middle of the panel */
                   className={cn(
-                    "rounded-[12px] px-2.5 py-2 transition-colors duration-300",
+                    "rounded-[12px] px-2.5 py-2 text-center transition-colors duration-300",
                     isActive ? "bg-primary-faint" : "bg-transparent",
                   )}
                 >
