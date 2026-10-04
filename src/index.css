@@ -1,0 +1,622 @@
+@import "tailwindcss";
+
+/* `dark:` follows the preference stored on <html data-theme="dark"> */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ------------------------------------------------------------------ *
+ *  Pretendard — the typeface Weverse uses across its whole product.
+ *  A Korean neo-grotesque (built on Inter + Source Han Sans); the design
+ *  carries its hierarchy with WEIGHT alone, never with a second family.
+ *
+ *  These files are self-hosted latin subsets (≈32 KB per weight) produced
+ *  from the official release with pyftsubset — see
+ *  docs/font-research.md → “Pretendard: how the subsets were built”.
+ *  Licensed under the SIL Open Font License; license text ships next to
+ *  the files in src/assets/fonts/.
+ * ------------------------------------------------------------------ */
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/pretendard-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/pretendard-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/pretendard-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/pretendard-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("./assets/fonts/pretendard-800.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  /* Hangul only: the demo's Korean glyph set (lyrics + UI strings), 11 KB a
+     weight. Anything outside it falls through to the system Korean face. */
+  unicode-range: U+AC00-D7A3;
+  src: url("./assets/fonts/pretendard-ko-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  /* Hangul only: the demo's Korean glyph set (lyrics + UI strings), 11 KB a
+     weight. Anything outside it falls through to the system Korean face. */
+  unicode-range: U+AC00-D7A3;
+  src: url("./assets/fonts/pretendard-ko-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  /* Hangul only: the demo's Korean glyph set (lyrics + UI strings), 11 KB a
+     weight. Anything outside it falls through to the system Korean face. */
+  unicode-range: U+AC00-D7A3;
+  src: url("./assets/fonts/pretendard-ko-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  /* Hangul only: the demo's Korean glyph set (lyrics + UI strings), 11 KB a
+     weight. Anything outside it falls through to the system Korean face. */
+  unicode-range: U+AC00-D7A3;
+  src: url("./assets/fonts/pretendard-ko-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Pretendard";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  /* Hangul only: the demo's Korean glyph set (lyrics + UI strings), 11 KB a
+     weight. Anything outside it falls through to the system Korean face. */
+  unicode-range: U+AC00-D7A3;
+  src: url("./assets/fonts/pretendard-ko-800.woff2") format("woff2");
+}
+
+/* ------------------------------------------------------------------ *
+ *  Vazirmatn — the Persian face for lyrics and any RTL copy. A separate
+ *  family on purpose: Pretendard has no Arabic script, and the Weverse
+ *  "one family" rule is about not mixing two *Latin* faces.
+ *  Arabic subset (24 KB a weight), SIL Open Font License.
+ * ------------------------------------------------------------------ */
+@font-face {
+  font-family: "Vazirmatn";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/vazirmatn-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Vazirmatn";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/vazirmatn-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Vazirmatn";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/vazirmatn-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Vazirmatn";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/vazirmatn-700.woff2") format("woff2");
+}
+
+/* ------------------------------------------------------------------ *
+ *  FAIMESS — design tokens
+ *  Soft-minimal system: light neutrals + one violet accent (+ teal/mint
+ *  support hues), wide airy shadows, generous radii. Values mirror
+ *  docs/design-tokens.json.
+ * ------------------------------------------------------------------ */
+@theme {
+  /* Pretendard does every job. Hierarchy comes from weight (800 / 700 / 600 /
+     500 / 400), never from switching family — the rule Weverse follows.
+     Both tokens point at it so swapping the display face later is a one-liner. */
+  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+    "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR",
+    "Malgun Gothic", sans-serif;
+  --font-display: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+    "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR",
+    "Malgun Gothic", sans-serif;
+  /* Persian/RTL copy — lyrics, and any future RTL string */
+  --font-fa: "Vazirmatn", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
+    "Segoe UI", Tahoma, sans-serif;
+
+  /* ------------------------------------------------------------------ *
+   *  Density — the one knob behind how much air the product gets.
+   *
+   *  Tailwind multiplies every numeric spacing/size utility (p-, m-, gap-,
+   *  size-, w-, h-, inset-) by this token, so 0.28rem instead of the 0.25rem
+   *  default lifts every padding, gap and icon by 12% **everywhere at once**
+   *  — no class has to be touched and no surface can fall out of step.
+   *
+   *  It was raised while auditing the two tightest budgets in the app: the
+   *  381px player column (its transport row still fits with room to spare)
+   *  and the 1580×889 art-board (which only ever scales). Anything that
+   *  must stay a fixed size is authored in `px` (e.g. `size-[34px]`), so it
+   *  deliberately ignores this knob. See docs/architecture.md §۱۵.
+   * ------------------------------------------------------------------ */
+  --spacing: 0.28rem;
+
+  /* surfaces */
+  --color-canvas: #eaeaec;
+  --color-canvas-deep: #e2e3e7;
+  --color-surface: #ffffff;
+  /* the parent card that holds every card: lighter than the canvas,
+     clearly deeper than the white cards so all three read apart */
+  --color-shell: #f1f2f5;
+  --color-shell-deep: #e9eaee;
+  --color-subtle: #f7f8fa;
+  --color-muted: #f1f2f5;
+  --color-line: #edeef1;
+  --color-line-strong: #e4e6ea;
+
+  /* brand accent — violet */
+  --color-primary: #8267f0;
+  --color-primary-deep: #6b4fdd;
+  --color-primary-soft: #ece7fe;
+  --color-primary-faint: #f6f4ff;
+
+  /* support hues */
+  --color-teal: #79bfb3;
+  --color-teal-deep: #4e8e86;
+  --color-teal-soft: #e4f2ef;
+
+  --color-mint: #58b879;
+  --color-mint-soft: #e7f5ec;
+
+  /* the “fire” counter — the one warm accent in the system */
+  --color-flame: #f2743d;
+  --color-flame-deep: #d95f2b;
+  --color-flame-soft: #fdece2;
+
+  /* ink */
+  --color-ink: #22252e;
+  --color-ink-body: #3c4049;
+  --color-ink-muted: #8a909a;
+  --color-ink-faint: #b9bec7;
+
+  /* radii */
+  --radius-frame: 34px;
+  --radius-shell: 30px;
+  --radius-card: 22px;
+  --radius-panel: 18px;
+  --radius-thumb: 12px;
+  --radius-chip: 10px;
+
+  /* elevation — wide, airy, colourless */
+  --shadow-xs: 0 1px 2px rgba(24, 28, 40, 0.05);
+  --shadow-sm: 0 4px 12px -4px rgba(24, 28, 40, 0.08);
+  --shadow-card: 0 10px 24px -10px rgba(24, 28, 40, 0.12);
+  --shadow-float: 0 22px 44px -14px rgba(24, 28, 40, 0.22);
+  --shadow-frame: 0 36px 70px -24px rgba(24, 28, 40, 0.18);
+  --shadow-primary: 0 8px 18px -6px rgba(130, 103, 240, 0.5);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Dark mode — the same token names, re-pointed.
+ *
+ *  Nothing else in the app knows about the theme: every card is painted
+ *  with bg-surface / text-ink / border-line, so re-declaring the tokens
+ *  under [data-theme="dark"] flips the whole product at once.
+ * ------------------------------------------------------------------ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-canvas: #0d0e12;
+  --color-canvas-deep: #08090c;
+  /* cards are lifted off the canvas, the parent card sits between them */
+  --color-surface: #1a1c23;
+  --color-shell: #13151b;
+  --color-shell-deep: #0f1116;
+  --color-subtle: #23262e;
+  --color-muted: #24272f;
+  --color-line: #2b2f38;
+  --color-line-strong: #3a3f4a;
+
+  --color-primary: #8b73f5;
+  --color-primary-deep: #ab99ff;
+  --color-primary-soft: #2a2440;
+  --color-primary-faint: #1f1c30;
+
+  --color-teal: #7cc7ba;
+  --color-teal-deep: #93d5c9;
+  --color-teal-soft: #1c2b29;
+
+  --color-mint: #5cc182;
+  --color-mint-soft: #16281d;
+
+  --color-flame: #f2743d;
+  --color-flame-deep: #ff9560;
+  --color-flame-soft: #2d1c13;
+
+  --color-ink: #f1f2f7;
+  --color-ink-body: #cfd3dd;
+  --color-ink-muted: #98a0ae;
+  --color-ink-faint: #6d7482;
+
+  /* elevation reads as darkness here, not as grey */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 12px 26px -12px rgba(0, 0, 0, 0.62);
+  --shadow-float: 0 24px 48px -16px rgba(0, 0, 0, 0.72);
+  --shadow-frame: 0 36px 80px -26px rgba(0, 0, 0, 0.72);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    /* theme flips shouldn't feel like a camera flash */
+    transition: background-color 240ms ease, color 240ms ease;
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button {
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+  }
+
+  input {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-primary);
+    color: #fff;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Utilities
+ * ------------------------------------------------------------------ */
+@utility scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink-faint);
+  }
+}
+
+/* fades the bottom edge of a scroll area, so a cut-off lyric line reads as
+   "there is more underneath" instead of as a hard stop */
+@utility mask-fade-b {
+  mask-image: linear-gradient(180deg, #000 0%, #000 calc(100% - 26px), transparent 100%);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Direction — one place that mirrors a glyph in a right-to-left UI.
+ *
+ *  Arrows that mean "back" and "next" are chosen logically at the call site
+ *  (`backIcon` / `forwardIcon` in src/lib/rtl.ts) because their whole shape
+ *  flips. The few glyphs that merely point up-and-away — the "opens
+ *  elsewhere" arrow and the paper plane — have no logical counterpart, so
+ *  they carry a `dir-flip` class and this rule turns them around. It is
+ *  scoped to `[dir="rtl"]` ancestors, so it works inside every card, dialog
+ *  and portal that re-declares its own direction.
+ * ------------------------------------------------------------------ */
+[dir="rtl"] .dir-flip {
+  transform: scaleX(-1);
+}
+
+/* keeps the frame from ever adding scrollbars to the page */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  The card split — 75 / 25 on every route (v26 moved the two cards up
+ *  into the shell), not just on home.
+ *  Unlayered rules, so they win over the `flex-1` that SurfaceCard carries.
+ *  Widths only: which card lands on which side is the row's own direction
+ *  (the content card is the wide one, on the right in Persian). Kept in sync
+ *  with HOME_METRICS.split in src/lib/stage.ts.
+ * ------------------------------------------------------------------ */
+@media (min-width: 1024px) {
+  .home-split-left {
+    flex: 0 1 calc(75% - 7px); /* half of the 14px gutter */
+  }
+  .home-split-right {
+    flex: 0 1 calc(25% - 7px);
+  }
+
+  /* the player card's expand button: 25% → 55% (the feed gives up the room) */
+  .home-split-left,
+  .home-split-right {
+    transition: flex-basis 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .home-split-wide .home-split-left {
+    flex: 0 1 calc(45% - 7px);
+  }
+  .home-split-wide .home-split-right {
+    flex: 0 1 calc(55% - 7px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-split-left,
+  .home-split-right {
+    transition: none;
+  }
+}
+
+/* The studio the app frame floats on — light grey by day, near-black at night.
+   The lower glow sits at the inline end of the frame (`--glow-x`), so it moves
+   with the writing direction instead of staying stuck in one corner. */
+.studio-backdrop {
+  --glow-x: 88%;
+  background:
+    radial-gradient(120% 90% at 50% -10%, #f6f6f8 0%, rgba(246, 246, 248, 0) 55%),
+    radial-gradient(80% 60% at var(--glow-x) 108%, #e4e5e9 0%, rgba(228, 229, 233, 0) 60%),
+    linear-gradient(180deg, #eaeaec 0%, #e5e6ea 100%);
+}
+
+[dir="rtl"] .studio-backdrop {
+  --glow-x: 12%;
+}
+
+/* Persian switches the whole app to Vazirmatn: the self-hosted Pretendard
+   subset carries Latin + Hangul only, so Arabic script would otherwise fall
+   through to whatever the OS picks. Overriding the two family tokens here
+   re-points every `font-sans` / `font-display` utility at once. */
+html:lang(fa) {
+  --font-sans: var(--font-fa);
+  --font-display: var(--font-fa);
+}
+
+[data-theme="dark"] .studio-backdrop {
+  background:
+    radial-gradient(120% 90% at 50% -10%, #1c1e26 0%, rgba(28, 30, 38, 0) 55%),
+    radial-gradient(80% 60% at var(--glow-x) 108%, #14161c 0%, rgba(20, 22, 28, 0) 60%),
+    linear-gradient(180deg, var(--color-canvas) 0%, var(--color-canvas-deep) 100%);
+}
+
+.studio-backdrop::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: radial-gradient(rgba(34, 37, 46, 0.045) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(120% 80% at 50% 40%, #000 20%, transparent 78%);
+}
+
+[data-theme="dark"] .studio-backdrop::before {
+  opacity: 0.35;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Motion — illustration & ambient loops
+ * ------------------------------------------------------------------ */
+@keyframes fi-shimmer {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateX(6px);
+  }
+}
+
+@keyframes fi-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes fi-flicker {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scaleY(1) scaleX(1);
+  }
+  35% {
+    opacity: 1;
+    transform: scaleY(1.12) scaleX(0.94);
+  }
+  70% {
+    opacity: 0.7;
+    transform: scaleY(0.92) scaleX(1.06);
+  }
+}
+
+@keyframes fi-sway {
+  0%,
+  100% {
+    transform: rotate(-1.1deg);
+  }
+  50% {
+    transform: rotate(1.1deg);
+  }
+}
+
+@keyframes fi-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes fi-pulse-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+@keyframes fi-bell-shake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(11deg);
+  }
+  40% {
+    transform: rotate(-9deg);
+  }
+  60% {
+    transform: rotate(6deg);
+  }
+  80% {
+    transform: rotate(-3deg);
+  }
+}
+
+@keyframes fi-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes fi-equalize {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.anim-shimmer {
+  animation: fi-shimmer 3.6s ease-in-out infinite;
+}
+.anim-twinkle {
+  animation: fi-twinkle 2.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.anim-flicker {
+  animation: fi-flicker 0.9s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: bottom center;
+}
+.anim-sway {
+  animation: fi-sway 5.5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: bottom center;
+}
+.anim-float {
+  animation: fi-float 6s ease-in-out infinite;
+}
+.anim-glow {
+  animation: fi-glow 5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.anim-pulse-ring {
+  animation: fi-pulse-ring 2.4s ease-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.anim-equalize {
+  animation: fi-equalize 1.1s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: bottom center;
+}
+.group:hover .anim-bell {
+  animation: fi-bell-shake 0.7s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
