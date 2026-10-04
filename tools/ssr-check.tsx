@@ -409,7 +409,7 @@ check(
 check(
   "the player card is the shell's, so it survives every route",
   readFileSync("src/app/App.tsx", "utf8").includes('id="player"') &&
-    ["ArtistsPage", "AlbumsPage", "PlaylistsPage", "NewsPage", "DownloadPage"].every(
+    ["ArtistsPage", "AlbumsPage", "PlaylistsPage", "NewsPage", "DownloadPage", "ShopPage"].every(
       (page) =>
         !readFileSync(`src/pages/${page}.tsx`, "utf8").includes("SurfaceCard") &&
         !readFileSync(`src/pages/${page}.tsx`, "utf8").includes("SectionSlot id=\"player\""),
@@ -831,6 +831,49 @@ check(
   "no language is missing a string",
   Object.values(STRINGS).every((entry) => entry.en.trim() && entry.fa.trim() && entry.ko.trim()),
   `${Object.keys(STRINGS).length} keys`,
+);
+
+/* -------- shop + shuffle (v28) ---------------------------------------- */
+
+const shopSrc = readFileSync("src/pages/ShopPage.tsx", "utf8");
+const shopData = readFileSync("src/data/shop.ts", "utf8");
+const routerSrc = readFileSync("src/app/router.ts", "utf8");
+const navSrc = readFileSync("src/data/navigation.ts", "utf8");
+const collectionSrc = readFileSync("src/sections/CollectionSection.tsx", "utf8");
+
+check(
+  "shuffle lives only where a list of songs is open",
+  !collectionSrc.includes('icon="shuffle"') &&
+    !collectionSrc.includes("page.shuffleAll") &&
+    readFileSync("src/sections/BrowseDetailView.tsx", "utf8").includes('icon="shuffle"'),
+  "the collection pages shuffle nothing; the detail card shuffles its own list",
+);
+check(
+  "the shop is a route of its own in the main menu",
+  routerSrc.includes('{ id: "shop", label: "Shop", path: "#/shop" }') &&
+    navSrc.includes('{ id: "shop", label: "Shop", icon: "shop" }') &&
+    readFileSync("src/app/App.tsx", "utf8").includes("shop: ShopPage") &&
+    routerSrc.includes('"shop"'),
+);
+check(
+  "the shop sells something: products, categories and prices",
+  (shopData.match(/^    id: "/gm) ?? []).length >= 6 &&
+    shopData.includes("SHOP_CATEGORIES") &&
+    shopData.includes("export const money") &&
+    shopSrc.includes("shopProducts") &&
+    shopSrc.includes("money(product.price)"),
+);
+check(
+  "the shop is honest that it is a demo",
+  shopSrc.includes('t("shop.demoNote")') && shopSrc.includes('t("shop.checkout")'),
+  "no checkout is pretended",
+);
+check(
+  "a product card has a photo, a price and a way to add it",
+  shopSrc.includes("<Photo") &&
+    shopSrc.includes('t("shop.add")') &&
+    shopSrc.includes("onAdd") &&
+    shopSrc.includes("setBag((n) => n + 1)"),
 );
 
 /* -------- the details the last pass fixed (v27) ----------------------- */

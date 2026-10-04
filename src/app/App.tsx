@@ -16,6 +16,7 @@ import { HomePage } from "../pages/HomePage";
 import { ArtistsPage } from "../pages/ArtistsPage";
 import { AlbumsPage } from "../pages/AlbumsPage";
 import { PlaylistsPage } from "../pages/PlaylistsPage";
+import { ShopPage } from "../pages/ShopPage";
 import { NewsPage } from "../pages/NewsPage";
 import { DownloadPage } from "../pages/DownloadPage";
 import { EASE } from "../lib/motion";
@@ -25,6 +26,7 @@ const PAGES = {
   artists: ArtistsPage,
   albums: AlbumsPage,
   playlists: PlaylistsPage,
+  shop: ShopPage,
   news: NewsPage,
   download: DownloadPage,
 } as const;

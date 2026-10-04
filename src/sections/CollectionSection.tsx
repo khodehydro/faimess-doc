@@ -461,13 +461,6 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
               {filterLabel(f)}
             </PillButton>
           ))}
-          <CircleButton
-            icon="shuffle"
-            size="sm"
-            tone="white"
-            label={t("page.shuffleAll")}
-            onClick={() => setFilter(copy.filters[0].key)}
-          />
           {kind === "playlists" && (
             <PillButton
               icon="plus"

@@ -99,6 +99,8 @@ const MAP = {
   sun: "sun",
   moon: "moon",
   globe: "globe",
+  shop: "shop", // the storefront awning — the main-menu entry
+  bag: "bag", // the shopping bag, for the cart itself
 };
 
 /** Bodies keep the pack's own stroke width; the pack's default (2 on the

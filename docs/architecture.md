@@ -178,15 +178,43 @@ export const routes = [
   { id: "artists", label: "Artists", path: "#/artists" },
   { id: "albums", label: "Albums", path: "#/albums" },
   { id: "playlists", label: "Playlists", path: "#/playlists" },
+  { id: "shop", label: "Shop", path: "#/shop" },   ← v28
 ];
 ```
 
 دو لیست مسیر وجود دارد:
-- `routes` → صفحات ناوبری (Home / Artists / Albums / Playlists)
+- `routes` → صفحات ناوبری (Home / Artists / Albums / Playlists / **Shop**)
 - `contextualRoutes` → صفحاتی که در منو نیستند ولی از داخل اپ باز می‌شوند (News · Get the app → `#/download`)
+
+منوی اصلی (`data/navigation.ts`) آینهٔ `routes` است؛ پس Shop با یک ردیف در هر دو لیست اضافه شد
+و پنل جست‌وجو/«Quick jump» هم خودکار آن را برداشت.
 
 افزودن صفحه: یک آیتم در یکی از این دو لیست + یک کامپوننت در `pages/` + یک خط در `PAGES` در `app/App.tsx`.
 ناوبری، پنل جست‌وجو و «Quick jump» **خودکار** از همین لیست‌ها تغذیه می‌شوند.
+
+### ۴.۰ فروشگاه (`#/shop`, v28)
+
+پنجمین مقصد منوی اصلی: مرچ کی‌پاپ (هودی، کفش، دستبند، فوتوکارت، لایت‌استیک…).
+
+```
+src/data/shop.ts     ShopProduct[] + SHOP_CATEGORIES + money()
+src/pages/ShopPage.tsx   صفحهٔ محتوا-تنها (کارت و پلیر مالِ Shell است)
+src/assets/photos/shop/*.webp   ۸ عکس محصول ۶۴۰×۶۴۰، self-hosted (~۱۶۴kB کل)
+```
+
+- **داده، نه منطق:** هر محصول `{ id, name, photo, category, price, wasPrice?, rating,
+  reviews, badge? }` است؛ متن‌ها (نام دسته‌ها، بج‌ها، دکمه‌ها) در i18n با کلیدهای
+  `shop.*` می‌مانند، دقیقاً مثل بقیهٔ صفحه‌ها.
+- **فیلتر دسته:** `All / Apparel / Accessories / Collectibles` با همان `PillButton`ها؛
+  گرید ۲ ستون (موبایل) → ۴ ستون (`lg`) با `AnimatePresence` روی تغییر دسته.
+- **کارت محصول:** عکس تمام‌قاب، بج گوشه (`New` / `Best seller` / `Low stock`)، دکمهٔ
+  قلب (ذخیره) بالا-انتها، و در هاور یک پیل **«افزودن به سبد»** پایین عکس. ردیف پایین:
+  نام، امتیاز/تعداد نظر و قیمت (قیمت خط‌خورده وقتی حراجی است).
+- **سبد:** یک شمارندهٔ ساده در هدر کارت (`Bag · n`) — دمو بک‌اند ندارد، پس هیچ پرداختی
+  شبیه‌سازی نمی‌شود و خط `shop.demoNote` همین را صریح می‌گوید. دکمهٔ Checkout فقط توست
+  «در اپ انجام می‌شود» می‌دهد و تا وقتی سبد خالی است غیرفعال است.
+- **آیکن‌ها:** `shop` (سایبان مغازه) برای منو و `bag` (کیف خرید) برای سبد — هر دو از
+  همان پک Lets Icons؛ نگاشت در `docs/icons.md`.
 
 ### ۴.۱ کارت جزئیات — پلی‌لیست، آرتیست، آلبوم (v26)
 

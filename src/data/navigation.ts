@@ -13,6 +13,7 @@ export const navItems: NavItem[] = [
   { id: "artists", label: "Artists", icon: "mic" },
   { id: "albums", label: "Albums", icon: "disc" },
   { id: "playlists", label: "Playlists", icon: "music" },
+  { id: "shop", label: "Shop", icon: "shop" },
 ];
 
 export const notifications = [
