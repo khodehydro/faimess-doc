@@ -144,6 +144,20 @@
   }
 }
 
+/* ------------------------------------------------------------------ *
+ *  Home layout — the 75 / 25 card split.
+ *  Unlayered rules, so they win over the `flex-1` that SurfaceCard carries.
+ *  Kept in sync with HOME_METRICS.split in src/lib/stage.ts.
+ * ------------------------------------------------------------------ */
+@media (min-width: 1024px) {
+  .home-split-left {
+    flex: 0 1 calc(75% - 7px); /* half of the 14px gutter */
+  }
+  .home-split-right {
+    flex: 0 1 calc(25% - 7px);
+  }
+}
+
 /* the grey studio the app frame floats on */
 .studio-backdrop {
   background:

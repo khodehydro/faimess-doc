@@ -41,13 +41,13 @@ export function GreetingSection() {
   };
 
   return (
-    <section className="relative flex h-full w-full flex-col justify-between overflow-hidden px-6 py-5">
+    <section className="relative flex h-full w-full flex-col justify-between overflow-hidden px-5 py-4">
       {/* decorative sprigs */}
       <motion.div
         initial={{ opacity: 0, x: -12, rotate: -6 }}
         animate={{ opacity: 1, x: 0, rotate: 0 }}
         transition={{ duration: 0.9, delay: 0.3, ease: EASE }}
-        className="pointer-events-none absolute left-1 top-[46%] h-[86px]"
+        className="pointer-events-none absolute left-0 top-[48%] h-[74px] opacity-90"
       >
         <Sprig />
       </motion.div>
@@ -55,7 +55,7 @@ export function GreetingSection() {
         initial={{ opacity: 0, x: 12, rotate: 6 }}
         animate={{ opacity: 1, x: 0, rotate: 0 }}
         transition={{ duration: 0.9, delay: 0.38, ease: EASE }}
-        className="pointer-events-none absolute right-1 top-[26%] h-[74px]"
+        className="pointer-events-none absolute right-0 top-[28%] h-[64px] opacity-90"
       >
         <Sprig flip />
       </motion.div>
@@ -65,7 +65,7 @@ export function GreetingSection() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.12, ease: EASE }}
-          className="font-display text-[34px] font-bold leading-[1.14] tracking-[-0.035em] text-ink"
+          className="font-display text-[29px] font-bold leading-[1.16] tracking-[-0.03em] text-ink"
         >
           {GREETING.line1}
           <br />
@@ -75,7 +75,7 @@ export function GreetingSection() {
               animate={{ rotate: [0, 16, -8, 14, 0] }}
               transition={{ duration: 1.8, delay: 0.9, repeat: Infinity, repeatDelay: 3.4 }}
               style={{ transformOrigin: "70% 80%", display: "inline-block" }}
-              className="text-[30px]"
+              className="text-[26px]"
             >
               👋
             </motion.span>
@@ -86,7 +86,7 @@ export function GreetingSection() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.26, ease: EASE }}
-          className="mx-auto mt-3 max-w-[320px] text-[13.5px] leading-relaxed text-ink-muted"
+          className="mx-auto mt-2.5 max-w-[300px] text-[13px] leading-relaxed text-ink-muted"
         >
           {GREETING.subtitle}
         </motion.p>
@@ -100,8 +100,8 @@ export function GreetingSection() {
         transition={{ duration: 0.6, delay: 0.36, ease: EASE }}
         className="relative flex items-center gap-2.5"
       >
-        <div className="flex flex-1 items-center gap-1.5 rounded-full border border-line bg-subtle py-1.5 pl-4 pr-1.5 transition-colors focus-within:border-primary/40 focus-within:bg-surface">
-          <label htmlFor="intent" className="whitespace-nowrap text-[14px] font-semibold text-ink">
+        <div className="flex flex-1 items-center gap-1 rounded-full border border-line bg-subtle py-1.5 pl-3.5 pr-1.5 transition-colors focus-within:border-primary/40 focus-within:bg-surface">
+          <label htmlFor="intent" className="whitespace-nowrap text-[13.5px] font-semibold text-ink">
             I want to...
           </label>
           <input
@@ -116,7 +116,7 @@ export function GreetingSection() {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             aria-label="Pick a date"
-            className="flex size-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-white hover:text-ink"
+            className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-white hover:text-ink"
           >
             <Icon name="calendar" size={15.5} />
           </motion.button>
@@ -125,7 +125,7 @@ export function GreetingSection() {
             whileHover={{ scale: 1.08, rotate: 8 }}
             whileTap={{ scale: 0.92 }}
             aria-label="Save idea"
-            className="flex size-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-white hover:text-ink"
+            className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-white hover:text-ink"
           >
             <Icon name="star" size={15.5} />
           </motion.button>
@@ -136,7 +136,7 @@ export function GreetingSection() {
           whileTap={{ scale: 0.94 }}
           transition={spring}
           aria-label="Start planning"
-          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-primary"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-primary"
         >
           <Icon name="send" size={18.5} strokeWidth={1.8} />
         </motion.button>
@@ -147,7 +147,7 @@ export function GreetingSection() {
         initial="initial"
         animate="animate"
         variants={{ animate: { transition: { staggerChildren: 0.06, delayChildren: 0.44 } } }}
-        className="relative flex items-center justify-between gap-2"
+        className="relative grid grid-cols-2 gap-1.5"
       >
         {FILTERS.map((f) => {
           const isActive = filter === f.id;

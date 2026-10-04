@@ -15,7 +15,7 @@ const clock = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute:
 
 function ConversationRow({ convo, active, onSelect }: { convo: Conversation; active: boolean; onSelect: () => void }) {
   return (
-    <button onClick={onSelect} className="relative flex w-full items-center gap-2.5 px-3 py-2.5 text-left">
+    <button onClick={onSelect} className="relative flex w-full items-center gap-2.5 px-2.5 py-2.5 text-left">
       {active && (
         <motion.span layoutId="convo-active" transition={spring} className="absolute inset-x-1 inset-y-0.5 rounded-[14px] bg-subtle" />
       )}
@@ -62,7 +62,7 @@ function InviteCard({
       initial={{ opacity: 0, scale: 0.96, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.45, ease: EASE }}
-      className="w-[212px] rounded-[16px] bg-white p-2.5 shadow-card ring-1 ring-line/70"
+      className="w-full max-w-[212px] rounded-[16px] bg-white p-2.5 shadow-card ring-1 ring-line/70"
     >
       <div className="flex items-center justify-between">
         <p className="text-[13.5px] font-bold text-ink">{message.title}</p>
@@ -244,7 +244,7 @@ export function MessagesSection() {
 
       {/* thread */}
       <div className="flex min-w-0 flex-col bg-subtle">
-        <div ref={scrollRef} className="scroll-slim min-h-0 flex-1 space-y-2.5 overflow-y-auto px-3.5 py-3">
+        <div ref={scrollRef} className="scroll-slim min-h-0 flex-1 space-y-2.5 overflow-y-auto px-3 py-3">
           <AnimatePresence initial={false} mode="popLayout">
             {active.messages.map((m, i) => (
               <Bubble key={m.id} message={m} index={i} onRespond={(status) => respond(m.id, status)} />
@@ -277,7 +277,7 @@ export function MessagesSection() {
             e.preventDefault();
             send();
           }}
-          className="flex items-center gap-2 border-t border-line/70 px-3 py-2.5"
+          className="flex items-center gap-2 border-t border-line/70 px-2.5 py-2.5"
         >
           <div className="flex flex-1 items-center rounded-full border border-line bg-white px-3.5 py-1.5 transition-colors focus-within:border-primary/40">
             <input

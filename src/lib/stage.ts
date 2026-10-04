@@ -24,6 +24,6 @@ export const HOME_METRICS = {
   gutter: 18,
   hero: 356,
   greeting: 344,
-  /** the right column (greeting + messages) keeps this fixed width */
-  rightColumn: 520,
+  /** home is split 75% left / 25% right (see `home-split-*` in index.css) */
+  split: { leftShare: 0.75, rightShare: 0.25, gutter: 14 },
 } as const;
