@@ -5,6 +5,7 @@
  * ------------------------------------------------------------------ */
 
 import type { SceneKey } from "../ui/Scenes";
+import type { FanActivity } from "./points";
 import { artists } from "./library";
 
 import afterglowPhoto from "../assets/photos/albums/afterglow.webp";
@@ -154,7 +155,8 @@ export type FeedUser = {
   id: string;
   name: string;
   handle: string;
-  points: number;
+  /** what earns this fan their points — the totals are derived from it */
+  activity: FanActivity;
   level: number;
   streak: number;
   online?: boolean;
@@ -163,12 +165,88 @@ export type FeedUser = {
 };
 
 export const activeUsers: FeedUser[] = [
-  { id: "au1", name: "Yunha", handle: "@yunha", points: 24180, level: 42, streak: 128, online: true, seed: 0, photo: yunhaPhoto },
-  { id: "au2", name: "Miso K.", handle: "@miso.k", points: 21640, level: 39, streak: 96, online: true, seed: 1, photo: misoPhoto },
-  { id: "au3", name: "Taehyun", handle: "@taehyun", points: 19950, level: 37, streak: 74, online: true, seed: 2, photo: taehyunPhoto },
-  { id: "au4", name: "Seojin", handle: "@seojin", points: 18320, level: 34, streak: 61, seed: 3, photo: seojinPhoto },
-  { id: "au5", name: "Haru", handle: "@haru", points: 16780, level: 31, streak: 48, online: true, seed: 4, photo: haruPhoto },
-  { id: "au6", name: "Jxnnie", handle: "@jxnnie", points: 15410, level: 29, streak: 33, seed: 5, photo: jxnniePhoto },
-  { id: "au7", name: "Minho", handle: "@minho", points: 14120, level: 27, streak: 25, seed: 6, photo: minhoPhoto },
-  { id: "au8", name: "Ari", handle: "@ari", points: 12980, level: 24, streak: 19, seed: 7, photo: ariPhoto },
+  {
+    id: "au1",
+    name: "Yunha",
+    handle: "@yunha",
+    activity: { listeningMinutes: 40_150, comments: 1_356, invites: 145, days: 242, lyricSheets: 6 },
+    level: 42,
+    streak: 128,
+    online: true,
+    seed: 0,
+    photo: yunhaPhoto,
+  },
+  {
+    id: "au2",
+    name: "Miso K.",
+    handle: "@miso.k",
+    activity: { listeningMinutes: 38_150, comments: 1_212, invites: 130, days: 216, lyricSheets: 5 },
+    level: 39,
+    streak: 96,
+    online: true,
+    seed: 1,
+    photo: misoPhoto,
+  },
+  {
+    id: "au3",
+    name: "Taehyun",
+    handle: "@taehyun",
+    activity: { listeningMinutes: 32_800, comments: 1_116, invites: 120, days: 200, lyricSheets: 5 },
+    level: 37,
+    streak: 74,
+    online: true,
+    seed: 2,
+    photo: taehyunPhoto,
+  },
+  {
+    id: "au4",
+    name: "Seojin",
+    handle: "@seojin",
+    activity: { listeningMinutes: 27_700, comments: 1_024, invites: 110, days: 184, lyricSheets: 5 },
+    level: 34,
+    streak: 61,
+    seed: 3,
+    photo: seojinPhoto,
+  },
+  {
+    id: "au5",
+    name: "Haru",
+    handle: "@haru",
+    activity: { listeningMinutes: 28_800, comments: 940, invites: 101, days: 168, lyricSheets: 4 },
+    level: 31,
+    streak: 48,
+    online: true,
+    seed: 4,
+    photo: haruPhoto,
+  },
+  {
+    id: "au6",
+    name: "Jxnnie",
+    handle: "@jxnnie",
+    activity: { listeningMinutes: 24_600, comments: 864, invites: 92, days: 154, lyricSheets: 4 },
+    level: 29,
+    streak: 33,
+    seed: 5,
+    photo: jxnniePhoto,
+  },
+  {
+    id: "au7",
+    name: "Minho",
+    handle: "@minho",
+    activity: { listeningMinutes: 20_400, comments: 792, invites: 85, days: 142, lyricSheets: 4 },
+    level: 27,
+    streak: 25,
+    seed: 6,
+    photo: minhoPhoto,
+  },
+  {
+    id: "au8",
+    name: "Ari",
+    handle: "@ari",
+    activity: { listeningMinutes: 22_850, comments: 728, invites: 78, days: 130, lyricSheets: 3 },
+    level: 24,
+    streak: 19,
+    seed: 7,
+    photo: ariPhoto,
+  },
 ];

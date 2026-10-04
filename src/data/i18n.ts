@@ -77,6 +77,78 @@ export const STRINGS: Record<string, Entry> = {
   "account.signOut": { en: "Sign out", fa: "خروج از حساب", ko: "로그아웃" },
   "account.points": { en: "{n} fan points", fa: "{n} امتیاز هواداری", ko: "팬 포인트 {n}" },
 
+  /* ------------------------ the five point rules ---------------------- */
+  "points.title": { en: "How points add up", fa: "امتیازها چطور جمع می‌شوند", ko: "포인트 계산법" },
+  "points.subtitle": {
+    en: "The same five rules for every listener on FAIMESS.",
+    fa: "پنج قاعدهٔ یکسان برای همهٔ شنونده‌های فیمس.",
+    ko: "FAIMESS의 모든 리스너에게 같은 다섯 가지 규칙이에요.",
+  },
+  "points.total": { en: "Total", fa: "مجموع", ko: "합계" },
+  "points.open": {
+    en: "See how these points add up",
+    fa: "ببین امتیازها چطور جمع می‌شوند",
+    ko: "포인트 계산법 보기",
+  },
+  "points.listening": { en: "Listening time", fa: "زمان گوش‌دادن", ko: "청취 시간" },
+  "points.comments": { en: "Comments on the site", fa: "کامنت‌های ثبت‌شده", ko: "사이트 댓글" },
+  "points.invites": { en: "Friends who joined", fa: "دوستانی که عضو شدند", ko: "초대해 가입한 친구" },
+  "points.tenure": { en: "Days as a member", fa: "روزهای عضویت", ko: "가입 일수" },
+  "points.lyrics": { en: "Lyric sheets approved", fa: "لیریک‌های تأییدشده", ko: "승인된 가사" },
+  "points.ratePerMinute": { en: "{n} per minute", fa: "{n} به ازای هر دقیقه", ko: "분당 {n}" },
+  "points.ratePerComment": { en: "{n} per comment", fa: "{n} به ازای هر کامنت", ko: "댓글당 {n}" },
+  "points.ratePerInvite": {
+    en: "{n} per joined invite",
+    fa: "{n} به ازای هر دعوت موفق",
+    ko: "가입 1명당 {n}",
+  },
+  "points.ratePerDay": { en: "{n} per day", fa: "{n} به ازای هر روز", ko: "하루당 {n}" },
+  "points.ratePerSheet": {
+    en: "{n} per approved sheet",
+    fa: "{n} به ازای هر لیریک تأییدشده",
+    ko: "승인 1건당 {n}",
+  },
+  "points.countHours": { en: "{n} hours listened", fa: "{n} ساعت گوش‌دادن", ko: "{n}시간 청취" },
+  "points.countMinutes": {
+    en: "{m} minutes · {h} hours",
+    fa: "{m} دقیقه · {h} ساعت",
+    ko: "{m}분 · {h}시간",
+  },
+  "points.countComments": { en: "{n} comments", fa: "{n} کامنت", ko: "댓글 {n}개" },
+  "points.countInvites": { en: "{n} friends joined", fa: "{n} دوست عضو شد", ko: "친구 {n}명 가입" },
+  "points.countDays": { en: "{n} days on FAIMESS", fa: "{n} روز عضویت در فیمس", ko: "FAIMESS {n}일" },
+  "points.countSheets": { en: "{n} sheets approved", fa: "{n} لیریک تأییدشده", ko: "가사 {n}건 승인" },
+  "points.sessionNote": {
+    en: "A sheet approved in this session is counted straight away; the balance itself lives in this browser.",
+    fa: "لیریکی که همین حالا تأیید شود بلافاصله حساب می‌شود؛ خودِ موجودی در همین مرورگر می‌ماند.",
+    ko: "이번 세션에서 승인된 가사는 바로 반영돼요. 잔액은 이 브라우저에만 남아요.",
+  },
+
+  /* --------------------------- the table ----------------------------- */
+  "points.head.listening": { en: "Listening", fa: "گوش‌دادن", ko: "청취" },
+  "points.head.comments": { en: "Comments", fa: "کامنت", ko: "댓글" },
+  "points.head.invites": { en: "Invites", fa: "دعوت", ko: "초대" },
+  "points.head.days": { en: "Days", fa: "روز", ko: "일수" },
+  "points.head.lyrics": { en: "Lyrics", fa: "لیریک", ko: "가사" },
+  "leader.title": { en: "Leaderboard", fa: "جدول امتیازها", ko: "리더보드" },
+  "leader.subtitle": {
+    en: "Every balance here is the same five rules, added up.",
+    fa: "هر موجودی در این جدول، مجموع همان پنج قاعدهٔ یکسان است.",
+    ko: "이 표의 모든 잔액은 같은 다섯 규칙을 더한 값이에요.",
+  },
+  "leader.listener": { en: "Listener", fa: "شنونده", ko: "리스너" },
+  "leader.you": { en: "You", fa: "تو", ko: "나" },
+  "leader.rulesNote": {
+    en: "A comment earns 0.25, a friend who signs up earns 3, and an approved lyric sheet earns 120.",
+    fa: "هر کامنت ۰.۲۵ امتیاز، هر دوستی که عضو شود ۳ امتیاز و هر لیریک تأییدشده ۱۲۰ امتیاز دارد.",
+    ko: "댓글은 0.25, 가입한 친구는 3, 승인된 가사는 120 포인트예요.",
+  },
+  "leader.tapNote": {
+    en: "Pick any listener on the shelf to open their own five lines.",
+    fa: "روی هر شنونده در قفسه بزن تا پنج خط امتیاز خودش باز شود.",
+    ko: "선반에서 리스너를 고르면 그 사람의 다섯 줄을 볼 수 있어요.",
+  },
+
   /* --------------------------- preferences ---------------------------- */
   "pref.title": { en: "Preferences", fa: "تنظیمات", ko: "환경설정" },
   "pref.language": { en: "Language", fa: "زبان", ko: "언어" },

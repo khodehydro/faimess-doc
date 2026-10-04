@@ -30,8 +30,10 @@ import { albums, artists, playlists } from "../src/data/library";
 import { banners } from "../src/data/banners";
 import { activeUsers, newestTracks, trendingTracks } from "../src/data/feed";
 import { conversations } from "../src/data/messages";
-import { me } from "../src/data/account";
+import { ME_ACTIVITY, me } from "../src/data/account";
 import { QUEUE, lyricsFor, trackById } from "../src/data/player";
+import { POINT_RULES, fanLines, fanPoints } from "../src/data/points";
+import { withThousands } from "../src/lib/format";
 import {
   PLAYLIST_COVERS,
   coverById,
@@ -122,7 +124,7 @@ const render = (Page: () => ReactElement, opts: RenderOpts = {}) =>
 /** the right-hand card, rendered on its own */
 const PlayerCard = () => <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />;
 const ProfileMenu = () => (
-  <ProfileMenuContent onClose={() => {}} onContributions={() => {}} />
+  <ProfileMenuContent onClose={() => {}} onContributions={() => {}} onPoints={() => {}} />
 );
 
 /* ------------------------------- pages ------------------------------- */
@@ -313,6 +315,66 @@ const mineSeed: UserPlaylist[] = [
   },
 ];
 
+/* ------------------------ fan points (five rules) -------------------- */
+
+check(
+  "points come from exactly five rules, each with a label, a rate and a unit",
+  POINT_RULES.length === 5 &&
+    POINT_RULES.every((r) => r.value > 0 && STRINGS[r.labelKey] && STRINGS[r.rateKey] && STRINGS[r.countKey]),
+  POINT_RULES.map((r) => `${r.id} ${r.value}`).join(" · "),
+);
+check(
+  "a comment is worth a quarter and a joined invite three",
+  POINT_RULES.find((r) => r.id === "comments")!.value === 0.25 &&
+    POINT_RULES.find((r) => r.id === "invites")!.value === 3,
+);
+check(
+  "the account's balance is exactly what its activity adds up to",
+  fanPoints(ME_ACTIVITY) === me.points,
+  `${fanPoints(ME_ACTIVITY)} points from ${fanLines(ME_ACTIVITY).length} lines`,
+);
+check(
+  "the rules actually move the total",
+  fanPoints({ ...ME_ACTIVITY, comments: ME_ACTIVITY.comments + 4 }) - fanPoints(ME_ACTIVITY) === 1 &&
+    fanPoints({ ...ME_ACTIVITY, invites: ME_ACTIVITY.invites + 1 }) - fanPoints(ME_ACTIVITY) === 3 &&
+    fanPoints({ ...ME_ACTIVITY, lyricSheets: ME_ACTIVITY.lyricSheets + 1 }) - fanPoints(ME_ACTIVITY) === 120,
+  "4 comments = 1 point · 1 invite = 3 · 1 sheet = 120",
+);
+check(
+  "every leaderboard balance is derived from an activity record",
+  activeUsers.every((u) => fanPoints(u.activity) > 0 && u.activity.days > 0) &&
+    activeUsers.every((u, i) => i === 0 || fanPoints(activeUsers[i - 1].activity) > fanPoints(u.activity)),
+  "and the ladder still runs top to bottom",
+);
+
+/* the numbers themselves — the shelf sends you to the table, and the table
+   reads the same five rules the cards do */
+const leaderSrc = readFileSync("src/ui/LeaderboardDialog.tsx", "utf8");
+const pointsDialogSrc = readFileSync("src/ui/PointsDialog.tsx", "utf8");
+const activeUsersSrc = readFileSync("src/sections/feed/ActiveUsers.tsx", "utf8");
+check(
+  "the leaderboard table is built from the rules, not a second copy of them",
+  leaderSrc.includes("POINT_RULES.map") &&
+    leaderSrc.includes("Record<PointRuleId, string>") &&
+    leaderSrc.includes("countFor(") &&
+    leaderSrc.includes("fanPoints("),
+  "one column per rule · widths keyed by rule id · totals derived",
+);
+check(
+  "the shelf card opens that table",
+  activeUsersSrc.includes("LeaderboardDialog") && activeUsersSrc.includes("fanPoints(user.activity)"),
+);
+check(
+  "the breakdown panel shows a line per rule",
+  pointsDialogSrc.includes("fanLines(") && pointsDialogSrc.includes("rule.rateKey"),
+);
+check(
+  "no balance is written down by hand any more",
+  !/points:\s*\d/.test(readFileSync("src/data/feed.ts", "utf8")) &&
+    !/points:\s*\d/.test(readFileSync("src/data/account.ts", "utf8")),
+  "feed.ts and account.ts keep activity records only",
+);
+
 const artistsPage = render(ArtistsPage);
 const downloadPage = render(DownloadPage);
 check("download page renders", downloadPage.includes("Get the FAIMESS app") && downloadPage.includes("Google Play"));
@@ -360,12 +422,22 @@ const newsPage = render(NewsPage);
 check("news page renders", newsPage.includes("News"));
 check("no undefined leaks into markup", !home.includes("undefined") && !artistsPage.includes("undefined"));
 check(
+  "the leaderboard prints the derived total",
+  home.includes(withThousands(fanPoints(activeUsers[0].activity))),
+  `${withThousands(fanPoints(activeUsers[0].activity))} on the top card`,
+);
+check(
   "the player can share a song or keep it",
   playingCard.includes("Share this song") && playingCard.includes("Add to one of your playlists"),
   "both actions are labelled under the title",
 );
 
 const profileMenu = render(ProfileMenu);
+check(
+  "the profile balance opens the breakdown",
+  profileMenu.includes(STRINGS["points.open"].en) && profileMenu.includes(withThousands(me.points)),
+  "the chip is a button, the numbers come from the rules",
+);
 check(
   "the profile menu carries the preferences",
   profileMenu.includes("Language") &&

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { me } from "../data/account";
+import type { FanActivity } from "../data/points";
 import {
   COMMUNITY_LYRICS,
   LYRIC_REWARD,
@@ -99,8 +100,11 @@ export function ContributionsProvider({ children }: { children: ReactNode }) {
       return { lines: parseSubmission(approved.original, approved.translation, 0), by: "you" };
     };
 
+    /* the seeded approval is already part of the account's lifetime record
+       (see ME_ACTIVITY in data/points.ts), so only sheets the moderators
+       approve *in this session* pay out on top of the balance */
     const earned = submissions
-      .filter((s) => s.status === "approved")
+      .filter((s) => s.status === "approved" && !s.id.startsWith("seed-"))
       .reduce((total, s) => total + s.points, 0);
 
     return {
@@ -121,4 +125,17 @@ export function useContributions() {
   const ctx = useContext(ContributionsContext);
   if (!ctx) throw new Error("useContributions must be used inside <ContributionsProvider>");
   return ctx;
+}
+
+/**
+ * The account's lifetime record (data/account.ts) with this session's
+ * approvals folded in — the one place the five point rules read the "me"
+ * side from, so the breakdown, the leaderboard row and the balance agree.
+ */
+export function useMyActivity(): FanActivity {
+  const { submissions } = useContributions();
+  const approvedNow = submissions.filter(
+    (sheet) => sheet.status === "approved" && !sheet.id.startsWith("seed-"),
+  ).length;
+  return { ...me.activity, lyricSheets: me.activity.lyricSheets + approvedNow };
 }

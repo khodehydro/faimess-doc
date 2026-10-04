@@ -5,15 +5,17 @@ import { Avatar } from "../ui/Avatar";
 import { CircleButton } from "../ui/primitives";
 import { useClickOutside } from "../hooks/useClickOutside";
 import { useApp } from "../app/AppContext";
-import { useContributions } from "../app/ContributionsContext";
+import { useContributions, useMyActivity } from "../app/ContributionsContext";
 import { usePreferences } from "../app/PreferencesContext";
 import { LANGS, THEMES } from "../data/i18n";
 import { ContributionsModal } from "./ContributionsModal";
+import { PointsDialog } from "../ui/PointsDialog";
 import { navItems, notifications } from "../data/navigation";
 import { allRoutes } from "../app/router";
 import { artists, albums, playlists } from "../data/library";
 import { me } from "../data/account";
 import { cn } from "../lib/cn";
+import { forwardIcon } from "../lib/rtl";
 import { EASE, spring } from "../lib/motion";
 
 /* ------------------------------------------------------------------ *
@@ -33,7 +35,11 @@ export function AccountCard() {
   const [bellOpen, setBellOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [contribOpen, setContribOpen] = useState(false);
+  const [pointsOpen, setPointsOpen] = useState(false);
   const [focused, setFocused] = useState(false);
+
+  /** the lifetime record plus whatever the moderators approved just now */
+  const myActivity = useMyActivity();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -286,6 +292,10 @@ export function AccountCard() {
               <ProfileMenuContent
                 onClose={() => setProfileOpen(false)}
                 onContributions={() => setContribOpen(true)}
+                onPoints={() => {
+                  setProfileOpen(false);
+                  setPointsOpen(true);
+                }}
               />
             </motion.div>
           )}
@@ -295,6 +305,20 @@ export function AccountCard() {
       <ContributionsModal
         open={contribOpen}
         onClose={() => setContribOpen(false)}
+      />
+
+      <PointsDialog
+        open={pointsOpen}
+        onClose={() => setPointsOpen(false)}
+        subject={{
+          name: me.name,
+          handle: me.handle,
+          photo: me.photo,
+          seed: 0,
+          meta: me.tier,
+          activity: myActivity,
+          note: t("points.sessionNote"),
+        }}
       />
     </div>
   );
@@ -311,11 +335,14 @@ export function AccountCard() {
 export function ProfileMenuContent({
   onClose,
   onContributions,
+  onPoints,
 }: {
   onClose: () => void;
   onContributions: () => void;
+  /** open the breakdown behind the balance */
+  onPoints: () => void;
 }) {
-  const { t, lang, setLang, theme, setTheme, locale } = usePreferences();
+  const { t, lang, setLang, theme, setTheme, locale, dir } = usePreferences();
   const { notify } = useApp();
   const { points, submissions } = useContributions();
   const pendingSheets = submissions.filter(
@@ -334,8 +361,14 @@ export function ProfileMenuContent({
         </span>
       </div>
 
-      <div className="mx-1 mb-1 flex items-center gap-2 rounded-[13px] bg-primary-faint/70 px-2.5 py-2">
-        <Icon name="star" size={14} className="text-primary-deep" />
+      <button
+        type="button"
+        onClick={onPoints}
+        aria-label={t("points.open")}
+        title={t("points.open")}
+        className="mx-1 mb-1 flex w-[calc(100%-8px)] items-center gap-2 rounded-[13px] bg-primary-faint/70 px-2.5 py-2 text-start transition-colors hover:bg-primary-faint"
+      >
+        <Icon name="star" size={14} className="shrink-0 text-primary-deep" />
         <span className="text-[12.5px] font-bold text-ink">
           {t("account.points", { n: points.toLocaleString(locale) })}
         </span>
@@ -344,7 +377,14 @@ export function ProfileMenuContent({
             {pendingSheets}
           </span>
         )}
-      </div>
+        {/* a “drill in” chevron, which is the forward arrow in this direction */}
+        <Icon
+          name={forwardIcon(dir)}
+          size={13}
+          strokeWidth={2.2}
+          className={cn("shrink-0 text-primary-deep/70", pendingSheets === 0 && "ms-auto")}
+        />
+      </button>
 
       {/* preferences — language + appearance, both kept in the browser */}
       <div className="mt-1.5 rounded-[13px] bg-subtle px-2 py-2">
