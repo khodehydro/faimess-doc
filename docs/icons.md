@@ -24,7 +24,7 @@
 tools/icons/lets-icons.json        ← کش ۹۰۰kB از مجموعه (git-ignore)
         │  tools/icons/build.mjs   ← جدول site-name → pack-name
         ▼
-src/ui/icons.gen.ts (کامیت می‌شود، ۵۵ آیکن)
+src/ui/icons.gen.ts (کامیت می‌شود، ۵۸ آیکن)
         │  src/ui/Icon.tsx          ← تنها مصرف‌کنندهٔ فایل تولید‌شده
         ▼
 همهٔ بخش‌ها: <Icon name="heart" />  ← اسم‌های خودِ سایت دست‌نخورده می‌مانند
@@ -86,7 +86,8 @@ curl -L -H "Accept: application/vnd.github.raw" \
 | `mic` | `mic` | |
 | `disc` | `doughnut-chart` | پک «vinyl/disc» ندارد؛ حلقهٔ این آیکن + دایرهٔ داخلی = صفحهٔ گرامافون |
 | `music` | `music` | |
-| `heart` | `favorite` | |
+| `heart` | `favorite` | قلب خطی — حالت لایک‌نشده |
+| `heartFill` | `favorite-fill` | **همان قلب، پُر** — حالت لایک‌شده. فقط رنگ عوض نمی‌شود، خودِ شکل پر می‌شود |
 | `shuffle` | `sort-random` | |
 | `headphones` | `headphones-fill-light` | فقط نسخهٔ `-light` خطی است (بقیه پُر هستند) |
 | `waveform` | `stat` | سه میلهٔ گرد = نوار «در حال پخش» |

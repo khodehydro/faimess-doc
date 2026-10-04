@@ -1080,6 +1080,26 @@ check(
   "the skeleton comes from the pack, the paint comes from the call site",
 );
 check(
+  "a liked song wears the solid heart, not just a tinted outline",
+  (() => {
+    const stroke = generated.find((g) => g.name === "heart")?.body ?? "";
+    const solid = generated.find((g) => g.name === "heartFill")?.body ?? "";
+    return (
+      /* the pair must really be a pair: same outline, one of them inked */
+      stroke.includes('fill="none"') &&
+        solid.includes('fill="currentColor"') &&
+        !solid.includes('fill="none"') &&
+        /* ink the stroke heart and you get the solid one, byte for byte */
+        solid.replace('fill="currentColor"', 'fill="none"') === stroke &&
+        /* and the button has to switch artwork — a `fill` prop on the stroke
+           icon is dead weight: the generated path carries its own fill */
+        playerSrc.includes('name={on ? "heartFill" : "heart"}') &&
+        !playerSrc.includes('fill={on ?')
+    );
+  })(),
+  "the pack's `favorite-fill` next to `favorite`, swapped on `aria-pressed`",
+);
+check(
   "the shop icon is an outline, like the rest of the menu",
   (() => {
     const body = generated.find((g) => g.name === "shop")?.body ?? "";

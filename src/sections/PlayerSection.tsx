@@ -807,7 +807,9 @@ function LikeButton({ player }: { player: PlayerApi }) {
         on ? "bg-primary-soft text-primary-deep" : "text-ink-muted hover:bg-subtle hover:text-ink",
       )}
     >
-      <Icon name="heart" size={17} strokeWidth={2} fill={on ? "currentColor" : "none"} />
+      {/* the pack's solid heart, not a `fill` on the stroke one: the
+          generated body carries its own `fill`, so the shape has to swap */}
+      <Icon name={on ? "heartFill" : "heart"} size={17} strokeWidth={on ? 1.6 : 2} />
     </motion.button>
   );
 }

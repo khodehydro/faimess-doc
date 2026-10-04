@@ -79,6 +79,10 @@ const MAP = {
   disc: "doughnut-chart", // no vinyl in the pack — the ring reads as a record
   music: "music",
   heart: "favorite",
+  /* the same heart, solid. The stroke `favorite` is the un-liked state; the
+     filled cut is what a liked song wears, so the shape itself changes and
+     not just its colour. */
+  heartFill: "favorite-fill",
   shuffle: "sort-random",
   headphones: "headphones-fill-light", // only the `-light` cut is a stroke
   waveform: "stat", // three rounded bars, the "now playing" equaliser
