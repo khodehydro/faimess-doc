@@ -406,6 +406,24 @@ check(
   pointsDialogSrc.includes("fanLines(") && pointsDialogSrc.includes("rule.rateKey"),
 );
 check(
+  "a points row is always the same two lines",
+  !pointsDialogSrc.includes("flex-wrap") &&
+    pointsDialogSrc.includes("shortRateKey") &&
+    pointsDialogSrc.includes("title={rate}") &&
+    pointsDialogSrc.includes("title={count}"),
+  "the rule and its rate on one line, the fan's own count underneath",
+);
+check(
+  "a comment header keeps its timestamp in the same corner",
+  !readFileSync("src/sections/player/CommentsSheet.tsx", "utf8").includes("flex-wrap"),
+  "name · badge · time on one line, the handle underneath",
+);
+check(
+  "a contribution row keeps its payout in the same corner",
+  !readFileSync("src/sections/ContributionsModal.tsx", "utf8").includes("flex-wrap"),
+  "language · lines · sent-at truncate before the points chip moves",
+);
+check(
   "no balance is written down by hand any more",
   !/points:\s*\d/.test(readFileSync("src/data/feed.ts", "utf8")) &&
     !/points:\s*\d/.test(readFileSync("src/data/account.ts", "utf8")),

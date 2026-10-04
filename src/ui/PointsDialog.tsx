@@ -63,7 +63,7 @@ export function PointsDialog({
   };
 
   return (
-    <Modal open={open} onClose={onClose} width={404}>
+    <Modal open={open} onClose={onClose} width={420}>
       {/* who this balance belongs to */}
       <div className="flex items-center gap-3.5 pe-8">
         <Avatar src={subject.photo} seed={subject.seed} size={44} />
@@ -84,31 +84,50 @@ export function PointsDialog({
       </h2>
       <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">{t("points.subtitle")}</p>
 
+      {/* Two lines per rule, and only two: the rule and its rate on top —
+          the rate always in the same column — then the fan's own count. The
+          labels truncate instead of wrapping, so no row can push its rate
+          out of line with the row above it, in any of the three languages. */}
       <ul className="mt-3.5 flex flex-col gap-1.5">
-        {lines.map((line) => (
-          <li
-            key={line.rule.id}
-            className="flex items-center gap-3 rounded-[14px] bg-subtle/60 px-2.5 py-2.5"
-          >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-surface text-primary-deep shadow-xs">
-              <Icon name={line.rule.icon} size={16} strokeWidth={1.9} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="flex flex-wrap items-baseline gap-x-1.5">
-                <span className="text-[13px] font-bold text-ink">{t(line.rule.labelKey)}</span>
-                <span className="text-[12px] font-semibold text-ink-faint">
-                  {t(line.rule.rateKey, { n: n(line.rule.value) })}
+        {lines.map((line) => {
+          const rate = t(line.rule.rateKey, { n: n(line.rule.value) });
+          const count = counted(line.rule.id, line.count);
+          return (
+            <li
+              key={line.rule.id}
+              className="flex items-center gap-3 rounded-[14px] bg-subtle/60 px-2.5 py-2.5"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-surface text-primary-deep shadow-xs">
+                <Icon name={line.rule.icon} size={16} strokeWidth={1.9} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-baseline gap-2">
+                  <span
+                    className="min-w-0 truncate text-[13px] font-bold text-ink"
+                    title={t(line.rule.labelKey)}
+                  >
+                    {t(line.rule.labelKey)}
+                  </span>
+                  <span
+                    className="ms-auto shrink-0 text-[12px] font-semibold text-ink-faint"
+                    title={rate}
+                  >
+                    {t(line.rule.shortRateKey, { n: n(line.rule.value) })}
+                  </span>
+                </span>
+                <span
+                  className="mt-1 block truncate text-[12px] font-semibold text-ink-muted"
+                  title={count}
+                >
+                  {count}
                 </span>
               </span>
-              <span className="mt-1 block truncate text-[12px] font-semibold text-ink-muted">
-                {counted(line.rule.id, line.count)}
+              <span className="shrink-0 text-[13.5px] font-extrabold tabular-nums text-primary-deep">
+                +{n(line.subtotal)}
               </span>
-            </span>
-            <span className="shrink-0 text-[13.5px] font-extrabold tabular-nums text-primary-deep">
-              +{n(line.subtotal)}
-            </span>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
 
       <div className="mt-2.5 flex items-center justify-between rounded-[14px] bg-primary-faint/70 px-3.5 py-3">

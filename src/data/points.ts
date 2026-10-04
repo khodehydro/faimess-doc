@@ -28,8 +28,10 @@ export type PointRule = {
   labelKey: string;
   /** the same thing, short enough to head a column */
   headKey: string;
-  /** the rate, as a line the fan can read: “{n} per comment” */
+  /** the rate as a sentence, for the tooltip: “{n} per comment” */
   rateKey: string;
+  /** the same rate squeezed into a column: “{n}/comment” */
+  shortRateKey: string;
   /** the raw count, in its own unit */
   countKey: string;
   /** how the count prints in a table cell */
@@ -55,6 +57,7 @@ export const POINT_RULES: PointRule[] = [
     headKey: "points.head.listening",
     short: "hours",
     rateKey: "points.ratePerMinute",
+    shortRateKey: "points.shortRate.listening",
     countKey: "points.countHours",
     value: 0.02,
   },
@@ -65,6 +68,7 @@ export const POINT_RULES: PointRule[] = [
     headKey: "points.head.comments",
     short: "count",
     rateKey: "points.ratePerComment",
+    shortRateKey: "points.shortRate.comments",
     countKey: "points.countComments",
     value: 0.25,
   },
@@ -75,6 +79,7 @@ export const POINT_RULES: PointRule[] = [
     headKey: "points.head.invites",
     short: "count",
     rateKey: "points.ratePerInvite",
+    shortRateKey: "points.shortRate.invites",
     countKey: "points.countInvites",
     value: 3,
   },
@@ -85,6 +90,7 @@ export const POINT_RULES: PointRule[] = [
     headKey: "points.head.days",
     short: "days",
     rateKey: "points.ratePerDay",
+    shortRateKey: "points.shortRate.tenure",
     countKey: "points.countDays",
     value: 0.5,
   },
@@ -95,6 +101,7 @@ export const POINT_RULES: PointRule[] = [
     headKey: "points.head.lyrics",
     short: "count",
     rateKey: "points.ratePerSheet",
+    shortRateKey: "points.shortRate.lyrics",
     countKey: "points.countSheets",
     value: LYRIC_REWARD,
   },

@@ -89,12 +89,16 @@ export function ContributionsModal({ open, onClose }: { open: boolean; onClose: 
                   </span>
                 </div>
 
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-semibold text-ink-muted">
-                  <span className="rounded-full bg-subtle px-2.5 py-1">{s.language}</span>
-                  <span>{t("contrib.lines", { n: s.lines })}</span>
-                  <span className="text-ink-faint">· {s.sentAt}</span>
+                {/* one line, always: the middle truncates before the payout
+                    or the language chip can ever move */}
+                <div className="mt-2 flex items-center gap-2.5 text-[12px] font-semibold text-ink-muted">
+                  <span className="shrink-0 rounded-full bg-subtle px-2.5 py-1">{s.language}</span>
+                  <span className="min-w-0 flex-1 truncate">
+                    {t("contrib.lines", { n: s.lines })}
+                    <span className="text-ink-faint"> · {s.sentAt}</span>
+                  </span>
                   {s.status === "approved" && (
-                    <span className="ms-auto font-extrabold text-teal-deep">+{s.points} pts</span>
+                    <span className="shrink-0 font-extrabold text-teal-deep">+{s.points} pts</span>
                   )}
                 </div>
 

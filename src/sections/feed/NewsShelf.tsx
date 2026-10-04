@@ -61,11 +61,11 @@ export function NewsShelf() {
               <Thumb scene={item.scene} className="h-full w-full transition-transform duration-500 group-hover:scale-105" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1.5">
-                <span className={cn("rounded-full px-2.5 py-[2px] text-[12px] font-bold uppercase tracking-wide", TAG_TONE[item.tag])}>
+              <span className="flex items-center gap-2">
+                <span className={cn("shrink-0 whitespace-nowrap rounded-full px-2.5 py-[2px] text-[12px] font-bold uppercase tracking-wide", TAG_TONE[item.tag])}>
                   {item.tag}
                 </span>
-                <span className="truncate text-[12px] text-ink-faint">{item.ago}</span>
+                <span className="min-w-0 flex-1 truncate text-[12px] text-ink-faint">{item.ago}</span>
               </span>
               <span className="mt-1.5 block line-clamp-2 text-[14px] font-bold leading-snug text-ink">{item.title}</span>
               <span className="mt-1.5 flex items-center gap-1.5 text-[12px] text-ink-muted">

@@ -108,6 +108,13 @@ export const STRINGS: Record<string, Entry> = {
     fa: "{n} به ازای هر لیریک تأییدشده",
     ko: "승인 1건당 {n}",
   },
+  /* the same rates in the short form the breakdown column reads; the long
+     sentence above stays as the tooltip on that cell */
+  "points.shortRate.listening": { en: "{n}/min", fa: "{n} در دقیقه", ko: "{n}/분" },
+  "points.shortRate.comments": { en: "{n}/comment", fa: "{n} در کامنت", ko: "{n}/댓글" },
+  "points.shortRate.invites": { en: "{n}/joined invite", fa: "{n} در دعوت", ko: "{n}/가입" },
+  "points.shortRate.tenure": { en: "{n}/day", fa: "{n} در روز", ko: "{n}/일" },
+  "points.shortRate.lyrics": { en: "{n}/sheet", fa: "{n} در شیت", ko: "{n}/가사" },
   "points.countHours": { en: "{n} hours listened", fa: "{n} ساعت گوش‌دادن", ko: "{n}시간 청취" },
   "points.countMinutes": {
     en: "{m} minutes · {h} hours",

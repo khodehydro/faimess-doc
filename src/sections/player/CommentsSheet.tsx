@@ -251,23 +251,32 @@ function CommentRow({
         <Avatar src={comment.photo} size={34} badge={comment.badge} ring={comment.fromArtist} />
 
         <div className="min-w-0 flex-1">
-          <p className="flex min-w-0 flex-wrap items-center gap-2">
+          {/* name · badges · time on the first line, handle · achievement on
+              the second — the timestamp keeps the same corner in every
+              comment instead of moving with the length of the name */}
+          <p className="flex min-w-0 items-center gap-2">
             <span className="min-w-0 truncate text-[13px] font-bold text-ink">{comment.author}</span>
             {comment.verified && (
-              <span className="text-primary" title={t("comments.verified")}>
+              <span className="shrink-0 text-primary" title={t("comments.verified")}>
                 <Icon name="verified" size={13} strokeWidth={2.2} />
               </span>
             )}
             {comment.fromArtist && (
-              <span className="rounded-full bg-primary px-2 py-[1px] text-[12px] font-extrabold uppercase tracking-wide text-white">
+              <span className="shrink-0 rounded-full bg-primary px-2 py-[1px] text-[12px] font-extrabold uppercase tracking-wide text-white">
                 {t("comments.artist")}
               </span>
             )}
-            <span className="text-[12px] font-semibold text-ink-faint">{comment.handle}</span>
-            <span className="text-[12px] text-ink-faint">·</span>
-            <span className="text-[12px] font-semibold text-ink-faint">{comment.time}</span>
+            <span className="ms-auto shrink-0 text-[12px] font-semibold text-ink-faint">
+              {comment.time}
+            </span>
+          </p>
+
+          <p className="mt-1 flex min-w-0 items-center gap-2">
+            <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-ink-faint">
+              {comment.handle}
+            </span>
             {comment.badge && (
-              <span className="max-w-[150px] truncate rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold text-ink-muted">
+              <span className="max-w-[150px] shrink-0 truncate rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold text-ink-muted">
                 {comment.badge.label}
               </span>
             )}
@@ -444,16 +453,19 @@ function ReplyRow({
     <div className="flex items-start gap-2.5">
       <Avatar src={reply.photo} size={26} badge={reply.badge} ring={reply.fromArtist} />
       <div className="min-w-0 flex-1">
-        <p className="flex min-w-0 flex-wrap items-center gap-2">
+        <p className="flex min-w-0 items-center gap-2">
           <span className="min-w-0 truncate text-[12.5px] font-bold text-ink">{reply.author}</span>
           {reply.verified && (
-            <span className="text-primary">
+            <span className="shrink-0 text-primary">
               <Icon name="verified" size={12} strokeWidth={2.2} />
             </span>
           )}
-          <span className="text-[12px] font-semibold text-ink-faint">{reply.handle}</span>
-          <span className="text-[12px] text-ink-faint">·</span>
-          <span className="text-[12px] font-semibold text-ink-faint">{reply.time}</span>
+          <span className="ms-auto shrink-0 text-[12px] font-semibold text-ink-faint">
+            {reply.time}
+          </span>
+        </p>
+        <p className="mt-0.5 min-w-0 truncate text-[12px] font-semibold text-ink-faint">
+          {reply.handle}
         </p>
         <p dir="auto" className="mt-1 text-[12.5px] leading-relaxed text-ink-body [overflow-wrap:anywhere]">
           {reply.text}

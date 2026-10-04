@@ -187,7 +187,7 @@ export function AccountCard() {
                   <span className="flex size-7 items-center justify-center rounded-full bg-subtle text-ink-body">
                     <Icon name={r.icon} size={15} />
                   </span>
-                  <span className="text-[14px] font-semibold text-ink">
+                  <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink">
                     {r.labelKey ? label(r.labelKey, r.label) : r.label}
                   </span>
                   <span className="ms-auto rounded-full bg-muted px-2.5 py-1 text-[12px] font-semibold text-ink-muted">
@@ -247,11 +247,11 @@ export function AccountCard() {
                       n.tone === "mint" && "bg-mint",
                     )}
                   />
-                  <span>
+                  <span className="min-w-0 flex-1">
                     <span className="block text-[13.5px] font-semibold leading-snug text-ink">
                       {n.title}
                     </span>
-                    <span className="text-[12px] text-ink-muted">{n.at}</span>
+                    <span className="mt-0.5 block text-[12px] text-ink-muted">{n.at}</span>
                   </span>
                 </motion.button>
               ))}
