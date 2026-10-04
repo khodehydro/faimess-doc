@@ -382,6 +382,21 @@ export const STRINGS: Record<string, Entry> = {
   },
   "download.appName": { en: "FAIMESS for Android", fa: "فیمس برای اندروید", ko: "안드로이드용 FAIMESS" },
   "download.meta": { en: "Version 2.4 · 28 MB · Android 9 and up", fa: "نسخهٔ ۲.۴ · ۲۸ مگابایت · اندروید ۹ و بالاتر", ko: "버전 2.4 · 28MB · 안드로이드 9 이상" },
+  "download.body": {
+    en: "The app carries everything the web player does — the feed, the bilingual lyric sheet, the player card — and adds the part the browser can’t do: taking the music with you.",
+    fa: "اپ همهٔ چیزهایی که پخش‌کنندهٔ وب دارد را با خودش می‌آورد — فید، متن دوزبانه و کارت پلیر — و آن بخشی را اضافه می‌کند که مرورگر نمی‌تواند: بردن موسیقی همراهت.",
+    ko: "앱은 웹 플레이어의 모든 것을 담고 있어요 — 피드, 이중언어 가사, 플레이어 카드 — 그리고 브라우저가 못 하는 일을 더해요: 음악을 함께 들고 다니기.",
+  },
+  "download.buildStore": {
+    en: "Prototype build — the store listing lands with the app",
+    fa: "نسخهٔ آزمایشی — صفحهٔ فروشگاه همراه خود اپ می‌آید",
+    ko: "프로토타입 빌드 — 스토어 등록은 앱과 함께",
+  },
+  "download.buildApk": {
+    en: "Prototype build — the APK ships with the app",
+    fa: "نسخهٔ آزمایشی — فایل APK همراه خود اپ می‌آید",
+    ko: "프로토타입 빌드 — APK는 앱과 함께",
+  },
   "download.getItOn": { en: "Get it on", fa: "بگیر از", ko: "다운로드" },
   "download.googlePlay": { en: "Google Play", fa: "گوگل پلی", ko: "Google Play" },
   "download.apk": { en: "Download APK", fa: "دانلود APK", ko: "APK 다운로드" },

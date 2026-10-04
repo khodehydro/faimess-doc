@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
-import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 import { Photo } from "../ui/Cover";
 import { CircleButton, Meta } from "../ui/primitives";
 import { Icon } from "../ui/Icon";
@@ -53,13 +60,19 @@ export function HeroBanner() {
     return () => window.removeEventListener("keydown", onKey);
   }, [go, writing]);
 
-  /* pointer parallax on the photograph */
+  /* Pointer parallax on the photograph. Over-damped on purpose: a spring
+     that overshoots reads as "the banner is shaking", and it is off entirely
+     for anyone who asked the system for less motion. */
+  const reduceMotion = useReducedMotion();
+  const reach = reduceMotion ? 0 : 10;
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
-  const x = useSpring(useTransform(mx, [-1, 1], [-12, 12]), { stiffness: 90, damping: 20 });
-  const y = useSpring(useTransform(my, [-1, 1], [-8, 8]), { stiffness: 90, damping: 20 });
+  const glide = { stiffness: 70, damping: 24, mass: 0.8 } as const;
+  const x = useSpring(useTransform(mx, [-1, 1], [-reach, reach]), glide);
+  const y = useSpring(useTransform(my, [-1, 1], [-reach * 0.7, reach * 0.7]), glide);
 
   const onMove = (e: ReactMouseEvent<HTMLDivElement>) => {
+    if (reduceMotion) return;
     const rect = ref.current?.getBoundingClientRect();
     if (!rect) return;
     mx.set(((e.clientX - rect.left) / rect.width) * 2 - 1);
@@ -112,7 +125,10 @@ export function HeroBanner() {
           }}
           className="absolute inset-0 cursor-grab active:cursor-grabbing"
         >
-          <motion.div style={{ x, y }} className="absolute -inset-6">
+          {/* the parallax layer is composited on its own (`will-change`) so the
+              moving photo never forces the text above it to re-rasterise —
+              that repaint is what made the labels look like they were shaking */}
+          <motion.div style={{ x, y }} className="absolute -inset-6 will-change-transform">
             <Photo src={banner.photo} className="scale-[1.03]" />
           </motion.div>
 
@@ -128,7 +144,7 @@ export function HeroBanner() {
             transition={{ duration: 0.6, delay: 0.25, ease: EASE }}
             className="absolute end-5 top-5 flex items-center gap-3"
           >
-            <div className="flex items-center gap-1.5 rounded-full bg-surface/85 px-3 py-2 backdrop-blur-md">
+            <div className="flex items-center gap-1.5 rounded-full bg-surface/92 px-3 py-2">
               <Icon name="flame" size={14} className="text-flame" />
               <span className="text-[13.5px] font-extrabold tabular-nums text-ink">{withThousands(banner.going)}</span>
               <span className="text-[12.5px] font-semibold text-ink-muted">{t("shelf.going")}</span>
@@ -139,7 +155,7 @@ export function HeroBanner() {
                 tone="white"
                 label={t("hero.showAlerts")}
                 iconClassName="anim-bell"
-                className="bg-surface/85 backdrop-blur-md"
+                className="bg-surface/92"
                 onClick={() => notify(t("toast.caughtUp"))}
               />
             </div>
@@ -155,7 +171,7 @@ export function HeroBanner() {
             <motion.div
               whileHover={{ y: -4 }}
               transition={spring}
-              className="w-[302px] rounded-[20px] bg-surface/94 p-3 shadow-float backdrop-blur-md"
+              className="w-[302px] rounded-[20px] bg-surface/96 p-3 shadow-float"
             >
               <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[12px] font-bold uppercase tracking-wide text-primary-deep">
                 <Icon name="sparkle" size={12} strokeWidth={2.2} />
@@ -210,10 +226,10 @@ export function HeroBanner() {
           tone="white"
           size="md"
           label={t("hero.prev")}
-          className="bg-surface/88 backdrop-blur-md"
+          className="bg-surface/94"
           onClick={() => go(-1)}
         />
-        <div className="flex items-center gap-1.5 rounded-full bg-surface/88 px-2.5 py-2 backdrop-blur-md">
+        <div className="flex items-center gap-1.5 rounded-full bg-surface/94 px-2.5 py-2">
           {banners.map((b, i) => (
             <button
               key={b.id}
@@ -240,7 +256,7 @@ export function HeroBanner() {
           tone="white"
           size="md"
           label={t("hero.next")}
-          className="bg-surface/88 backdrop-blur-md"
+          className="bg-surface/94"
           onClick={() => go(1)}
         />
       </div>

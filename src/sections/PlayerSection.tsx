@@ -600,10 +600,7 @@ function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void 
       <h2 className="font-display mt-3 text-[17.5px] font-bold leading-snug text-ink">
         {t("player.downloadTitle")}
       </h2>
-      <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-muted">
-        Songs stream free in the browser — saving a track for offline listening, and the
-        full-quality files, are Android-only.
-      </p>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-muted">{t("player.downloadBody")}</p>
 
       <div className="mt-4 flex items-center gap-2">
         <motion.button

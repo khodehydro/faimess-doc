@@ -68,8 +68,7 @@ export function DownloadPage() {
           </div>
 
           <p className="mt-3.5 max-w-[520px] text-[13.5px] leading-relaxed text-ink-body">
-            The app carries everything the web player does — the feed, the bilingual lyric sheet, the
-            player card — and adds the part the browser can't do: taking the music with you.
+            {t("download.body")}
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-2.5">
@@ -77,7 +76,7 @@ export function DownloadPage() {
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={spring}
-              onClick={() => notify("Prototype build — the store listing lands with the app", "primary")}
+              onClick={() => notify(t("download.buildStore"), "primary")}
               className="flex items-center gap-2 rounded-[14px] bg-ink px-3.5 py-2.5 text-white shadow-float"
             >
               <Icon name="play" size={16} strokeWidth={2.2} />
@@ -91,7 +90,7 @@ export function DownloadPage() {
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={spring}
-              onClick={() => notify("Prototype build — the APK ships with the app", "primary")}
+              onClick={() => notify(t("download.buildApk"), "primary")}
               className="flex items-center gap-2 rounded-[14px] border border-line-strong bg-surface px-4 py-3 text-[13.5px] font-bold text-ink-body transition-colors hover:border-primary/30 hover:text-primary-deep"
             >
               <Icon name="download" size={16} strokeWidth={2.1} />
