@@ -120,6 +120,9 @@ export function FeedSection() {
         ref={stripRef}
         className="sticky top-0 z-30 flex items-center gap-2 border-b border-line/70 bg-surface/95 px-4 py-3 backdrop-blur-md"
       >
+        {/* the chips share the full width of the card between them, each
+            centring its own label — the strip reads as one control instead of
+            a row that stops halfway. Narrow screens fall back to scrolling. */}
         <div className="scroll-slim -my-1 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1">
           {chips.map((shelf) => {
             const isActive = active === shelf.id;
@@ -128,7 +131,7 @@ export function FeedSection() {
                 key={shelf.id}
                 onClick={() => jumpTo(shelf.id)}
                 className={cn(
-                  "relative flex items-center gap-2 rounded-full px-3 py-2 text-[13px] font-semibold transition-colors",
+                  "relative flex min-w-[86px] flex-1 items-center justify-center gap-2 rounded-full px-3 py-2 text-[13px] font-semibold transition-colors",
                   isActive ? "text-white" : "text-ink-muted hover:text-ink",
                 )}
               >
@@ -147,11 +150,6 @@ export function FeedSection() {
             );
           })}
         </div>
-
-        <span className="flex shrink-0 items-center gap-2 pe-1 text-[12px] font-medium text-ink-faint">
-          <Icon name="waveform" size={14} />
-          {t("feed.scrollMore")}
-        </span>
       </div>
 
       {/* the shelves — full height, no inner scroller */}

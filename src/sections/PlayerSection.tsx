@@ -21,6 +21,7 @@ import { me } from "../data/account";
 import { cn } from "../lib/cn";
 import { backIcon, dirSign, forwardIcon, trackRatio } from "../lib/rtl";
 import { EASE, spring } from "../lib/motion";
+import { compactNumber, withThousands } from "../lib/format";
 
 /* ------------------------------------------------------------------ *
  *  Card 5 (right) — the player.
@@ -89,7 +90,17 @@ export function PlayerSection({
           <span className="flex size-7 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
             <Icon name="waveform" size={15} strokeWidth={2.2} />
           </span>
-          <span className="font-display text-[15px] font-bold text-ink">{t("player.title")}</span>
+          {/* this slot used to hold the word "Player"; it now holds the one
+              number a listener looks for on a track — how often it is played */}
+          {track && (
+            <span
+              className="flex items-center gap-1.5 rounded-full bg-primary-faint px-2.5 py-1.5 text-[12.5px] font-bold tabular-nums text-primary-deep"
+              title={withThousands(track.plays)}
+            >
+              <Icon name="play" size={12} strokeWidth={2.4} />
+              {t("player.plays", { n: compactNumber(track.plays) })}
+            </span>
+          )}
           <span className="ms-auto flex items-center gap-1.5">
             {track && (
               <span className="flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1.5 text-[12px] font-bold tabular-nums text-ink-muted">
@@ -839,20 +850,10 @@ function LyricsPanel({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col border-t border-line">
-      <header className="flex shrink-0 items-center gap-2 px-4 py-2.5">
-        <span className="text-ink-faint">
-          <Icon name="mic" size={13.5} />
-        </span>
-        <span className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">{t("lyrics.title")}</span>
-        <span className="ms-auto flex items-center gap-1.5">
-          <span className="rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold text-ink-muted">한국어</span>
-          <span className="rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold text-ink-muted">EN</span>
-          <span className="rounded-full bg-primary-soft px-2 py-[1px] text-[12px] font-bold text-primary-deep">فارسی</span>
-        </span>
-      </header>
-
+      {/* No header: the sheet starts straight under the player. The only
+          thing above the lines is the credit line, when there is one. */}
       {by && (
-        <p className="mx-3 mb-2 flex items-center gap-2 rounded-panel bg-mint-soft/70 px-3 py-2 text-[12px] font-semibold text-teal-deep">
+        <p className="mx-3 mt-3 mb-2 flex items-center gap-2 rounded-panel bg-mint-soft/70 px-3 py-2 text-[12px] font-semibold text-teal-deep">
           <Icon name="check" size={13} strokeWidth={2.6} />
           {t("lyrics.credit", {
             who: by === "you" ? t("lyrics.creditYou") : `@${by}`,
@@ -866,7 +867,7 @@ function LyricsPanel({
         onScroll={() => {
           touchedAt.current = Date.now();
         }}
-        className="scroll-slim mask-fade-b min-h-0 flex-1 overflow-y-auto px-3 pb-8 pt-1.5"
+        className="scroll-slim mask-fade-b min-h-0 flex-1 overflow-y-auto px-3 pb-8 pt-2.5"
       >
         {!lines ? (
           <div className="flex flex-col items-center px-3 py-8 text-center">

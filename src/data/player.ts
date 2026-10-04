@@ -25,6 +25,8 @@ export type PlayerTrack = {
   photo: string;
   /** the file the <audio> element plays — one demo master for every track */
   audio: string;
+  /** lifetime streams, shown compact in the player header ("2.4M") */
+  plays: number;
 };
 
 /** "3:12" → 192 */
@@ -51,6 +53,32 @@ const SAME_SONG: Record<string, string> = { tr1: "nt2", tr2: "nt1", tr4: "nt3" }
 
 type FeedTrack = (typeof newestTracks)[number] | (typeof trendingTracks)[number];
 
+/**
+ * Lifetime streams per track. Demo figures with the shape of real ones — the
+ * leaders are in the millions, album cuts in the tens of thousands. A track
+ * that isn't listed still gets a stable number, so a new song can never
+ * leave the header blank.
+ */
+const PLAYS: Record<string, number> = {
+  nt1: 2_431_902,
+  nt2: 1_876_540,
+  nt3: 1_204_318,
+  nt4: 942_770,
+  nt5: 688_215,
+  nt6: 512_406,
+  tr3: 734_920,
+  tr5: 421_388,
+  tr6: 265_140,
+  pb1: 96_450,
+  le1: 74_220,
+  sm1: 58_930,
+};
+
+/** a stable fallback so `plays` is never missing (id-sum based, not random) */
+const playsFor = (t: FeedTrack): number =>
+  PLAYS[t.id] ??
+  8_000 + [...t.id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) * 1_211 + t.title.length * 977;
+
 const fromTrack = (t: FeedTrack): PlayerTrack => ({
   id: t.id,
   title: t.title,
@@ -60,6 +88,7 @@ const fromTrack = (t: FeedTrack): PlayerTrack => ({
   photo: t.photo,
   /* one synthesised master stands in for the whole queue — docs/audio.md */
   audio: demoAudio,
+  plays: playsFor(t),
 });
 
 const isSameSong = (a: FeedTrack, b: FeedTrack) => a.title === b.title && a.artist === b.artist;
@@ -74,6 +103,7 @@ const DEEP_CUTS: PlayerTrack[] = [
     seconds: 224,
     photo: paperBoatsPhoto,
     audio: demoAudio,
+    plays: 96_450,
   },
   {
     id: "le1",
@@ -83,6 +113,7 @@ const DEEP_CUTS: PlayerTrack[] = [
     seconds: 252,
     photo: longExposurePhoto,
     audio: demoAudio,
+    plays: 74_220,
   },
   {
     id: "sm1",
@@ -92,6 +123,7 @@ const DEEP_CUTS: PlayerTrack[] = [
     seconds: 202,
     photo: slowMotionPhoto,
     audio: demoAudio,
+    plays: 58_930,
   },
 ];
 

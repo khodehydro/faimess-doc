@@ -33,7 +33,7 @@ import { conversations } from "../src/data/messages";
 import { ME_ACTIVITY, me } from "../src/data/account";
 import { QUEUE, lyricsFor, trackById } from "../src/data/player";
 import { POINT_RULES, fanLines, fanPoints } from "../src/data/points";
-import { withThousands } from "../src/lib/format";
+import { compactNumber, withThousands } from "../src/lib/format";
 import {
   PLAYLIST_COVERS,
   coverById,
@@ -217,8 +217,23 @@ check(
 
 /* ------------------------------ the player ---------------------------- */
 
-check("right card is the player", home.includes("Player") && !home.includes("Enter Text..."), "messages composer must be gone");
+check(
+  "right card is the player",
+  home.includes('aria-label="Music management"') && !home.includes("Enter Text..."),
+  "the rail's label is the player's own — messages composer must be gone",
+);
 check("player opens empty", home.includes("nothing playing yet"));
+check(
+  "the player header shows the play count, not the word “Player”",
+  readFileSync("src/sections/PlayerSection.tsx", "utf8").includes('t("player.plays"') &&
+    QUEUE.every((t) => t.plays > 0),
+  `top track: ${compactNumber(QUEUE[0].plays)}`,
+);
+check(
+  "compact play counts read the way people write them",
+  compactNumber(2_000) === "2K" && compactNumber(2_431_902) === "2.4M",
+  "2,000 → 2K · 2,431,902 → 2.4M",
+);
 
 check("queue has every feed song, once", new Set(QUEUE.map((t) => `${t.title}|${t.artist}`)).size === QUEUE.length, `${QUEUE.length} tracks`);
 check("queue entries carry a length", QUEUE.every((t) => t.seconds > 60), `${QUEUE.map((t) => t.seconds).join(", ")}`);
@@ -261,7 +276,7 @@ check(
   Object.values(STRINGS).every((e) => e.en.length > 0 && e.fa.length > 0 && e.ko.length > 0),
   `${Object.keys(STRINGS).length} keys`,
 );
-check("persian copy is real persian", /[\u0600-\u06FF]/.test(STRINGS["player.title"].fa));
+check("persian copy is real persian", /[\u0600-\u06FF]/.test(STRINGS["player.plays"].fa));
 check("korean copy is real hangul", /[\uac00-\ud7a3]/.test(STRINGS["nav.home"].ko));
 check("placeholders survive filling", fill("Hey {name}", { name: "Seora" }) === "Hey Seora");
 check("two appearance options", THEMES.length === 2 && THEMES.map((t) => t.id).join() === "light,dark");
@@ -275,8 +290,16 @@ check(
 /* the loaded state — a real render of the card with a track in it */
 const playingCard = render(PlayerCard, { trackId: "nt1" });
 check("loaded player shows the track", playingCard.includes("Afterglow") && playingCard.includes("NOVAE"));
-check("loaded player shows details", playingCard.includes("Afterglow") && playingCard.includes("Lyrics"));
-check("korean lyrics render", /[\uac00-\ud7a3]/.test(playingCard) && playingCard.includes("한국어"));
+check(
+  "loaded player shows details",
+  playingCard.includes("Afterglow") && playingCard.includes("2.4M plays"),
+  "artist and album, and the play count where the title used to be",
+);
+check(
+  "korean lyrics render",
+  /[\uac00-\ud7a3]{2,}/.test(plain(playingCard)),
+  "the sheet itself is Korean — no language chip needed",
+);
 check("persian translation renders", playingCard.includes("نور"));
 check("seek bar is a slider", playingCard.includes('role="slider"') && playingCard.includes("aria-valuetext"));
 check("download button ships", playingCard.includes("Download — Android app only"));
@@ -401,6 +424,20 @@ check(
   "the shelf card opens that table",
   activeUsersSrc.includes("LeaderboardDialog") && activeUsersSrc.includes("fanPoints(user.activity)"),
 );
+const feedIndexSrc = readFileSync("src/sections/feed/index.tsx", "utf8");
+const playerSrc = readFileSync("src/sections/PlayerSection.tsx", "utf8");
+check(
+  "the lyrics sheet has no header of its own",
+  !playerSrc.includes("lyrics.title") && !playerSrc.includes("한국어"),
+  "the lines start straight under the player; only a credit line can sit above them",
+);
+check(
+  "the quick-jump chips share the card's width",
+  feedIndexSrc.includes("min-w-[86px] flex-1") &&
+    feedIndexSrc.includes("justify-center") &&
+    !feedIndexSrc.includes("feed.scrollMore"),
+  "no “scroll for more” hint — the strip is one full-width control",
+);
 check(
   "the banner caption declares its own direction",
   heroSrc.includes('dir="auto"') &&
@@ -521,13 +558,13 @@ const pressed = (html: string, label: string) =>
 const homeFa = render(HomePage, { lang: "fa" });
 const homeKo = render(HomePage, { lang: "ko" });
 check("persian home is right-to-left", homeFa.includes('dir="rtl"'));
-const faWords = ["آهنگ‌های تازه", "پخش‌کننده", "جدیدترین آهنگ‌ها", "الان پرطرفدار"];
+const faWords = ["آهنگ‌های تازه", "هنوز چیزی پخش نمی‌شود", "جدیدترین آهنگ‌ها", "الان پرطرفدار"];
 check(
   "persian chrome is translated",
   faWords.every((word) => plain(homeFa).includes(word)),
   `missing: ${faWords.filter((word) => !plain(homeFa).includes(word)).join(" ")}`,
 );
-const koWords = ["신곡", "플레이어", "최신 곡", "지금 인기"];
+const koWords = ["신곡", "아직 재생 중인 곡이 없어요", "최신 곡", "지금 인기"];
 check(
   "korean chrome is translated",
   koWords.every((word) => plain(homeKo).includes(word)),
@@ -544,7 +581,7 @@ check(
 const cardFa = render(PlayerCard, { lang: "fa", trackId: "nt1" });
 check(
   "persian player is translated",
-  plain(cardFa).includes("پخش‌کننده") && plain(cardFa).includes("متن آهنگ"),
+  plain(cardFa).includes("کامنت‌ها") && plain(cardFa).includes("دیدن همه"),
 );
 check("the persian card keeps its own direction", cardFa.includes('dir="rtl"'));
 

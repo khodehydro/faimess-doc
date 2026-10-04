@@ -174,7 +174,6 @@ export const STRINGS: Record<string, Entry> = {
   },
 
   /* ------------------------------- feed ------------------------------- */
-  "feed.scrollMore": { en: "scroll for more", fa: "برای بیشتر اسکرول کن", ko: "더 보려면 스크롤" },
   "feed.followed": { en: "Followed", fa: "دنبال‌شده‌ها", ko: "팔로잉" },
   "feed.newSongs": { en: "New songs", fa: "آهنگ‌های تازه", ko: "신곡" },
   "feed.trending": { en: "Trending", fa: "پرطرفدار", ko: "인기" },
@@ -210,7 +209,8 @@ export const STRINGS: Record<string, Entry> = {
   /* ------------------------------- hero ------------------------------- */
 
   /* ------------------------------ player ------------------------------ */
-  "player.title": { en: "Player", fa: "پخش‌کننده", ko: "플레이어" },
+  /* the player header carries the play count where the word "Player" was */
+  "player.plays": { en: "{n} plays", fa: "{n} پخش", ko: "{n}회 재생" },
   "player.upNext": { en: "Up next", fa: "بعدی در صف", ko: "다음 곡" },
   "player.likedSongs": { en: "Liked songs", fa: "آهنگ‌های لایک‌شده", ko: "좋아요한 곡" },
   "player.yourPlaylists": { en: "Your playlists", fa: "پلی‌لیست‌های تو", ko: "내 플레이리스트" },
@@ -266,7 +266,6 @@ export const STRINGS: Record<string, Entry> = {
   "player.playing": { en: "Playing {artist} — “{title}”", fa: "پخش {artist} — «{title}»", ko: "{artist} — “{title}” 재생 중" },
 
   /* ------------------------------ lyrics ------------------------------ */
-  "lyrics.title": { en: "Lyrics", fa: "متن آهنگ", ko: "가사" },
   "lyrics.emptyTitle": { en: "No lyrics for this one yet", fa: "این آهنگ هنوز لیریک ندارد", ko: "이 곡은 아직 가사가 없어요" },
   "lyrics.emptyBody": {
     en: "Know the words by heart? Send the sheet — a moderator checks it against the official text before it goes live.",
