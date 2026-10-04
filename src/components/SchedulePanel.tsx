@@ -271,8 +271,9 @@ export function SchedulePanel({ onToast }: { onToast: (text: string) => void }) 
                 <span className="flex-1">
                   <span className="block text-[12.5px] font-bold text-ink">{ev.title}</span>
                   <Meta icon="calendar" iconSize={11} className="text-[10.5px]">
-                    {weekDays[ev.dayIndex].short} {weekDays[ev.dayIndex].date} Dec
-                    {ev.meta ? ` · ${ev.meta.split("·")[1]?.trim() ?? ""}` : ""}
+                    {`${weekDays[ev.dayIndex].short} ${weekDays[ev.dayIndex].date} Dec${
+                      ev.meta?.includes("·") ? ` · ${ev.meta.split("·")[1]!.trim()}` : ""
+                    }`}
                   </Meta>
                 </span>
                 <AvatarStack seeds={[1, 3]} more={ev.guests ?? 1} size={20} />
