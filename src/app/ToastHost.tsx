@@ -9,7 +9,9 @@ export function ToastHost() {
   const { toasts } = useApp();
 
   return (
-    <div className="pointer-events-none fixed start-1/2 top-5 z-50 flex -translate-x-1/2 flex-col items-center gap-2">
+    /* physical centring on purpose: a logical half-offset plus the negative
+       translate would push the whole stack a toast-width off-centre in RTL */
+    <div className="pointer-events-none fixed left-1/2 top-5 z-50 flex -translate-x-1/2 flex-col items-center gap-2">
       <AnimatePresence initial={false}>
         {toasts.map((t) => (
           <motion.div

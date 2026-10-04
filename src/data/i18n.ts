@@ -321,6 +321,11 @@ export const STRINGS: Record<string, Entry> = {
   "comments.copyLink": { en: "Copy link", fa: "کپی لینک", ko: "링크 복사" },
   "comments.reportComment": { en: "Report comment", fa: "گزارش کامنت", ko: "댓글 신고" },
   "comments.delete": { en: "Delete", fa: "حذف", ko: "삭제" },
+  "report.note": {
+    en: "Reports are anonymous. The fan won’t know — moderators review it and decide.",
+    fa: "گزارش‌ها بی‌نام‌اند. هوادار متوجه نمی‌شود — مدیران بررسی می‌کنند و تصمیم می‌گیرند.",
+    ko: "신고는 익명이에요. 팬은 알 수 없고, 관리자가 검토해 결정합니다.",
+  },
   "comments.more": { en: "More actions", fa: "کارهای بیشتر", ko: "더보기" },
   "comments.verified": { en: "Verified account", fa: "حساب تأییدشده", ko: "인증된 계정" },
   "comments.close": { en: "Close comments", fa: "بستن کامنت‌ها", ko: "댓글 닫기" },

@@ -14,6 +14,7 @@ import {
 } from "../data/schedule";
 import { useApp } from "../app/AppContext";
 import { usePreferences } from "../app/PreferencesContext";
+import { backIcon, forwardIcon } from "../lib/rtl";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
 
@@ -119,7 +120,7 @@ export function ScheduleSection() {
               aria-label={t("sched.prevMonth")}
               className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
             >
-              <Icon name="chevronLeft" size={14.5} strokeWidth={2.1} />
+              <Icon name={backIcon(dir)} size={14.5} strokeWidth={2.1} />
             </motion.button>
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.span
@@ -141,7 +142,7 @@ export function ScheduleSection() {
               aria-label={t("sched.nextMonth")}
               className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
             >
-              <Icon name="chevronRight" size={14.5} strokeWidth={2.1} />
+              <Icon name={forwardIcon(dir)} size={14.5} strokeWidth={2.1} />
             </motion.button>
           </div>
 

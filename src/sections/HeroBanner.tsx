@@ -8,7 +8,8 @@ import { useApp } from "../app/AppContext";
 import { cn } from "../lib/cn";
 import { withThousands } from "../lib/format";
 import { EASE, spring } from "../lib/motion";
-import { useT } from "../app/PreferencesContext";
+import { usePreferences } from "../app/PreferencesContext";
+import { backIcon, dirSign, forwardIcon } from "../lib/rtl";
 
 const AUTOPLAY_MS = 7000;
 
@@ -19,7 +20,7 @@ const AUTOPLAY_MS = 7000;
  * ------------------------------------------------------------------ */
 
 export function HeroBanner() {
-  const t = useT();
+  const { t, dir: writing } = usePreferences();
   const { notify } = useApp();
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState(1);
@@ -45,12 +46,12 @@ export function HeroBanner() {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
       if (el && /input|textarea/i.test(el.tagName)) return;
-      if (e.key === "ArrowRight") go(1);
-      if (e.key === "ArrowLeft") go(-1);
+      if (e.key === "ArrowRight") go(dirSign(writing));
+      if (e.key === "ArrowLeft") go(-dirSign(writing));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [go]);
+  }, [go, writing]);
 
   /* pointer parallax on the photograph */
   const mx = useMotionValue(0);
@@ -65,13 +66,15 @@ export function HeroBanner() {
     my.set(((e.clientY - rect.top) / rect.height) * 2 - 1);
   };
 
+  /* slides travel along the physical x-axis, so the offset follows the
+     writing direction — a "next" slide comes from the left in RTL */
   const variants = useMemo(
     () => ({
-      enter: (d: number) => ({ x: d * 64, opacity: 0, scale: 1.02 }),
+      enter: (d: number) => ({ x: d * 64 * dirSign(writing), opacity: 0, scale: 1.02 }),
       center: { x: 0, opacity: 1, scale: 1 },
-      exit: (d: number) => ({ x: d * -64, opacity: 0, scale: 1.01 }),
+      exit: (d: number) => ({ x: d * -64 * dirSign(writing), opacity: 0, scale: 1.01 }),
     }),
-    [],
+    [writing],
   );
 
   return (
@@ -101,8 +104,11 @@ export function HeroBanner() {
           dragElastic={0.12}
           dragMomentum={false}
           onDragEnd={(_, info) => {
-            if (info.offset.x < -70) go(1);
-            else if (info.offset.x > 70) go(-1);
+            /* dragging towards the inline end goes forward, whichever way
+               that is on screen */
+            const travel = info.offset.x * dirSign(writing);
+            if (travel < -70) go(1);
+            else if (travel > 70) go(-1);
           }}
           className="absolute inset-0 cursor-grab active:cursor-grabbing"
         >
@@ -200,7 +206,7 @@ export function HeroBanner() {
       {/* carousel controls */}
       <div className="absolute bottom-5 end-5 z-20 flex items-center gap-2">
         <CircleButton
-          icon="chevronLeft"
+          icon={backIcon(writing)}
           tone="white"
           size="md"
           label={t("hero.prev")}
@@ -230,7 +236,7 @@ export function HeroBanner() {
           ))}
         </div>
         <CircleButton
-          icon="chevronRight"
+          icon={forwardIcon(writing)}
           tone="white"
           size="md"
           label={t("hero.next")}

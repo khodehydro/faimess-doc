@@ -14,6 +14,9 @@ import { ContributionsProvider } from "../src/app/ContributionsContext";
 import { PreferencesProvider } from "../src/app/PreferencesContext";
 import { ProfileMenuContent } from "../src/sections/AccountCard";
 import { NavCard } from "../src/sections/NavCard";
+import { Stage } from "../src/app/Stage";
+import { ToastHost } from "../src/app/ToastHost";
+import { backIcon, dirSign, forwardIcon, trackRatio } from "../src/lib/rtl";
 import { LANGS, STRINGS, THEMES, fill, type Lang, type Theme } from "../src/data/i18n";
 import { PlayerSection } from "../src/sections/PlayerSection";
 import { DownloadPage } from "../src/pages/DownloadPage";
@@ -321,6 +324,52 @@ check("the language switcher marks persian", pressed(menuFa, "فارسی") && !p
 check("the appearance switcher follows the theme", pressed(menuDark, "Dark") && pressed(menuLight, "Light"));
 check("light and dark really render differently", menuDark !== menuLight);
 
+/* --------------------------- physical geometry ------------------------ */
+/* The one class of RTL bug that mangles the whole screen: a *logical* inset
+   combined with a *physical* transform. Both are asserted here. */
+
+const stageSrc = readFileSync("src/app/Stage.tsx", "utf8");
+check(
+  "the scaled art-board is pinned physically",
+  stageSrc.includes('className="absolute left-0 top-0"') && !/absolute start-0/.test(stageSrc),
+  "a logical anchor would slide the board off-centre once scale ≠ 1",
+);
+const stageHtml = renderToString(
+  <Stage>
+    <span />
+  </Stage>,
+);
+check(
+  "the stage renders its physical anchor",
+  stageHtml.includes("left-0") && stageHtml.includes("transform-origin"),
+);
+const toastHtml = render(
+  () => (
+    <AppProvider>
+      <ToastHost />
+    </AppProvider>
+  ),
+);
+check(
+  "toasts are centred physically",
+  toastHtml.includes("left-1/2") && !toastHtml.includes("start-1/2"),
+);
+check(
+  "pointer → progress is mirrored in RTL",
+  trackRatio(0, { left: 0, width: 100 }, "ltr") === 0 &&
+    trackRatio(100, { left: 0, width: 100 }, "ltr") === 1 &&
+    trackRatio(0, { left: 0, width: 100 }, "rtl") === 1 &&
+    trackRatio(100, { left: 0, width: 100 }, "rtl") === 0,
+);
+check(
+  "offsets and arrows flip with the direction",
+  dirSign("rtl") === -1 &&
+    dirSign("ltr") === 1 &&
+    backIcon("rtl") === "chevronRight" &&
+    forwardIcon("ltr") === "chevronRight" &&
+    forwardIcon("rtl") === "chevronLeft",
+);
+
 /* ------------------------------- data -------------------------------- */
 
 const photos = [
@@ -372,6 +421,14 @@ const orphanFamilies = [...families].filter(
 check("every dynamic key family resolves", orphanFamilies.length === 0, orphanFamilies.join(", "));
 const missingShaped = [...new Set(shaped.filter((key) => !STRINGS[key]))];
 check("every key-shaped literal is in the table", missingShaped.length === 0, missingShaped.join(", "));
+
+/* a class of RTL bug rather than a key one: `end-1/2`-style logical insets
+   paired with `-translate-x-1/2` end up half a box off-target */
+const mixed = sources.filter((file) => {
+  const code = readFileSync(file, "utf8");
+  return /(start|end)-1\/2/.test(code) && /-translate-x-1\/2/.test(code);
+});
+check("no logical inset is centred with a physical translate", mixed.length === 0, mixed.join(", "));
 check(
   "no language is missing a string",
   Object.values(STRINGS).every((entry) => entry.en.trim() && entry.fa.trim() && entry.ko.trim()),

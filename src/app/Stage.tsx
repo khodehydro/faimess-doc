@@ -40,7 +40,11 @@ export function Stage({ children }: { children: ReactNode }) {
       <div className="relative" style={{ width: STAGE.width * scale, height: STAGE.height * scale }}>
         <div
           ref={innerRef}
-          className="absolute start-0 top-0"
+          /* Pinned physically on purpose: the board is scaled about its own
+             top-left corner, so a logical `start-0` would drag the whole app
+             off-centre (and past the right edge) as soon as the document turns
+             RTL. Geometry is never mirrored — only text is. */
+          className="absolute left-0 top-0"
           style={{
             width: STAGE.width,
             height: STAGE.height,

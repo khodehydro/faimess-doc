@@ -15,6 +15,7 @@ import { SubmitLyrics } from "./player/SubmitLyrics";
 import { LYRIC_REWARD } from "../data/lyrics";
 import { me } from "../data/account";
 import { cn } from "../lib/cn";
+import { backIcon, dirSign, forwardIcon, trackRatio } from "../lib/rtl";
 import { EASE, spring } from "../lib/motion";
 
 /* ------------------------------------------------------------------ *
@@ -417,7 +418,7 @@ function TrackPanel({
   expanded: boolean;
   onDownload: () => void;
 }) {
-  const { t } = usePreferences();
+  const { t, dir } = usePreferences();
   const { track, playing, position, duration, progress, toggle, next, prev, seek } = player;
   const barRef = useRef<HTMLDivElement>(null);
   const [scrubbing, setScrubbing] = useState(false);
@@ -427,8 +428,7 @@ function TrackPanel({
   const seekFromX = (clientX: number) => {
     const rect = barRef.current?.getBoundingClientRect();
     if (!rect || !duration) return;
-    const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
-    seek(ratio * duration);
+    seek(trackRatio(clientX, rect, dir) * duration);
   };
 
   const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -489,8 +489,9 @@ function TrackPanel({
           onPointerUp={() => setScrubbing(false)}
           onPointerCancel={() => setScrubbing(false)}
           onKeyDown={(e) => {
-            if (e.key === "ArrowRight") seek(position + 5);
-            if (e.key === "ArrowLeft") seek(position - 5);
+            /* in RTL the arrow that points "forward" is the left one */
+            const step = e.key === "ArrowRight" ? 5 : e.key === "ArrowLeft" ? -5 : 0;
+            if (step) seek(position + step * dirSign(dir));
           }}
           className="group relative flex h-4 cursor-pointer items-center focus:outline-none"
         >
@@ -502,7 +503,9 @@ function TrackPanel({
           </span>
           <motion.span
             className="absolute size-[13px] rounded-full bg-primary shadow-primary ring-2 ring-surface"
-            style={{ left: `calc(${progress * 100}% - 6.5px)` }}
+            /* the fill starts at the card's inline start, so the knob must
+               travel along the same axis — `left` would mirror against it */
+            style={{ insetInlineStart: `calc(${progress * 100}% - 6.5px)` }}
             animate={{ scale: scrubbing ? 1.15 : 1 }}
             transition={spring}
           />
@@ -526,7 +529,7 @@ function TrackPanel({
             aria-label={t("player.prevTrack")}
             className="flex size-9 items-center justify-center rounded-full text-ink-body transition-colors hover:bg-subtle hover:text-ink"
           >
-            <Icon name="chevronLeft" size={17} strokeWidth={2.2} />
+            <Icon name={backIcon(dir)} size={17} strokeWidth={2.2} />
           </motion.button>
 
           <motion.button
@@ -548,7 +551,7 @@ function TrackPanel({
             aria-label={t("player.nextTrack")}
             className="flex size-9 items-center justify-center rounded-full text-ink-body transition-colors hover:bg-subtle hover:text-ink"
           >
-            <Icon name="chevronRight" size={17} strokeWidth={2.2} />
+            <Icon name={forwardIcon(dir)} size={17} strokeWidth={2.2} />
           </motion.button>
         </div>
 
