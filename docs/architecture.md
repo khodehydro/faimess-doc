@@ -46,7 +46,7 @@ scale = min((vw − 2·padding)/1680, (vh − 2·padding)/930, maxScale)
 |---|---|
 | TopBar | محتوا‌محور (≈۷۰) |
 | Hero (چپ) | ۳۷۲ (عرض `flex-1`) |
-| Schedule (چپ) | `flex-1` (≈۴۳۶) |
+| Feed (چپ) | `flex-1` (≈۴۳۶، اسکرول داخلی) |
 | Greeting (راست) | ۳۳۰ |
 | Messages (راست) | `flex-1` (≈۴۷۸) |
 | فاصله‌ها | ۱۸ بین بخش‌ها، ۲۰ پدینگ صفحه |
@@ -61,7 +61,8 @@ scale = min((vw − 2·padding)/1680, (vh − 2·padding)/930, maxScale)
 export type SectionParams = {
   topbar: undefined;
   hero: undefined;
-  schedule: undefined;
+  schedule: undefined;   // آماده برای صفحات دیگر (مثلاً یک صفحهٔ تقویم)
+  feed: undefined;
   greeting: undefined;
   messages: undefined;
   collection: { kind: "artists" | "albums" | "playlists" };
@@ -86,6 +87,31 @@ export type SectionParams = {
 2. در `registry.tsx` کلید `my: { foo: number }` را به `SectionParams` و `my: MySection` را به `sections` اضافه کن.
 3. در صفحه: `<SectionSlot id="my" params={{ foo: 1 }} />` (در یک والد با ارتفاع مشخص، مثلاً `h-[300px]`).
 
+## ۳.۱ فید خانه (src/sections/feed/)
+
+فید یک **ستون اسکرول‌شو**ی شش‌شلفی است که جای باکس زمان‌بندی نشسته است. هر شلف از `Shelf` استفاده می‌کند:
+
+```tsx
+<Shelf id="feed-artists" icon="users" title="Artists you follow" hint="۱۰" action={<PillButton …/>}>
+  <Row>{/* آیتم‌های افقی */}</Row>
+</Shelf>
+```
+
+- `Shelf` → هدر **چسبان** (با پس‌زمینهٔ نیمه‌شفاف + بلور) که هنگام اسکرول روی محتوا می‌ماند، به‌علاوهٔ `Row` (ردیف افقی snap‌دار) و `PlayDot` (دکمهٔ پخش روی کاور).
+- `FEED_SHELVES` در `feed/index.tsx` منبع ترتیب است: هر آیتم `{ id, label, icon, Component }`. افزودن/جابه‌جایی/حذف شلف = ویرایش همین آرایه؛ چیپ‌های میان‌بر بالای باکس و رفتار «شلف فعال» خودکار از همین آرایه ساخته می‌شوند.
+- اسکرول: خود باکس (`overflow-y-auto`) اسکرول می‌کند؛ چیپ‌ها با `scrollTo` به `offsetTop` شلف می‌پرند و یک شنوندهٔ اسکرول، چیپ فعال را مشخص می‌کند.
+- هر شلف داده‌اش را از `src/data/feed.ts` می‌خواند. افزودن آهنگ/آرتیست/خبر تازه = افزودن یک آبجکت به همان فایل.
+
+### شلف‌های فعلی
+| id | عنوان | نوع محتوا |
+|---|---|---|
+| `feed-artists` | Artists you follow | کاور دایره‌ای + نام + نشان تأیید + پالس ریلیز جدید |
+| `feed-newest` | Newest songs | لیست دوستونه با کاور، بج `NEW`، مدت و «افزودن به کتابخانه» |
+| `feed-trending` | Trending now | رتبه + **شمارندهٔ آتش** قابل کلیک (رأی کاربر) + درصد رشد |
+| `feed-news` | Latest news | کارت خبر + دکمهٔ «Go to news» → مسیر `#/news` |
+| `feed-albums` | Fresh albums | ردیف افقی کاور مربعی + دکمهٔ پخش |
+| `feed-users` | Active listeners | پروفایل دایره‌ای + امتیاز (flame) + سطح و استریک |
+
 ## ۴. صفحه‌ها و مسیرها
 
 `app/router.ts` منبع حقیقت مسیرهاست:
@@ -99,8 +125,12 @@ export const routes = [
 ];
 ```
 
-افزودن صفحه: یک آیتم در `routes` + یک کامپوننت در `pages/` + یک خط در `PAGES` در `app/App.tsx`.
-ناوبری بالای صفحه و پنل جست‌وجو **خودکار** از همین لیست تغذیه می‌شوند.
+دو لیست مسیر وجود دارد:
+- `routes` → صفحات ناوبری (Home / Artists / Albums / Playlists)
+- `contextualRoutes` → صفحاتی که در منو نیستند ولی از داخل اپ باز می‌شوند (News)
+
+افزودن صفحه: یک آیتم در یکی از این دو لیست + یک کامپوننت در `pages/` + یک خط در `PAGES` در `app/App.tsx`.
+ناوبری، پنل جست‌وجو و «Quick jump» **خودکار** از همین لیست‌ها تغذیه می‌شوند.
 
 ## ۵. بنر چرخشی
 

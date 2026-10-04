@@ -1,0 +1,103 @@
+import { AnimatePresence, motion } from "framer-motion";
+import { PillButton } from "../ui/primitives";
+import { Thumb } from "../ui/Scenes";
+import { Icon } from "../ui/Icon";
+import { newsItems, type NewsItem } from "../data/feed";
+import { useApp } from "../app/AppContext";
+import { cn } from "../lib/cn";
+import { EASE, popChild, staggerParent } from "../lib/motion";
+import { useState } from "react";
+
+/* ------------------------------------------------------------------ *
+ *  News page (#/news) — reached from the feed's “Go to news” action.
+ * ------------------------------------------------------------------ */
+
+const TAGS: Array<NewsItem["tag"] | "All"> = ["All", "Comeback", "Tour", "Charts", "Awards", "Editorial"];
+
+const TAG_TONE: Record<string, string> = {
+  Comeback: "bg-primary-soft text-primary-deep",
+  Tour: "bg-teal-soft text-teal-deep",
+  Charts: "bg-mint-soft text-teal-deep",
+  Editorial: "bg-muted text-ink-body",
+  Awards: "bg-flame-soft text-flame-deep",
+};
+
+export function NewsPage() {
+  const { notify, navigate } = useApp();
+  const [tag, setTag] = useState<(typeof TAGS)[number]>("All");
+
+  const items = tag === "All" ? newsItems : newsItems.filter((n) => n.tag === tag);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 sm:px-5 lg:px-5 lg:pb-5">
+      <div className="flex items-center gap-3 pb-3.5">
+        <div className="min-w-0">
+          <h2 className="font-display text-[24px] font-bold leading-tight tracking-[-0.035em] text-ink">News</h2>
+          <p className="mt-0.5 text-[11.5px] text-ink-muted">Comebacks, tours, charts and everything the K-pop desk is tracking</p>
+        </div>
+        <div className="ml-auto flex items-center gap-1.5">
+          {TAGS.map((t) => (
+            <PillButton key={t} active={tag === t} onClick={() => setTag(t)}>
+              {t}
+            </PillButton>
+          ))}
+          <PillButton tone="soft" icon="arrowLeft" onClick={() => navigate("home")}>
+            Back home
+          </PillButton>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={tag}
+          variants={staggerParent(0.04)}
+          initial="initial"
+          animate="animate"
+          exit={{ opacity: 0, y: -8, transition: { duration: 0.18, ease: EASE } }}
+          className="grid min-h-0 flex-1 grid-cols-1 content-start gap-3.5 lg:grid-cols-3"
+        >
+          {items.map((item, i) => (
+            <motion.div
+              key={item.id}
+              variants={popChild}
+              whileHover={{ y: -5 }}
+              onClick={() => notify(`Opening “${item.title}”`)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  notify(`Opening “${item.title}”`);
+                }
+              }}
+              className={cn(
+                "group flex cursor-pointer flex-col overflow-hidden rounded-card bg-surface text-left shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float",
+                i === 0 && "lg:col-span-3 lg:flex-row",
+              )}
+            >
+              <span className={cn("relative block overflow-hidden", i === 0 ? "h-[150px] lg:h-auto lg:w-[380px]" : "h-[124px]")}>
+                <Thumb scene={item.scene} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
+                <span className={cn("absolute left-3 top-3 rounded-full px-2 py-[3px] text-[9.5px] font-bold uppercase tracking-wide backdrop-blur", TAG_TONE[item.tag])}>
+                  {item.tag}
+                </span>
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col p-3.5">
+                <span className="font-display text-[14px] font-bold leading-snug tracking-[-0.015em] text-ink">{item.title}</span>
+                <span className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-ink-muted">{item.excerpt}</span>
+                <span className="mt-auto flex items-center gap-2 pt-3 text-[10px] text-ink-faint">
+                  <Icon name="news" size={11} />
+                  {item.source}
+                  <span>·</span>
+                  {item.ago}
+                  <span className="ml-auto text-ink-muted transition-colors group-hover:text-primary">
+                    <Icon name="arrowUpRight" size={13} strokeWidth={2} />
+                  </span>
+                </span>
+              </span>
+            </motion.div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}

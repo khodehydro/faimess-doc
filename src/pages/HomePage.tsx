@@ -2,7 +2,7 @@ import { SectionSlot } from "../sections/registry";
 
 /**
  * Home — the two-column dashboard.
- * Left: hero carousel + schedule (stretches with the frame).
+ * Left: hero carousel + the scrolling music feed (stretches with the frame).
  * Right: greeting + messages (fixed 520px, per the reference).
  * Heights are authored for the 1680×930 stage; below `lg` the page stacks.
  */
@@ -14,8 +14,9 @@ export function HomePage() {
         <div className="h-[300px] shrink-0 sm:h-[330px] lg:h-[372px]">
           <SectionSlot id="hero" params={undefined} />
         </div>
-        <div className="h-[430px] shrink-0 lg:h-auto lg:min-h-0 lg:flex-1">
-          <SectionSlot id="schedule" params={undefined} />
+        {/* the feed is the tall, scrollable box of the home screen */}
+        <div className="h-[560px] shrink-0 lg:h-auto lg:min-h-0 lg:flex-1">
+          <SectionSlot id="feed" params={undefined} />
         </div>
       </div>
 

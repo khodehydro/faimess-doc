@@ -37,6 +37,11 @@
   --color-mint: #58b879;
   --color-mint-soft: #e7f5ec;
 
+  /* the “fire” counter — the one warm accent in the system */
+  --color-flame: #f2743d;
+  --color-flame-deep: #d95f2b;
+  --color-flame-soft: #fdece2;
+
   /* ink */
   --color-ink: #22252e;
   --color-ink-body: #3c4049;

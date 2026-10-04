@@ -7,6 +7,7 @@ import { CircleButton } from "../ui/primitives";
 import { useClickOutside } from "../hooks/useClickOutside";
 import { useApp } from "../app/AppContext";
 import { navItems, notifications } from "../data/navigation";
+import { allRoutes } from "../app/router";
 import { artists, albums, playlists } from "../data/library";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
@@ -37,6 +38,15 @@ export function TopBar() {
     [],
   );
 
+  /** news + any other page that lives outside the nav */
+  const extraPages = useMemo(
+    () =>
+      allRoutes
+        .filter((r) => !navItems.some((n) => n.id === r.id))
+        .map((r) => ({ id: `page-${r.id}`, label: r.label, kind: "Page", icon: "news" as const, route: r.id })),
+    [],
+  );
+
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -45,9 +55,10 @@ export function TopBar() {
       ...artists.map((a) => ({ id: a.id, label: a.name, kind: "Artist", icon: "mic" as const })),
       ...albums.map((a) => ({ id: a.id, label: a.title, kind: "Album", icon: "disc" as const })),
       ...playlists.map((p) => ({ id: p.id, label: p.name, kind: "Playlist", icon: "music" as const })),
+      ...extraPages.map((p) => ({ id: p.id, label: p.label, kind: "Page", icon: p.icon })),
     ];
     return pool.filter((p) => p.label.toLowerCase().includes(q)).slice(0, 5);
-  }, [query]);
+  }, [query, extraPages]);
 
   return (
     <header className="flex items-center gap-3 px-5 py-3.5">
@@ -143,12 +154,14 @@ export function TopBar() {
                 <p className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-faint">
                   {query ? "Results" : "Quick jump"}
                 </p>
-                {(query ? results : quick).map((r) => (
+                {(query ? results : [...quick, ...extraPages]).map((r) => (
                   <button
                     key={r.id}
                     onClick={() => {
                       setSearchOpen(false);
-                      notify(`Opened ${r.label}`);
+                      const target = (r as { route?: string }).route;
+                      if (target) navigate(target as typeof route);
+                      else notify(`Opened ${r.label}`);
                     }}
                     className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-subtle"
                   >
