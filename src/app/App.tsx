@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { AppProvider, useApp } from "./AppContext";
 import { PlayerProvider } from "./PlayerContext";
+import { PlaylistsProvider } from "./PlaylistsContext";
 import { CommentsProvider } from "./CommentsContext";
 import { ContributionsProvider } from "./ContributionsContext";
 import { PreferencesProvider, usePreferences } from "./PreferencesContext";
@@ -86,6 +87,7 @@ export default function App() {
   return (
     <AppProvider>
       <PreferencesProvider>
+        <PlaylistsProvider>
         <PlayerProvider>
           <CommentsProvider>
             <ContributionsProvider>
@@ -96,6 +98,7 @@ export default function App() {
             </ContributionsProvider>
           </CommentsProvider>
         </PlayerProvider>
+        </PlaylistsProvider>
       </PreferencesProvider>
     </AppProvider>
   );

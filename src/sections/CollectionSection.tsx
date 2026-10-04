@@ -1,13 +1,16 @@
 import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArtistCover, Cover } from "../ui/Cover";
+import { ArtistCover, Cover, Photo } from "../ui/Cover";
 import { Icon } from "../ui/Icon";
 import { Meta, PillButton, CircleButton } from "../ui/primitives";
+import { CreatePlaylistDialog } from "../ui/PlaylistDialogs";
 import { albums, artists, playlists } from "../data/library";
+import { coverPhoto, type UserPlaylist } from "../data/playlists";
 import { useApp } from "../app/AppContext";
 import { usePreferences, useT } from "../app/PreferencesContext";
 import { usePlayer } from "../app/PlayerContext";
-import { leadTrackFor } from "../data/player";
+import { usePlaylists } from "../app/PlaylistsContext";
+import { leadTrackFor, trackById } from "../data/player";
 import { cn } from "../lib/cn";
 import { EASE, spring, staggerParent, popChild } from "../lib/motion";
 
@@ -241,6 +244,84 @@ function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
   );
 }
 
+/* --------------------------- your own lists ---------------------------- */
+
+/** "4 tracks" / "—" — derived from the ids a user playlist stores */
+function listMeta(list: UserPlaylist, t: (key: string, vars?: Record<string, string | number>) => string) {
+  const tracks = list.trackIds.map((id) => trackById(id)).filter((track) => !!track);
+  const seconds = tracks.reduce((sum, track) => sum + (track?.seconds ?? 0), 0);
+  return {
+    count: t("playlist.trackCount", { count: tracks.length }),
+    minutes: seconds ? `${Math.max(1, Math.round(seconds / 60))} min` : "—",
+  };
+}
+
+/**
+ * The listener's own playlists, above the curated grid and on their own
+ * track, so the editorial six keep the layout they were designed for.
+ */
+function MineStrip({ onOpen, onNew }: { onOpen: (id: string) => void; onNew: () => void }) {
+  const { t } = usePreferences();
+  const { mine } = usePlaylists();
+
+  return (
+    <div className="pb-3">
+      <div className="flex items-baseline justify-between gap-2 pb-1.5">
+        <span className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">
+          {t("page.filter.madeByYou")}
+        </span>
+        {mine.length > 0 && (
+          <span className="text-[12px] font-semibold text-ink-faint">
+            {t("playlist.listCount", { count: mine.length })}
+          </span>
+        )}
+      </div>
+
+      <div className="scroll-slim flex gap-2.5 overflow-x-auto pb-1">
+        <motion.button
+          variants={popChild}
+          onClick={onNew}
+          whileHover={{ y: -2 }}
+          transition={spring}
+          className="group flex w-[124px] shrink-0 flex-col rounded-[16px] border border-dashed border-line p-2 text-start transition-colors hover:border-primary/40 hover:bg-primary-faint/40"
+        >
+          <span className="flex h-[64px] w-full items-center justify-center rounded-[12px] bg-subtle text-ink-muted transition-colors group-hover:bg-primary-soft group-hover:text-primary-deep">
+            <Icon name="plus" size={18} strokeWidth={2.4} />
+          </span>
+          <span className="mt-1.5 block truncate text-[13px] font-bold text-ink">{t("playlist.new")}</span>
+          <span className="block truncate text-[12px] font-semibold text-ink-faint">{t("playlist.newTip")}</span>
+        </motion.button>
+
+        {mine.map((list) => {
+          const meta = listMeta(list, t);
+          return (
+            <motion.button
+              key={list.id}
+              variants={popChild}
+              onClick={() => onOpen(list.id)}
+              whileHover={{ y: -2 }}
+              transition={spring}
+              className="group flex w-[124px] shrink-0 flex-col rounded-[16px] bg-surface p-2 text-start shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float"
+            >
+              <span className="relative block h-[64px] w-full overflow-hidden rounded-[12px]">
+                <Photo src={coverPhoto(list.cover)} alt="" />
+                <span className="absolute inset-0 flex items-center justify-center bg-ink/35 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  <Icon name="folderPlus" size={17} strokeWidth={2.2} />
+                </span>
+              </span>
+              <span className="mt-1.5 block truncate text-[13px] font-bold text-ink">{list.name}</span>
+              <span className="block truncate text-[12px] font-semibold text-ink-faint">
+                {meta.count} · {meta.minutes}
+              </span>
+              <span className="sr-only">{t("playlist.openMine", { name: list.name })}</span>
+            </motion.button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------ section ------------------------------- */
 
 export function CollectionSection({ params }: { params: { kind: LibraryKind } }) {
@@ -248,6 +329,11 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
   const { t } = usePreferences();
   const copy = COPY[kind];
   const [filter, setFilter] = useState(copy.filters[0].key);
+  /* your own playlists: one sheet to make one, one to edit one */
+  const [creating, setCreating] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  /* kept while the sheet animates out, so its title doesn't flicker back */
+  const [editId, setEditId] = useState<string | null>(null);
 
   const filterLabel = (f: { key: string; text?: string }) => f.text ?? t(f.key);
 
@@ -274,8 +360,28 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
             label={t("page.shuffleAll")}
             onClick={() => setFilter(copy.filters[0].key)}
           />
+          {kind === "playlists" && (
+            <PillButton
+              icon="plus"
+              tone="primary"
+              className="ms-1"
+              onClick={() => setCreating(true)}
+            >
+              {t("playlist.new")}
+            </PillButton>
+          )}
         </div>
       </div>
+
+      {kind === "playlists" && (
+        <MineStrip
+          onOpen={(id) => {
+            setEditId(id);
+            setEditOpen(true);
+          }}
+          onNew={() => setCreating(true)}
+        />
+      )}
 
       {/* grid */}
       <AnimatePresence mode="wait" initial={false}>
@@ -295,6 +401,17 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
           {kind === "playlists" && playlists.map((p) => <PlaylistRow key={p.id} playlist={p} />)}
         </motion.div>
       </AnimatePresence>
+
+      {kind === "playlists" && (
+        <>
+          <CreatePlaylistDialog open={creating} onClose={() => setCreating(false)} />
+          <CreatePlaylistDialog
+            open={editOpen}
+            playlistId={editId}
+            onClose={() => setEditOpen(false)}
+          />
+        </>
+      )}
     </section>
   );
 }

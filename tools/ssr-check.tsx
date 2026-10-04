@@ -12,6 +12,7 @@ import { PlayerProvider } from "../src/app/PlayerContext";
 import { CommentsProvider } from "../src/app/CommentsContext";
 import { ContributionsProvider } from "../src/app/ContributionsContext";
 import { PreferencesProvider } from "../src/app/PreferencesContext";
+import { PlaylistsProvider } from "../src/app/PlaylistsContext";
 import { ProfileMenuContent } from "../src/sections/AccountCard";
 import { NavCard } from "../src/sections/NavCard";
 import { Stage } from "../src/app/Stage";
@@ -31,6 +32,12 @@ import { activeUsers, newestTracks, trendingTracks } from "../src/data/feed";
 import { conversations } from "../src/data/messages";
 import { me } from "../src/data/account";
 import { QUEUE, lyricsFor, trackById } from "../src/data/player";
+import {
+  PLAYLIST_COVERS,
+  coverById,
+  isCoverId,
+  type UserPlaylist,
+} from "../src/data/playlists";
 import {
   COMMUNITY_LYRICS,
   LYRICS,
@@ -91,6 +98,8 @@ type RenderOpts = {
   theme?: Theme;
   /** load the player with this track — omit for the empty state */
   trackId?: string;
+  /** playlists the listener already built */
+  playlists?: UserPlaylist[];
 };
 
 const render = (Page: () => ReactElement, opts: RenderOpts = {}) =>
@@ -100,7 +109,9 @@ const render = (Page: () => ReactElement, opts: RenderOpts = {}) =>
         <CommentsProvider>
           <ContributionsProvider>
             <PreferencesProvider initialLang={opts.lang} initialTheme={opts.theme}>
-              <Page />
+              <PlaylistsProvider initial={opts.playlists}>
+                <Page />
+              </PlaylistsProvider>
             </PreferencesProvider>
           </ContributionsProvider>
         </CommentsProvider>
@@ -249,6 +260,18 @@ check("avatars carry their latest award", playingCard.includes("Top listener · 
   check("liked ids come from the queue", liked.every((id) => QUEUE.some((t) => t.id === id)));
 }
 
+/* ------------------- your playlists: share, add, cover ---------------- */
+
+const mineSeed: UserPlaylist[] = [
+  {
+    id: "mine-check-1",
+    name: "Rainy commute",
+    cover: "rainy-window",
+    trackIds: ["nt1", "tr3"],
+    createdAt: 1_700_000_000_000,
+  },
+];
+
 const artistsPage = render(ArtistsPage);
 const downloadPage = render(DownloadPage);
 check("download page renders", downloadPage.includes("Get the FAIMESS app") && downloadPage.includes("Google Play"));
@@ -265,9 +288,41 @@ const playlistsPage = render(PlaylistsPage);
 check("playlists page renders", playlistsPage.includes("Playlists"));
 check("every playlist on the page", playlists.every((p) => playlistsPage.includes(p.name)), `${playlists.length} playlists`);
 
+/* the "make your own" flow — v17 */
+const playlistsMine = render(PlaylistsPage, { playlists: mineSeed });
+check(
+  "the playlists page offers a new playlist",
+  playlistsPage.includes("New playlist") && playlistsPage.includes("Made by you"),
+);
+check(
+  "your lists sit above the curated grid",
+  playlistsMine.includes("Rainy commute") &&
+    playlistsMine.includes("Made by you") &&
+    playlistsMine.includes("2 tracks"),
+  "made-by-you strip, with the track count read off the ids",
+);
+check(
+  "the curated six survive alongside them",
+  playlists.every((p) => playlistsMine.includes(p.name)),
+);
+check(
+  "covers only ever come from the bundled set",
+  PLAYLIST_COVERS.length === 6 &&
+    PLAYLIST_COVERS.every((c) => !!c.photo && !!STRINGS[c.labelKey]) &&
+    !isCoverId("../../etc/passwd") &&
+    coverById("nope").id === "midnight-drive",
+  "an unknown id falls back to the first cover",
+);
+
+
 const newsPage = render(NewsPage);
 check("news page renders", newsPage.includes("News"));
 check("no undefined leaks into markup", !home.includes("undefined") && !artistsPage.includes("undefined"));
+check(
+  "the player can share a song or keep it",
+  playingCard.includes("Share this song") && playingCard.includes("Add to one of your playlists"),
+  "both actions are labelled under the title",
+);
 
 const profileMenu = render(ProfileMenu);
 check(
@@ -440,6 +495,12 @@ const mixed = sources.filter((file) => {
   return /(start|end)-1\/2/.test(code) && /-translate-x-1\/2/.test(code);
 });
 check("no logical inset is centred with a physical translate", mixed.length === 0, mixed.join(", "));
+
+/* v17 keeps artwork inside the FAIMESS set: no file input, no object URLs */
+const uploads = sources.filter((file) =>
+  /type="file"|createObjectURL|FileReader|new Blob\(/.test(readFileSync(file, "utf8")),
+);
+check("a playlist can never take an uploaded image", uploads.length === 0, uploads.join(", "));
 check(
   "no language is missing a string",
   Object.values(STRINGS).every((entry) => entry.en.trim() && entry.fa.trim() && entry.ko.trim()),

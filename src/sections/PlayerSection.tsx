@@ -3,12 +3,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "../ui/Icon";
 import { Photo } from "../ui/Cover";
 import { Modal } from "../ui/Modal";
+import { AddToPlaylistDialog, CreatePlaylistDialog } from "../ui/PlaylistDialogs";
+import { ShareDialog } from "../ui/ShareDialog";
 import { usePlayer } from "../app/PlayerContext";
+import { usePlaylists } from "../app/PlaylistsContext";
 import { useContributions } from "../app/ContributionsContext";
 import { useApp } from "../app/AppContext";
 import { usePreferences } from "../app/PreferencesContext";
-import { activeLineIndex, lyricsFor, mmss, QUEUE, type PlayerTrack } from "../data/player";
+import { activeLineIndex, lyricsFor, mmss, QUEUE, trackById, type PlayerTrack } from "../data/player";
 import { playlists } from "../data/library";
+import { coverPhoto } from "../data/playlists";
 import { CommentsBar } from "./player/CommentsBar";
 import { CommentsSheet } from "./player/CommentsSheet";
 import { SubmitLyrics } from "./player/SubmitLyrics";
@@ -234,6 +238,9 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
   const { t } = usePreferences();
   const player = usePlayer();
   const { navigate, notify } = useApp();
+  const { mine } = usePlaylists();
+  /* "new playlist" from the panel — the same sheet the Playlists page opens */
+  const [creating, setCreating] = useState(false);
 
   const rows: PlayerTrack[] =
     panel === "liked" ? QUEUE.filter((t) => player.liked.includes(t.id)) : QUEUE;
@@ -249,7 +256,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
       <header className="flex shrink-0 items-center gap-2 border-b border-line px-3.5 py-2.5">
         <span className="text-[13.5px] font-bold text-ink">{t(PANEL_TITLE[panel])}</span>
         <span className="rounded-full bg-subtle px-1.5 py-[1px] text-[11.5px] font-bold text-ink-muted">
-          {panel === "playlists" ? playlists.length : rows.length}
+          {panel === "playlists" ? playlists.length + mine.length : rows.length}
         </span>
         <button
           onClick={onClose}
@@ -263,13 +270,59 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
       <div className="scroll-slim min-h-0 flex-1 overflow-y-auto px-2 py-2">
         {panel === "playlists" ? (
           <div className="flex flex-col gap-1">
+            {/* the listener's own lists first — they are the ones being used */}
+            {mine.map((list) => {
+              const lead = list.trackIds[0] ? trackById(list.trackIds[0]) : null;
+              return (
+                <button
+                  key={list.id}
+                  onClick={() => {
+                    if (!lead) {
+                      notify(t("playlist.emptyNote", { name: list.name }));
+                      return;
+                    }
+                    player.play(lead);
+                    notify(t("player.playing", { artist: lead.artist, title: lead.title }));
+                  }}
+                  className="group flex items-center gap-2.5 rounded-[12px] px-1.5 py-1.5 text-start transition-colors hover:bg-primary-faint"
+                >
+                  <span className="size-[34px] shrink-0 overflow-hidden rounded-[10px] shadow-xs">
+                    <Photo src={coverPhoto(list.cover)} alt="" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-bold text-ink">{list.name}</span>
+                    <span className="block truncate text-[12px] font-semibold text-ink-muted">
+                      {t("playlist.trackCount", { count: list.trackIds.length })}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-primary-faint px-1.5 py-[1px] text-[11px] font-bold text-primary-deep">
+                    {t("playlist.yours")}
+                  </span>
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => setCreating(true)}
+              className="flex items-center gap-2.5 rounded-[12px] px-1.5 py-1.5 text-start transition-colors hover:bg-primary-faint"
+            >
+              <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-dashed border-primary/40 bg-primary-faint/60 text-primary-deep">
+                <Icon name="plus" size={15} strokeWidth={2.4} />
+              </span>
+              <span className="text-[13px] font-bold text-primary-deep">{t("playlist.new")}</span>
+            </button>
+
+            <p className="px-1.5 pb-0.5 pt-2 text-[11.5px] font-bold uppercase tracking-wider text-ink-faint">
+              {t("playlist.curated")}
+            </p>
+
             {playlists.map((list) => (
               <button
                 key={list.id}
                 onClick={() => {
                   navigate("playlists");
                   onClose();
-                  notify(`Opening “${list.name}”`);
+                  notify(t("player.opening", { name: list.name }));
                 }}
                 className="group flex items-center gap-2.5 rounded-[12px] px-1.5 py-1.5 text-start transition-colors hover:bg-primary-faint"
               >
@@ -340,6 +393,8 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
           </div>
         )}
       </div>
+
+      <CreatePlaylistDialog open={creating} onClose={() => setCreating(false)} />
     </motion.aside>
   );
 }
@@ -516,11 +571,16 @@ function TrackPanel({
         </div>
       </div>
 
-      {/* transport */}
+      {/* transport — the two side clusters are equal width, so the
+          prev/play/next group stays optically centred whatever sits in them */}
       <div className="flex w-full items-center">
-        <LikeButton player={player} />
+        {/* keep it … */}
+        <div className="flex min-w-0 flex-1 items-center">
+          <LikeButton player={player} />
+          <AddToPlaylistButton />
+        </div>
 
-        <div className="flex flex-1 items-center justify-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           <motion.button
             whileHover={{ y: -1.5 }}
             whileTap={{ scale: 0.94 }}
@@ -555,9 +615,90 @@ function TrackPanel({
           </motion.button>
         </div>
 
-        <DownloadButton onOpen={onDownload} />
+        {/* … send it on */}
+        <div className="flex min-w-0 flex-1 items-center justify-end">
+          <ShareSongButton />
+          <DownloadButton onOpen={onDownload} />
+        </div>
       </div>
     </section>
+  );
+}
+
+/* ---------------------------- share + playlists -------------------------- */
+
+/**
+ * The actions around the transport, grouped by what they do to the track:
+ * the heart and "add to playlist" keep it, share and download send it on.
+ * All four are the same 36px single-tone circle, and the two clusters are
+ * equal width, so the transport stays optically centred in the card — which
+ * matters most in the narrow, rail-open state.
+ */
+function AddToPlaylistButton() {
+  const player = usePlayer();
+  const { t } = usePreferences();
+  const [adding, setAdding] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  return (
+    <>
+      <IconAction
+        icon="folderPlus"
+        label={t("player.addTip")}
+        onClick={() => setAdding(true)}
+      />
+      <AddToPlaylistDialog
+        open={adding}
+        onClose={() => setAdding(false)}
+        track={player.track}
+        onNewPlaylist={() => {
+          setAdding(false);
+          setCreating(true);
+        }}
+      />
+      <CreatePlaylistDialog
+        open={creating}
+        onClose={() => setCreating(false)}
+        seed={player.track}
+      />
+    </>
+  );
+}
+
+function ShareSongButton() {
+  const player = usePlayer();
+  const { t } = usePreferences();
+  const [sharing, setSharing] = useState(false);
+
+  return (
+    <>
+      <IconAction icon="share" label={t("player.shareTip")} onClick={() => setSharing(true)} />
+      <ShareDialog open={sharing} onClose={() => setSharing(false)} track={player.track} />
+    </>
+  );
+}
+
+function IconAction({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <motion.button
+      whileHover={{ y: -1.5 }}
+      whileTap={{ scale: 0.9 }}
+      transition={spring}
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className="flex size-9 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
+    >
+      <Icon name={icon} size={17} strokeWidth={2.1} />
+    </motion.button>
   );
 }
 
