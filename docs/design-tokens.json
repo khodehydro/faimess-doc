@@ -1,0 +1,113 @@
+{
+  "$meta": {
+    "source": "Screenshot scan — Fiplan home page (soft-minimal travel planner dashboard)",
+    "note": "All values are visual estimates extracted from an 800x600 screenshot, normalized to a 1440px canvas (scale ~2x).",
+    "version": "1.0.0"
+  },
+  "style": {
+    "category": "Web App Dashboard / Product Home",
+    "style": "Soft Minimal Friendly SaaS",
+    "presentation": "Floating Card Mockup",
+    "keywords": ["warm-minimal", "soft-ui-lite", "airy", "illustration-driven", "social-presence", "rounded"]
+  },
+  "color": {
+    "canvas": "#EAEAEC",
+    "surface": "#FFFFFF",
+    "surfaceSubtle": "#F7F8FA",
+    "surfaceMuted": "#F2F3F5",
+    "border": "#EDEEF1",
+    "borderStrong": "#E3E5E9",
+
+    "primary": "#F18069",
+    "primaryHover": "#E86F57",
+    "primarySoft": "#FDEAE4",
+    "primaryFaint": "#FEF4F1",
+
+    "secondary": "#79BFB3",
+    "secondaryDeep": "#4E8E86",
+    "secondarySoft": "#E4F2EF",
+
+    "success": "#58B879",
+    "successSoft": "#E7F5EC",
+
+    "ink": "#22252E",
+    "inkBody": "#3C4049",
+    "inkMuted": "#8A909A",
+    "inkFaint": "#B9BEC7",
+
+    "illustration": {
+      "skyCream": "#FBE6CE",
+      "sun": "#F7B26A",
+      "sunDeep": "#F59A5B",
+      "clay": "#E2604B",
+      "shadowDeep": "#3B4A55",
+      "foliage": "#43514B",
+      "water": "#7FB6AE"
+    }
+  },
+  "radius": {
+    "frame": "32-40px",
+    "card": "20-24px",
+    "panel": "16px",
+    "thumbnail": "12px",
+    "chip": "8-12px",
+    "pill": "999px",
+    "full": "999px"
+  },
+  "spacing": {
+    "scale": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 96],
+    "cardPadding": "20-24px",
+    "cardGap": "16-20px",
+    "frameGutter": "80-100px"
+  },
+  "shadow": {
+    "xs": "0 1px 2px rgba(24,28,40,.06)",
+    "sm": "0 4px 12px -4px rgba(24,28,40,.08)",
+    "md": "0 12px 28px -10px rgba(24,28,40,.14)",
+    "floatingCard": "0 24px 48px -12px rgba(24,28,40,.22)",
+    "frame": "0 40px 80px -24px rgba(24,28,40,.18)"
+  },
+  "typography": {
+    "fontFamily": ["Plus Jakarta Sans", "Poppins", "Manrope", "Gilroy", "sans-serif"],
+    "scale": {
+      "display": { "size": "36-38px", "weight": 700, "lineHeight": 1.15, "tracking": "-0.02em" },
+      "h2": { "size": "24px", "weight": 700, "lineHeight": 1.3, "tracking": "-0.01em" },
+      "h3": { "size": "16px", "weight": 600, "lineHeight": 1.4, "tracking": "0" },
+      "body": { "size": "14px", "weight": 500, "lineHeight": 1.5, "tracking": "0" },
+      "small": { "size": "12px", "weight": 500, "lineHeight": 1.4, "tracking": "0" },
+      "micro": { "size": "11px", "weight": 500, "lineHeight": 1.35, "tracking": "0.01em" }
+    }
+  },
+  "iconography": {
+    "family": ["Lucide", "Feather", "Solar"],
+    "strokeWidth": "1.5-1.75px",
+    "size": "16-20px",
+    "rule": "icons always sit inside a circular or pill-shaped tray"
+  },
+  "layout": {
+    "canvasWidth": "1440px",
+    "topbarHeight": "56-64px",
+    "columns": { "left": "62%", "right": "38%" },
+    "patterns": ["floating frame", "overlapping floating cards", "master-detail chat panel", "time-grid calendar with event chips"]
+  },
+  "components": {
+    "nav": "segmented capsule, active item = solid coral pill with white text",
+    "search": "full-rounded field, hairline border, leading search icon",
+    "avatar": "circle with coral ring; stacked avatars carry a +N green pill",
+    "eventChip": { "variant": "teal-soft (private/locked), white card with thumbnail (rich), ghost (suggested)", "radius": "8-12px" },
+    "chatBubble": { "incoming": "light surface bubble", "outgoing": "right-aligned light bubble" },
+    "inviteCard": "thumbnail + title + meta + [Reject: neutral] [Accept: solid coral]",
+    "primaryAction": "circular coral button with paper-plane / send icon"
+  },
+  "antiPatterns": [
+    "saturated or dark backgrounds",
+    "sharp corners",
+    "1px dark high-contrast borders",
+    "heavy full-card gradients",
+    "full-surface glassmorphism",
+    "dark or hard drop shadows",
+    "dense data tables",
+    "more than two accent hues",
+    "multiple font families"
+  ]
+}
