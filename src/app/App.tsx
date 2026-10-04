@@ -18,18 +18,37 @@ const PAGES = {
   news: NewsPage,
 } as const;
 
-/**
- * The frame: top bar + the active page.
- * Layout that must never scroll lives here (fixed stage height on desktop).
- */
+/* ------------------------------------------------------------------ *
+ *  Shell — the five-card composition.
+ *
+ *    ┌────────┐ ┌──────────────┐            ┌──────────────────┐
+ *    │ brand  │ │  main menu   │            │ search · bell · 👤│
+ *    └────────┘ └──────────────┘            └──────────────────┘
+ *    ┌───────────────────────────┐  ┌──────────────────────────┐
+ *    │      left content card    │  │    right content card    │
+ *    └───────────────────────────┘  └──────────────────────────┘
+ *
+ *  The three top cards are pills (semicircular ends); the two content
+ *  cards keep the normal card radius. No wrapping frame — the cards
+ *  float directly on the studio backdrop.
+ * ------------------------------------------------------------------ */
+
 function Shell() {
   const { route } = useApp();
   const Page = PAGES[route];
 
   return (
-    <div className="mx-3 my-3 overflow-visible rounded-[26px] bg-surface shadow-card lg:mx-0 lg:my-0 lg:flex lg:h-full lg:flex-col lg:overflow-hidden lg:rounded-frame lg:shadow-frame lg:ring-1 lg:ring-black/[0.04]">
-      <SectionSlot id="topbar" params={undefined} />
+    <div className="flex h-full w-full flex-col gap-3.5 p-3 lg:p-0">
+      {/* top row — three separate pills */}
+      <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap">
+        <SectionSlot id="brand" params={undefined} />
+        <SectionSlot id="nav" params={undefined} />
+        <div className="ml-auto flex items-center">
+          <SectionSlot id="account" params={undefined} />
+        </div>
+      </div>
 
+      {/* content row — pages own their cards */}
       <div className="flex min-h-0 flex-1 flex-col">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div

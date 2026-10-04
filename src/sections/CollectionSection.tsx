@@ -205,7 +205,7 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
   const [filter, setFilter] = useState(copy.filters[0]);
 
   return (
-    <section className="flex h-full w-full flex-col">
+    <section className="flex min-h-0 w-full flex-1 flex-col">
       {/* header */}
       <div className="flex items-center gap-3 pb-3.5">
         <div className="min-w-0">

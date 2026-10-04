@@ -90,7 +90,7 @@ export function HeroBanner() {
         mx.set(0);
         my.set(0);
       }}
-      className="relative h-full w-full overflow-hidden rounded-card bg-primary-faint select-none"
+      className="relative h-full w-full select-none overflow-hidden rounded-[18px] bg-primary-faint shadow-card ring-1 ring-line/60"
     >
       {/* slides */}
       <AnimatePresence initial={false} custom={dir} mode="popLayout">

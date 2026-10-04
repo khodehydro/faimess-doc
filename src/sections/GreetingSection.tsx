@@ -41,7 +41,7 @@ export function GreetingSection() {
   };
 
   return (
-    <section className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-card bg-surface px-6 py-5 shadow-card">
+    <section className="relative flex h-full w-full flex-col justify-between overflow-hidden px-6 py-5">
       {/* decorative sprigs */}
       <motion.div
         initial={{ opacity: 0, x: -12, rotate: -6 }}

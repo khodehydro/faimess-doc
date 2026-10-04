@@ -33,7 +33,7 @@ export function Shelf({
   return (
     <section id={id} className={cn("relative scroll-mt-[56px]", className)}>
       <header
-        className="sticky z-20 -mx-5 flex items-center gap-2.5 bg-surface/94 px-5 py-2.5 backdrop-blur-md"
+        className="sticky z-20 -mx-3.5 flex items-center gap-2.5 bg-surface/94 px-3.5 py-2.5 backdrop-blur-md"
         style={{ top: SHELF_STICKY_TOP }}
       >
         <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-faint text-primary-deep">

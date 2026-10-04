@@ -79,9 +79,9 @@ export function FeedSection() {
   const chips = useMemo(() => FEED_SHELVES, []);
 
   return (
-    <section ref={rootRef} className="relative w-full rounded-card bg-surface shadow-card">
+    <section ref={rootRef} className="relative w-full">
       {/* quick-jump strip — sticks to the top of the page scroller */}
-      <div className="sticky top-0 z-30 flex items-center gap-1.5 rounded-t-card border-b border-line/70 bg-surface/95 px-5 py-2.5 backdrop-blur-md">
+      <div className="sticky top-0 z-30 flex items-center gap-1.5 border-b border-line/70 bg-surface/95 px-3.5 py-2.5 backdrop-blur-md">
         {chips.map((shelf) => {
           const isActive = active === shelf.id;
           return (
@@ -115,7 +115,7 @@ export function FeedSection() {
       </div>
 
       {/* the shelves — full height, no inner scroller */}
-      <div className="px-5 pb-8 pt-1">
+      <div className="px-3.5 pb-6 pt-1">
         {chips.map((shelf, i) => (
           <div
             key={shelf.id}

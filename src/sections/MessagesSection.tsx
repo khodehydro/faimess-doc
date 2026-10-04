@@ -232,7 +232,7 @@ export function MessagesSection() {
   };
 
   return (
-    <section className="grid h-full w-full grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] overflow-hidden rounded-card bg-surface shadow-card">
+    <div className="grid h-[480px] w-full min-h-0 grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] lg:h-auto lg:flex-1">
       {/* conversation list */}
       <div className="flex min-w-0 flex-col border-r border-line">
         <div className="scroll-slim min-h-0 flex-1 overflow-y-auto pb-2 pt-2">
@@ -299,6 +299,6 @@ export function MessagesSection() {
           </motion.button>
         </form>
       </div>
-    </section>
+    </div>
   );
 }

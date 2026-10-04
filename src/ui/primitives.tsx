@@ -8,6 +8,25 @@ import { spring } from "../lib/motion";
  *  Shared primitives — the soft-minimal vocabulary of the design.
  * ------------------------------------------------------------------ */
 
+/** Page-level content card: one of the two big cards on the home screen. */
+export function SurfaceCard({
+  children,
+  className,
+  ...rest
+}: { children: ReactNode; className?: string } & ComponentProps<typeof motion.section>) {
+  return (
+    <motion.section
+      className={cn(
+        "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-card bg-surface shadow-card",
+        className,
+      )}
+      {...rest}
+    >
+      {children}
+    </motion.section>
+  );
+}
+
 export function Card({
   children,
   className,

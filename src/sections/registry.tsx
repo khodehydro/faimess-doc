@@ -1,5 +1,7 @@
 import type { ComponentType } from "react";
-import { TopBar } from "./TopBar";
+import { BrandCard } from "./BrandCard";
+import { NavCard } from "./NavCard";
+import { AccountCard } from "./AccountCard";
 import { HeroBanner } from "./HeroBanner";
 import { ScheduleSection } from "./ScheduleSection";
 import { GreetingSection } from "./GreetingSection";
@@ -15,12 +17,17 @@ import { FeedSection } from "./feed";
  *    2. add one line to `params` and one to `sections` below
  *    3. place <SectionSlot id="…" /> wherever it belongs in a page
  *
+ *  The home screen is made of five cards: brand / nav / account (top pills)
+ *  and the left + right content cards.
+ *
  *  Note: the home feed composes its own sub-shelves — see src/sections/feed/.
  *  No other file needs to change.
  * ------------------------------------------------------------------ */
 
 export type SectionParams = {
-  topbar: undefined;
+  brand: undefined;
+  nav: undefined;
+  account: undefined;
   hero: undefined;
   schedule: undefined;
   feed: undefined;
@@ -32,7 +39,9 @@ export type SectionParams = {
 export type SectionId = keyof SectionParams;
 
 export const sections = {
-  topbar: TopBar,
+  brand: BrandCard,
+  nav: NavCard,
+  account: AccountCard,
   hero: HeroBanner,
   schedule: ScheduleSection,
   feed: FeedSection,

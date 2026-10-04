@@ -7,6 +7,7 @@ import { useApp } from "../app/AppContext";
 import { cn } from "../lib/cn";
 import { EASE, popChild, staggerParent } from "../lib/motion";
 import { useState } from "react";
+import { SurfaceCard } from "../ui/primitives";
 
 /* ------------------------------------------------------------------ *
  *  News page (#/news) — reached from the feed's “Go to news” action.
@@ -29,7 +30,7 @@ export function NewsPage() {
   const items = tag === "All" ? newsItems : newsItems.filter((n) => n.tag === tag);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 sm:px-5 lg:px-5 lg:pb-5">
+    <SurfaceCard className="p-5">
       <div className="flex items-center gap-3 pb-3.5">
         <div className="min-w-0">
           <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.035em] text-ink">News</h2>
@@ -98,6 +99,6 @@ export function NewsPage() {
           ))}
         </motion.div>
       </AnimatePresence>
-    </div>
+    </SurfaceCard>
   );
 }
