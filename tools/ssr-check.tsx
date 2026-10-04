@@ -518,6 +518,9 @@ const mobileNavSrc = readFileSync("src/sections/MobileNav.tsx", "utf8");
 const miniSrc = readFileSync("src/sections/MiniPlayer.tsx", "utf8");
 const sheetSrc = readFileSync("src/sections/PlayerSheet.tsx", "utf8");
 const compactHookSrc = readFileSync("src/hooks/useCompact.ts", "utf8");
+/* also read further down (shop section) — declared once, here, because the
+   compact guards above need it */
+const collectionSrc = readFileSync("src/sections/CollectionSection.tsx", "utf8");
 
 check(
   "under 1024px the app is the compact shell",
@@ -532,6 +535,17 @@ check(
     !compactSrc.includes("max-lg:") &&
     !compactSrc.includes("lg:hidden"),
   "same 1024 line as the stage — below it, bottom nav and mini player",
+);
+check(
+  "a collection header stacks on a phone instead of running under its chips",
+  /* one row cannot hold a 26px title and five pills on a handset: the title
+     takes the first line, the chips scroll on the second */
+  collectionSrc.includes("min-w-0 basis-full lg:basis-auto") &&
+    collectionSrc.includes("flex-1 items-center gap-2 overflow-x-auto py-1 lg:ms-auto") &&
+    collectionSrc.includes('className="ms-1 hidden shrink-0 lg:flex"') &&
+    /* the chips must stay on the title's row (far end) on desktop */
+    collectionSrc.includes("lg:flex-none lg:overflow-visible"),
+  "basis-full under 1024px, ms-auto above it",
 );
 check(
   "the compact top row is brand · search controls, with the brand centred",
@@ -953,7 +967,6 @@ const shopSrc = readFileSync("src/pages/ShopPage.tsx", "utf8");
 const shopData = readFileSync("src/data/shop.ts", "utf8");
 const routerSrc = readFileSync("src/app/router.ts", "utf8");
 const navSrc = readFileSync("src/data/navigation.ts", "utf8");
-const collectionSrc = readFileSync("src/sections/CollectionSection.tsx", "utf8");
 
 check(
   "shuffle lives only where a list of songs is open",

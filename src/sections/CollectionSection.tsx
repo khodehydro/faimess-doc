@@ -447,17 +447,27 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
 
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col">
-      {/* header */}
-      <div className="flex items-center gap-4 pb-5">
-        <div className="min-w-0">
-          <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.018em] text-ink">
+      {/* header — on a phone the title takes the whole first line and the
+          filters move to a second, horizontally scrolling line; in one row
+          they simply ran over the title (there is no width where a 26px
+          heading and five pills fit side by side on a handset) */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 pb-5">
+        <div className="min-w-0 basis-full lg:basis-auto">
+          <h2 className="font-display text-[22px] font-bold leading-tight tracking-[-0.018em] text-ink lg:text-[26px]">
             {t(copy.titleKey)}
           </h2>
           <p className="mt-1.5 truncate text-[13.5px] text-ink-muted">{t(copy.subtitleKey)}</p>
         </div>
-        <div className="ms-auto flex items-center gap-2">
+        {/* the chips scroll sideways on a phone; `min-w-0` is what lets a
+            flex child actually shrink enough to scroll */}
+        <div className="scroll-slim flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1 lg:ms-auto lg:flex-none lg:overflow-visible">
           {copy.filters.map((f) => (
-            <PillButton key={f.key} active={filter === f.key} onClick={() => setFilter(f.key)}>
+            <PillButton
+              key={f.key}
+              active={filter === f.key}
+              className="shrink-0"
+              onClick={() => setFilter(f.key)}
+            >
               {filterLabel(f)}
             </PillButton>
           ))}
@@ -465,7 +475,9 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
             <PillButton
               icon="plus"
               tone="primary"
-              className="ms-1"
+              /* the compact layout has the same door in the "made by you"
+                 strip right underneath, so this one is desktop-only */
+              className="ms-1 hidden shrink-0 lg:flex"
               onClick={() => setCreating(true)}
             >
               {t("playlist.new")}
