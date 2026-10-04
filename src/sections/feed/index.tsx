@@ -142,16 +142,20 @@ export function FeedSection() {
               <button
                 key={shelf.id}
                 onClick={() => jumpTo(shelf.id)}
+                aria-current={isActive ? "true" : undefined}
                 className={cn(
-                  "relative flex min-w-[86px] flex-1 items-center justify-center gap-2 rounded-full px-3 py-2 text-[13px] font-semibold transition-colors",
-                  isActive ? "text-white" : "text-ink-muted hover:text-ink",
+                  "relative flex min-w-[86px] flex-1 items-center justify-center gap-2 rounded-full px-3 pb-3 pt-2 text-[13px] font-semibold transition-colors",
+                  isActive ? "text-primary-deep" : "text-ink-muted hover:text-ink",
                 )}
               >
+                {/* this menu sits under the shelves it switches, so the
+                    selected tab is marked with a purple rule under it —
+                    the top menu, which has nothing below it, goes without */}
                 {isActive && (
                   <motion.span
-                    layoutId="feed-chip"
+                    layoutId="feed-chip-underline"
                     transition={spring}
-                    className="absolute inset-0 rounded-full bg-primary shadow-primary"
+                    className="absolute inset-x-4 bottom-1 h-[2.5px] rounded-full bg-primary"
                   />
                 )}
                 <span className="relative flex items-center gap-2">

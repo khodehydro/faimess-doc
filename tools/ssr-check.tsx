@@ -491,6 +491,7 @@ check(
   activeUsersSrc.includes("LeaderboardDialog") && activeUsersSrc.includes("fanPoints(user.activity)"),
 );
 const feedIndexSrc = readFileSync("src/sections/feed/index.tsx", "utf8");
+const navCardSrc = readFileSync("src/sections/NavCard.tsx", "utf8");
 const playerSrc = readFileSync("src/sections/PlayerSection.tsx", "utf8");
 check(
   /* an empty sheet is centred in the whole slot and still fits: the CTA and
@@ -506,6 +507,25 @@ check(
   "the lyrics sheet has no header of its own",
   !playerSrc.includes("lyrics.title") && !playerSrc.includes("한국어"),
   "the lines start straight under the player; only a credit line can sit above them",
+);
+check(
+  "the top menu paints its tab purple, with nothing behind it and no rule",
+  navCardSrc.includes('isActive\n                ? "text-primary-deep"') &&
+    !navCardSrc.includes("layoutId=\"nav-pill\"") &&
+    !navCardSrc.includes("bg-primary") &&
+    /* the underline belongs to the menu that sits under what it switches */
+    !navCardSrc.includes("h-[2.5px]") &&
+    !navCardSrc.includes("shadow-primary"),
+  "colour is the whole mark up here — this bar has nothing below it",
+);
+check(
+  "the lower menu marks its tab with a purple rule",
+  feedIndexSrc.includes('layoutId="feed-chip-underline"') &&
+    feedIndexSrc.includes("h-[2.5px] rounded-full bg-primary") &&
+    feedIndexSrc.includes('isActive ? "text-primary-deep"') &&
+    !feedIndexSrc.includes('layoutId="feed-chip"') &&
+    !feedIndexSrc.includes('text-white'),
+  "the strip sits under the shelves, so its tab gets the line",
 );
 check(
   "the quick-jump chips share the card's width",
