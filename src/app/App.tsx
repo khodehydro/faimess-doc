@@ -19,18 +19,20 @@ const PAGES = {
 } as const;
 
 /* ------------------------------------------------------------------ *
- *  Shell — the five-card composition.
+ *  Shell — the parent card and the five cards inside it.
  *
- *    ┌────────┐ ┌──────────────┐            ┌──────────────────┐
- *    │ brand  │ │  main menu   │            │ search · bell · 👤│
- *    └────────┘ └──────────────┘            └──────────────────┘
- *    ┌───────────────────────────┐  ┌──────────────────────────┐
- *    │      left content card    │  │    right content card    │
- *    └───────────────────────────┘  └──────────────────────────┘
+ *    ┌─────────────────────── parent card (#F1F2F5) ───────────────────────┐
+ *    │ ┌────────┐ ┌──────────────┐            ┌──────────────────┐         │
+ *    │ │ brand  │ │  main menu   │            │ search · bell · 👤│         │
+ *    │ └────────┘ └──────────────┘            └──────────────────┘         │
+ *    │ ┌───────────────────────────┐  ┌──────────────────────────┐         │
+ *    │ │      left content card    │  │    right content card    │         │
+ *    │ └───────────────────────────┘  └──────────────────────────┘         │
+ *    └─────────────────────────────────────────────────────────────────────┘
  *
+ *  Colour ladder: canvas #EAEAEC  →  parent #F1F2F5  →  cards #FFFFFF.
  *  The three top cards are pills (semicircular ends); the two content
- *  cards keep the normal card radius. No wrapping frame — the cards
- *  float directly on the studio backdrop.
+ *  cards keep the normal card radius.
  * ------------------------------------------------------------------ */
 
 function Shell() {
@@ -38,7 +40,7 @@ function Shell() {
   const Page = PAGES[route];
 
   return (
-    <div className="flex h-full w-full flex-col gap-3.5 p-3 lg:p-0">
+    <div className="flex h-full w-full min-h-0 flex-col gap-3.5 rounded-[24px] bg-shell p-3 shadow-frame ring-1 ring-black/[0.035] lg:gap-3.5 lg:rounded-shell lg:p-3.5">
       {/* top row — three separate pills */}
       <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap">
         <SectionSlot id="brand" params={undefined} />

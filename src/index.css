@@ -20,6 +20,10 @@
   --color-canvas: #eaeaec;
   --color-canvas-deep: #e2e3e7;
   --color-surface: #ffffff;
+  /* the parent card that holds every card: lighter than the canvas,
+     clearly deeper than the white cards so all three read apart */
+  --color-shell: #f1f2f5;
+  --color-shell-deep: #e9eaee;
   --color-subtle: #f7f8fa;
   --color-muted: #f1f2f5;
   --color-line: #edeef1;
@@ -52,6 +56,7 @@
 
   /* radii */
   --radius-frame: 34px;
+  --radius-shell: 30px;
   --radius-card: 22px;
   --radius-panel: 18px;
   --radius-thumb: 12px;
