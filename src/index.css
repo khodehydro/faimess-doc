@@ -1,0 +1,291 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ *
+ *  Fiplan — design tokens
+ *  extracted from the reference home-screen scan (docs/design-home-scan.md)
+ * ------------------------------------------------------------------ */
+@theme {
+  --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+
+  /* surfaces */
+  --color-canvas: #eaeaec;
+  --color-canvas-deep: #e2e3e7;
+  --color-surface: #ffffff;
+  --color-subtle: #f7f8fa;
+  --color-muted: #f1f2f5;
+  --color-line: #edeef1;
+  --color-line-strong: #e4e6ea;
+
+  /* accents */
+  --color-coral: #f18069;
+  --color-coral-deep: #e86f57;
+  --color-coral-soft: #fdeae4;
+  --color-coral-faint: #fef5f2;
+
+  --color-teal: #79bfb3;
+  --color-teal-deep: #4e8e86;
+  --color-teal-soft: #e4f2ef;
+
+  --color-mint: #58b879;
+  --color-mint-soft: #e7f5ec;
+
+  /* ink */
+  --color-ink: #22252e;
+  --color-ink-body: #3c4049;
+  --color-ink-muted: #8a909a;
+  --color-ink-faint: #b9bec7;
+
+  /* radii */
+  --radius-frame: 36px;
+  --radius-card: 24px;
+  --radius-panel: 18px;
+  --radius-thumb: 12px;
+  --radius-chip: 10px;
+
+  /* elevation — always wide, airy and colourless */
+  --shadow-xs: 0 1px 2px rgba(24, 28, 40, 0.05);
+  --shadow-sm: 0 4px 12px -4px rgba(24, 28, 40, 0.08);
+  --shadow-card: 0 12px 28px -10px rgba(24, 28, 40, 0.14);
+  --shadow-float: 0 24px 48px -12px rgba(24, 28, 40, 0.22);
+  --shadow-frame: 0 40px 80px -24px rgba(24, 28, 40, 0.18);
+  --shadow-coral: 0 8px 18px -6px rgba(241, 128, 105, 0.55);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button {
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+  }
+
+  input {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-coral);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-coral);
+    color: #fff;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Utilities
+ * ------------------------------------------------------------------ */
+@utility scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: #dadee4 transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #dadee4;
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #c9ced6;
+  }
+}
+
+/* the grey studio backdrop the app frame floats on */
+.studio-backdrop {
+  background:
+    radial-gradient(120% 90% at 50% -10%, #f6f6f8 0%, rgba(246, 246, 248, 0) 55%),
+    radial-gradient(80% 60% at 88% 108%, #e4e5e9 0%, rgba(228, 229, 233, 0) 60%),
+    linear-gradient(180deg, #eaeaec 0%, #e5e6ea 100%);
+}
+
+.studio-backdrop::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: radial-gradient(rgba(34, 37, 46, 0.045) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(120% 80% at 50% 40%, #000 20%, transparent 78%);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Motion — illustration & ambient loops (CSS so SVG internals can use them)
+ * ------------------------------------------------------------------ */
+@keyframes fi-shimmer {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateX(6px);
+  }
+}
+
+@keyframes fi-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes fi-flicker {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scaleY(1) scaleX(1);
+  }
+  35% {
+    opacity: 1;
+    transform: scaleY(1.12) scaleX(0.94);
+  }
+  70% {
+    opacity: 0.7;
+    transform: scaleY(0.92) scaleX(1.06);
+  }
+}
+
+@keyframes fi-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(28px, -6px, 0);
+  }
+}
+
+@keyframes fi-sway {
+  0%,
+  100% {
+    transform: rotate(-1.1deg);
+  }
+  50% {
+    transform: rotate(1.1deg);
+  }
+}
+
+@keyframes fi-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes fi-pulse-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+@keyframes fi-bell-shake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(11deg);
+  }
+  40% {
+    transform: rotate(-9deg);
+  }
+  60% {
+    transform: rotate(6deg);
+  }
+  80% {
+    transform: rotate(-3deg);
+  }
+}
+
+@keyframes fi-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.06);
+  }
+}
+
+.anim-shimmer {
+  animation: fi-shimmer 3.6s ease-in-out infinite;
+}
+.anim-twinkle {
+  animation: fi-twinkle 2.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.anim-flicker {
+  animation: fi-flicker 0.9s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: bottom center;
+}
+.anim-sway {
+  animation: fi-sway 5.5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: bottom center;
+}
+.anim-float {
+  animation: fi-float 6s ease-in-out infinite;
+}
+.anim-glow {
+  animation: fi-glow 5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.anim-pulse-ring {
+  animation: fi-pulse-ring 2.4s ease-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.group:hover .anim-bell {
+  animation: fi-bell-shake 0.7s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "fiplan",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Fiplan — travel planner dashboard, pixel-styled recreation of the reference home screen",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@fontsource-variable/plus-jakarta-sans": "^5.1.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.4.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.6",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.6",
+    "typescript": "~5.7.3",
+    "vite": "^6.1.0"
+  }
+}
