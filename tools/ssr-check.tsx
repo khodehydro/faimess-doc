@@ -920,14 +920,31 @@ check(
   "play all · shuffle · share · edit, nothing with a fixed label",
 );
 check(
-  "the facts sit opposite the title, and the duration next to the count",
+  "the details sit under the name, the duration next to the count",
   detailSrc.includes("byline:") &&
     detailSrc.includes("facts:") &&
     detailSrc.includes("countOf(tracks, t)") &&
     detailSrc.includes("t(\"detail.minutes\"") &&
-    detailSrc.includes("text-end") &&
-    !detailSrc.includes("heading.sub"),
-  "12 tracks · 44 min on the far side, not a second line under the name",
+    !detailSrc.includes("heading.sub") &&
+    /* the two lines are stacked inside the info block, not pushed aside */
+    detailSrc.includes('className="min-w-0 flex-1"') &&
+    !detailSrc.includes("text-end"),
+  "name, then who it is by, then year · tracks · minutes",
+);
+check(
+  "the controls sit opposite those details, not under the name",
+  /ms-auto flex shrink-0 items-center gap-2[\s\S]{0,120}<ExpandPill/.test(detailSrc) &&
+    detailSrc.includes('tone="primary" icon="play"'),
+  "the four pills are a sibling of the info block, pushed to the far end",
+);
+check(
+  "an artist opens as singles and albums",
+  detailSrc.includes('t("detail.singles")') &&
+    detailSrc.includes('t("detail.artistAlbums")') &&
+    detailSrc.includes("albums.filter((album) => album.artist === artist.name)") &&
+    detailSrc.includes('openDetail({ kind: "album", id: album.id })') &&
+    detailSrc.includes("tracksForAlbum"),
+  "and each album row opens the album card, right here",
 );
 
 

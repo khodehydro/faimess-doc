@@ -145,6 +145,9 @@ export const STRINGS: Record<string, Entry> = {
   "detail.shuffle": { en: "Shuffle", fa: "تصادفی", ko: "셔플" },
   "detail.share": { en: "Share", fa: "اشتراک", ko: "공유" },
   "detail.minutes": { en: "{n} min", fa: "{n} دقیقه", ko: "{n}분" },
+  "detail.singles": { en: "Singles", fa: "سینگل‌ترک‌ها", ko: "싱글" },
+  "detail.artistAlbums": { en: "Albums", fa: "آلبوم‌های آرتیست", ko: "앨범" },
+  "detail.openAlbum": { en: "Open “{name}”", fa: "باز کردن «{name}»", ko: "“{name}” 열기" },
   "detail.empty": { en: "Nothing here yet", fa: "هنوز چیزی اینجا نیست", ko: "아직 아무것도 없어요" },
   "detail.emptyBody": {
     en: "Add a few songs and this list starts playing like any other.",

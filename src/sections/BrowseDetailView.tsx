@@ -4,7 +4,7 @@ import { useApp } from "../app/AppContext";
 import { usePlayer } from "../app/PlayerContext";
 import { usePlaylists } from "../app/PlaylistsContext";
 import { usePreferences } from "../app/PreferencesContext";
-import { albums, artists, playlists } from "../data/library";
+import { albums, artists, playlists, type Album } from "../data/library";
 import { QUEUE, leadTrackFor, trackById, type PlayerTrack } from "../data/player";
 import { coverPhoto } from "../data/playlists";
 import { ArtistCover, Cover } from "../ui/Cover";
@@ -25,6 +25,10 @@ import { cn } from "../lib/cn";
  *  is showing, the player keeps playing on the right, and Back returns to
  *  whatever page was underneath. The list is the demo queue, so the
  *  numbers printed in the header are the numbers that actually play.
+ *
+ *  The header reads left-to-right like a record sleeve: the name, and the
+ *  facts about it, on the start side; the controls that act on it opposite
+ *  them, so the eye never has to pick them out of the words.
  * ------------------------------------------------------------------ */
 
 type Heading = {
@@ -33,15 +37,17 @@ type Heading = {
   kind: LibraryKind;
   id: string;
   title: string;
-  /** who it is by — sits opposite the title, on the far side of the row */
+  /** who it is by — the first line under the name */
   byline: string;
-  /** year · tracks · minutes — one line, read at a glance */
+  /** year · tracks · minutes — the second line under the name */
   facts: string;
   cover: string;
   seed: number;
   /** circular art for artists, square for records and lists */
   round?: boolean;
   tracks: PlayerTrack[];
+  /** an artist's own records, shown as a second section */
+  albums?: Album[];
   /** only the listener's own playlists can be edited */
   editableId?: string;
 };
@@ -58,9 +64,18 @@ const countOf = (
     ? t("playlist.trackOne")
     : t("playlist.trackCount", { count: tracks.length });
 
+/** "Velvet Static" and "Velvet Static · single" are the same record */
+const tracksForAlbum = (album: Album): PlayerTrack[] => {
+  const found = QUEUE.filter(
+    (track) => track.album === album.title || track.album.startsWith(`${album.title} ·`),
+  );
+  const lead = leadTrackFor(album.artist);
+  return found.length ? found : lead ? [lead] : [];
+};
+
 export function BrowseDetailView() {
   const { t, dir } = usePreferences();
-  const { detail, closeDetail, notify } = useApp();
+  const { detail, closeDetail, notify, openDetail } = useApp();
   const { mine } = usePlaylists();
   const player = usePlayer();
   const [editing, setEditing] = useState(false);
@@ -85,17 +100,13 @@ export function BrowseDetailView() {
         seed: artist.seed,
         round: true,
         tracks,
+        albums: albums.filter((album) => album.artist === artist.name),
       };
     }
   } else if (detail?.kind === "album") {
     const album = albums.find((a) => a.id === detail.id);
     if (album) {
-      /* "Velvet Static" and "Velvet Static · single" are the same record */
-      const found = QUEUE.filter(
-        (track) => track.album === album.title || track.album.startsWith(`${album.title} ·`),
-      );
-      const lead = leadTrackFor(album.artist);
-      const tracks = found.length ? found : lead ? [lead] : [];
+      const tracks = tracksForAlbum(album);
       heading = {
         kind: "album",
         id: album.id,
@@ -183,9 +194,115 @@ export function BrowseDetailView() {
     if (first) start(first, ids);
   };
 
+  /* ------------------------------- pieces ------------------------------- */
+
+  const trackRows =
+    heading.tracks.length === 0 ? (
+      <div className="flex flex-col items-center gap-2.5 rounded-card bg-subtle/60 px-6 py-10 text-center">
+        <span className="flex size-11 items-center justify-center rounded-full bg-surface text-primary-deep shadow-xs">
+          <Icon name="music" size={19} strokeWidth={2} />
+        </span>
+        <p className="font-display text-[15px] font-bold text-ink">{t("detail.empty")}</p>
+        <p className="max-w-[320px] text-[13px] leading-relaxed text-ink-muted">
+          {t("detail.emptyBody")}
+        </p>
+        {heading.editableId && (
+          <PillButton tone="primary" icon="plus" onClick={() => setEditing(true)}>
+            {t("detail.addSongs")}
+          </PillButton>
+        )}
+      </div>
+    ) : (
+      <ul className="flex flex-col gap-1.5">
+        {heading.tracks.map((track, i) => {
+          const playing = player.track?.id === track.id;
+          return (
+            <motion.li key={`${track.id}-${i}`} whileHover={{ x: 2 }} transition={spring}>
+              <button
+                type="button"
+                onClick={() => start(track, heading!.tracks.map((t) => t.id))}
+                className={cn(
+                  "group flex w-full items-center gap-3.5 rounded-[16px] border px-3 py-2.5 text-start transition-colors",
+                  playing
+                    ? "border-primary/35 bg-primary-faint/60"
+                    : "border-line/80 bg-surface hover:border-primary/25 hover:bg-primary-faint/50",
+                )}
+              >
+                <span className="flex w-4 shrink-0 justify-center text-[12.5px] font-bold tabular-nums text-ink-faint">
+                  {playing ? (
+                    <span className="text-primary">
+                      <Icon name="waveform" size={14} strokeWidth={2.4} />
+                    </span>
+                  ) : (
+                    i + 1
+                  )}
+                </span>
+                <span className="size-[44px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
+                  <Cover src={track.photo} seed={i} className="h-full w-full" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px] font-bold text-ink">
+                    {track.title}
+                  </span>
+                  <span className="mt-0.5 block truncate text-[12.5px] font-semibold text-ink-muted">
+                    {track.artist} · {track.album}
+                  </span>
+                </span>
+                <span className="shrink-0 text-[12.5px] font-semibold tabular-nums text-ink-faint">
+                  {Math.floor(track.seconds / 60)}:{String(track.seconds % 60).padStart(2, "0")}
+                </span>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-primary transition-opacity group-hover:opacity-100">
+                  <Icon name="play" size={14} strokeWidth={2} />
+                </span>
+              </button>
+            </motion.li>
+          );
+        })}
+      </ul>
+    );
+
+  const albumRows = (heading.albums ?? []).length > 0 && (
+    <ul className="flex flex-col gap-1.5">
+      {(heading.albums ?? []).map((album) => {
+        const list = tracksForAlbum(album);
+        return (
+          <motion.li key={album.id} whileHover={{ x: 2 }} transition={spring}>
+            <button
+              type="button"
+              onClick={() => openDetail({ kind: "album", id: album.id })}
+              aria-label={t("detail.openAlbum", { name: album.title })}
+              className="group flex w-full items-center gap-3.5 rounded-[16px] border border-line/80 bg-surface px-3 py-2.5 text-start transition-colors hover:border-primary/25 hover:bg-primary-faint/50"
+            >
+              <span className="size-[44px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
+                <Cover src={album.photo} seed={album.seed} className="h-full w-full" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[14px] font-bold text-ink">{album.title}</span>
+                <span className="mt-0.5 block truncate text-[12.5px] font-semibold text-ink-muted">
+                  {album.year} · {t("playlist.trackCount", { count: album.tracks })}
+                </span>
+              </span>
+              <span
+                onClick={(event) => {
+                  /* the play button inside the row must not also open it */
+                  event.stopPropagation();
+                  if (list[0]) start(list[0], list.map((track) => track.id));
+                }}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-primary transition-opacity group-hover:opacity-100"
+              >
+                <Icon name="play" size={14} strokeWidth={2} />
+              </span>
+            </button>
+          </motion.li>
+        );
+      })}
+    </ul>
+  );
+
   return (
     <section className="flex flex-col gap-5 p-5 pb-8">
-      {/* header */}
+      {/* header — the name and its facts on the start side, the controls
+          that act on them opposite, on the same line */}
       <div className="flex items-start gap-4">
         <CircleButton
           icon={backIcon(dir)}
@@ -212,107 +329,55 @@ export function BrowseDetailView() {
           )}
         </span>
 
-        <div className="flex min-w-0 flex-1 items-start gap-4">
-          {/* the title owns the line; the controls stay minimal under it and
-              unfold their words on hover — the words never push the row */}
-          <div className="min-w-0 flex-1">
-            <h2 className="font-display truncate text-[23px] font-bold leading-tight tracking-[-0.016em] text-ink">
-              {heading.title}
-            </h2>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <ExpandPill tone="primary" icon="play" onClick={playAll}>
-                {t("detail.playAll")}
-              </ExpandPill>
-              <ExpandPill icon="shuffle" onClick={shuffleAll}>
-                {t("detail.shuffle")}
-              </ExpandPill>
-              <ExpandPill icon="share" onClick={() => setSharing(true)}>
-                {t("detail.share")}
-              </ExpandPill>
-              {heading.editableId && (
-                /* the pencil is the edit door for a list of your own — the
-                   card itself opens the songs */
-                <ExpandPill icon="edit" onClick={() => setEditing(true)}>
-                  {t("detail.edit")}
-                </ExpandPill>
-              )}
-            </div>
-          </div>
+        {/* the name, and the details straight under it */}
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display truncate text-[23px] font-bold leading-tight tracking-[-0.016em] text-ink">
+            {heading.title}
+          </h2>
+          <p className="mt-1 truncate text-[13.5px] font-bold text-ink-muted">{heading.byline}</p>
+          <p className="mt-0.5 truncate text-[12.5px] font-semibold tabular-nums text-ink-faint">
+            {heading.facts}
+          </p>
+        </div>
 
-          {/* who made it, and the numbers a listener reads before playing:
-              year · tracks · minutes, opposite the title */}
-          <div className="shrink-0 text-end">
-            <p className="truncate text-[13.5px] font-bold text-ink">{heading.byline}</p>
-            <p className="mt-1 text-[12.5px] font-semibold tabular-nums text-ink-muted">
-              {heading.facts}
-            </p>
-          </div>
+        {/* the controls, opposite those details; each one unfolds its word
+            on hover, so the row stays a row of glyphs until asked */}
+        <div className="ms-auto flex shrink-0 items-center gap-2">
+          <ExpandPill tone="primary" icon="play" onClick={playAll}>
+            {t("detail.playAll")}
+          </ExpandPill>
+          <ExpandPill icon="shuffle" onClick={shuffleAll}>
+            {t("detail.shuffle")}
+          </ExpandPill>
+          <ExpandPill icon="share" onClick={() => setSharing(true)}>
+            {t("detail.share")}
+          </ExpandPill>
+          {heading.editableId && (
+            /* the pencil is the edit door for a list of your own — the card
+               itself opens the songs */
+            <ExpandPill icon="edit" onClick={() => setEditing(true)}>
+              {t("detail.edit")}
+            </ExpandPill>
+          )}
         </div>
       </div>
 
-      {/* the list */}
-      {heading.tracks.length === 0 ? (
-        <div className="flex flex-col items-center gap-2.5 rounded-card bg-subtle/60 px-6 py-10 text-center">
-          <span className="flex size-11 items-center justify-center rounded-full bg-surface text-primary-deep shadow-xs">
-            <Icon name="music" size={19} strokeWidth={2} />
-          </span>
-          <p className="font-display text-[15px] font-bold text-ink">{t("detail.empty")}</p>
-          <p className="max-w-[320px] text-[13px] leading-relaxed text-ink-muted">
-            {t("detail.emptyBody")}
-          </p>
-          {heading.editableId && (
-            <PillButton tone="primary" icon="plus" onClick={() => setEditing(true)}>
-              {t("detail.addSongs")}
-            </PillButton>
+      {/* an artist splits in two: the singles, then the records */}
+      {heading.kind === "artist" ? (
+        <>
+          <div className="flex flex-col gap-2.5">
+            <SectionLabel label={t("detail.singles")} count={heading.tracks.length} />
+            {trackRows}
+          </div>
+          {(heading.albums ?? []).length > 0 && (
+            <div className="flex flex-col gap-2.5">
+              <SectionLabel label={t("detail.artistAlbums")} count={(heading.albums ?? []).length} />
+              {albumRows}
+            </div>
           )}
-        </div>
+        </>
       ) : (
-        <ul className="flex flex-col gap-1.5">
-          {heading.tracks.map((track, i) => {
-            const playing = player.track?.id === track.id;
-            return (
-              <motion.li key={`${track.id}-${i}`} whileHover={{ x: 2 }} transition={spring}>
-                <button
-                  type="button"
-                  onClick={() => start(track, heading!.tracks.map((t) => t.id))}
-                  className={cn(
-                    "group flex w-full items-center gap-3.5 rounded-[16px] border px-3 py-2.5 text-start transition-colors",
-                    playing
-                      ? "border-primary/35 bg-primary-faint/60"
-                      : "border-line/80 bg-surface hover:border-primary/25 hover:bg-primary-faint/50",
-                  )}
-                >
-                  <span className="flex w-4 shrink-0 justify-center text-[12.5px] font-bold tabular-nums text-ink-faint">
-                    {playing ? (
-                      <span className="text-primary">
-                        <Icon name="waveform" size={14} strokeWidth={2.4} />
-                      </span>
-                    ) : (
-                      i + 1
-                    )}
-                  </span>
-                  <span className="size-[44px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
-                    <Cover src={track.photo} seed={i} className="h-full w-full" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14px] font-bold text-ink">
-                      {track.title}
-                    </span>
-                    <span className="mt-0.5 block truncate text-[12.5px] font-semibold text-ink-muted">
-                      {track.artist} · {track.album}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-[12.5px] font-semibold tabular-nums text-ink-faint">
-                    {Math.floor(track.seconds / 60)}:{String(track.seconds % 60).padStart(2, "0")}
-                  </span>
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-primary transition-opacity group-hover:opacity-100">
-                    <Icon name="play" size={14} strokeWidth={2} />
-                  </span>
-                </button>
-              </motion.li>
-            );
-          })}
-        </ul>
+        trackRows
       )}
 
       {heading.editableId && (
@@ -335,5 +400,19 @@ export function BrowseDetailView() {
         )}
       />
     </section>
+  );
+}
+
+/** the small heading that opens a section of the detail card */
+function SectionLabel({ label, count }: { label: string; count: number }) {
+  return (
+    <div className="flex items-baseline gap-2 px-0.5">
+      <span className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">
+        {label}
+      </span>
+      <span className="rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold tabular-nums text-ink-muted">
+        {count}
+      </span>
+    </div>
   );
 }
