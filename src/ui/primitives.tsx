@@ -66,7 +66,7 @@ export function CircleButton({
 }: CircleButtonProps) {
   const dims = { sm: 32, md: 38, lg: 44 }[size];
   const tones: Record<string, string> = {
-    white: "bg-white text-ink shadow-sm ring-1 ring-line hover:text-primary-deep hover:ring-primary/30",
+    white: "bg-surface text-ink shadow-sm ring-1 ring-line hover:text-primary-deep hover:ring-primary/30",
     subtle: "bg-subtle text-ink-body hover:bg-muted",
     primary: "bg-primary text-white shadow-primary hover:bg-primary-deep",
     ink: "bg-ink text-white shadow-md",

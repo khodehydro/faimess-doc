@@ -8,6 +8,7 @@ import { useApp } from "../../app/AppContext";
 import { withThousands } from "../../lib/format";
 import { cn } from "../../lib/cn";
 import { spring } from "../../lib/motion";
+import { useT } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 6 — the most active listeners: circular profile, level and
@@ -15,17 +16,18 @@ import { spring } from "../../lib/motion";
  * ------------------------------------------------------------------ */
 
 export function ActiveUsers() {
+  const t = useT();
   const { notify } = useApp();
 
   return (
     <Shelf
       id="feed-users"
       icon="activity"
-      title="Active listeners"
-      hint="updated live"
+      title={t("shelf.activeListeners")}
+      hint={t("shelf.hintLive")}
       action={
-        <PillButton tone="soft" icon="crown" onClick={() => notify("Opening the season leaderboard")}>
-          Leaderboard
+        <PillButton tone="soft" icon="crown" onClick={() => notify(t("toast.leaderboard"))}>
+          {t("shelf.leaderboard")}
         </PillButton>
       }
     >
@@ -39,11 +41,11 @@ export function ActiveUsers() {
               animate={{ opacity: 1, y: 0, transition: { duration: 0.45, delay: i * 0.04 } }}
               whileHover={{ y: -4 }}
               transition={spring}
-              onClick={() => notify(`Opening ${user.handle}`)}
+              onClick={() => notify(t("toast.opening", { name: user.handle }))}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  notify(`Opening ${user.handle}`);
+                  notify(t("toast.opening", { name: user.handle }));
                 }
               }}
               role="button"
@@ -57,7 +59,7 @@ export function ActiveUsers() {
               {/* rank ribbon */}
               <span
                 className={cn(
-                  "absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full px-1.5 py-[2px] text-[12px] font-extrabold",
+                  "absolute start-2.5 top-2.5 flex items-center gap-1 rounded-full px-1.5 py-[2px] text-[12px] font-extrabold",
                   medal ? "bg-primary text-white" : "bg-subtle text-ink-muted",
                 )}
               >
@@ -66,7 +68,7 @@ export function ActiveUsers() {
               </span>
 
               {user.online && (
-                <span className="absolute right-2.5 top-3 size-2 rounded-full bg-mint ring-2 ring-white" title="Online now" />
+                <span className="absolute end-2.5 top-3 size-2 rounded-full bg-mint ring-2 ring-surface" title={t("shelf.onlineNow")} />
               )}
 
               {/* circular profile */}

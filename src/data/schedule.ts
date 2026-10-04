@@ -1,17 +1,23 @@
 import type { SceneKey } from "../ui/Scenes";
 
-export type WeekDay = { short: string; date: number; dimmed?: boolean };
+/** `date` is a day of the fixed demo month (December 2023); the day name is
+ *  rendered from it with Intl, so it follows the interface language. */
+export type WeekDay = { date: number; dimmed?: boolean };
 
 export const weekDays: WeekDay[] = [
-  { short: "Sun", date: 10, dimmed: true },
-  { short: "Mon", date: 11 },
-  { short: "Tue", date: 12 },
-  { short: "Wed", date: 13 },
-  { short: "Thu", date: 14 },
+  { date: 10, dimmed: true },
+  { date: 11 },
+  { date: 12 },
+  { date: 13 },
+  { date: 14 },
 ];
 
-/** Time gutter of the day grid — five rows fit the frame without scrolling. */
-export const hourRows = ["10 AM", "11 AM", "12 PM", "01 PM", "02 PM"];
+/** the demo month the grid is pinned to */
+export const GRID_MONTH = { year: 2023, month: 11 };
+
+/** Time gutter of the day grid — five rows fit the frame without scrolling.
+ *  Stored as hours so the label can be formatted per language. */
+export const hourRows = [10, 11, 12, 13, 14];
 
 export type ScheduleEvent = {
   id: string;

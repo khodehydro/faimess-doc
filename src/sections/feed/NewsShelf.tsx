@@ -7,6 +7,7 @@ import { newsItems } from "../../data/feed";
 import { useApp } from "../../app/AppContext";
 import { cn } from "../../lib/cn";
 import { spring } from "../../lib/motion";
+import { useT } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 4 — latest news, with a link through to the full news page.
@@ -21,17 +22,18 @@ const TAG_TONE: Record<string, string> = {
 };
 
 export function NewsShelf() {
+  const t = useT();
   const { navigate, notify } = useApp();
 
   return (
     <Shelf
       id="feed-news"
       icon="news"
-      title="Latest news"
-      hint="K-pop desk"
+      title={t("shelf.latestNews")}
+      hint={t("shelf.hintDesk")}
       action={
         <PillButton tone="soft" icon="arrowUpRight" onClick={() => navigate("news")}>
-          Go to news
+          {t("shelf.goToNews")}
         </PillButton>
       }
     >
@@ -53,7 +55,7 @@ export function NewsShelf() {
             role="button"
             tabIndex={0}
             aria-label={item.title}
-            className="group flex cursor-pointer items-center gap-3 overflow-hidden rounded-[16px] border border-line/80 bg-surface p-2.5 text-left transition-colors hover:border-primary/25"
+            className="group flex cursor-pointer items-center gap-3 overflow-hidden rounded-[16px] border border-line/80 bg-surface p-2.5 text-start transition-colors hover:border-primary/25"
           >
             <span className="relative h-[62px] w-[92px] shrink-0 overflow-hidden rounded-[12px]">
               <Thumb scene={item.scene} className="h-full w-full transition-transform duration-500 group-hover:scale-105" />
@@ -73,7 +75,7 @@ export function NewsShelf() {
             </span>
             <motion.span
               transition={spring}
-              className="mr-0.5 shrink-0 text-ink-faint transition-colors group-hover:text-primary"
+              className="me-0.5 shrink-0 text-ink-faint transition-colors group-hover:text-primary"
             >
               <Icon name="chevronRight" size={16.5} strokeWidth={2} />
             </motion.span>

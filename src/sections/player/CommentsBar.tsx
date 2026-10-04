@@ -4,6 +4,7 @@ import { Icon } from "../../ui/Icon";
 import { useTrackComments } from "../../app/CommentsContext";
 import { CommentComposer } from "./CommentComposer";
 import { spring } from "../../lib/motion";
+import { useT } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  The comments strip pinned to the bottom of the player card:
@@ -12,6 +13,7 @@ import { spring } from "../../lib/motion";
  * ------------------------------------------------------------------ */
 
 export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () => void }) {
+  const t = useT();
   const comments = useTrackComments(trackId);
   const latest = comments.thread[0];
   const second = comments.thread.find((c) => c.replies.length > 0);
@@ -22,7 +24,7 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
         <span className="text-ink-faint">
           <Icon name="message" size={13.5} />
         </span>
-        <span className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">Comments</span>
+        <span className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">{t("comments.title")}</span>
         <span className="rounded-full bg-subtle px-1.5 py-[1px] text-[11.5px] font-bold tabular-nums text-ink-muted">
           {comments.total}
         </span>
@@ -31,9 +33,9 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
           whileTap={{ scale: 0.96 }}
           transition={spring}
           onClick={onOpen}
-          className="ml-auto flex items-center gap-1 rounded-full bg-primary-soft px-2 py-1 text-[11.5px] font-bold text-primary-deep"
+          className="ms-auto flex items-center gap-1 rounded-full bg-primary-soft px-2 py-1 text-[11.5px] font-bold text-primary-deep"
         >
-          See all
+          {t("comments.seeAll")}
           <Icon name="arrowRight" size={12} strokeWidth={2.2} />
         </motion.button>
       </header>
@@ -44,8 +46,8 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
       {latest && (
         <button
           onClick={onOpen}
-          className="group mt-1.5 flex w-full min-w-0 items-center gap-2 px-3.5 text-left"
-          aria-label="Open the comment thread"
+          className="group mt-1.5 flex w-full min-w-0 items-center gap-2 px-3.5 text-start"
+          aria-label={t("comments.openThread")}
         >
           <Avatar src={latest.photo} size={22} badge={latest.badge} />
           <span className="min-w-0 flex-1">
@@ -63,17 +65,19 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
       {second && (
         <button
           onClick={onOpen}
-          className="group mt-1 flex w-full min-w-0 items-center gap-2 px-3.5 text-left"
-          aria-label="Open the comment thread"
+          className="group mt-1 flex w-full min-w-0 items-center gap-2 px-3.5 text-start"
+          aria-label={t("comments.openThread")}
         >
           <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-subtle text-ink-faint">
             <Icon name="message" size={11} />
           </span>
           <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-ink-faint">
-            {second.replies.length} {second.replies.length === 1 ? "reply" : "replies"} from the community
+            {t(second.replies.length === 1 ? "comments.repliesFromOne" : "comments.repliesFrom", {
+              n: second.replies.length,
+            })}
           </span>
           <span className="shrink-0 text-[11px] font-semibold text-ink-faint transition-colors group-hover:text-primary-deep">
-            View
+            {t("comments.view")}
           </span>
         </button>
       )}

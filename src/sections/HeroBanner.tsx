@@ -8,6 +8,7 @@ import { useApp } from "../app/AppContext";
 import { cn } from "../lib/cn";
 import { withThousands } from "../lib/format";
 import { EASE, spring } from "../lib/motion";
+import { useT } from "../app/PreferencesContext";
 
 const AUTOPLAY_MS = 7000;
 
@@ -18,6 +19,7 @@ const AUTOPLAY_MS = 7000;
  * ------------------------------------------------------------------ */
 
 export function HeroBanner() {
+  const t = useT();
   const { notify } = useApp();
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState(1);
@@ -118,21 +120,21 @@ export function HeroBanner() {
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.25, ease: EASE }}
-            className="absolute right-5 top-5 flex items-center gap-3"
+            className="absolute end-5 top-5 flex items-center gap-3"
           >
-            <div className="flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-2 backdrop-blur-md">
+            <div className="flex items-center gap-1.5 rounded-full bg-surface/85 px-3 py-2 backdrop-blur-md">
               <Icon name="flame" size={14} className="text-flame" />
               <span className="text-[13.5px] font-extrabold tabular-nums text-ink">{withThousands(banner.going)}</span>
-              <span className="text-[12.5px] font-semibold text-ink-muted">going</span>
+              <span className="text-[12.5px] font-semibold text-ink-muted">{t("shelf.going")}</span>
             </div>
             <div className="group">
               <CircleButton
                 icon="bell"
                 tone="white"
-                label="Show alerts"
+                label={t("hero.showAlerts")}
                 iconClassName="anim-bell"
-                className="bg-white/85 backdrop-blur-md"
-                onClick={() => notify("You're all caught up ✨")}
+                className="bg-surface/85 backdrop-blur-md"
+                onClick={() => notify(t("toast.caughtUp"))}
               />
             </div>
           </motion.div>
@@ -142,12 +144,12 @@ export function HeroBanner() {
             initial={{ opacity: 0, y: 22, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
-            className="absolute bottom-6 left-5 flex items-end gap-3"
+            className="absolute bottom-6 start-5 flex items-end gap-3"
           >
             <motion.div
               whileHover={{ y: -4 }}
               transition={spring}
-              className="w-[302px] rounded-[20px] bg-white/94 p-3 shadow-float backdrop-blur-md"
+              className="w-[302px] rounded-[20px] bg-surface/94 p-3 shadow-float backdrop-blur-md"
             >
               <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[12px] font-bold uppercase tracking-wide text-primary-deep">
                 <Icon name="sparkle" size={12} strokeWidth={2.2} />
@@ -182,9 +184,9 @@ export function HeroBanner() {
               whileHover={{ y: -3, rotate: -4 }}
               whileTap={{ scale: 0.92 }}
               transition={spring}
-              onClick={() => notify(`${banner.title} · tickets`)}
-              aria-label="Open tickets"
-              title="Open tickets"
+              onClick={() => notify(t("toast.tickets", { title: banner.title }))}
+              aria-label={t("hero.openTickets")}
+              title={t("hero.openTickets")}
               className="mb-7 flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-primary"
             >
               <motion.span animate={{ y: [0, -2, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}>
@@ -196,16 +198,16 @@ export function HeroBanner() {
       </AnimatePresence>
 
       {/* carousel controls */}
-      <div className="absolute bottom-5 right-5 z-20 flex items-center gap-2">
+      <div className="absolute bottom-5 end-5 z-20 flex items-center gap-2">
         <CircleButton
           icon="chevronLeft"
           tone="white"
           size="md"
-          label="Previous banner"
-          className="bg-white/88 backdrop-blur-md"
+          label={t("hero.prev")}
+          className="bg-surface/88 backdrop-blur-md"
           onClick={() => go(-1)}
         />
-        <div className="flex items-center gap-1.5 rounded-full bg-white/88 px-2.5 py-2 backdrop-blur-md">
+        <div className="flex items-center gap-1.5 rounded-full bg-surface/88 px-2.5 py-2 backdrop-blur-md">
           {banners.map((b, i) => (
             <button
               key={b.id}
@@ -213,7 +215,7 @@ export function HeroBanner() {
                 setDir(i > index ? 1 : -1);
                 setIndex(i);
               }}
-              aria-label={`Go to ${b.title}`}
+              aria-label={b.title}
               className="group relative flex h-2 items-center"
             >
               <motion.span
@@ -231,8 +233,8 @@ export function HeroBanner() {
           icon="chevronRight"
           tone="white"
           size="md"
-          label="Next banner"
-          className="bg-white/88 backdrop-blur-md"
+          label={t("hero.next")}
+          className="bg-surface/88 backdrop-blur-md"
           onClick={() => go(1)}
         />
       </div>

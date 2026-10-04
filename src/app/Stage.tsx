@@ -40,7 +40,7 @@ export function Stage({ children }: { children: ReactNode }) {
       <div className="relative" style={{ width: STAGE.width * scale, height: STAGE.height * scale }}>
         <div
           ref={innerRef}
-          className="absolute left-0 top-0"
+          className="absolute start-0 top-0"
           style={{
             width: STAGE.width,
             height: STAGE.height,

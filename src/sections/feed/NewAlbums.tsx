@@ -8,12 +8,14 @@ import { useApp } from "../../app/AppContext";
 import { usePlayer } from "../../app/PlayerContext";
 import { leadTrackFor } from "../../data/player";
 import { spring } from "../../lib/motion";
+import { useT } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 5 — the freshest albums: square art, title and release age.
  * ------------------------------------------------------------------ */
 
 export function NewAlbums() {
+  const t = useT();
   const { navigate, notify } = useApp();
   const player = usePlayer();
 
@@ -21,11 +23,11 @@ export function NewAlbums() {
     <Shelf
       id="feed-albums"
       icon="disc"
-      title="Fresh albums"
-      hint="this week"
+      title={t("shelf.freshAlbums")}
+      hint={t("shelf.hintWeek")}
       action={
         <PillButton tone="soft" icon="arrowRight" onClick={() => navigate("albums")}>
-          All albums
+          {t("shelf.allAlbums")}
         </PillButton>
       }
     >
@@ -37,11 +39,11 @@ export function NewAlbums() {
             animate={{ opacity: 1, y: 0, transition: { duration: 0.45, delay: i * 0.04 } }}
             whileHover={{ y: -4 }}
             transition={spring}
-            onClick={() => notify(`Opening “${album.title}”`)}
+            onClick={() => notify(t("toast.openingName", { name: album.title }))}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                notify(`Opening “${album.title}”`);
+                notify(t("toast.openingName", { name: album.title }));
               }
             }}
             role="button"
@@ -51,7 +53,7 @@ export function NewAlbums() {
           >
             <span className="relative block aspect-square overflow-hidden rounded-[16px] shadow-card ring-1 ring-line/70">
               <Cover src={album.photo} seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.06]" />
-              <span className="absolute left-2 top-2 rounded-full bg-white/88 px-1.5 py-[2px] text-[12px] font-bold text-ink backdrop-blur">
+              <span className="absolute start-2 top-2 rounded-full bg-surface/88 px-1.5 py-[2px] text-[12px] font-bold text-ink backdrop-blur">
                 {album.released}
               </span>
               <PlayDot
@@ -60,9 +62,9 @@ export function NewAlbums() {
                   const lead = leadTrackFor(album.artist);
                   if (!lead) return;
                   player.play(lead);
-                  notify(`Playing “${album.title}” — starting with “${lead.title}”`);
+                  notify(t("toast.playingAlbum", { album: album.title, title: lead.title }));
                 }}
-                className="absolute bottom-2 right-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                className="absolute bottom-2 end-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
               />
             </span>
             <span className="mt-2 block truncate text-[14px] font-bold text-ink">{album.title}</span>

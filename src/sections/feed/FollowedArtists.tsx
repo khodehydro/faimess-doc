@@ -8,12 +8,14 @@ import { useApp } from "../../app/AppContext";
 import { usePlayer } from "../../app/PlayerContext";
 import { leadTrackFor } from "../../data/player";
 import { spring } from "../../lib/motion";
+import { useT } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 1 — artists you follow: circular artwork, name underneath.
  * ------------------------------------------------------------------ */
 
 export function FollowedArtists() {
+  const t = useT();
   const { notify } = useApp();
   const player = usePlayer();
 
@@ -21,15 +23,15 @@ export function FollowedArtists() {
     <Shelf
       id="feed-artists"
       icon="users"
-      title="Artists you follow"
+      title={t("shelf.followedArtists")}
       hint={`${followedArtists.length}`}
       action={
         <PillButton
           tone="soft"
           icon="plus"
-          onClick={() => notify("Find more artists to follow")}
+          onClick={() => notify(t("toast.findMore"))}
         >
-          Find artists
+          {t("shelf.findArtists")}
         </PillButton>
       }
     >
@@ -46,12 +48,12 @@ export function FollowedArtists() {
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.96 }}
               transition={spring}
-              onClick={() => notify(`Opening ${artist.name}`)}
+              onClick={() => notify(t("toast.opening", { name: artist.name }))}
               className="relative"
               aria-label={`Open ${artist.name}`}
             >
               {/* circular cover */}
-              <span className="relative block size-[70px] overflow-hidden rounded-full ring-[2.5px] ring-white shadow-card">
+              <span className="relative block size-[70px] overflow-hidden rounded-full ring-[2.5px] ring-surface shadow-card">
                 <Cover src={artist.photo} seed={artist.seed} className="h-full w-full" />
               </span>
 
@@ -59,7 +61,7 @@ export function FollowedArtists() {
               <span className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-primary/0 transition-all duration-300 group-hover:ring-primary/60" />
 
               {artist.newRelease && (
-                <span className="absolute -right-0.5 top-0 flex size-4 items-center justify-center rounded-full bg-primary text-white ring-2 ring-white">
+                <span className="absolute -end-0.5 top-0 flex size-4 items-center justify-center rounded-full bg-primary text-white ring-2 ring-surface">
                   <Icon name="bolt" size={11} strokeWidth={2.4} />
                 </span>
               )}
@@ -70,7 +72,7 @@ export function FollowedArtists() {
                   const lead = leadTrackFor(artist.name);
                   if (!lead) return;
                   player.play(lead);
-                  notify(`Playing ${artist.name} — “${lead.title}”`);
+                  notify(t("player.playing", { artist: artist.name, title: lead.title }));
                 }}
                 className="absolute inset-0 m-auto opacity-0 transition-opacity duration-300 group-hover:opacity-100"
               />
@@ -79,7 +81,7 @@ export function FollowedArtists() {
             <span className="flex max-w-full items-center gap-0.5">
               <span className="truncate text-[13px] font-bold leading-tight text-ink">{artist.name}</span>
               {artist.verified && (
-                <span className="shrink-0 text-primary" title="Verified artist">
+                <span className="shrink-0 text-primary" title={t("shelf.verifiedArtist")}>
                   <Icon name="verified" size={12} strokeWidth={1.8} />
                 </span>
               )}

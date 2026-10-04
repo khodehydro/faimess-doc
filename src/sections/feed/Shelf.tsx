@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Icon, type IconName } from "../../ui/Icon";
 import { cn } from "../../lib/cn";
 import { spring } from "../../lib/motion";
+import { useT } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Shelf — the building block of the feed.
@@ -41,7 +42,7 @@ export function Shelf({
         </span>
         <h3 className="font-display text-[17px] font-bold tracking-[-0.012em] text-ink">{title}</h3>
         {hint && <span className="text-[13px] font-medium text-ink-muted">{hint}</span>}
-        {action && <span className="ml-auto">{action}</span>}
+        {action && <span className="ms-auto">{action}</span>}
       </header>
 
       <div className="pb-5">{children}</div>
@@ -60,6 +61,8 @@ export function Row({ children, className }: { children: ReactNode; className?: 
 
 /** circular “Play” affordance that appears on hover of any cover */
 export function PlayDot({ onClick, className }: { onClick: (e: React.MouseEvent) => void; className?: string }) {
+  const t = useT();
+
   return (
     <motion.span
       onClick={onClick}
@@ -68,7 +71,7 @@ export function PlayDot({ onClick, className }: { onClick: (e: React.MouseEvent)
       whileTap={{ scale: 0.92 }}
       transition={spring}
       role="button"
-      aria-label="Play"
+      aria-label={t("shelf.play")}
       className={cn(
         "flex size-8 items-center justify-center rounded-full bg-primary text-white shadow-primary",
         className,

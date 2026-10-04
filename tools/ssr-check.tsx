@@ -11,6 +11,10 @@ import { AppProvider } from "../src/app/AppContext";
 import { PlayerProvider } from "../src/app/PlayerContext";
 import { CommentsProvider } from "../src/app/CommentsContext";
 import { ContributionsProvider } from "../src/app/ContributionsContext";
+import { PreferencesProvider } from "../src/app/PreferencesContext";
+import { ProfileMenuContent } from "../src/sections/AccountCard";
+import { NavCard } from "../src/sections/NavCard";
+import { LANGS, STRINGS, THEMES, fill, type Lang, type Theme } from "../src/data/i18n";
 import { PlayerSection } from "../src/sections/PlayerSection";
 import { DownloadPage } from "../src/pages/DownloadPage";
 import { HomePage } from "../src/pages/HomePage";
@@ -31,7 +35,8 @@ import {
   parseSubmission,
   submissionProblem,
 } from "../src/data/lyrics";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 
 /* minimal browser surface for React + framer-motion */
 const g = globalThis as unknown as Record<string, unknown>;
@@ -76,18 +81,35 @@ function check(name: string, ok: boolean, detail = "") {
 /** SSR drops `<!-- -->` between adjacent text nodes — strip them before matching prose */
 const plain = (html: string) => html.replace(/<!--[\s\S]*?-->/g, "");
 
-const render = (Page: () => ReactElement) =>
+type RenderOpts = {
+  /** force the interface language instead of reading localStorage */
+  lang?: Lang;
+  /** force the appearance */
+  theme?: Theme;
+  /** load the player with this track — omit for the empty state */
+  trackId?: string;
+};
+
+const render = (Page: () => ReactElement, opts: RenderOpts = {}) =>
   renderToString(
     <AppProvider>
-      <PlayerProvider>
+      <PlayerProvider initialTrackId={opts.trackId}>
         <CommentsProvider>
           <ContributionsProvider>
-            <Page />
+            <PreferencesProvider initialLang={opts.lang} initialTheme={opts.theme}>
+              <Page />
+            </PreferencesProvider>
           </ContributionsProvider>
         </CommentsProvider>
       </PlayerProvider>
     </AppProvider>,
   );
+
+/** the right-hand card, rendered on its own */
+const PlayerCard = () => <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />;
+const ProfileMenu = () => (
+  <ProfileMenuContent onClose={() => {}} onContributions={() => {}} />
+);
 
 /* ------------------------------- pages ------------------------------- */
 
@@ -129,18 +151,35 @@ check("korean faces are declared", css.includes("pretendard-ko-") && css.include
 check("persian token + utility", css.includes("--font-fa:") && css.includes('"Vazirmatn"'));
 check("empty player invites a first play", home.includes("Start with") && home.includes("دوست داری"));
 
-/* the loaded state — a real render of the card with a track in it */
-const playingCard = renderToString(
-  <AppProvider>
-    <PlayerProvider initialTrackId="nt1">
-      <CommentsProvider>
-        <ContributionsProvider>
-          <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />
-        </ContributionsProvider>
-      </CommentsProvider>
-    </PlayerProvider>
-  </AppProvider>,
+/* ---------------------------- preferences ---------------------------- */
+/* language + appearance live on <html>; the SSR pass checks the tables and
+   the profile menu that drives them */
+check(
+  "three languages ship, Persian right-to-left",
+  LANGS.length === 3 &&
+    LANGS.some((l) => l.id === "fa" && l.dir === "rtl") &&
+    LANGS.some((l) => l.id === "ko") &&
+    LANGS.some((l) => l.id === "en"),
+  LANGS.map((l) => `${l.id}:${l.dir}`).join(" "),
 );
+check(
+  "every string is translated three ways",
+  Object.values(STRINGS).every((e) => e.en.length > 0 && e.fa.length > 0 && e.ko.length > 0),
+  `${Object.keys(STRINGS).length} keys`,
+);
+check("persian copy is real persian", /[\u0600-\u06FF]/.test(STRINGS["player.title"].fa));
+check("korean copy is real hangul", /[\uac00-\ud7a3]/.test(STRINGS["nav.home"].ko));
+check("placeholders survive filling", fill("Hey {name}", { name: "Seora" }) === "Hey Seora");
+check("two appearance options", THEMES.length === 2 && THEMES.map((t) => t.id).join() === "light,dark");
+check(
+  "dark tokens + variant are declared",
+  css.includes('@custom-variant dark') &&
+    css.includes('[data-theme="dark"]') &&
+    /\[data-theme="dark"\][\s\S]{0,400}--color-surface:/.test(css),
+);
+
+/* the loaded state — a real render of the card with a track in it */
+const playingCard = render(PlayerCard, { trackId: "nt1" });
 check("loaded player shows the track", playingCard.includes("Afterglow") && playingCard.includes("NOVAE"));
 check("loaded player shows details", playingCard.includes("Afterglow") && playingCard.includes("Lyrics"));
 check("korean lyrics render", /[\uac00-\ud7a3]/.test(playingCard) && playingCard.includes("한국어"));
@@ -161,38 +200,18 @@ check("every track carries the demo audio", QUEUE.every((t) => typeof t.audio ==
 }
 check("expanded player has a layout rule", readFileSync("src/index.css", "utf8").includes("home-split-wide"));
 check("rail ships behind more", playingCard.includes("More — queue, liked songs, playlists"));
-check("rail labels are in the markup", ["Play queue", "Liked songs", "Playlists"].every((l) => playingCard.includes(l)));
+check("rail labels are in the markup", ["Play queue", "Liked songs", "Your playlists"].every((l) => playingCard.includes(l)));
 check("rail starts hidden", playingCard.includes("inert=") || playingCard.includes("inert"));
 check("the playing track can be liked", playingCard.includes("Remove from Liked songs") && playingCard.includes('aria-pressed="true"'));
 
 /* a track with no editorial sheet — the fan submission loop */
-const noSheet = renderToString(
-  <AppProvider>
-    <PlayerProvider initialTrackId="pb1">
-      <CommentsProvider>
-        <ContributionsProvider>
-          <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />
-        </ContributionsProvider>
-      </CommentsProvider>
-    </PlayerProvider>
-  </AppProvider>,
-);
+const noSheet = render(PlayerCard, { trackId: "pb1" });
 check("a sheetless track invites the fans", noSheet.includes("No lyrics for this one yet"));
 check("the empty panel carries the send button", noSheet.includes("Send the lyrics"));
 check("the panel says what approval pays", noSheet.includes(`+${LYRIC_REWARD} fan points`));
 check("no editorial lines leak into the empty sheet", !noSheet.includes("Paper Boats · SEORA") || noSheet.includes("No lyrics"));
 
-const fanSheet = renderToString(
-  <AppProvider>
-    <PlayerProvider initialTrackId="sm1">
-      <CommentsProvider>
-        <ContributionsProvider>
-          <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />
-        </ContributionsProvider>
-      </CommentsProvider>
-    </PlayerProvider>
-  </AppProvider>,
-);
+const fanSheet = render(PlayerCard, { trackId: "sm1" });
 check("an approved fan sheet renders as the lyrics", fanSheet.includes("Slow motion, we don’t have to run"));
 check(
   "the fan gets the credit line",
@@ -236,6 +255,72 @@ const newsPage = render(NewsPage);
 check("news page renders", newsPage.includes("News"));
 check("no undefined leaks into markup", !home.includes("undefined") && !artistsPage.includes("undefined"));
 
+const profileMenu = render(ProfileMenu);
+check(
+  "the profile menu carries the preferences",
+  profileMenu.includes("Language") &&
+    profileMenu.includes("Appearance") &&
+    profileMenu.includes("فارسی") &&
+    profileMenu.includes("한국어"),
+);
+check("the theme switch is in the menu", profileMenu.includes("Light") && profileMenu.includes("Dark"));
+check("the menu keeps the points + contributions rows", profileMenu.includes("fan points") && profileMenu.includes("Your contributions"));
+
+/* --------------------- the same app, other languages ------------------ */
+
+/** is this exact button (pressed state + label) in the markup? */
+const pressed = (html: string, label: string) =>
+  new RegExp(
+    `<button\\b[^>]*aria-pressed="true"[^>]*>(?:(?!</button>)[\\s\\S])*?${label}</button>`,
+  ).test(html);
+
+const homeFa = render(HomePage, { lang: "fa" });
+const homeKo = render(HomePage, { lang: "ko" });
+check("persian home is right-to-left", homeFa.includes('dir="rtl"'));
+const faWords = ["آهنگ‌های تازه", "پخش‌کننده", "جدیدترین آهنگ‌ها", "الان پرطرفدار"];
+check(
+  "persian chrome is translated",
+  faWords.every((word) => plain(homeFa).includes(word)),
+  `missing: ${faWords.filter((word) => !plain(homeFa).includes(word)).join(" ")}`,
+);
+const koWords = ["신곡", "플레이어", "최신 곡", "지금 인기"];
+check(
+  "korean chrome is translated",
+  koWords.every((word) => plain(homeKo).includes(word)),
+  `missing: ${koWords.filter((word) => !plain(homeKo).includes(word)).join(" ")}`,
+);
+check("the shelves keep their photography in persian", plain(homeFa).split(".webp").length - 1 >= 20);
+check(
+  "no raw key leaks into the markup",
+  [homeFa, homeKo].every(
+    (html) => !/(player|comments|submit|contrib|pref|shelf|lyrics)\.[a-z][A-Za-z]+/.test(plain(html)),
+  ),
+);
+
+const cardFa = render(PlayerCard, { lang: "fa", trackId: "nt1" });
+check(
+  "persian player is translated",
+  plain(cardFa).includes("پخش‌کننده") && plain(cardFa).includes("متن آهنگ"),
+);
+check("the persian card keeps its own direction", cardFa.includes('dir="rtl"'));
+
+/* the top pills live in the shell, so they get their own probe */
+const navFa = render(NavCard, { lang: "fa" });
+const navKo = render(NavCard, { lang: "ko" });
+check(
+  "the menu pill is translated",
+  ["خانه", "هنرمندان", "آلبوم‌ها", "پلی‌لیست‌ها"].every((word) => plain(navFa).includes(word)),
+  plain(navFa).slice(0, 0),
+);
+check("the korean menu pill is translated", plain(navKo).includes("홈") && plain(navKo).includes("아티스트"));
+
+const menuFa = render(ProfileMenu, { lang: "fa" });
+const menuDark = render(ProfileMenu, { theme: "dark" });
+const menuLight = render(ProfileMenu, { theme: "light" });
+check("the language switcher marks persian", pressed(menuFa, "فارسی") && !pressed(menuFa, "한국어"));
+check("the appearance switcher follows the theme", pressed(menuDark, "Dark") && pressed(menuLight, "Light"));
+check("light and dark really render differently", menuDark !== menuLight);
+
 /* ------------------------------- data -------------------------------- */
 
 const photos = [
@@ -254,6 +339,44 @@ const bad = photos.filter((p) => !p.includes(".webp"));
 check("photos point at webp assets", photos.every((p) => p.includes(".webp") || p.startsWith("data:image/webp")), `sample: ${photos[0]}`);
 check("roster art is unique per entity", new Set(artists.map((a) => a.photo)).size === artists.length);
 check("listener art is unique per fan", new Set(activeUsers.map((u) => u.photo)).size === activeUsers.length);
+
+/* --------------------------- the key table --------------------------- */
+
+const sources: string[] = [];
+const walk = (dir: string) => {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) walk(full);
+    else if (/\.tsx?$/.test(entry.name)) sources.push(full);
+  }
+};
+walk("src");
+
+const groups = new Set(Object.keys(STRINGS).map((key) => key.split(".")[0]));
+const staticKeys = new Set<string>();
+const families = new Set<string>();
+const shaped: string[] = [];
+for (const file of sources) {
+  const code = readFileSync(file, "utf8");
+  for (const m of code.matchAll(/\bt\(\s*"([^"]+)"/g)) staticKeys.add(m[1]);
+  for (const m of code.matchAll(/\bt\(\s*`([^`$]*)\$\{/g)) families.add(m[1]);
+  for (const m of code.matchAll(/"([a-z][a-zA-Z]*\.[A-Za-z][A-Za-z0-9.]*)"/g)) {
+    if (groups.has(m[1].split(".")[0])) shaped.push(m[1]);
+  }
+}
+const missing = [...staticKeys].filter((key) => !STRINGS[key]);
+check("every t(\"key\") is in the table", missing.length === 0, missing.join(", "));
+const orphanFamilies = [...families].filter(
+  (prefix) => !Object.keys(STRINGS).some((key) => key.startsWith(prefix)),
+);
+check("every dynamic key family resolves", orphanFamilies.length === 0, orphanFamilies.join(", "));
+const missingShaped = [...new Set(shaped.filter((key) => !STRINGS[key]))];
+check("every key-shaped literal is in the table", missingShaped.length === 0, missingShaped.join(", "));
+check(
+  "no language is missing a string",
+  Object.values(STRINGS).every((entry) => entry.en.trim() && entry.fa.trim() && entry.ko.trim()),
+  `${Object.keys(STRINGS).length} keys`,
+);
 
 console.log(results.join("\n"));
 console.log(`\n${pass}/${pass + fail} PASS${fail ? ` — ${fail} FAILED` : ""}`);

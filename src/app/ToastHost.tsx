@@ -9,7 +9,7 @@ export function ToastHost() {
   const { toasts } = useApp();
 
   return (
-    <div className="pointer-events-none fixed left-1/2 top-5 z-50 flex -translate-x-1/2 flex-col items-center gap-2">
+    <div className="pointer-events-none fixed start-1/2 top-5 z-50 flex -translate-x-1/2 flex-col items-center gap-2">
       <AnimatePresence initial={false}>
         {toasts.map((t) => (
           <motion.div
@@ -18,7 +18,7 @@ export function ToastHost() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.97 }}
             transition={spring}
-            className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 py-2 pl-3 pr-4 text-[13.5px] font-semibold text-ink shadow-float ring-1 ring-black/[0.04] backdrop-blur"
+            className="pointer-events-auto flex items-center gap-2 rounded-full bg-surface/95 py-2 ps-3 pe-4 text-[13.5px] font-semibold text-ink shadow-float ring-1 ring-black/[0.04] dark:ring-white/[0.06] backdrop-blur"
           >
             <span
               className={cn(

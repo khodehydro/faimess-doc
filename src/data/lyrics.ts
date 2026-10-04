@@ -197,11 +197,14 @@ export function parseSubmission(original: string, translation: string, duration:
   return stamped ? [...lines].sort((a, b) => a.at - b.at) : lines;
 }
 
+/** why a sheet can't be sent yet — prose lives in the i18n table */
+export type SubmissionProblem = "empty" | "one-line" | "short";
+
 /** what stops the form from sending — null when the text is good enough */
-export function submissionProblem(original: string): string | null {
+export function submissionProblem(original: string): SubmissionProblem | null {
   const lines = splitLines(original);
-  if (lines.length === 0) return "Paste the lyrics first.";
-  if (lines.length < 2) return "At least two lines, please.";
-  if (original.trim().length < 24) return "That looks too short to be a full sheet.";
+  if (lines.length === 0) return "empty";
+  if (lines.length < 2) return "one-line";
+  if (original.trim().length < 24) return "short";
   return null;
 }

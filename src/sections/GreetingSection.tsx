@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "../ui/Icon";
 import { Sprig } from "../ui/Scenes";
 import { useApp } from "../app/AppContext";
+import { usePreferences } from "../app/PreferencesContext";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
 
@@ -12,20 +13,20 @@ import { EASE, spring } from "../lib/motion";
  * ------------------------------------------------------------------ */
 
 const GREETING = {
-  line1: "Have a Good day,",
+  /** the fan's display name is data, not chrome */
   name: "Wendy",
-  subtitle: "Fuel your days with the boundless enthusiasm of a fellow explorer.",
 };
 
 const FILTERS = [
-  { id: "now", label: "Now" },
-  { id: "tomorrow", label: "Tomorrow" },
-  { id: "next-week", label: "Next week" },
-  { id: "custom", label: "Custom" },
+  { id: "now", key: "greet.now" },
+  { id: "tomorrow", key: "greet.tomorrow" },
+  { id: "next-week", key: "greet.nextWeek" },
+  { id: "custom", key: "greet.custom" },
 ];
 
 export function GreetingSection() {
   const { notify } = useApp();
+  const { t, dir } = usePreferences();
   const [draft, setDraft] = useState("");
   const [filter, setFilter] = useState("now");
   const [plan, setPlan] = useState<string | null>(null);
@@ -34,20 +35,20 @@ export function GreetingSection() {
     e?.preventDefault();
     const text = draft.trim();
     if (!text) return;
-    const label = FILTERS.find((f) => f.id === filter)?.label ?? "Now";
+    const key = FILTERS.find((f) => f.id === filter)?.key ?? "greet.now";
     setPlan(text);
     setDraft("");
-    notify(`Planning “${text}” · ${label}`);
+    notify(t("greet.planningToast", { text, label: t(key) }));
   };
 
   return (
-    <section className="relative flex h-full w-full flex-col justify-between overflow-hidden px-5 py-4">
+    <section dir={dir} className="relative flex h-full w-full flex-col justify-between overflow-hidden px-5 py-4">
       {/* decorative sprigs */}
       <motion.div
         initial={{ opacity: 0, x: -12, rotate: -6 }}
         animate={{ opacity: 1, x: 0, rotate: 0 }}
         transition={{ duration: 0.9, delay: 0.3, ease: EASE }}
-        className="pointer-events-none absolute left-0 top-[48%] h-[74px] opacity-90"
+        className="pointer-events-none absolute start-0 top-[48%] h-[74px] opacity-90"
       >
         <Sprig />
       </motion.div>
@@ -55,7 +56,7 @@ export function GreetingSection() {
         initial={{ opacity: 0, x: 12, rotate: 6 }}
         animate={{ opacity: 1, x: 0, rotate: 0 }}
         transition={{ duration: 0.9, delay: 0.38, ease: EASE }}
-        className="pointer-events-none absolute right-0 top-[28%] h-[64px] opacity-90"
+        className="pointer-events-none absolute end-0 top-[28%] h-[64px] opacity-90"
       >
         <Sprig flip />
       </motion.div>
@@ -67,7 +68,7 @@ export function GreetingSection() {
           transition={{ duration: 0.7, delay: 0.12, ease: EASE }}
           className="font-display text-[29px] font-bold leading-[1.16] tracking-[-0.015em] text-ink"
         >
-          {GREETING.line1}
+          {t("greet.line1")}
           <br />
           <span className="inline-flex items-center gap-1.5">
             {GREETING.name}
@@ -88,7 +89,7 @@ export function GreetingSection() {
           transition={{ duration: 0.6, delay: 0.26, ease: EASE }}
           className="mx-auto mt-2.5 max-w-[300px] text-[13px] leading-relaxed text-ink-muted"
         >
-          {GREETING.subtitle}
+          {t("greet.subtitle")}
         </motion.p>
       </div>
 
@@ -100,23 +101,23 @@ export function GreetingSection() {
         transition={{ duration: 0.6, delay: 0.36, ease: EASE }}
         className="relative flex items-center gap-2.5"
       >
-        <div className="flex flex-1 items-center gap-1 rounded-full border border-line bg-subtle py-1.5 pl-3.5 pr-1.5 transition-colors focus-within:border-primary/40 focus-within:bg-surface">
+        <div className="flex flex-1 items-center gap-1 rounded-full border border-line bg-subtle py-1.5 ps-3.5 pe-1.5 transition-colors focus-within:border-primary/40 focus-within:bg-surface">
           <label htmlFor="intent" className="whitespace-nowrap text-[13.5px] font-semibold text-ink">
-            I want to...
+            {t("greet.want")}
           </label>
           <input
             id="intent"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="start a late-night mix"
+            placeholder={t("greet.placeholder")}
             className="min-w-0 flex-1 bg-transparent px-1 text-[14px] text-ink placeholder:text-ink-faint focus:outline-none"
           />
           <motion.button
             type="button"
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
-            aria-label="Pick a date"
-            className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-white hover:text-ink"
+            aria-label={t("greet.pickDate")}
+            className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-surface hover:text-ink"
           >
             <Icon name="calendar" size={15.5} />
           </motion.button>
@@ -124,8 +125,8 @@ export function GreetingSection() {
             type="button"
             whileHover={{ scale: 1.08, rotate: 8 }}
             whileTap={{ scale: 0.92 }}
-            aria-label="Save idea"
-            className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-white hover:text-ink"
+            aria-label={t("greet.saveIdea")}
+            className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-surface hover:text-ink"
           >
             <Icon name="star" size={15.5} />
           </motion.button>
@@ -135,7 +136,7 @@ export function GreetingSection() {
           whileHover={{ y: -2, scale: 1.04 }}
           whileTap={{ scale: 0.94 }}
           transition={spring}
-          aria-label="Start planning"
+          aria-label={t("greet.startPlanning")}
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-primary"
         >
           <Icon name="send" size={18.5} strokeWidth={1.8} />
@@ -168,7 +169,7 @@ export function GreetingSection() {
               <span className={cn("flex size-3 items-center justify-center rounded-full border", isActive ? "border-primary" : "border-ink-faint")}>
                 <motion.span animate={{ scale: isActive ? 1 : 0 }} transition={spring} className="block size-1.5 rounded-full bg-primary" />
               </span>
-              {f.label}
+              {t(f.key)}
             </motion.button>
           );
         })}
@@ -193,9 +194,9 @@ export function GreetingSection() {
                 <Icon name="sparkle" size={16.5} />
               </motion.span>
               <p className="flex-1 text-[13.5px] font-semibold text-ink">
-                Drafting a plan for <span className="text-primary-deep">“{plan}”</span>
+                {t("greet.drafting")} <span className="text-primary-deep">“{plan}”</span>
               </p>
-              <button onClick={() => setPlan(null)} aria-label="Dismiss" className="text-ink-faint transition-colors hover:text-ink">
+              <button onClick={() => setPlan(null)} aria-label={t("greet.dismiss")} className="text-ink-faint transition-colors hover:text-ink">
                 <Icon name="close" size={14.5} />
               </button>
             </div>

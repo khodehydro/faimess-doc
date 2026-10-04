@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Avatar } from "../../ui/Avatar";
 import { Icon } from "../../ui/Icon";
+import { useT } from "../../app/PreferencesContext";
 import { useApp } from "../../app/AppContext";
 import { useTrackComments } from "../../app/CommentsContext";
 import { me } from "../../data/account";
@@ -31,10 +32,11 @@ function Input({
   autoFocus?: boolean;
   onCancel?: () => void;
 }) {
+  const t = useT();
   const canSend = value.trim().length > 0;
 
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-1 rounded-full bg-subtle py-1 pl-3 pr-1 ring-1 ring-transparent transition-colors focus-within:ring-primary/25">
+    <div className="flex min-w-0 flex-1 items-center gap-1 rounded-full bg-subtle py-1 ps-3 pe-1 ring-1 ring-transparent transition-colors focus-within:ring-primary/25">
       <input
         value={value}
         autoFocus={autoFocus}
@@ -62,7 +64,7 @@ function Input({
         disabled={!canSend}
         whileTap={{ scale: 0.92 }}
         transition={spring}
-        aria-label="Send"
+        aria-label={t("comments.send")}
         className={cn(
           "flex size-7 shrink-0 items-center justify-center rounded-full transition-colors",
           canSend ? "bg-primary text-white shadow-primary" : "text-ink-faint",
@@ -84,6 +86,7 @@ export function CommentComposer({
   className?: string;
   onPosted?: () => void;
 }) {
+  const t = useT();
   const { notify } = useApp();
   const comments = useTrackComments(trackId);
   const [text, setText] = useState("");
@@ -92,14 +95,14 @@ export function CommentComposer({
     if (!text.trim()) return;
     comments.addComment(text.trim());
     setText("");
-    notify("Comment posted — it's at the top of the thread", "primary");
+    notify(t("comments.postedToast"), "primary");
     onPosted?.();
   };
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <Avatar src={me.photo} size={26} badge={me.badge} />
-      <Input value={text} onChange={setText} onSend={send} placeholder="Add a comment…" />
+      <Input value={text} onChange={setText} onSend={send} placeholder={t("comments.placeholder")} />
     </div>
   );
 }
@@ -116,6 +119,7 @@ export function ReplyComposer({
   handle: string;
   onDone: () => void;
 }) {
+  const t = useT();
   const { notify } = useApp();
   const comments = useTrackComments(trackId);
   const [text, setText] = useState("");
@@ -123,7 +127,7 @@ export function ReplyComposer({
   const send = () => {
     if (!text.trim()) return;
     comments.addReply(parentId, text.trim());
-    notify(`Replied to ${handle}`, "primary");
+    notify(t("comments.repliedToast", { handle }), "primary");
     onDone();
   };
 
@@ -134,7 +138,7 @@ export function ReplyComposer({
         value={text}
         onChange={setText}
         onSend={send}
-        placeholder={`Reply to ${handle}…`}
+        placeholder={t("comments.replyTo", { handle })}
         autoFocus
         onCancel={onDone}
       />
@@ -142,7 +146,7 @@ export function ReplyComposer({
         onClick={onDone}
         className="shrink-0 text-[11.5px] font-bold text-ink-faint transition-colors hover:text-ink"
       >
-        Cancel
+        {t("comments.cancel")}
       </button>
     </div>
   );

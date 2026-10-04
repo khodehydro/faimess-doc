@@ -5,6 +5,7 @@ import { Icon } from "../ui/Icon";
 import { Meta, PillButton, CircleButton } from "../ui/primitives";
 import { albums, artists, playlists } from "../data/library";
 import { useApp } from "../app/AppContext";
+import { usePreferences, useT } from "../app/PreferencesContext";
 import { usePlayer } from "../app/PlayerContext";
 import { leadTrackFor } from "../data/player";
 import { cn } from "../lib/cn";
@@ -17,26 +18,43 @@ export type LibraryKind = "artists" | "albums" | "playlists";
  *  Playlists pages. Switch `kind` from the page and it re-skins itself.
  * ------------------------------------------------------------------ */
 
-const COPY: Record<LibraryKind, { title: string; subtitle: string; filters: string[] }> = {
+const COPY: Record<LibraryKind, { titleKey: string; subtitleKey: string; filters: { key: string; text?: string }[] }> = {
   artists: {
-    title: "Artists",
-    subtitle: "The voices shaping your library right now",
-    filters: ["All", "Following", "Top played", "New"],
+    titleKey: "nav.artists",
+    subtitleKey: "page.artists.subtitle",
+    filters: [
+      { key: "page.filter.all" },
+      { key: "page.filter.following" },
+      { key: "page.filter.topPlayed" },
+      { key: "page.filter.new" },
+    ],
   },
   albums: {
-    title: "Albums",
-    subtitle: "Full records, saved and ready to play",
-    filters: ["All", "Recent", "Saved", "2025"],
+    titleKey: "nav.albums",
+    subtitleKey: "page.albums.subtitle",
+    filters: [
+      { key: "page.filter.all" },
+      { key: "page.filter.recent" },
+      { key: "page.filter.saved" },
+      { key: "page.filter.2025", text: "2025" },
+    ],
   },
   playlists: {
-    title: "Playlists",
-    subtitle: "Mixes built by you and the Faimess editors",
-    filters: ["All", "Made by you", "Liked", "Moods"],
+    titleKey: "nav.playlists",
+    subtitleKey: "page.playlists.subtitle",
+    filters: [
+      { key: "page.filter.all" },
+      { key: "page.filter.madeByYou" },
+      { key: "page.filter.liked" },
+      { key: "page.filter.moods" },
+    ],
   },
 };
 
 /** hover-revealed play control shared by every card */
 function PlayFab({ onClick, className }: { onClick: () => void; className?: string }) {
+  const t = useT();
+
   return (
     <motion.button
       onClick={(e) => {
@@ -47,7 +65,7 @@ function PlayFab({ onClick, className }: { onClick: () => void; className?: stri
       whileHover={{ scale: 1.08 }}
       whileTap={{ scale: 0.92 }}
       transition={spring}
-      aria-label="Play"
+      aria-label={t("shelf.play")}
       className={cn(
         "absolute flex size-10 items-center justify-center rounded-full bg-primary text-white shadow-primary",
         className,
@@ -90,7 +108,7 @@ function CardShell({
       whileHover={{ y: -5 }}
       transition={spring}
       className={cn(
-        "group relative flex min-h-0 cursor-pointer flex-col overflow-hidden rounded-card bg-surface text-left shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float",
+        "group relative flex min-h-0 cursor-pointer flex-col overflow-hidden rounded-card bg-surface text-start shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float",
         className,
       )}
     >
@@ -102,12 +120,13 @@ function CardShell({
 /* ------------------------------- cards -------------------------------- */
 
 function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
+  const t = useT();
   const { notify } = useApp();
   const player = usePlayer();
   const [following, setFollowing] = useState(artist.following);
 
   return (
-    <CardShell onClick={() => notify(`Opening ${artist.name}`)} label={`Open ${artist.name}`}>
+    <CardShell onClick={() => notify(t("toast.opening", { name: artist.name }))} label={t("page.openArtist", { name: artist.name })}>
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <ArtistCover src={artist.photo} seed={artist.seed} initials={artist.initials} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
         <PlayFab
@@ -115,11 +134,11 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
             const lead = leadTrackFor(artist.name);
             if (!lead) return;
             player.play(lead);
-            notify(`Playing ${artist.name} — “${lead.title}”`);
+            notify(t("player.playing", { artist: artist.name, title: lead.title }));
           }}
-          className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          className="bottom-3 end-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         />
-        <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[12px] font-bold text-ink backdrop-blur">
+        <span className="absolute start-3 top-3 rounded-full bg-surface/85 px-2 py-0.5 text-[12px] font-bold text-ink backdrop-blur">
           {artist.genre}
         </span>
       </div>
@@ -136,7 +155,10 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
           icon={following ? "check" : "plus"}
           onClick={() => {
             setFollowing((v) => !v);
-            notify(following ? `Unfollowed ${artist.name}` : `Following ${artist.name}`, following ? "primary" : "mint");
+            notify(
+              t(following ? "toast.unfollowed" : "toast.following", { name: artist.name }),
+              following ? "primary" : "mint",
+            );
           }}
           className="shrink-0 px-2.5 py-1"
         >
@@ -149,10 +171,11 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
 }
 
 function AlbumCard({ album }: { album: (typeof albums)[number] }) {
+  const t = useT();
   const { notify } = useApp();
   const player = usePlayer();
   return (
-    <CardShell onClick={() => notify(`Opening “${album.title}”`)} label={`Open ${album.title}`}>
+    <CardShell onClick={() => notify(t("toast.openingName", { name: album.title }))} label={t("page.openAlbum", { name: album.title })}>
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <Cover src={album.photo} seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
         <PlayFab
@@ -160,11 +183,11 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
             const lead = leadTrackFor(album.artist);
             if (!lead) return;
             player.play(lead);
-            notify(`Playing “${album.title}” — starting with “${lead.title}”`);
+            notify(t("toast.playingAlbum", { album: album.title, title: lead.title }));
           }}
-          className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          className="bottom-3 end-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         />
-        <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[12px] font-bold text-ink backdrop-blur">
+        <span className="absolute start-3 top-3 rounded-full bg-surface/85 px-2 py-0.5 text-[12px] font-bold text-ink backdrop-blur">
           {album.year}
         </span>
       </div>
@@ -176,7 +199,7 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
           </Meta>
         </span>
         <span onClick={(e) => e.stopPropagation()} className="shrink-0">
-          <CircleButton icon="heart" size="sm" tone="ghost" label="Save album" onClick={() => notify(`Saved “${album.title}”`, "mint")} />
+          <CircleButton icon="heart" size="sm" tone="ghost" label={t("page.saveAlbum")} onClick={() => notify(t("toast.saved", { name: album.title }), "mint")} />
         </span>
       </div>
     </CardShell>
@@ -184,14 +207,15 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
 }
 
 function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
+  const t = useT();
   const { notify } = useApp();
   return (
     <motion.button
       variants={popChild}
-      onClick={() => notify(`Opening “${playlist.name}”`)}
+      onClick={() => notify(t("toast.openingName", { name: playlist.name }))}
       whileHover={{ y: -3 }}
       transition={spring}
-      className="group flex min-h-0 items-center gap-3 overflow-hidden rounded-card bg-surface p-2.5 text-left shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float"
+      className="group flex min-h-0 items-center gap-3 overflow-hidden rounded-card bg-surface p-2.5 text-start shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float"
     >
       <span className="relative size-[68px] shrink-0 overflow-hidden rounded-[16px]">
         <Cover src={playlist.photo} seed={playlist.seed} className="h-full w-full" />
@@ -208,7 +232,7 @@ function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
           </Meta>
         </span>
       </span>
-      <span className="mr-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+      <span className="me-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
         <span className="flex size-9 items-center justify-center rounded-full bg-primary text-white shadow-primary">
           <Icon name="play" size={15.5} strokeWidth={2} />
         </span>
@@ -221,24 +245,35 @@ function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
 
 export function CollectionSection({ params }: { params: { kind: LibraryKind } }) {
   const { kind } = params;
+  const { t } = usePreferences();
   const copy = COPY[kind];
-  const [filter, setFilter] = useState(copy.filters[0]);
+  const [filter, setFilter] = useState(copy.filters[0].key);
+
+  const filterLabel = (f: { key: string; text?: string }) => f.text ?? t(f.key);
 
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col">
       {/* header */}
       <div className="flex items-center gap-3 pb-3.5">
         <div className="min-w-0">
-          <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.018em] text-ink">{copy.title}</h2>
-          <p className="mt-0.5 truncate text-[13.5px] text-ink-muted">{copy.subtitle}</p>
+          <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.018em] text-ink">
+            {t(copy.titleKey)}
+          </h2>
+          <p className="mt-0.5 truncate text-[13.5px] text-ink-muted">{t(copy.subtitleKey)}</p>
         </div>
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ms-auto flex items-center gap-1.5">
           {copy.filters.map((f) => (
-            <PillButton key={f} active={filter === f} onClick={() => setFilter(f)}>
-              {f}
+            <PillButton key={f.key} active={filter === f.key} onClick={() => setFilter(f.key)}>
+              {filterLabel(f)}
             </PillButton>
           ))}
-          <CircleButton icon="shuffle" size="sm" tone="white" label="Shuffle all" onClick={() => setFilter(copy.filters[0])} />
+          <CircleButton
+            icon="shuffle"
+            size="sm"
+            tone="white"
+            label={t("page.shuffleAll")}
+            onClick={() => setFilter(copy.filters[0].key)}
+          />
         </div>
       </div>
 

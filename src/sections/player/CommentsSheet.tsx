@@ -4,8 +4,9 @@ import { Avatar } from "../../ui/Avatar";
 import { Icon } from "../../ui/Icon";
 import { Modal } from "../../ui/Modal";
 import { useApp } from "../../app/AppContext";
+import { usePreferences } from "../../app/PreferencesContext";
 import { useTrackComments } from "../../app/CommentsContext";
-import { REPORT_LABEL, REPORT_REASONS, type Comment } from "../../data/comments";
+import { REPORT_REASONS, type Comment } from "../../data/comments";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import { CommentComposer, ReplyComposer } from "./CommentComposer";
 import { EASE, spring } from "../../lib/motion";
@@ -31,6 +32,7 @@ export function CommentsSheet({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = usePreferences();
   const comments = useTrackComments(trackId);
   const [sort, setSort] = useState<Sort>("newest");
   const [reportTarget, setReportTarget] = useState<Target | null>(null);
@@ -63,7 +65,7 @@ export function CommentsSheet({
               className="mt-0.5 flex items-center gap-1 rounded-full bg-subtle px-2 py-1 text-[12px] font-bold text-ink-body transition-colors hover:bg-muted"
             >
               <Icon name="chevronLeft" size={13} strokeWidth={2.2} />
-              Back
+              {t("comments.back")}
             </button>
           ) : (
             <span className="mt-0.5 flex size-8 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
@@ -73,7 +75,7 @@ export function CommentsSheet({
 
           <div className="min-w-0 flex-1">
             <h2 className="font-display truncate text-[15.5px] font-bold text-ink">
-              {reportTarget ? "Report this comment" : "Comments"}
+              {t(reportTarget ? "comments.reportTitle" : "comments.title")}
             </h2>
             <p className="truncate text-[12.5px] text-ink-muted">
               {reportTarget
@@ -86,7 +88,7 @@ export function CommentsSheet({
 
           <button
             onClick={onClose}
-            aria-label="Close comments"
+            aria-label={t("comments.close")}
             className="flex size-7 shrink-0 items-center justify-center rounded-full text-ink-faint transition-colors hover:bg-subtle hover:text-ink"
           >
             <Icon name="close" size={15} strokeWidth={2} />
@@ -129,10 +131,10 @@ export function CommentsSheet({
                       sort === s ? "bg-primary text-white shadow-primary" : "bg-subtle text-ink-muted hover:text-ink",
                     )}
                   >
-                    {s === "newest" ? "Newest" : "Top fired"}
+                    {t(s === "newest" ? "comments.newest" : "comments.topFired")}
                   </button>
                 ))}
-                <span className="ml-auto text-[11.5px] font-semibold text-ink-faint">
+                <span className="ms-auto text-[11.5px] font-semibold text-ink-faint">
                   {comments.total > 0 && `${list.length} shown`}
                 </span>
               </div>
@@ -140,7 +142,7 @@ export function CommentsSheet({
               <div className="scroll-slim mask-fade-b min-h-0 flex-1 overflow-y-auto px-4 pb-3">
                 {comments.total === 0 && (
                   <p className="py-10 text-center text-[13px] text-ink-faint">
-                    No comments yet — be the first one.
+                    {t("comments.empty")}
                   </p>
                 )}
 
@@ -170,11 +172,11 @@ export function CommentsSheet({
                         className="flex items-center gap-1.5 rounded-full border border-line-strong bg-surface px-3.5 py-2 text-[12.5px] font-bold text-ink-body transition-colors hover:border-primary/30 hover:text-primary-deep"
                       >
                         <Icon name="plus" size={14} strokeWidth={2.2} />
-                        Load {Math.min(comments.hidden, 6)} more comments
+                        {t("comments.loadMore", { n: Math.min(comments.hidden, 6) })}
                       </motion.button>
                     ) : (
                       <p className="py-1 text-[12px] font-semibold text-ink-faint">
-                        That's every comment in this demo build 🎉
+                        {t("comments.end")}
                       </p>
                     )}
                   </div>
@@ -203,6 +205,7 @@ function CommentRow({
   comment: Comment;
   onReport: (target: Target) => void;
 }) {
+  const { t } = usePreferences();
   const { notify } = useApp();
   const comments = useTrackComments(trackId);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -221,16 +224,16 @@ function CommentRow({
           <Icon name="lock" size={14} />
         </span>
         <span className="min-w-0 flex-1 text-[12.5px] text-ink-muted">
-          Hidden — you reported this as <span className="font-bold">{REPORT_LABEL[reported]}</span>.
+          {t("comments.hidden")} <span className="font-bold">{t(`report.label.${reported}`)}</span>.
         </span>
         <button
           onClick={() => {
             comments.undoReport(comment.id);
-            notify("Report withdrawn", "teal");
+            notify(t("comments.reportWithdrawn"), "teal");
           }}
           className="shrink-0 text-[11.5px] font-bold text-primary-deep"
         >
-          Undo
+          {t("comments.undo")}
         </button>
       </div>
     );
@@ -250,13 +253,13 @@ function CommentRow({
           <p className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="min-w-0 truncate text-[13px] font-bold text-ink">{comment.author}</span>
             {comment.verified && (
-              <span className="text-primary" title="Verified account">
+              <span className="text-primary" title={t("comments.verified")}>
                 <Icon name="verified" size={13} strokeWidth={2.2} />
               </span>
             )}
             {comment.fromArtist && (
               <span className="rounded-full bg-primary px-1.5 py-[1px] text-[10.5px] font-extrabold uppercase tracking-wide text-white">
-                Artist
+                {t("comments.artist")}
               </span>
             )}
             <span className="text-[11.5px] font-semibold text-ink-faint">{comment.handle}</span>
@@ -296,10 +299,10 @@ function CommentRow({
               Reply
             </button>
 
-            <div className="relative ml-auto" ref={menuRef}>
+            <div className="relative ms-auto" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                aria-label="More actions"
+                aria-label={t("comments.more")}
                 aria-expanded={menuOpen}
                 className="flex size-7 items-center justify-center rounded-full text-ink-faint transition-colors hover:bg-subtle hover:text-ink"
               >
@@ -313,11 +316,11 @@ function CommentRow({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -4, scale: 0.98 }}
                     transition={{ duration: 0.16, ease: EASE }}
-                    className="absolute right-0 top-8 z-10 w-[178px] overflow-hidden rounded-panel border border-line bg-surface p-1 shadow-float"
+                    className="absolute end-0 top-8 z-10 w-[178px] overflow-hidden rounded-panel border border-line bg-surface p-1 shadow-float"
                   >
                     <MenuItem
                       icon="send"
-                      label="Reply"
+                      label={t("comments.reply")}
                       onClick={() => {
                         setMenuOpen(false);
                         setReplyOpen(true);
@@ -325,15 +328,15 @@ function CommentRow({
                     />
                     <MenuItem
                       icon="arrowUpRight"
-                      label="Copy link"
+                      label={t("comments.copyLink")}
                       onClick={() => {
                         setMenuOpen(false);
-                        notify("Comment link copied", "teal");
+                        notify(t("comments.copied"), "teal");
                       }}
                     />
                     <MenuItem
                       icon="lock"
-                      label="Report comment"
+                      label={t("comments.reportComment")}
                       tone="flame"
                       onClick={() => {
                         setMenuOpen(false);
@@ -343,12 +346,12 @@ function CommentRow({
                     {comment.mine && (
                       <MenuItem
                         icon="close"
-                        label="Delete"
+                        label={t("comments.delete")}
                         tone="flame"
                         onClick={() => {
                           setMenuOpen(false);
                           comments.remove(comment.id);
-                          notify("Comment deleted", "teal");
+                          notify(t("comments.deletedToast"), "teal");
                         }}
                       />
                     )}
@@ -377,7 +380,7 @@ function CommentRow({
                 onClick={() => setShowReplies((v) => !v)}
                 className="text-[11.5px] font-bold text-primary-deep"
               >
-                {showReplies ? "Hide" : "View"} {comment.replies.length}{" "}
+                {showReplies ? "Hide" : t("comments.view")} {comment.replies.length}{" "}
                 {comment.replies.length === 1 ? "reply" : "replies"}
               </button>
             </div>
@@ -392,7 +395,7 @@ function CommentRow({
                 transition={{ duration: 0.22, ease: EASE }}
                 className="overflow-hidden"
               >
-                <div className="mt-2 flex flex-col gap-2.5 border-l-2 border-line pl-3">
+                <div className="mt-2 flex flex-col gap-2.5 border-s-2 border-line ps-3">
                   {comment.replies.map((reply) => (
                     <ReplyRow
                       key={reply.id}
@@ -420,6 +423,7 @@ function ReplyRow({
   reply: Comment;
   onReport: (target: Target) => void;
 }) {
+  const { t } = usePreferences();
   const { notify } = useApp();
   const comments = useTrackComments(trackId);
   const reported = comments.reportOf(reply.id, reply.id);
@@ -427,9 +431,9 @@ function ReplyRow({
   if (reported) {
     return (
       <p className="text-[12px] text-ink-faint">
-        Hidden — you reported this reply.{" "}
+        {t("comments.hidden")} <span className="font-bold">{t(`report.label.${reported}`)}</span>.{" "}
         <button onClick={() => comments.undoReport(reply.id, reply.id)} className="font-bold text-primary-deep">
-          Undo
+          {t("comments.undo")}
         </button>
       </p>
     );
@@ -488,11 +492,12 @@ function MenuItem({
   onClick: () => void;
   tone?: "flame";
 }) {
+  const { t } = usePreferences();
   return (
     <button
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-2 rounded-[10px] px-2 py-1.5 text-left text-[12.5px] font-bold transition-colors",
+        "flex w-full items-center gap-2 rounded-[10px] px-2 py-1.5 text-start text-[12.5px] font-bold transition-colors",
         tone === "flame" ? "text-flame-deep hover:bg-flame-soft" : "text-ink-body hover:bg-subtle",
       )}
     >
@@ -515,6 +520,7 @@ function ReportBody({
   onSubmit: () => void;
   onCancel: () => void;
 }) {
+  const { t } = usePreferences();
   return (
     <motion.div
       key="report"
@@ -535,7 +541,7 @@ function ReportBody({
               key={r.id}
               onClick={() => onPick(r.id)}
               className={cn(
-                "flex items-start gap-2.5 rounded-panel border p-2.5 text-left transition-colors",
+                "flex items-start gap-2.5 rounded-panel border p-2.5 text-start transition-colors",
                 reason === r.id
                   ? "border-primary/40 bg-primary-faint"
                   : "border-line hover:border-primary/25 hover:bg-subtle",
@@ -550,8 +556,8 @@ function ReportBody({
                 <Icon name="check" size={10} strokeWidth={3} />
               </span>
               <span className="min-w-0">
-                <span className="block text-[13px] font-bold text-ink">{r.label}</span>
-                <span className="mt-0.5 block text-[12px] leading-relaxed text-ink-muted">{r.hint}</span>
+                <span className="block text-[13px] font-bold text-ink">{t(`report.label.${r.id}`)}</span>
+                <span className="mt-0.5 block text-[12px] leading-relaxed text-ink-muted">{t(`report.hint.${r.id}`)}</span>
               </span>
             </button>
           ))}
@@ -571,13 +577,13 @@ function ReportBody({
           )}
         >
           <Icon name="lock" size={14} strokeWidth={2.1} />
-          Submit report
+          {t("comments.submitReport")}
         </motion.button>
         <button
           onClick={onCancel}
           className="rounded-[14px] px-3 py-2.5 text-[13px] font-bold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
         >
-          Cancel
+          {t("comments.cancel")}
         </button>
       </footer>
     </motion.div>

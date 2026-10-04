@@ -45,7 +45,7 @@ export function Avatar({ src, seed = 0, size = 36, className, ring, badge }: Ava
   return (
     <span
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center rounded-full bg-white",
+        "relative inline-flex shrink-0 items-center justify-center rounded-full bg-surface",
         ring && "ring-2 ring-primary ring-offset-2 ring-offset-white",
         className,
       )}
@@ -69,7 +69,7 @@ export function Avatar({ src, seed = 0, size = 36, className, ring, badge }: Ava
           title={badge.label}
           aria-label={badge.label}
           className={cn(
-            "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full ring-2 ring-white",
+            "absolute -bottom-0.5 -end-0.5 flex items-center justify-center rounded-full ring-2 ring-surface",
             BADGE_TONE[badge.tone],
           )}
           style={{ width: Math.max(14, size * 0.42), height: Math.max(14, size * 0.42) }}
@@ -164,7 +164,7 @@ export function AvatarStack({ seeds, size = 26, more = 0, className }: StackProp
         {seeds.map((s, i) => (
           <span
             key={`${s}-${i}`}
-            className="rounded-full ring-2 ring-white transition-transform duration-300 ease-out hover:-translate-y-0.5"
+            className="rounded-full ring-2 ring-surface transition-transform duration-300 ease-out hover:-translate-y-0.5"
           >
             <Avatar seed={s} size={size} />
           </span>
@@ -172,7 +172,7 @@ export function AvatarStack({ seeds, size = 26, more = 0, className }: StackProp
       </div>
       {more > 0 && (
         <span
-          className="-ml-2 inline-flex items-center justify-center rounded-full bg-primary-soft font-bold text-primary-deep ring-2 ring-white"
+          className="-ms-2 inline-flex items-center justify-center rounded-full bg-primary-soft font-bold text-primary-deep ring-2 ring-surface"
           style={{ width: size, height: size, fontSize: Math.max(10, size * 0.42) }}
         >
           +{more}

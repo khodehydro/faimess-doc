@@ -4,6 +4,7 @@ import { navItems } from "../data/navigation";
 import { useApp } from "../app/AppContext";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
+import { useT } from "../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Card 2 — main menu.
@@ -12,10 +13,11 @@ import { EASE, spring } from "../lib/motion";
  * ------------------------------------------------------------------ */
 
 export function NavCard() {
+  const t = useT();
   const { route, navigate } = useApp();
 
   return (
-    <nav className="flex h-[62px] shrink-0 items-center gap-0.5 rounded-full bg-surface p-2 shadow-card ring-1 ring-black/[0.03]">
+    <nav className="flex h-[62px] shrink-0 items-center gap-0.5 rounded-full bg-surface p-2 shadow-card ring-1 ring-black/[0.03] dark:ring-white/[0.05]">
       {navItems.map((item, i) => {
         const isActive = route === item.id;
         return (
@@ -41,7 +43,7 @@ export function NavCard() {
             )}
             <span className="relative flex items-center gap-2">
               <Icon name={item.icon} size={16} strokeWidth={isActive ? 1.9 : 1.6} />
-              {item.label}
+              {t(`nav.${item.id}`)}
             </span>
           </motion.button>
         );

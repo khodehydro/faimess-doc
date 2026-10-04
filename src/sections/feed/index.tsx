@@ -8,6 +8,7 @@ import { NewsShelf } from "./NewsShelf";
 import { NewAlbums } from "./NewAlbums";
 import { ActiveUsers } from "./ActiveUsers";
 import { cn } from "../../lib/cn";
+import { useT } from "../../app/PreferencesContext";
 import { spring } from "../../lib/motion";
 
 /* ------------------------------------------------------------------ *
@@ -24,24 +25,26 @@ import { spring } from "../../lib/motion";
 
 type ShelfEntry = {
   id: string;
+  /** i18n key — the chip strip reads the label from the table */
   label: string;
   icon: IconName;
   Component: ComponentType;
 };
 
 export const FEED_SHELVES: ShelfEntry[] = [
-  { id: "feed-artists", label: "Followed", icon: "users", Component: FollowedArtists },
-  { id: "feed-newest", label: "New songs", icon: "music", Component: NewestTracks },
-  { id: "feed-trending", label: "Trending", icon: "flame", Component: TrendingTracks },
-  { id: "feed-news", label: "News", icon: "news", Component: NewsShelf },
-  { id: "feed-albums", label: "Albums", icon: "disc", Component: NewAlbums },
-  { id: "feed-users", label: "Fans", icon: "activity", Component: ActiveUsers },
+  { id: "feed-artists", label: "feed.followed", icon: "users", Component: FollowedArtists },
+  { id: "feed-newest", label: "feed.newSongs", icon: "music", Component: NewestTracks },
+  { id: "feed-trending", label: "feed.trending", icon: "flame", Component: TrendingTracks },
+  { id: "feed-news", label: "feed.news", icon: "news", Component: NewsShelf },
+  { id: "feed-albums", label: "feed.albums", icon: "disc", Component: NewAlbums },
+  { id: "feed-users", label: "feed.fans", icon: "activity", Component: ActiveUsers },
 ];
 
 /** height of the chip strip — shelf headers stick right under it */
 export const CHIP_STRIP_HEIGHT = 48;
 
 export function FeedSection() {
+  const t = useT();
   const rootRef = useRef<HTMLElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const [active, setActive] = useState(FEED_SHELVES[0].id);
@@ -102,15 +105,15 @@ export function FeedSection() {
               )}
               <span className="relative flex items-center gap-1.5">
                 <Icon name={shelf.icon} size={13.5} strokeWidth={isActive ? 2 : 1.7} />
-                {shelf.label}
+                {t(shelf.label)}
               </span>
             </button>
           );
         })}
 
-        <span className="ml-auto flex items-center gap-1.5 text-[12px] font-medium text-ink-faint">
+        <span className="ms-auto flex items-center gap-1.5 text-[12px] font-medium text-ink-faint">
           <Icon name="waveform" size={14} />
-          scroll for more
+          {t("feed.scrollMore")}
         </span>
       </div>
 

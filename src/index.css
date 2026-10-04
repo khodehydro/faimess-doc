@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* `dark:` follows the preference stored on <html data-theme="dark"> */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* ------------------------------------------------------------------ *
  *  Pretendard — the typeface Weverse uses across its whole product.
  *  A Korean neo-grotesque (built on Inter + Source Han Sans); the design
@@ -208,6 +211,56 @@
   --shadow-primary: 0 8px 18px -6px rgba(130, 103, 240, 0.5);
 }
 
+/* ------------------------------------------------------------------ *
+ *  Dark mode — the same token names, re-pointed.
+ *
+ *  Nothing else in the app knows about the theme: every card is painted
+ *  with bg-surface / text-ink / border-line, so re-declaring the tokens
+ *  under [data-theme="dark"] flips the whole product at once.
+ * ------------------------------------------------------------------ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-canvas: #0d0e12;
+  --color-canvas-deep: #08090c;
+  /* cards are lifted off the canvas, the parent card sits between them */
+  --color-surface: #1a1c23;
+  --color-shell: #13151b;
+  --color-shell-deep: #0f1116;
+  --color-subtle: #23262e;
+  --color-muted: #24272f;
+  --color-line: #2b2f38;
+  --color-line-strong: #3a3f4a;
+
+  --color-primary: #8b73f5;
+  --color-primary-deep: #ab99ff;
+  --color-primary-soft: #2a2440;
+  --color-primary-faint: #1f1c30;
+
+  --color-teal: #7cc7ba;
+  --color-teal-deep: #93d5c9;
+  --color-teal-soft: #1c2b29;
+
+  --color-mint: #5cc182;
+  --color-mint-soft: #16281d;
+
+  --color-flame: #f2743d;
+  --color-flame-deep: #ff9560;
+  --color-flame-soft: #2d1c13;
+
+  --color-ink: #f1f2f7;
+  --color-ink-body: #cfd3dd;
+  --color-ink-muted: #98a0ae;
+  --color-ink-faint: #6d7482;
+
+  /* elevation reads as darkness here, not as grey */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 12px 26px -12px rgba(0, 0, 0, 0.62);
+  --shadow-float: 0 24px 48px -16px rgba(0, 0, 0, 0.72);
+  --shadow-frame: 0 36px 80px -26px rgba(0, 0, 0, 0.72);
+}
+
 @layer base {
   html,
   body,
@@ -223,6 +276,8 @@
     margin: 0;
     background-color: var(--color-canvas);
     color: var(--color-ink);
+    /* theme flips shouldn't feel like a camera flash */
+    transition: background-color 240ms ease, color 240ms ease;
     font-family: var(--font-sans);
     font-synthesis-weight: none;
     -webkit-font-smoothing: antialiased;
@@ -255,7 +310,7 @@
  * ------------------------------------------------------------------ */
 @utility scroll-slim {
   scrollbar-width: thin;
-  scrollbar-color: #dadee4 transparent;
+  scrollbar-color: var(--color-line-strong) transparent;
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -265,11 +320,11 @@
     background: transparent;
   }
   &::-webkit-scrollbar-thumb {
-    background: #dadee4;
+    background: var(--color-line-strong);
     border-radius: 999px;
   }
   &::-webkit-scrollbar-thumb:hover {
-    background: #c9ced6;
+    background: var(--color-ink-faint);
   }
 }
 
@@ -320,12 +375,28 @@
   }
 }
 
-/* the grey studio the app frame floats on */
+/* the studio the app frame floats on — light grey by day, near-black at night */
 .studio-backdrop {
   background:
     radial-gradient(120% 90% at 50% -10%, #f6f6f8 0%, rgba(246, 246, 248, 0) 55%),
     radial-gradient(80% 60% at 88% 108%, #e4e5e9 0%, rgba(228, 229, 233, 0) 60%),
     linear-gradient(180deg, #eaeaec 0%, #e5e6ea 100%);
+}
+
+/* Persian switches the whole app to Vazirmatn: the self-hosted Pretendard
+   subset carries Latin + Hangul only, so Arabic script would otherwise fall
+   through to whatever the OS picks. Overriding the two family tokens here
+   re-points every `font-sans` / `font-display` utility at once. */
+html:lang(fa) {
+  --font-sans: var(--font-fa);
+  --font-display: var(--font-fa);
+}
+
+[data-theme="dark"] .studio-backdrop {
+  background:
+    radial-gradient(120% 90% at 50% -10%, #1c1e26 0%, rgba(28, 30, 38, 0) 55%),
+    radial-gradient(80% 60% at 88% 108%, #14161c 0%, rgba(20, 22, 28, 0) 60%),
+    linear-gradient(180deg, var(--color-canvas) 0%, var(--color-canvas-deep) 100%);
 }
 
 .studio-backdrop::before {
@@ -337,6 +408,11 @@
   background-image: radial-gradient(rgba(34, 37, 46, 0.045) 1px, transparent 1px);
   background-size: 22px 22px;
   mask-image: radial-gradient(120% 80% at 50% 40%, #000 20%, transparent 78%);
+}
+
+[data-theme="dark"] .studio-backdrop::before {
+  opacity: 0.35;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
 }
 
 /* ------------------------------------------------------------------ *

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { SurfaceCard } from "../ui/primitives";
 import { SectionSlot } from "../sections/registry";
 import { cn } from "../lib/cn";
+import { usePreferences } from "../app/PreferencesContext";
 
 /**
  * Home — two of the five cards, split 75 / 25.
@@ -20,6 +21,7 @@ import { cn } from "../lib/cn";
  * cards stack full-width and the document scrolls instead.
  */
 export function HomePage() {
+  const { dir } = usePreferences();
   /* the player's expand / collapse button */
   const [wide, setWide] = useState(false);
 
@@ -31,7 +33,7 @@ export function HomePage() {
       )}
     >
       {/* ── left content card ───────────────────────────────────────── */}
-      <SurfaceCard className="home-split-left lg:min-h-0">
+      <SurfaceCard dir={dir} className="home-split-left lg:min-h-0">
         <div className="scroll-slim flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
           <div className="shrink-0 p-3.5">
             <div className="h-[300px] sm:h-[330px] lg:h-[340px]">
@@ -49,7 +51,7 @@ export function HomePage() {
       </SurfaceCard>
 
       {/* ── right content card ──────────────────────────────────────── */}
-      <SurfaceCard className="home-split-right lg:min-h-0">
+      <SurfaceCard dir={dir} className="home-split-right lg:min-h-0">
         <SectionSlot
           id="player"
           params={{ expanded: wide, onToggleExpand: () => setWide((w) => !w) }}

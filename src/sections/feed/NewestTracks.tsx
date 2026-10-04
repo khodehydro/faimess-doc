@@ -10,6 +10,7 @@ import { usePlayer } from "../../app/PlayerContext";
 import { trackById } from "../../data/player";
 import { cn } from "../../lib/cn";
 import { spring } from "../../lib/motion";
+import { useT } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 2 — the newest songs, as a two-column list so the shelf stays
@@ -23,6 +24,7 @@ function TrackRow({
   track: (typeof newestTracks)[number];
   index: number;
 }) {
+  const t = useT();
   const { notify } = useApp();
   const player = usePlayer();
   /* this row is the one the player card is holding */
@@ -48,10 +50,10 @@ function TrackRow({
             if (!playable) return;
             if (mine) {
               player.toggle();
-              notify(playing ? `Paused “${track.title}”` : `Playing “${track.title}”`);
+              notify(playing ? t("toast.paused", { title: track.title }) : t("toast.playingCard", { title: track.title }));
             } else {
               player.play(playable);
-              notify(`Playing “${track.title}” — it's in the player card`);
+              notify(t("toast.playingCard", { title: track.title }));
             }
           }}
           className={cn(
@@ -68,7 +70,7 @@ function TrackRow({
           <span className="truncate text-[14.5px] font-bold text-ink">{track.title}</span>
           {track.isNew && (
             <span className="shrink-0 rounded-full bg-primary px-1.5 py-[1px] text-[12px] font-bold uppercase tracking-wide text-white">
-              New
+              {t("shelf.new")}
             </span>
           )}
         </span>
@@ -85,9 +87,9 @@ function TrackRow({
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         transition={spring}
-        onClick={() => notify(`Added “${track.title}” to your queue`, "mint")}
+        onClick={() => notify(t("toast.queued", { title: track.title }), "mint")}
         aria-label={`Add ${track.title} to library`}
-        className="flex size-7 shrink-0 items-center justify-center rounded-full text-ink-faint opacity-0 transition-all duration-300 hover:bg-white hover:text-primary group-hover:opacity-100"
+        className="flex size-7 shrink-0 items-center justify-center rounded-full text-ink-faint opacity-0 transition-all duration-300 hover:bg-surface hover:text-primary group-hover:opacity-100"
       >
         <Icon name="plus" size={15.5} strokeWidth={2} />
       </motion.button>
@@ -96,17 +98,18 @@ function TrackRow({
 }
 
 export function NewestTracks() {
+  const t = useT();
   const { notify } = useApp();
 
   return (
     <Shelf
       id="feed-newest"
       icon="music"
-      title="Newest songs"
-      hint="updated hourly"
+      title={t("shelf.newestSongs")}
+      hint={t("shelf.hintHourly")}
       action={
-        <PillButton tone="soft" icon="play" onClick={() => notify("Playing the new-release mix")}>
-          Play all
+        <PillButton tone="soft" icon="play" onClick={() => notify(t("toast.mix"))}>
+          {t("shelf.playAll")}
         </PillButton>
       }
     >

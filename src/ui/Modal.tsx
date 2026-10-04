@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "./Icon";
+import { useT } from "../app/PreferencesContext";
 import { cn } from "../lib/cn";
 import { EASE } from "../lib/motion";
 
@@ -28,6 +29,7 @@ export function Modal({
   /** drop the default padding + close button — the caller brings its own chrome */
   bare?: boolean;
 }) {
+  const t = useT();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -72,8 +74,8 @@ export function Modal({
             {!bare && (
               <button
                 onClick={onClose}
-                aria-label="Close"
-                className="absolute right-3.5 top-3.5 flex size-7 items-center justify-center rounded-full text-ink-faint transition-colors hover:bg-subtle hover:text-ink"
+                aria-label={t("ui.close")}
+                className="absolute end-3.5 top-3.5 flex size-7 items-center justify-center rounded-full text-ink-faint transition-colors hover:bg-subtle hover:text-ink"
               >
                 <Icon name="close" size={15} strokeWidth={2} />
               </button>

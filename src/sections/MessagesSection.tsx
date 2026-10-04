@@ -5,23 +5,26 @@ import { Avatar } from "../ui/Avatar";
 import { Thumb } from "../ui/Scenes";
 import { cannedReplies, conversations, type Conversation, type Message } from "../data/messages";
 import { useApp } from "../app/AppContext";
+import { usePreferences } from "../app/PreferencesContext";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
 
 const uid = () => Math.random().toString(36).slice(2, 9);
-const clock = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+/** the stamp reads in the interface language, not the browser's */
+const clock = (locale: string) =>
+  new Date().toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hour12: false });
 
 /* ---------------------------- list column ---------------------------- */
 
 function ConversationRow({ convo, active, onSelect }: { convo: Conversation; active: boolean; onSelect: () => void }) {
   return (
-    <button onClick={onSelect} className="relative flex w-full items-center gap-2.5 px-2.5 py-2.5 text-left">
+    <button onClick={onSelect} className="relative flex w-full items-center gap-2.5 px-2.5 py-2.5 text-start">
       {active && (
         <motion.span layoutId="convo-active" transition={spring} className="absolute inset-x-1 inset-y-0.5 rounded-[14px] bg-subtle" />
       )}
       <span className="relative">
         <Avatar src={convo.photo} seed={convo.seed} size={34} />
-        {convo.online && <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-mint ring-2 ring-white" />}
+        {convo.online && <span className="absolute -bottom-0.5 -end-0.5 size-3 rounded-full bg-mint ring-2 ring-surface" />}
       </span>
       <span className="relative min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
@@ -56,13 +59,14 @@ function InviteCard({
   message: Extract<Message, { kind: "invite" }>;
   onRespond: (status: "accepted" | "declined") => void;
 }) {
+  const { t } = usePreferences();
   return (
     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.96, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.45, ease: EASE }}
-      className="w-full max-w-[212px] rounded-[16px] bg-white p-2.5 shadow-card ring-1 ring-line/70"
+      className="w-full max-w-[212px] rounded-[16px] bg-surface p-2.5 shadow-card ring-1 ring-line/70"
     >
       <div className="flex items-center justify-between">
         <p className="text-[13.5px] font-bold text-ink">{message.title}</p>
@@ -76,7 +80,7 @@ function InviteCard({
         </div>
         <div className="min-w-0">
           <p className="text-[12px] font-semibold leading-snug text-ink-body">{message.when}</p>
-          <p className="mt-0.5 text-[12px] text-ink-muted">4 friends going</p>
+          <p className="mt-0.5 text-[12px] text-ink-muted">{t("msg.friendsGoing", { n: 4 })}</p>
         </div>
       </div>
 
@@ -89,7 +93,7 @@ function InviteCard({
               onClick={() => onRespond("declined")}
               className="flex-1 rounded-full border border-line bg-surface py-1.5 text-[13px] font-semibold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
             >
-              Reject
+              {t("msg.reject")}
             </motion.button>
             <motion.button
               whileHover={{ y: -1, scale: 1.02 }}
@@ -97,7 +101,7 @@ function InviteCard({
               onClick={() => onRespond("accepted")}
               className="flex-1 rounded-full bg-primary py-1.5 text-[13px] font-bold text-white shadow-primary"
             >
-              Accept
+              {t("msg.accept")}
             </motion.button>
           </motion.div>
         ) : (
@@ -111,7 +115,7 @@ function InviteCard({
             )}
           >
             <Icon name={message.status === "accepted" ? "check" : "close"} size={13.5} strokeWidth={2.6} />
-            {message.status === "accepted" ? "You're going 🎉" : "Declined"}
+            {message.status === "accepted" ? t("msg.going") : t("msg.declined")}
           </motion.div>
         )}
       </AnimatePresence>
@@ -138,7 +142,7 @@ function Bubble({
 
   if (message.kind === "system") {
     return (
-      <motion.p layout {...enter} className="mx-auto w-fit rounded-full bg-white/75 px-3 py-1 text-[12.5px] text-ink-muted">
+      <motion.p layout {...enter} className="mx-auto w-fit rounded-full bg-surface/75 px-3 py-1 text-[12.5px] text-ink-muted">
         {message.text}
       </motion.p>
     );
@@ -158,7 +162,7 @@ function Bubble({
       <div
         className={cn(
           "max-w-[178px] rounded-[16px] px-3 py-2 text-[13.5px] leading-snug shadow-xs",
-          mine ? "rounded-br-md bg-primary-soft text-ink" : "rounded-bl-md bg-white text-ink-body",
+          mine ? "rounded-ee-md bg-primary-soft text-ink" : "rounded-es-md bg-surface text-ink-body",
         )}
       >
         {message.text}
@@ -172,6 +176,7 @@ function Bubble({
 
 export function MessagesSection() {
   const { notify } = useApp();
+  const { t, locale, dir } = usePreferences();
   const [convos, setConvos] = useState<Conversation[]>(conversations);
   const [activeId, setActiveId] = useState(conversations[0].id);
   const [draft, setDraft] = useState("");
@@ -197,7 +202,7 @@ export function MessagesSection() {
     const text = draft.trim();
     if (!text) return;
     const id = activeId;
-    patch(id, (c) => ({ ...c, messages: [...c.messages, { id: uid(), kind: "text", from: "me", text, at: clock() }] }));
+    patch(id, (c) => ({ ...c, messages: [...c.messages, { id: uid(), kind: "text", from: "me", text, at: clock(locale) }] }));
     setDraft("");
     setTyping(true);
     window.setTimeout(() => {
@@ -206,7 +211,7 @@ export function MessagesSection() {
         ...c,
         messages: [
           ...c.messages,
-          { id: uid(), kind: "text", from: "them", text: cannedReplies[Math.floor(Math.random() * cannedReplies.length)], at: clock() },
+          { id: uid(), kind: "text", from: "them", text: cannedReplies[Math.floor(Math.random() * cannedReplies.length)], at: clock(locale) },
         ],
       }));
     }, 1500);
@@ -221,20 +226,23 @@ export function MessagesSection() {
         {
           id: uid(),
           kind: "system",
-          text: status === "accepted" ? `You joined ${name}'s plan` : `You passed on ${name}'s plan`,
+          text: t(status === "accepted" ? "msg.joined" : "msg.passed", { name }),
         },
       ],
     }));
     notify(
-      status === "accepted" ? `Invite accepted · ${name} was notified` : "Invite declined",
+      t(status === "accepted" ? "msg.acceptedToast" : "msg.declinedToast", { name }),
       status === "accepted" ? "mint" : "primary",
     );
   };
 
   return (
-    <div className="grid h-[480px] w-full min-h-0 grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] lg:h-auto lg:flex-1">
+    <div
+      dir={dir}
+      className="grid h-[480px] w-full min-h-0 grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] lg:h-auto lg:flex-1"
+    >
       {/* conversation list */}
-      <div className="flex min-w-0 flex-col border-r border-line">
+      <div className="flex min-w-0 flex-col border-e border-line">
         <div className="scroll-slim min-h-0 flex-1 overflow-y-auto pb-2 pt-2">
           {convos.map((c) => (
             <ConversationRow key={c.id} convo={c} active={c.id === activeId} onSelect={() => openConversation(c.id)} />
@@ -257,7 +265,7 @@ export function MessagesSection() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className="flex w-fit items-center gap-1 rounded-[14px] rounded-bl-md bg-white px-3 py-2.5 shadow-xs"
+                className="flex w-fit items-center gap-1 rounded-[14px] rounded-es-md bg-surface px-3 py-2.5 shadow-xs"
               >
                 {[0, 1, 2].map((d) => (
                   <motion.span
@@ -279,11 +287,11 @@ export function MessagesSection() {
           }}
           className="flex items-center gap-2 border-t border-line/70 px-2.5 py-2.5"
         >
-          <div className="flex flex-1 items-center rounded-full border border-line bg-white px-3.5 py-1.5 transition-colors focus-within:border-primary/40">
+          <div className="flex flex-1 items-center rounded-full border border-line bg-surface px-3.5 py-1.5 transition-colors focus-within:border-primary/40">
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Enter Text..."
+              placeholder={t("msg.enterText")}
               className="w-full bg-transparent text-[13.5px] text-ink placeholder:text-ink-faint focus:outline-none"
             />
           </div>
@@ -292,7 +300,7 @@ export function MessagesSection() {
             whileHover={{ y: -2, scale: 1.05 }}
             whileTap={{ scale: 0.93 }}
             transition={spring}
-            aria-label="Send message"
+            aria-label={t("msg.send")}
             className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-primary"
           >
             <Icon name="send" size={16.5} strokeWidth={1.9} />

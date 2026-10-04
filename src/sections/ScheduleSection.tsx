@@ -4,34 +4,41 @@ import { Icon } from "../ui/Icon";
 import { AvatarStack } from "../ui/Avatar";
 import { Meta } from "../ui/primitives";
 import { Thumb } from "../ui/Scenes";
-import { featuredEvent, hourRows, scheduleEvents, weekDays, type ScheduleEvent } from "../data/schedule";
+import {
+  GRID_MONTH,
+  featuredEvent,
+  hourRows,
+  scheduleEvents,
+  weekDays,
+  type ScheduleEvent,
+} from "../data/schedule";
 import { useApp } from "../app/AppContext";
+import { usePreferences } from "../app/PreferencesContext";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
 
 const GRID_COLS = "56px repeat(5, minmax(0, 1fr))";
 const ROW = 56;
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const dayOf = (date: number) => new Date(GRID_MONTH.year, GRID_MONTH.month, date);
+const baseMonth = dayOf(1);
 
 /* ------------------------------- chips ------------------------------- */
 
 function EventChip({ event, onOpen }: { event: ScheduleEvent; onOpen: (title: string) => void }) {
+  const { t } = usePreferences();
   if (event.kind === "locked") {
     return (
       <motion.button
         whileHover={{ y: -2 }}
         transition={spring}
         onClick={() => onOpen(event.title)}
-        className="flex h-full w-full flex-col justify-center rounded-[10px] bg-teal-soft px-2.5 py-1.5 text-left text-teal-deep"
+        className="flex h-full w-full flex-col justify-center rounded-[10px] bg-teal-soft px-2.5 py-1.5 text-start text-teal-deep"
       >
         <span className="flex items-center gap-1.5 text-[13.5px] font-bold leading-tight">
           <Icon name="lock" size={12.5} strokeWidth={2} />
           {event.title}
         </span>
-        <span className="mt-0.5 text-[12px] font-medium opacity-70">Private · 10:00 AM</span>
+        <span className="mt-0.5 text-[12px] font-medium opacity-70">{t("sched.private")} · 10:00 AM</span>
       </motion.button>
     );
   }
@@ -42,7 +49,7 @@ function EventChip({ event, onOpen }: { event: ScheduleEvent; onOpen: (title: st
         whileHover={{ y: -3, scale: 1.005 }}
         transition={spring}
         onClick={() => onOpen(event.title)}
-        className="flex h-full w-full items-center gap-2.5 rounded-[12px] bg-white p-1.5 pr-2.5 text-left shadow-card ring-1 ring-line/70"
+        className="flex h-full w-full items-center gap-2.5 rounded-[12px] bg-surface p-1.5 pe-2.5 text-start shadow-card ring-1 ring-line/70"
       >
         <span className="block size-[36px] shrink-0 overflow-hidden rounded-[10px]">
           <Thumb scene={event.scene ?? "forest"} className="h-full w-full" />
@@ -63,7 +70,7 @@ function EventChip({ event, onOpen }: { event: ScheduleEvent; onOpen: (title: st
       whileHover={{ y: -2 }}
       transition={spring}
       onClick={() => onOpen(event.title)}
-      className="flex h-full w-full items-center gap-1.5 rounded-[10px] border border-dashed border-line-strong bg-white/70 px-2.5 py-1.5 text-left text-ink-muted backdrop-blur-sm"
+      className="flex h-full w-full items-center gap-1.5 rounded-[10px] border border-dashed border-line-strong bg-surface/70 px-2.5 py-1.5 text-start text-ink-muted backdrop-blur-sm"
     >
       <Icon name="clock" size={12.5} strokeWidth={2} />
       <span className="text-[13.5px] font-semibold leading-tight">{event.title}</span>
@@ -75,22 +82,33 @@ function EventChip({ event, onOpen }: { event: ScheduleEvent; onOpen: (title: st
 
 export function ScheduleSection() {
   const { notify } = useApp();
+  const { t, dir, locale } = usePreferences();
+  /** weekday / month / hour labels follow the interface language — Persian
+   *  also gets the Persian calendar straight from Intl */
+  const fmt = (options: Intl.DateTimeFormatOptions, date: Date) =>
+    new Intl.DateTimeFormat(locale, options).format(date);
+  const weekdayShort = (i: number) => fmt({ weekday: "short" }, dayOf(weekDays[i].date));
+  const hourLabel = (hour: number) =>
+    fmt({ hour: "numeric", hour12: locale.startsWith("en") }, dayOf(11));
   const panelRef = useRef<HTMLElement>(null);
   const [activeDay, setActiveDay] = useState(1);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [monthOffset, setMonthOffset] = useState(0);
 
   const monthLabel = useMemo(() => {
-    const base = new Date(2023, 11, 1);
-    base.setMonth(base.getMonth() + monthOffset);
-    return `${MONTHS[base.getMonth()]} ${base.getFullYear()}`;
-  }, [monthOffset]);
+    const base = new Date(GRID_MONTH.year, GRID_MONTH.month + monthOffset, 1);
+    return new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(base);
+  }, [monthOffset, locale]);
 
   return (
-    <section ref={panelRef} className="relative h-full w-full overflow-hidden rounded-card bg-surface p-5 shadow-card">
+    <section
+      ref={panelRef}
+      dir={dir}
+      className="relative h-full w-full overflow-hidden rounded-card bg-surface p-5 shadow-card"
+    >
       {/* header */}
       <div className="flex items-start justify-between gap-3">
-        <h2 className="font-display text-[24px] font-bold leading-tight tracking-[-0.015em] text-ink">Upcoming Schedule</h2>
+        <h2 className="font-display text-[24px] font-bold leading-tight tracking-[-0.015em] text-ink">{t("sched.title")}</h2>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-0.5 rounded-full border border-line bg-surface p-1">
@@ -98,7 +116,7 @@ export function ScheduleSection() {
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.92 }}
               onClick={() => setMonthOffset((m) => m - 1)}
-              aria-label="Previous month"
+              aria-label={t("sched.prevMonth")}
               className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
             >
               <Icon name="chevronLeft" size={14.5} strokeWidth={2.1} />
@@ -120,7 +138,7 @@ export function ScheduleSection() {
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.92 }}
               onClick={() => setMonthOffset((m) => m + 1)}
-              aria-label="Next month"
+              aria-label={t("sched.nextMonth")}
               className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
             >
               <Icon name="chevronRight" size={14.5} strokeWidth={2.1} />
@@ -132,14 +150,14 @@ export function ScheduleSection() {
               <button
                 key={v}
                 onClick={() => setView(v)}
-                aria-label={v === "grid" ? "Time grid" : "List"}
+                aria-label={v === "grid" ? t("sched.grid") : t("sched.list")}
                 className={cn(
                   "relative flex size-6 items-center justify-center rounded-full transition-colors",
                   view === v ? "text-ink" : "text-ink-faint hover:text-ink-muted",
                 )}
               >
                 {view === v && (
-                  <motion.span layoutId="view-pill" transition={spring} className="absolute inset-0 rounded-full bg-white shadow-xs" />
+                  <motion.span layoutId="view-pill" transition={spring} className="absolute inset-0 rounded-full bg-surface shadow-xs" />
                 )}
                 <span className="relative">
                   <Icon name={v} size={14.5} strokeWidth={1.9} />
@@ -152,13 +170,19 @@ export function ScheduleSection() {
 
       {/* day headers */}
       <div className="mt-4 grid" style={{ gridTemplateColumns: GRID_COLS }}>
-        <span className="pt-3 text-[12px] font-medium uppercase tracking-wide text-ink-faint">Dec</span>
+        <span className="pt-3 text-[12px] font-medium uppercase tracking-wide text-ink-faint">
+          {fmt({ month: "short" }, baseMonth)}
+        </span>
         {weekDays.map((d, i) => {
           const isActive = i === activeDay;
           return (
-            <button key={d.short} onClick={() => setActiveDay(i)} className="group flex flex-col items-center gap-0.5 pb-2">
+            <button
+              key={d.date}
+              onClick={() => setActiveDay(i)}
+              className="group flex flex-col items-center gap-0.5 pb-2"
+            >
               <span className={cn("text-[13px] font-medium", d.dimmed && !isActive ? "text-ink-faint" : "text-ink-muted")}>
-                {d.short}
+                {weekdayShort(i)}
               </span>
               <span
                 className={cn(
@@ -205,9 +229,9 @@ export function ScheduleSection() {
                   className="relative grid border-t border-line/80"
                   style={{ gridTemplateColumns: GRID_COLS, height: ROW }}
                 >
-                  <span className="pt-2 text-[12.5px] font-medium text-ink-faint">{hour}</span>
+                  <span className="pt-2 text-[12.5px] font-medium text-ink-faint">{hourLabel(hour)}</span>
                   {weekDays.map((d) => (
-                    <span key={d.short} className="h-full border-l border-line/60" />
+                    <span key={d.date} className="h-full border-s border-line/60" />
                   ))}
                 </div>
               ))}
@@ -229,7 +253,7 @@ export function ScheduleSection() {
                     style={{ gridColumn: ev.dayIndex + 2, gridRow: ev.row + 1 }}
                     className="pointer-events-auto m-1"
                   >
-                    <EventChip event={ev} onOpen={(t) => notify(`Opening “${t}”`)} />
+                    <EventChip event={ev} onOpen={(title) => notify(t("toast.opening", { name: title }))} />
                   </motion.div>
                 ))}
               </div>
@@ -252,15 +276,16 @@ export function ScheduleSection() {
                 transition={{ delay: i * 0.06, duration: 0.35 }}
                 className="flex items-center gap-3 rounded-[14px] border border-line bg-subtle px-3 py-3 transition-colors hover:bg-muted"
               >
-                <span className="flex size-9 items-center justify-center rounded-[11px] bg-white text-teal-deep shadow-xs">
+                <span className="flex size-9 items-center justify-center rounded-[11px] bg-surface text-teal-deep shadow-xs">
                   <Icon name={ev.kind === "locked" ? "lock" : ev.kind === "rich" ? "compass" : "clock"} size={16.5} />
                 </span>
                 <span className="flex-1">
                   <span className="block text-[14.5px] font-bold text-ink">{ev.title}</span>
                   <Meta icon="calendar" iconSize={11} className="text-[13px]">
-                    {`${weekDays[ev.dayIndex].short} ${weekDays[ev.dayIndex].date} Dec${
-                      ev.meta?.includes("·") ? ` · ${ev.meta.split("·")[1]!.trim()}` : ""
-                    }`}
+                    {`${weekdayShort(ev.dayIndex)} ${weekDays[ev.dayIndex].date} ${fmt(
+                      { month: "short" },
+                      baseMonth,
+                    )}${ev.meta?.includes("·") ? ` · ${ev.meta.split("·")[1]!.trim()}` : ""}`}
                   </Meta>
                 </span>
                 <AvatarStack seeds={[1, 3]} more={ev.guests ?? 1} size={20} />
@@ -281,7 +306,7 @@ export function ScheduleSection() {
         transition={{ duration: 0.7, delay: 0.7, ease: EASE }}
         whileDrag={{ scale: 1.03, boxShadow: "0 32px 60px -16px rgba(24,28,40,.32)", cursor: "grabbing" }}
         whileHover={{ y: -4 }}
-        className="absolute bottom-7 left-6 z-20 w-[242px] cursor-grab touch-none rounded-[18px] bg-white p-2 shadow-float ring-1 ring-line/60"
+        className="absolute bottom-7 start-6 z-20 w-[242px] cursor-grab touch-none rounded-[18px] bg-surface p-2 shadow-float ring-1 ring-line/60"
       >
         <div className="h-[84px] overflow-hidden rounded-[12px]">
           <Thumb scene={featuredEvent.scene} className="h-full w-full" />
@@ -306,8 +331,8 @@ export function ScheduleSection() {
             <motion.button
               whileHover={{ x: 2 }}
               whileTap={{ scale: 0.94 }}
-              onClick={() => notify(`Opening “${featuredEvent.title}”`)}
-              aria-label="Open event"
+              onClick={() => notify(t("toast.opening", { name: featuredEvent.title }))}
+              aria-label={t("sched.openEvent")}
               className="flex size-7 items-center justify-center rounded-full bg-primary-faint text-primary-deep"
             >
               <Icon name="arrowUpRight" size={14.5} strokeWidth={2} />

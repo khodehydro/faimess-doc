@@ -6,6 +6,7 @@ import { Modal } from "../ui/Modal";
 import { usePlayer } from "../app/PlayerContext";
 import { useContributions } from "../app/ContributionsContext";
 import { useApp } from "../app/AppContext";
+import { usePreferences } from "../app/PreferencesContext";
 import { activeLineIndex, lyricsFor, mmss, QUEUE, type PlayerTrack } from "../data/player";
 import { playlists } from "../data/library";
 import { CommentsBar } from "./player/CommentsBar";
@@ -36,10 +37,11 @@ type IconName = ComponentProps<typeof Icon>["name"];
 
 const QUICK_PICKS = QUEUE.slice(0, 3);
 
+/** i18n keys — the drawer translates them on the way out */
 const PANEL_TITLE: Record<PanelId, string> = {
-  queue: "Up next",
-  liked: "Liked songs",
-  playlists: "Your playlists",
+  queue: "player.upNext",
+  liked: "player.likedSongs",
+  playlists: "player.yourPlaylists",
 };
 
 export function PlayerSection({
@@ -47,6 +49,7 @@ export function PlayerSection({
 }: {
   params: { expanded: boolean; onToggleExpand: () => void };
 }) {
+  const { t } = usePreferences();
   const player = usePlayer();
   const { track } = player;
   const [panel, setPanel] = useState<PanelId | null>(null);
@@ -81,8 +84,8 @@ export function PlayerSection({
           <span className="flex size-7 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
             <Icon name="waveform" size={15} strokeWidth={2.2} />
           </span>
-          <span className="font-display text-[15px] font-bold text-ink">Player</span>
-          <span className="ml-auto flex items-center gap-1.5">
+          <span className="font-display text-[15px] font-bold text-ink">{t("player.title")}</span>
+          <span className="ms-auto flex items-center gap-1.5">
             {track && (
               <span className="flex items-center gap-1.5 rounded-full bg-subtle px-2 py-1 text-[12px] font-bold tabular-nums text-ink-muted">
                 <Icon name="list" size={12} />
@@ -94,8 +97,8 @@ export function PlayerSection({
               transition={spring}
               onClick={toggleRail}
               aria-expanded={railOpen}
-              title={railOpen ? "Hide the music sidebar" : "More — queue, liked songs, playlists"}
-              aria-label={railOpen ? "Hide the music sidebar" : "More — queue, liked songs, playlists"}
+              title={t(railOpen ? "player.railHide" : "player.railShow")}
+              aria-label={t(railOpen ? "player.railHide" : "player.railShow")}
               className={cn(
                 "flex size-7 items-center justify-center rounded-full transition-colors",
                 railOpen ? "bg-primary text-white shadow-primary" : "text-ink-muted hover:bg-subtle hover:text-ink",
@@ -109,8 +112,8 @@ export function PlayerSection({
               transition={spring}
               onClick={onToggleExpand}
               aria-pressed={expanded}
-              title={expanded ? "Collapse the player" : "Expand the player"}
-              aria-label={expanded ? "Collapse the player" : "Expand the player"}
+              title={t(expanded ? "player.collapse" : "player.expand")}
+              aria-label={t(expanded ? "player.collapse" : "player.expand")}
               className={cn(
                 "flex size-7 items-center justify-center rounded-full transition-colors",
                 expanded ? "bg-primary text-white shadow-primary" : "text-ink-muted hover:bg-subtle hover:text-ink",
@@ -183,10 +186,11 @@ function PlayerRail({
   active: PanelId | null;
   onSelect: (id: PanelId) => void;
 }) {
+  const { t } = usePreferences();
   const items: { id: PanelId; icon: IconName; label: string }[] = [
-    { id: "queue", icon: "list", label: "Play queue" },
-    { id: "liked", icon: "heart", label: "Liked songs" },
-    { id: "playlists", icon: "folder", label: "Playlists" },
+    { id: "queue", icon: "list", label: "player.playQueue" },
+    { id: "liked", icon: "heart", label: "player.likedSongs" },
+    { id: "playlists", icon: "folder", label: "player.yourPlaylists" },
   ];
 
   return (
@@ -195,8 +199,8 @@ function PlayerRail({
       animate={{ width: open ? 46 : 0, opacity: open ? 1 : 0 }}
       transition={{ duration: 0.28, ease: EASE }}
       inert={!open}
-      aria-label="Music management"
-      className={cn("shrink-0 overflow-hidden", open && "border-r border-line")}
+      aria-label={t("player.musicManagement")}
+      className={cn("shrink-0 overflow-hidden", open && "border-e border-line")}
     >
       <div className="flex h-full w-[46px] flex-col items-center gap-1 py-3">
       {items.map((item) => (
@@ -205,8 +209,8 @@ function PlayerRail({
           onClick={() => onSelect(item.id)}
           whileTap={{ scale: 0.92 }}
           transition={spring}
-          title={item.label}
-          aria-label={item.label}
+          title={t(item.label)}
+          aria-label={t(item.label)}
           aria-pressed={active === item.id}
           className={cn(
             "flex size-9 items-center justify-center rounded-[12px] transition-colors",
@@ -226,6 +230,7 @@ function PlayerRail({
 /* ------------------------------- drawers ------------------------------- */
 
 function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void }) {
+  const { t } = usePreferences();
   const player = usePlayer();
   const { navigate, notify } = useApp();
 
@@ -241,14 +246,14 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
       className="absolute inset-0 z-20 flex flex-col bg-surface"
     >
       <header className="flex shrink-0 items-center gap-2 border-b border-line px-3.5 py-2.5">
-        <span className="text-[13.5px] font-bold text-ink">{PANEL_TITLE[panel]}</span>
+        <span className="text-[13.5px] font-bold text-ink">{t(PANEL_TITLE[panel])}</span>
         <span className="rounded-full bg-subtle px-1.5 py-[1px] text-[11.5px] font-bold text-ink-muted">
           {panel === "playlists" ? playlists.length : rows.length}
         </span>
         <button
           onClick={onClose}
-          aria-label="Close panel"
-          className="ml-auto flex size-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
+          aria-label={t("player.closePanel")}
+          className="ms-auto flex size-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
         >
           <Icon name="close" size={15} strokeWidth={2} />
         </button>
@@ -265,7 +270,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
                   onClose();
                   notify(`Opening “${list.name}”`);
                 }}
-                className="group flex items-center gap-2.5 rounded-[12px] px-1.5 py-1.5 text-left transition-colors hover:bg-primary-faint"
+                className="group flex items-center gap-2.5 rounded-[12px] px-1.5 py-1.5 text-start transition-colors hover:bg-primary-faint"
               >
                 <span className="size-[34px] shrink-0 overflow-hidden rounded-[10px] shadow-xs">
                   <Photo src={list.photo} alt="" />
@@ -282,12 +287,12 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
               </button>
             ))}
             <p className="px-1.5 pt-1 text-[12px] leading-relaxed text-ink-faint">
-              Six editorial lists, curated by FAIMESS.
+              {t("player.ownsPlaylists")}
             </p>
           </div>
         ) : rows.length === 0 ? (
           <p className="px-2 py-6 text-center text-[13px] leading-relaxed text-ink-faint">
-            Nothing here yet — tap the heart while a song plays.
+            {t("player.likedEmpty")}
           </p>
         ) : (
           <div className="flex flex-col gap-0.5">
@@ -298,7 +303,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
                   key={row.id}
                   onClick={() => player.play(row)}
                   className={cn(
-                    "group flex items-center gap-2.5 rounded-[12px] px-1.5 py-1.5 text-left transition-colors",
+                    "group flex items-center gap-2.5 rounded-[12px] px-1.5 py-1.5 text-start transition-colors",
                     mine ? "bg-primary-faint" : "hover:bg-subtle",
                   )}
                 >
@@ -328,7 +333,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
             })}
             {panel === "liked" && (
               <p className="px-1.5 pt-1 text-[12px] leading-relaxed text-ink-faint">
-                Favourites live in this session only — the demo has no backend yet.
+                {t("player.sessionOnly")}
               </p>
             )}
           </div>
@@ -341,6 +346,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
 /* ------------------------------ empty state ----------------------------- */
 
 function EmptyState({ onPick }: { onPick: (track: PlayerTrack) => void }) {
+  const { t } = usePreferences();
   return (
     <motion.div
       key="empty"
@@ -360,10 +366,10 @@ function EmptyState({ onPick }: { onPick: (track: PlayerTrack) => void }) {
 
       <div>
         <h3 className="font-display text-[16px] font-bold leading-snug text-ink">
-          Hey {me.name}, nothing playing yet
+          {t("player.hey", { name: me.name })} {t("player.nothingPlaying")}
         </h3>
         <p className="mt-1 text-[12.5px] leading-snug text-ink-muted">
-          Tap play anywhere and the song lands here — cover, seek bar and bilingual lyrics.
+          {t("player.pickOne")}
         </p>
         <p dir="rtl" lang="fa" className="font-fa mt-1.5 text-[12.5px] leading-relaxed text-ink-faint">
           یه آهنگ که دوست داری رو پخش کن 🎧
@@ -371,7 +377,9 @@ function EmptyState({ onPick }: { onPick: (track: PlayerTrack) => void }) {
       </div>
 
       <div className="flex w-full flex-col gap-1.5">
-        <span className="text-left text-[12px] font-bold uppercase tracking-wider text-ink-faint">Start with</span>
+        <span className="text-start text-[12px] font-bold uppercase tracking-wider text-ink-faint">
+          {t("player.startWith")}
+        </span>
         {QUICK_PICKS.map((pick) => (
           <motion.button
             key={pick.id}
@@ -379,7 +387,7 @@ function EmptyState({ onPick }: { onPick: (track: PlayerTrack) => void }) {
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.98 }}
             transition={spring}
-            className="group flex items-center gap-2.5 rounded-[14px] border border-line/80 bg-surface p-1.5 pr-3 text-left transition-colors hover:border-primary/25 hover:bg-primary-faint/50"
+            className="group flex items-center gap-2.5 rounded-[14px] border border-line/80 bg-surface p-1.5 pe-3 text-start transition-colors hover:border-primary/25 hover:bg-primary-faint/50"
           >
             <span className="size-[36px] shrink-0 overflow-hidden rounded-[11px] shadow-xs">
               <Photo src={pick.photo} alt="" />
@@ -409,6 +417,7 @@ function TrackPanel({
   expanded: boolean;
   onDownload: () => void;
 }) {
+  const { t } = usePreferences();
   const { track, playing, position, duration, progress, toggle, next, prev, seek } = player;
   const barRef = useRef<HTMLDivElement>(null);
   const [scrubbing, setScrubbing] = useState(false);
@@ -435,7 +444,7 @@ function TrackPanel({
         animate={{ scale: playing ? 1 : 0.97, opacity: playing ? 1 : 0.86 }}
         transition={spring}
         className={cn(
-          "relative shrink-0 overflow-hidden rounded-[16px] shadow-float ring-1 ring-black/[0.05]",
+          "relative shrink-0 overflow-hidden rounded-[16px] shadow-float ring-1 ring-black/[0.05] dark:ring-white/[0.06]",
           expanded ? "size-[118px]" : "size-[88px]",
         )}
       >
@@ -470,7 +479,7 @@ function TrackPanel({
           ref={barRef}
           role="slider"
           tabIndex={0}
-          aria-label="Seek"
+          aria-label={t("player.seek")}
           aria-valuemin={0}
           aria-valuemax={Math.round(duration)}
           aria-valuenow={Math.round(position)}
@@ -487,12 +496,12 @@ function TrackPanel({
         >
           <span className="relative block h-[6px] w-full overflow-hidden rounded-full bg-subtle">
             <span
-              className="absolute inset-y-0 left-0 rounded-full bg-primary"
+              className="absolute inset-y-0 start-0 rounded-full bg-primary"
               style={{ width: `${progress * 100}%` }}
             />
           </span>
           <motion.span
-            className="absolute size-[13px] rounded-full bg-primary shadow-primary ring-2 ring-white"
+            className="absolute size-[13px] rounded-full bg-primary shadow-primary ring-2 ring-surface"
             style={{ left: `calc(${progress * 100}% - 6.5px)` }}
             animate={{ scale: scrubbing ? 1.15 : 1 }}
             transition={spring}
@@ -514,7 +523,7 @@ function TrackPanel({
             whileTap={{ scale: 0.94 }}
             transition={spring}
             onClick={prev}
-            aria-label="Previous track"
+            aria-label={t("player.prevTrack")}
             className="flex size-9 items-center justify-center rounded-full text-ink-body transition-colors hover:bg-subtle hover:text-ink"
           >
             <Icon name="chevronLeft" size={17} strokeWidth={2.2} />
@@ -536,7 +545,7 @@ function TrackPanel({
             whileTap={{ scale: 0.94 }}
             transition={spring}
             onClick={next}
-            aria-label="Next track"
+            aria-label={t("player.nextTrack")}
             className="flex size-9 items-center justify-center rounded-full text-ink-body transition-colors hover:bg-subtle hover:text-ink"
           >
             <Icon name="chevronRight" size={17} strokeWidth={2.2} />
@@ -557,14 +566,15 @@ function TrackPanel({
  * where to get the app instead of pretending to save a file.
  */
 function DownloadButton({ onOpen }: { onOpen: () => void }) {
+  const { t } = usePreferences();
   return (
     <motion.button
       whileHover={{ y: -1.5 }}
       whileTap={{ scale: 0.9 }}
       transition={spring}
       onClick={onOpen}
-      title="Download — Android app only"
-      aria-label="Download — Android app only"
+      title={t("player.downloadTip")}
+      aria-label={t("player.downloadTip")}
       className="flex size-9 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
     >
       <Icon name="download" size={17} strokeWidth={2.1} />
@@ -575,6 +585,7 @@ function DownloadButton({ onOpen }: { onOpen: () => void }) {
 /* ------------------------------ download note --------------------------- */
 
 function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = usePreferences();
   const { navigate } = useApp();
 
   return (
@@ -584,7 +595,7 @@ function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void 
       </span>
 
       <h2 className="font-display mt-3 text-[17.5px] font-bold leading-snug text-ink">
-        Downloads live in the Android app
+        {t("player.downloadTitle")}
       </h2>
       <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-muted">
         Songs stream free in the browser — saving a track for offline listening, and the
@@ -602,7 +613,7 @@ function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void 
           }}
           className="flex items-center gap-2 rounded-[14px] bg-primary px-3.5 py-2.5 text-[13.5px] font-bold text-white shadow-primary"
         >
-          Android download page
+          {t("player.androidPage")}
           <Icon name="arrowRight" size={15} strokeWidth={2.2} />
         </motion.button>
 
@@ -610,7 +621,7 @@ function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void 
           onClick={onClose}
           className="rounded-[14px] px-3 py-2.5 text-[13.5px] font-bold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
         >
-          Not now
+          {t("player.notNow")}
         </button>
       </div>
     </Modal>
@@ -618,6 +629,7 @@ function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void 
 }
 
 function LikeButton({ player }: { player: PlayerApi }) {
+  const { t } = usePreferences();
   const { notify } = useApp();
   const id = player.track?.id;
   const on = !!id && player.liked.includes(id);
@@ -629,11 +641,11 @@ function LikeButton({ player }: { player: PlayerApi }) {
       onClick={() => {
         if (!id) return;
         player.toggleLike(id);
-        notify(on ? "Removed from Liked songs" : "Saved to Liked songs", on ? "teal" : "primary");
+        notify(t(on ? "player.unlikedToast" : "player.likedToast"), on ? "teal" : "primary");
       }}
       aria-pressed={on}
-      title={on ? "Remove from Liked songs" : "Save to Liked songs"}
-      aria-label={on ? "Remove from Liked songs" : "Save to Liked songs"}
+      title={t(on ? "player.likeOn" : "player.likeOff")}
+      aria-label={t(on ? "player.likeOn" : "player.likeOff")}
       className={cn(
         "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
         on ? "bg-primary-soft text-primary-deep" : "text-ink-muted hover:bg-subtle hover:text-ink",
@@ -662,6 +674,7 @@ function LyricsPanel({
   playing: boolean;
   onSend: () => void;
 }) {
+  const { t } = usePreferences();
   const { pendingFor } = useContributions();
   const pending = pendingFor(track.id);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -687,8 +700,8 @@ function LyricsPanel({
         <span className="text-ink-faint">
           <Icon name="mic" size={13.5} />
         </span>
-        <span className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">Lyrics</span>
-        <span className="ml-auto flex items-center gap-1">
+        <span className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">{t("lyrics.title")}</span>
+        <span className="ms-auto flex items-center gap-1">
           <span className="rounded-full bg-subtle px-1.5 py-[1px] text-[11.5px] font-bold text-ink-muted">한국어</span>
           <span className="rounded-full bg-subtle px-1.5 py-[1px] text-[11.5px] font-bold text-ink-muted">EN</span>
           <span className="rounded-full bg-primary-soft px-1.5 py-[1px] text-[11.5px] font-bold text-primary-deep">فارسی</span>
@@ -698,8 +711,10 @@ function LyricsPanel({
       {by && (
         <p className="mx-2.5 mb-1.5 flex items-center gap-1.5 rounded-panel bg-mint-soft/70 px-2.5 py-1.5 text-[12px] font-semibold text-teal-deep">
           <Icon name="check" size={13} strokeWidth={2.6} />
-          Fan sheet by {by === "you" ? "you" : `@${by}`} · approved by the mods ·{" "}
-          <span className="font-extrabold">+{LYRIC_REWARD} pts</span>
+          {t("lyrics.credit", {
+            who: by === "you" ? t("lyrics.creditYou") : `@${by}`,
+            n: LYRIC_REWARD,
+          })}
         </p>
       )}
 
@@ -716,17 +731,17 @@ function LyricsPanel({
               <Icon name="mic" size={18} strokeWidth={2.1} />
             </span>
             <p className="font-display mt-2.5 text-[14px] font-bold text-ink">
-              No lyrics for this one yet
+              {t("lyrics.emptyTitle")}
             </p>
             <p className="mt-1 max-w-[290px] text-[12.5px] leading-relaxed text-ink-muted">
               {pending
-                ? "Your sheet is with the moderators. Once it’s approved the words show up right here — and the points land in your fan account."
-                : "Know the words by heart? Send the sheet — a moderator checks it against the official text before it goes live."}
+                ? t("lyrics.emptyBodyPending")
+                : t("lyrics.emptyBody")}
             </p>
             {pending ? (
               <span className="mt-2.5 flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1 text-[12px] font-bold text-ink-muted">
                 <Icon name="clock" size={13} />
-                Pending review
+                {t("lyrics.pending")}
               </span>
             ) : (
               <motion.button
@@ -737,13 +752,13 @@ function LyricsPanel({
                 className="mt-2.5 flex items-center gap-2 rounded-[14px] bg-primary px-3.5 py-2.5 text-[13.5px] font-bold text-white shadow-primary"
               >
                 <Icon name="send" size={15} strokeWidth={2.1} />
-                Send the lyrics
+                {t("lyrics.send")}
               </motion.button>
             )}
             <span className="mt-2 text-[12px] font-semibold text-ink-faint">
               {pending
-                ? "A moderator usually replies within a day"
-                : `Approved sheets pay +${LYRIC_REWARD} fan points`}
+                ? t("lyrics.wait")
+                : t("lyrics.pay", { n: LYRIC_REWARD })}
             </span>
           </div>
         ) : (

@@ -3,6 +3,7 @@ import { AppProvider, useApp } from "./AppContext";
 import { PlayerProvider } from "./PlayerContext";
 import { CommentsProvider } from "./CommentsContext";
 import { ContributionsProvider } from "./ContributionsContext";
+import { PreferencesProvider, usePreferences } from "./PreferencesContext";
 import { Stage } from "./Stage";
 import { ToastHost } from "./ToastHost";
 import { SectionSlot } from "../sections/registry";
@@ -42,21 +43,28 @@ const PAGES = {
 
 function Shell() {
   const { route } = useApp();
+  const { dir } = usePreferences();
   const Page = PAGES[route];
 
   return (
-    <div className="flex h-full w-full min-h-0 flex-col gap-3.5 rounded-[24px] bg-shell p-3 shadow-frame ring-1 ring-black/[0.035] lg:gap-3.5 lg:rounded-shell lg:p-3.5">
+    <div
+      dir={dir}
+      className="flex h-full w-full min-h-0 flex-col gap-3.5 rounded-[24px] bg-shell p-3 shadow-frame ring-1 ring-black/[0.035] lg:gap-3.5 lg:rounded-shell lg:p-3.5 dark:ring-white/[0.05]"
+    >
       {/* top row — three separate pills */}
       <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap">
         <SectionSlot id="brand" params={undefined} />
         <SectionSlot id="nav" params={undefined} />
-        <div className="ml-auto flex items-center">
+        <div className="ms-auto flex items-center">
           <SectionSlot id="account" params={undefined} />
         </div>
       </div>
 
-      {/* content row — pages own their cards */}
-      <div className="flex min-h-0 flex-1 flex-col">
+      {/* content row — pages own their cards. Locked to LTR so the two content
+          cards keep their physical places (and the player stays on the right)
+          even when the interface is Persian; each card re-declares `dir`
+          for its own text. */}
+      <div dir="ltr" className="flex min-h-0 flex-1 flex-col">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={route}
@@ -77,16 +85,18 @@ function Shell() {
 export default function App() {
   return (
     <AppProvider>
-      <PlayerProvider>
-        <CommentsProvider>
-          <ContributionsProvider>
-            <Stage>
-              <Shell />
-            </Stage>
-            <ToastHost />
-          </ContributionsProvider>
-        </CommentsProvider>
-      </PlayerProvider>
+      <PreferencesProvider>
+        <PlayerProvider>
+          <CommentsProvider>
+            <ContributionsProvider>
+              <Stage>
+                <Shell />
+              </Stage>
+              <ToastHost />
+            </ContributionsProvider>
+          </CommentsProvider>
+        </PlayerProvider>
+      </PreferencesProvider>
     </AppProvider>
   );
 }

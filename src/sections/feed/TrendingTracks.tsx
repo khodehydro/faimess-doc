@@ -11,6 +11,7 @@ import { trackById } from "../../data/player";
 import { compactNumber } from "../../lib/format";
 import { cn } from "../../lib/cn";
 import { spring } from "../../lib/motion";
+import { useT } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 3 — trending songs ranked by how many users hit the fire
@@ -20,6 +21,7 @@ import { spring } from "../../lib/motion";
 type Row = (typeof trendingTracks)[number] & { fired: boolean; fires: number };
 
 function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: number }) {
+  const t = useT();
   const { notify } = useApp();
   const player = usePlayer();
   /* the queue may hold this song under its newest-release id */
@@ -34,7 +36,10 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
     setFired(next);
     setFires((n) => n + (next ? 1 : -1));
     setPop((p) => p + 1);
-    notify(next ? `You fired “${row.title}” 🔥` : `Removed your fire from “${row.title}”`, next ? "primary" : "teal");
+    notify(
+      next ? t("toast.fired", { title: row.title }) : t("toast.unfired", { title: row.title }),
+      next ? "primary" : "teal",
+    );
   };
 
   const medal = rank <= 3;
@@ -65,7 +70,7 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
             if (mine) player.toggle();
             else {
               player.play(playable);
-              notify(`Playing “${row.title}” — it's in the player card`);
+              notify(t("toast.playingCard", { title: row.title }));
             }
           }}
           className={cn(
@@ -130,6 +135,7 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
 }
 
 export function TrendingTracks() {
+  const t = useT();
   const { notify } = useApp();
   const [range, setRange] = useState<"day" | "week">("day");
 
@@ -142,8 +148,8 @@ export function TrendingTracks() {
     <Shelf
       id="feed-trending"
       icon="flame"
-      title="Trending now"
-      hint="ranked by fan fires"
+      title={t("shelf.trendingNow")}
+      hint={t("shelf.hintFires")}
       action={
         <div className="flex items-center gap-1.5">
           <div className="flex items-center gap-0.5 rounded-full bg-subtle p-0.5">
@@ -160,14 +166,14 @@ export function TrendingTracks() {
                 )}
               >
                 {range === r.id && (
-                  <motion.span layoutId="trend-range" transition={spring} className="absolute inset-0 rounded-full bg-white shadow-xs" />
+                  <motion.span layoutId="trend-range" transition={spring} className="absolute inset-0 rounded-full bg-surface shadow-xs" />
                 )}
                 <span className="relative">{r.label}</span>
               </button>
             ))}
           </div>
-          <PillButton tone="soft" onClick={() => notify("Showing every trending track")}>
-            See all
+          <PillButton tone="soft" onClick={() => notify(t("toast.allTrending"))}>
+            {t("shelf.seeAll")}
           </PillButton>
         </div>
       }
