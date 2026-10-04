@@ -141,21 +141,24 @@ check(
   `${banners.length} slides in the data, the live one on screen (sr-only title)`,
 );
 check(
-  "the banner's two arrows are full-height glass rails",
-  heroSrc.includes("items-stretch") &&
-    heroSrc.includes("self-stretch") &&
-    heroSrc.includes("backdrop-blur-xl") &&
-    heroSrc.includes("backIcon(writing)") &&
-    heroSrc.includes("forwardIcon(writing)"),
-  "one rail per side, arrows swapped by writing direction",
+  "the banner's only chrome is an indicator, centred on the bottom edge",
+  heroSrc.includes("bottom-5") &&
+    heroSrc.includes("justify-center") &&
+    heroSrc.includes("aria-current") &&
+    heroSrc.includes("banners.map((b, i)"),
+  "dots, one per slide, tappable",
 );
 check(
-  "no card, badge, bell or dot is left on the banner",
+  "no card, badge, bell, arrow or glass rail is left on the banner",
   !heroSrc.includes("bell") &&
     !heroSrc.includes("openTickets") &&
     !heroSrc.includes("stops.map") &&
     !heroSrc.includes("withThousands") &&
-    !heroSrc.includes("CircleButton"),
+    !heroSrc.includes("CircleButton") &&
+    !heroSrc.includes("GlassStep") &&
+    !heroSrc.includes("backIcon") &&
+    !heroSrc.includes("forwardIcon") &&
+    !heroSrc.includes("backdrop-blur"),
 );
 
 /* ------------------------------ the player ---------------------------- */

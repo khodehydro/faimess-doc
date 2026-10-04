@@ -129,8 +129,6 @@ export const STRINGS: Record<string, Entry> = {
   "shelf.wasLiveSuffix": { en: "was live", fa: "لایو بود", ko: "라이브 했어요" },
 
   /* ------------------------------- hero ------------------------------- */
-  "hero.prev": { en: "Previous banner", fa: "بنر قبلی", ko: "이전 배너" },
-  "hero.next": { en: "Next banner", fa: "بنر بعدی", ko: "다음 배너" },
 
   /* ------------------------------ player ------------------------------ */
   "player.title": { en: "Player", fa: "پخش‌کننده", ko: "플레이어" },

@@ -8,21 +8,20 @@ import {
   useTransform,
 } from "framer-motion";
 import { Photo } from "../ui/Cover";
-import { Icon, type IconName } from "../ui/Icon";
 import { banners } from "../data/banners";
 import { cn } from "../lib/cn";
-import { EASE } from "../lib/motion";
+import { EASE, spring } from "../lib/motion";
 import { usePreferences } from "../app/PreferencesContext";
-import { backIcon, dirSign, forwardIcon } from "../lib/rtl";
+import { dirSign } from "../lib/rtl";
 
 const AUTOPLAY_MS = 7000;
 
 /* ------------------------------------------------------------------ *
- *  Home hero — a full-bleed photograph per slide (data/banners.ts) with
- *  exactly two controls: a frosted rail down each side of the banner,
- *  previous on the inline start, next on the inline end. No cards, no
- *  badges, no dots — the artwork and the two arrows are the whole banner.
- *  Add an entry to the data and it becomes a new slide.
+ *  Home hero — a full-bleed photograph per slide (data/banners.ts) and
+ *  nothing on top of it but a small indicator, centred along the bottom
+ *  edge. No cards, no badges, no arrow rails: the carousel moves on its
+ *  own (7s), on ← / →, on a horizontal drag — and on a tap of the
+ *  indicator. Add an entry to the data and it becomes a new slide.
  * ------------------------------------------------------------------ */
 
 export function HeroBanner() {
@@ -135,59 +134,35 @@ export function HeroBanner() {
         </motion.div>
       </AnimatePresence>
 
-      {/* The banner's only chrome: one rail per side, as tall as the banner
-          itself. The arrow rides on its own chip above the glass, so the
-          parallax moving the photo behind it can't drag the glyph around. */}
-      <div className="pointer-events-none absolute inset-0 z-20 flex items-stretch justify-between">
-        <GlassStep
-          side="start"
-          icon={backIcon(writing)}
-          label={t("hero.prev")}
-          onClick={() => go(-1)}
-        />
-        <GlassStep
-          side="end"
-          icon={forwardIcon(writing)}
-          label={t("hero.next")}
-          onClick={() => go(1)}
-        />
+      {/* the one piece of chrome left: an indicator, centred on the
+          bottom edge. Physical centring on purpose — `inset-x-0` + flex
+          mirrors cleanly in RTL, while a logical half-offset would not. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center">
+        <div className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-surface/92 px-2.5 py-2 shadow-sm">
+          {banners.map((b, i) => (
+            <button
+              key={b.id}
+              type="button"
+              onClick={() => {
+                setDir(i > index ? 1 : -1);
+                setIndex(i);
+              }}
+              aria-label={b.title}
+              aria-current={i === index}
+              className="group relative flex h-2 items-center"
+            >
+              <motion.span
+                animate={{ width: i === index ? 20 : 6, opacity: i === index ? 1 : 0.42 }}
+                transition={spring}
+                className={cn(
+                  "block h-2 rounded-full transition-colors",
+                  i === index ? "bg-primary" : "bg-ink-faint group-hover:bg-ink-muted",
+                )}
+              />
+            </button>
+          ))}
+        </div>
       </div>
     </div>
-  );
-}
-
-/* -------------------------------- the rails ----------------------------- */
-
-/**
- * A full-height frosted rail. `side` is the *inline* side it hugs, so the two
- * swap places with the writing direction while previous / next keep meaning.
- */
-function GlassStep({
-  side,
-  icon,
-  label,
-  onClick,
-}: {
-  side: "start" | "end";
-  icon: IconName;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      whileTap={{ scale: 0.99 }}
-      className={cn(
-        "group pointer-events-auto flex w-[50px] self-stretch items-center justify-center bg-white/10 backdrop-blur-xl transition-colors duration-300 hover:bg-white/20 lg:w-[70px]",
-        side === "start" ? "border-e border-white/15" : "border-s border-white/15",
-      )}
-    >
-      <span className="flex size-10 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/30 shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-all duration-300 group-hover:bg-white/30 group-hover:ring-white/45 lg:size-11">
-        <Icon name={icon} size={19} strokeWidth={2.2} />
-      </span>
-    </motion.button>
   );
 }
