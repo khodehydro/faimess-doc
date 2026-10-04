@@ -52,11 +52,11 @@ export function Shelf({
           <Icon name={icon} size={16} strokeWidth={1.9} />
         </span>
         <div className={cn("min-w-0 flex-1", hint && "sm:flex sm:items-center sm:gap-3")}>
-          <h3 className="min-w-0 truncate whitespace-nowrap font-display text-[18px] font-bold tracking-[-0.012em] text-ink">
+          <h3 className="min-w-0 truncate whitespace-nowrap font-display text-lg font-bold tracking-[-0.012em] text-ink">
             {title}
           </h3>
           {hint && (
-            <span className="mt-0.5 block min-w-0 truncate whitespace-nowrap text-[12.5px] font-medium text-ink-muted sm:mt-0 sm:text-[13px]">
+            <span className="mt-0.5 block min-w-0 truncate whitespace-nowrap text-xs font-medium text-ink-muted sm:mt-0 sm:text-sm">
               {hint}
             </span>
           )}
