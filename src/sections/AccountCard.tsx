@@ -24,7 +24,20 @@ import { EASE, spring } from "../lib/motion";
  *  card is a pill with semicircular ends. Popovers open below it.
  * ------------------------------------------------------------------ */
 
-export function AccountCard() {
+/**
+ * The search field, the bell and the avatar — together in one pill on
+ * desktop, and split apart on phones: the compact shell takes the search
+ * out as a full-width card of its own and keeps the two controls in a pill
+ * beside the brand. `part` asks for one half or the other; the desktop call
+ * site passes nothing and gets the whole pill.
+ */
+export function AccountCard({
+  part = "all",
+  className,
+}: {
+  part?: "all" | "search" | "controls";
+  className?: string;
+} = {}) {
   const { route, navigate, notify, openDetail } = useApp();
   const { t, has, dir } = usePreferences();
   /** nav labels are translated where we have them, otherwise the data label stands */
@@ -132,12 +145,21 @@ export function AccountCard() {
     <div
       ref={rootRef}
       dir={dir}
-      className="flex h-[62px] shrink-0 items-center gap-2 rounded-full bg-surface p-2 shadow-card ring-1 ring-black/[0.03] dark:ring-white/[0.05]"
+      className={cn(
+        "flex shrink-0 items-center gap-2 bg-surface shadow-card ring-1 ring-black/[0.03] dark:ring-white/[0.05]",
+        part === "search"
+          ? "rounded-card p-2"
+          : part === "controls"
+            ? "h-[56px] rounded-full p-1.5"
+            : "h-[62px] rounded-full p-2",
+        className,
+      )}
     >
-      {/* search */}
-      <div ref={searchRef} className="relative">
+      {part !== "controls" && (
+      /* search */
+      <div ref={searchRef} className={cn("relative", part === "search" && "min-w-0 flex-1")}>
         <motion.div
-          animate={{ width: focused || query ? 330 : 268 }}
+          animate={{ width: part === "search" ? "100%" : focused || query ? 330 : 268 }}
           transition={spring}
           className={cn(
             "flex items-center gap-2.5 rounded-full bg-subtle px-4 py-2.5 transition-colors",
@@ -179,7 +201,12 @@ export function AccountCard() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.98 }}
               transition={{ duration: 0.22, ease: EASE }}
-              className="absolute start-0 top-[calc(100%+12px)] z-40 w-[336px] overflow-hidden rounded-panel border border-line bg-surface p-2.5 shadow-float"
+              className={cn(
+                "absolute top-[calc(100%+12px)] z-40 overflow-hidden rounded-panel border border-line bg-surface p-2.5 shadow-float",
+                part === "search"
+                  ? "inset-x-0"
+                  : "start-0 w-[336px]",
+              )}
             >
               <p className="px-3 py-2 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
                 {query ? t("account.results") : t("account.quickJump")}
@@ -211,6 +238,10 @@ export function AccountCard() {
         </AnimatePresence>
       </div>
 
+      )}
+
+      {part !== "search" && (
+      <>
       {/* alerts */}
       <div ref={bellRef} className="group relative">
         <CircleButton
@@ -307,6 +338,9 @@ export function AccountCard() {
           )}
         </AnimatePresence>
       </div>
+
+      </>
+      )}
 
       <ContributionsModal
         open={contribOpen}

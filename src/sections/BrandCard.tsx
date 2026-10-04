@@ -3,13 +3,14 @@ import { Logo } from "../ui/Logo";
 import { useApp } from "../app/AppContext";
 import { EASE } from "../lib/motion";
 import { useT } from "../app/PreferencesContext";
+import { cn } from "../lib/cn";
 
 /* ------------------------------------------------------------------ *
  *  Card 1 — brand.
  *  A pill: both ends are perfect semicircles (rounded-full).
  * ------------------------------------------------------------------ */
 
-export function BrandCard() {
+export function BrandCard({ compact = false }: { compact?: boolean } = {}) {
   const t = useT();
   const { navigate } = useApp();
 
@@ -22,10 +23,25 @@ export function BrandCard() {
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
       aria-label={t("brand.home")}
-      className="flex h-[62px] shrink-0 items-center gap-3 rounded-full bg-surface px-4.5 shadow-card ring-1 ring-black/[0.03] dark:ring-white/[0.05]"
+      className={cn(
+        "flex shrink-0 items-center rounded-full bg-surface shadow-card ring-1 ring-black/[0.03] dark:ring-white/[0.05]",
+        /* the compact header is a tighter pill: it has to sit dead centre
+           between the edge of the screen and the controls beside it, and
+           the full-size wordmark collides with them under ~400px */
+        compact ? "h-[56px] gap-2 px-3" : "h-[62px] gap-3 px-4.5",
+      )}
     >
-      <Logo size={34} />
-      <span className="font-display text-[21px] font-extrabold tracking-[-0.022em] text-ink">FAIMESS</span>
+      <Logo size={compact ? 24 : 34} />
+      <span
+        className={cn(
+          "font-display font-extrabold tracking-[-0.022em] text-ink",
+          compact
+            ? "text-[16px] max-[374px]:hidden"
+            : "text-[21px]",
+        )}
+      >
+        FAIMESS
+      </span>
     </motion.button>
   );
 }

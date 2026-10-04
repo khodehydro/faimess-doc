@@ -12,24 +12,10 @@ import { SectionSlot } from "../sections/registry";
 import { SurfaceCard } from "../ui/primitives";
 import { BrowseDetailView } from "../sections/BrowseDetailView";
 import { cn } from "../lib/cn";
-import { HomePage } from "../pages/HomePage";
-import { ArtistsPage } from "../pages/ArtistsPage";
-import { AlbumsPage } from "../pages/AlbumsPage";
-import { PlaylistsPage } from "../pages/PlaylistsPage";
-import { ShopPage } from "../pages/ShopPage";
-import { NewsPage } from "../pages/NewsPage";
-import { DownloadPage } from "../pages/DownloadPage";
 import { EASE } from "../lib/motion";
-
-const PAGES = {
-  home: HomePage,
-  artists: ArtistsPage,
-  albums: AlbumsPage,
-  playlists: PlaylistsPage,
-  shop: ShopPage,
-  news: NewsPage,
-  download: DownloadPage,
-} as const;
+import { PAGES } from "./pages";
+import { CompactShell } from "./CompactShell";
+import { useCompact } from "../hooks/useCompact";
 
 /* ------------------------------------------------------------------ *
  *  Shell — the parent card and the five cards inside it.
@@ -54,6 +40,11 @@ export function Shell() {
   /** the player card's expand button — its width is shared by every route */
   const [wide, setWide] = useState(false);
   const Page = PAGES[route];
+  /* under 1024px the art-board is gone and the same app is arranged for a
+     hand: bottom menu, mini player, search in its own card (CompactShell) */
+  const compact = useCompact();
+
+  if (compact) return <CompactShell />;
 
   return (
     <div

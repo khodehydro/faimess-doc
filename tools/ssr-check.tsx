@@ -492,6 +492,9 @@ check(
 );
 const feedIndexSrc = readFileSync("src/sections/feed/index.tsx", "utf8");
 const navCardSrc = readFileSync("src/sections/NavCard.tsx", "utf8");
+const appSrc = readFileSync("src/app/App.tsx", "utf8");
+const brandSrc = readFileSync("src/sections/BrandCard.tsx", "utf8");
+const accountSrc = readFileSync("src/sections/AccountCard.tsx", "utf8");
 const playerSrc = readFileSync("src/sections/PlayerSection.tsx", "utf8");
 check(
   /* an empty sheet is centred in the whole slot and still fits: the CTA and
@@ -508,6 +511,70 @@ check(
   !playerSrc.includes("lyrics.title") && !playerSrc.includes("한국어"),
   "the lines start straight under the player; only a credit line can sit above them",
 );
+/* ------------------- compact shell: phones + tablets ------------------ */
+
+const compactSrc = readFileSync("src/app/CompactShell.tsx", "utf8");
+const mobileNavSrc = readFileSync("src/sections/MobileNav.tsx", "utf8");
+const miniSrc = readFileSync("src/sections/MiniPlayer.tsx", "utf8");
+const sheetSrc = readFileSync("src/sections/PlayerSheet.tsx", "utf8");
+const compactHookSrc = readFileSync("src/hooks/useCompact.ts", "utf8");
+
+check(
+  "under 1024px the app is the compact shell",
+  compactHookSrc.includes('"(max-width: 1023px)"') &&
+    appSrc.includes("if (compact) return <CompactShell />") &&
+    appSrc.includes('from "./CompactShell"') &&
+    /* one breakpoint for both worlds: the hook is built on matchMedia, the
+       art-board on `innerWidth >= 1024`, and they must stay the same line —
+       so the shell is *not* done with Tailwind `max-lg:` variants, which
+       would be a second, silently divergent copy of the number */
+    compactHookSrc.includes("window.matchMedia") &&
+    !compactSrc.includes("max-lg:") &&
+    !compactSrc.includes("lg:hidden"),
+  "same 1024 line as the stage — below it, bottom nav and mini player",
+);
+check(
+  "the compact top row is brand · search controls, with the brand centred",
+  compactSrc.includes('part="controls"') &&
+    compactSrc.includes('part="search"') &&
+    compactSrc.includes("absolute left-1/2 top-1/2 -translate-x-1/2") &&
+    brandSrc.includes("compact ? \"h-[56px] gap-2 px-3\"") &&
+    brandSrc.includes("max-[374px]:hidden"),
+  "physically centred, and the wordmark drops out under 375px",
+);
+check(
+  "search is its own full-width card on the compact shell",
+  accountSrc.includes('"inset-x-0"') &&
+    accountSrc.includes('"rounded-card p-2"') &&
+    accountSrc.includes('part === "search" ? "100%"'),
+  "the same search field, re-homed — not a second implementation",
+);
+check(
+  "the main menu moves to the bottom, purple tab + rule",
+  mobileNavSrc.includes('layoutId="mobile-nav-rule"') &&
+    mobileNavSrc.includes("h-[2.5px]") &&
+    mobileNavSrc.includes("text-primary-deep") &&
+    !mobileNavSrc.includes("bg-primary text-white") &&
+    compactSrc.includes("<MobileNav />"),
+  "same five destinations, thumb-reachable, same active mark",
+);
+check(
+  "the player collapses to a bar that opens the full card",
+  miniSrc.includes("absolute inset-0 z-0") &&
+    miniSrc.includes('onOpen') &&
+    !miniSrc.includes("<button") === false &&
+    compactSrc.includes("<MiniPlayer") &&
+    sheetSrc.includes("PlayerSection"),
+  "the sheet renders PlayerSection itself — the desktop card, not a copy",
+);
+check(
+  "the feed strip is not shown on phones and tablets",
+  feedIndexSrc.includes("hidden items-center gap-2") &&
+    feedIndexSrc.includes("lg:flex") &&
+    !compactSrc.includes("sticky top-0 z-30"),
+  "the shelves simply scroll; the strip measures 0 and headers stick to the card",
+);
+
 check(
   "the top menu paints its tab purple, with nothing behind it and no rule",
   navCardSrc.includes('isActive\n                ? "text-primary-deep"') &&
@@ -816,7 +883,13 @@ check("no logical inset is centred with a physical translate", mixed.length === 
    a left-to-right world. Both are scanned for across every source file. */
 const PHYSICAL = /^-?(?:ml|mr|pl|pr|left|right|border-l|border-r|rounded-l|rounded-r|rounded-tl|rounded-tr|rounded-bl|rounded-br|text-left|text-right|origin-left|origin-right)(-|$)/;
 /** the only two files allowed to place something physically, on purpose */
-const PHYSICAL_OK = new Set(["src/app/Stage.tsx", "src/app/ToastHost.tsx"]);
+const PHYSICAL_OK = new Set([
+  "src/app/Stage.tsx",
+  "src/app/ToastHost.tsx",
+  /* the compact header centres the brand on the true axis of the screen:
+     `left-1/2` is a *viewfinder* fact, not a text-direction one */
+  "src/app/CompactShell.tsx",
+]);
 const physicalHits: string[] = [];
 for (const file of sources) {
   const classes = [...readFileSync(file, "utf8").matchAll(/className="([^"]*)"/g)].flatMap((m) =>
@@ -893,7 +966,9 @@ check(
   "the shop is a route of its own in the main menu",
   routerSrc.includes('{ id: "shop", label: "Shop", path: "#/shop" }') &&
     navSrc.includes('{ id: "shop", label: "Shop", icon: "shop" }') &&
-    readFileSync("src/app/App.tsx", "utf8").includes("shop: ShopPage") &&
+    /* the page table moved out of App.tsx when the compact shell landed —
+       both shells read src/app/pages.ts now */
+    readFileSync("src/app/pages.ts", "utf8").includes("shop: ShopPage") &&
     routerSrc.includes('"shop"'),
 );
 check(

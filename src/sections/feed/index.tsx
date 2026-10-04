@@ -127,10 +127,13 @@ export function FeedSection() {
       style={{ [SHELF_STICKY_VAR]: `${stripHeight}px` } as CSSProperties}
     >
       {/* quick-jump strip — sticks to the top of the page scroller, and
-          hands its measured height to the shelf headers below */}
+          hands its measured height to the shelf headers below. Phones and
+          tablets do not get it: there the shelves are simply scrolled, and
+          the measured height collapses to 0 so the shelf headers stick to
+          the top of the card instead. */}
       <div
         ref={stripRef}
-        className="sticky top-0 z-30 flex items-center gap-2 border-b border-line/70 bg-surface/95 px-4 py-3 backdrop-blur-md"
+        className="sticky top-0 z-30 hidden items-center gap-2 border-b border-line/70 bg-surface/95 px-4 py-3 backdrop-blur-md lg:flex"
       >
         {/* the chips share the full width of the card between them, each
             centring its own label — the strip reads as one control instead of

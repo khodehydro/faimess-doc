@@ -44,6 +44,7 @@ type Entry = { en: string; fa: string; ko: string };
 export const STRINGS: Record<string, Entry> = {
   /* ---------------------------- navigation ---------------------------- */
   "nav.home": { en: "Home", fa: "خانه", ko: "홈" },
+  "nav.primary": { en: "Main navigation", fa: "منوی اصلی", ko: "메인 메뉴" },
   "nav.artists": { en: "Artists", fa: "هنرمندان", ko: "아티스트" },
   "nav.albums": { en: "Albums", fa: "آلبوم‌ها", ko: "앨범" },
   "nav.playlists": { en: "Playlists", fa: "پلی‌لیست‌ها", ko: "플레이리스트" },
@@ -245,6 +246,9 @@ export const STRINGS: Record<string, Entry> = {
   "player.collapse": { en: "Collapse the player", fa: "جمع کردن پلیر", ko: "플레이어 축소" },
   "player.railShow": { en: "More — queue, liked songs, playlists", fa: "بیشتر — صف، لایک‌ها، پلی‌لیست‌ها", ko: "더보기 — 대기열, 좋아요, 플레이리스트" },
   "player.railHide": { en: "Hide the music sidebar", fa: "بستن نوار موسیقی", ko: "음악 사이드바 숨기기" },
+  /* the compact (phone/tablet) player: a bar over the bottom navigation */
+  "player.miniPick": { en: "Pick a song", fa: "یه آهنگ پخش کن", ko: "곡을 골라 보세요" },
+  "player.openFull": { en: "Open the player", fa: "باز کردن پلیر", ko: "플레이어 열기" },
   "player.downloadTip": { en: "Download — Android app only", fa: "دانلود — فقط اپ اندروید", ko: "다운로드 — 안드로이드 앱 전용" },
   "player.downloadTitle": { en: "Downloads live in the Android app", fa: "دانلود در اپ اندروید است", ko: "다운로드는 안드로이드 앱에 있어요" },
   "player.downloadBody": {
