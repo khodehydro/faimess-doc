@@ -43,7 +43,7 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
       {/* rank */}
       <span
         className={cn(
-          "flex size-6 shrink-0 items-center justify-center rounded-full text-[10.5px] font-extrabold tabular-nums",
+          "flex size-6 shrink-0 items-center justify-center rounded-full text-[13px] font-extrabold tabular-nums",
           medal ? "bg-primary text-white shadow-primary" : "bg-subtle text-ink-muted",
         )}
       >
@@ -53,17 +53,17 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
       <span className="relative size-[38px] shrink-0 overflow-hidden rounded-[11px] shadow-xs">
         <Cover seed={row.seed} className="h-full w-full" />
         <span className="absolute inset-0 flex items-center justify-center bg-ink/45 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-          <Icon name="play" size={14} strokeWidth={2} />
+          <Icon name="play" size={15.5} strokeWidth={2} />
         </span>
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[12.5px] font-bold text-ink">{row.title}</span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-[10px] text-ink-muted">
+        <span className="block truncate text-[14.5px] font-bold text-ink">{row.title}</span>
+        <span className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-muted">
           <span className="font-semibold text-ink-body">{row.artist}</span>
           <span className="text-ink-faint">·</span>
           <span className="flex items-center gap-0.5 text-teal-deep">
-            <Icon name="trend" size={11} strokeWidth={2} />+{row.delta}%
+            <Icon name="trend" size={12.5} strokeWidth={2} />+{row.delta}%
           </span>
         </span>
       </span>
@@ -90,7 +90,7 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
           transition={{ duration: 0.45, ease: "easeOut" }}
           className={cn("block", fired ? "text-flame" : "text-flame/70 group-hover:text-flame")}
         >
-          <Icon name="flame" size={14} strokeWidth={1.9} fill={fired ? "currentColor" : "none"} />
+          <Icon name="flame" size={15.5} strokeWidth={1.9} fill={fired ? "currentColor" : "none"} />
         </motion.span>
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
@@ -99,7 +99,7 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
             transition={{ duration: 0.18 }}
-            className="text-[11px] font-extrabold tabular-nums"
+            className="text-[13.5px] font-extrabold tabular-nums"
           >
             {compactNumber(fires)}
           </motion.span>
@@ -135,7 +135,7 @@ export function TrendingTracks() {
                 key={r.id}
                 onClick={() => setRange(r.id)}
                 className={cn(
-                  "relative rounded-full px-2.5 py-1 text-[10.5px] font-semibold transition-colors",
+                  "relative rounded-full px-2.5 py-1 text-[13px] font-semibold transition-colors",
                   range === r.id ? "text-ink" : "text-ink-faint hover:text-ink-muted",
                 )}
               >

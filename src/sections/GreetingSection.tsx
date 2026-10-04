@@ -41,7 +41,7 @@ export function GreetingSection() {
   };
 
   return (
-    <section className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-card bg-surface px-6 py-6 shadow-card">
+    <section className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-card bg-surface px-6 py-5 shadow-card">
       {/* decorative sprigs */}
       <motion.div
         initial={{ opacity: 0, x: -12, rotate: -6 }}
@@ -65,7 +65,7 @@ export function GreetingSection() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.12, ease: EASE }}
-          className="font-display text-[32px] font-bold leading-[1.14] tracking-[-0.035em] text-ink"
+          className="font-display text-[34px] font-bold leading-[1.14] tracking-[-0.035em] text-ink"
         >
           {GREETING.line1}
           <br />
@@ -75,7 +75,7 @@ export function GreetingSection() {
               animate={{ rotate: [0, 16, -8, 14, 0] }}
               transition={{ duration: 1.8, delay: 0.9, repeat: Infinity, repeatDelay: 3.4 }}
               style={{ transformOrigin: "70% 80%", display: "inline-block" }}
-              className="text-[27px]"
+              className="text-[30px]"
             >
               👋
             </motion.span>
@@ -86,7 +86,7 @@ export function GreetingSection() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.26, ease: EASE }}
-          className="mx-auto mt-3 max-w-[320px] text-[11.5px] leading-relaxed text-ink-muted"
+          className="mx-auto mt-3 max-w-[320px] text-[13.5px] leading-relaxed text-ink-muted"
         >
           {GREETING.subtitle}
         </motion.p>
@@ -101,7 +101,7 @@ export function GreetingSection() {
         className="relative flex items-center gap-2.5"
       >
         <div className="flex flex-1 items-center gap-1.5 rounded-full border border-line bg-subtle py-1.5 pl-4 pr-1.5 transition-colors focus-within:border-primary/40 focus-within:bg-surface">
-          <label htmlFor="intent" className="whitespace-nowrap text-[12px] font-semibold text-ink">
+          <label htmlFor="intent" className="whitespace-nowrap text-[14px] font-semibold text-ink">
             I want to...
           </label>
           <input
@@ -109,7 +109,7 @@ export function GreetingSection() {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="start a late-night mix"
-            className="min-w-0 flex-1 bg-transparent px-1 text-[12px] text-ink placeholder:text-ink-faint focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent px-1 text-[14px] text-ink placeholder:text-ink-faint focus:outline-none"
           />
           <motion.button
             type="button"
@@ -118,7 +118,7 @@ export function GreetingSection() {
             aria-label="Pick a date"
             className="flex size-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-white hover:text-ink"
           >
-            <Icon name="calendar" size={14} />
+            <Icon name="calendar" size={15.5} />
           </motion.button>
           <motion.button
             type="button"
@@ -127,7 +127,7 @@ export function GreetingSection() {
             aria-label="Save idea"
             className="flex size-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-white hover:text-ink"
           >
-            <Icon name="star" size={14} />
+            <Icon name="star" size={15.5} />
           </motion.button>
         </div>
         <motion.button
@@ -138,7 +138,7 @@ export function GreetingSection() {
           aria-label="Start planning"
           className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-primary"
         >
-          <Icon name="send" size={17} strokeWidth={1.8} />
+          <Icon name="send" size={18.5} strokeWidth={1.8} />
         </motion.button>
       </motion.form>
 
@@ -159,7 +159,7 @@ export function GreetingSection() {
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.96 }}
               className={cn(
-                "relative flex flex-1 items-center justify-center gap-1.5 rounded-full border py-1.5 text-[11px] font-semibold transition-colors",
+                "relative flex flex-1 items-center justify-center gap-1.5 rounded-full border py-1.5 text-[13.5px] font-semibold transition-colors",
                 isActive
                   ? "border-primary/35 bg-primary-faint text-primary-deep"
                   : "border-line bg-surface text-ink-body hover:border-line-strong",
@@ -190,13 +190,13 @@ export function GreetingSection() {
                 transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 2.2 }}
                 className="text-primary"
               >
-                <Icon name="sparkle" size={15} />
+                <Icon name="sparkle" size={16.5} />
               </motion.span>
-              <p className="flex-1 text-[11.5px] font-semibold text-ink">
+              <p className="flex-1 text-[13.5px] font-semibold text-ink">
                 Drafting a plan for <span className="text-primary-deep">“{plan}”</span>
               </p>
               <button onClick={() => setPlan(null)} aria-label="Dismiss" className="text-ink-faint transition-colors hover:text-ink">
-                <Icon name="close" size={13} />
+                <Icon name="close" size={14.5} />
               </button>
             </div>
           </motion.div>

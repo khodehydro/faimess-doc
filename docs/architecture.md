@@ -26,14 +26,14 @@ main.tsx                →  App (Provider + Stage + Shell)
 `src/lib/stage.ts` اندازهٔ آرت‌بورد و متریک‌های چیدمان را نگه می‌دارد:
 
 ```ts
-export const STAGE = { width: 1680, height: 930, padding: 20, maxScale: 1.5 };
-export const HOME_METRICS = { topBar: 84, gutter: 18, hero: 372, greeting: 330, rightColumn: 520 };
+export const STAGE = { width: 1580, height: 889, padding: 20, maxScale: 1.5 };
+export const HOME_METRICS = { topBar: 84, gutter: 18, hero: 356, greeting: 344, rightColumn: 520 };
 ```
 
 `useStageScale` نسبت مقیاس را حساب می‌کند:
 
 ```
-scale = min((vw − 2·padding)/1680, (vh − 2·padding)/930, maxScale)
+scale = min((vw − 2·padding)/1580, (vh − 2·padding)/889, maxScale)
 ```
 
 - **دسکتاپ (≥1024px):** صفحه `h-dvh overflow-hidden` است؛ محتوا هرگز سرریز نمی‌کند، فقط مقیاس عوض می‌شود.
@@ -45,9 +45,9 @@ scale = min((vw − 2·padding)/1680, (vh − 2·padding)/930, maxScale)
 | بخش | ارتفاع |
 |---|---|
 | TopBar | محتوا‌محور (≈۷۰) |
-| Hero (چپ) | ۳۷۲ (عرض `flex-1`) |
+| Hero (چپ) | ۳۵۶ (عرض `flex-1`) |
 | Feed (چپ) | `flex-1` (≈۴۳۶، اسکرول داخلی) |
-| Greeting (راست) | ۳۳۰ |
+| Greeting (راست) | ۳۴۴ |
 | Messages (راست) | `flex-1` (≈۴۷۸) |
 | فاصله‌ها | ۱۸ بین بخش‌ها، ۲۰ پدینگ صفحه |
 
@@ -159,8 +159,21 @@ export const routes = [
 
 | نقش | فونت | کاربرد |
 |---|---|---|
-| نمایشی | `Outfit Variable` (`font-display`) | برند، تیتر بخش‌ها، خوش‌آمد، نام کارت‌ها، مونوگرام کاورها |
-| بدنه/UI | `Figtree Variable` (`font-sans`) | متن‌ها، متادیتا، دکمه‌ها، ورودی‌ها |
+| نمایشی | `Quicksand Variable` (`font-display`) | برند، تیتر بخش‌ها، خوش‌آ‌مد، نام کارت‌ها، مونوگرام کاورها |
+| بدنه/UI | `Nunito Sans Variable` (`font-sans`) | متن‌ها، متادیتا، دکمه‌ها، ورودی‌ها |
+
+### مقیاس تایپ (authoring در فضای صحنه)
+
+| نقش | اندازه |
+|---|---|
+| خوش‌آمد | ۳۴px / Bold |
+| تیتر صفحه | ۲۴–۲۶px / Bold |
+| تیتر شلف و کارت | ۱۵–۱۷px / Bold |
+| متن اصلی، نام آهنگ، پیام | ۱۳٫۵–۱۵px |
+| متادیتا، بج‌ها، برچسب‌ها | **حداقل ۱۲px** |
+| آیکون‌ها | ۱۴–۱۸px (تِرِی‌ها ۲۸–۳۸px) |
+
+> کف مقیاس ۱۲px است (قبلاً ۹px بود). اگر باز هم بزرگ‌تر خواستی، فقط اعداد `text-[…px]` را تغییر بده یا مقدار `STAGE.width` را کمتر کن (کل رابط بزرگ‌تر رندر می‌شود).
 
 برای عوض کردن فونت‌ها فقط دو متغیر `--font-sans` و `--font-display` در `src/index.css` را تغییر بده و پکیج `@fontsource-variable/<font>` را اضافه/جایگزین کن.
 

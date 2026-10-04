@@ -18,7 +18,7 @@ export function ToastHost() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.97 }}
             transition={spring}
-            className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 py-2 pl-3 pr-4 text-[11.5px] font-semibold text-ink shadow-float ring-1 ring-black/[0.04] backdrop-blur"
+            className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/95 py-2 pl-3 pr-4 text-[13.5px] font-semibold text-ink shadow-float ring-1 ring-black/[0.04] backdrop-blur"
           >
             <span
               className={cn(
@@ -28,7 +28,7 @@ export function ToastHost() {
                 t.tone === "mint" && "bg-mint",
               )}
             >
-              <Icon name="check" size={11} strokeWidth={2.8} />
+              <Icon name="check" size={12.5} strokeWidth={2.8} />
             </span>
             {t.text}
           </motion.div>

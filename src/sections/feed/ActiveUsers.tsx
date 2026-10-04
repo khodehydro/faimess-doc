@@ -50,18 +50,18 @@ export function ActiveUsers() {
               tabIndex={0}
               aria-label={`${user.name} ${user.handle}`}
               className={cn(
-                "group relative flex w-[152px] shrink-0 cursor-pointer snap-start flex-col items-center gap-2 rounded-[18px] border p-3 text-center transition-colors",
+                "group relative flex w-[170px] shrink-0 cursor-pointer snap-start flex-col items-center gap-2 rounded-[18px] border p-3 text-center transition-colors",
                 medal ? "border-primary/25 bg-primary-faint/70" : "border-line/80 bg-surface hover:border-primary/20",
               )}
             >
               {/* rank ribbon */}
               <span
                 className={cn(
-                  "absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full px-1.5 py-[2px] text-[9px] font-extrabold",
+                  "absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full px-1.5 py-[2px] text-[12px] font-extrabold",
                   medal ? "bg-primary text-white" : "bg-subtle text-ink-muted",
                 )}
               >
-                {medal ? <Icon name="crown" size={9} strokeWidth={2.2} /> : `#${i + 1}`}
+                {medal ? <Icon name="crown" size={11} strokeWidth={2.2} /> : `#${i + 1}`}
                 {medal && <span className="tabular-nums">{i + 1}</span>}
               </span>
 
@@ -76,20 +76,20 @@ export function ActiveUsers() {
 
               <span className="w-full">
                 <span className="flex items-center justify-center gap-1">
-                  <span className="truncate text-[12px] font-bold text-ink">{user.name}</span>
+                  <span className="truncate text-[14px] font-bold text-ink">{user.name}</span>
                 </span>
-                <span className="mt-0.5 block truncate text-[9.5px] text-ink-faint">{user.handle}</span>
+                <span className="mt-0.5 block truncate text-[12px] text-ink-faint">{user.handle}</span>
               </span>
 
               <span className="flex flex-col items-center gap-1">
-                <span className="flex items-center gap-1 rounded-full bg-flame-soft px-2 py-0.5 text-[11px] font-extrabold tabular-nums text-flame-deep">
-                  <Icon name="flame" size={11} strokeWidth={2} />
+                <span className="flex items-center gap-1 rounded-full bg-flame-soft px-2 py-0.5 text-[13.5px] font-extrabold tabular-nums text-flame-deep">
+                  <Icon name="flame" size={12.5} strokeWidth={2} />
                   {withThousands(user.points)}
                 </span>
-                <span className="flex items-center gap-1.5 text-[9px] font-semibold text-ink-muted">
+                <span className="flex items-center gap-1.5 text-[12px] font-semibold text-ink-muted">
                   <span className="rounded-full bg-subtle px-1.5 py-[1px]">Lv {user.level}</span>
                   <span className="flex items-center gap-0.5">
-                    <Icon name="bolt" size={9} strokeWidth={2.2} className="text-primary" />
+                    <Icon name="bolt" size={11} strokeWidth={2.2} className="text-primary" />
                     {user.streak}d
                   </span>
                 </span>

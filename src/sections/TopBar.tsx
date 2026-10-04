@@ -72,7 +72,7 @@ export function TopBar() {
         aria-label="FAIMESS home"
       >
         <Logo size={32} />
-        <span className="font-display text-[19px] font-extrabold tracking-[-0.04em] text-ink">FAIMESS</span>
+        <span className="font-display text-[20px] font-extrabold tracking-[-0.04em] text-ink">FAIMESS</span>
       </motion.button>
 
       {/* page switcher */}
@@ -89,7 +89,7 @@ export function TopBar() {
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.97 }}
               className={cn(
-                "relative flex items-center gap-2 rounded-full px-3.5 py-2 text-[12.5px] font-semibold transition-colors",
+                "relative flex items-center gap-2 rounded-full px-3.5 py-2 text-[14.5px] font-semibold transition-colors",
                 isActive ? "text-white" : "text-ink-body hover:text-ink",
               )}
             >
@@ -101,7 +101,7 @@ export function TopBar() {
                 />
               )}
               <span className="relative flex items-center gap-2">
-                <Icon name={item.icon} size={15} strokeWidth={isActive ? 1.9 : 1.6} />
+                <Icon name={item.icon} size={16.5} strokeWidth={isActive ? 1.9 : 1.6} />
                 {item.label}
               </span>
             </motion.button>
@@ -120,7 +120,7 @@ export function TopBar() {
               focused || searchOpen ? "border-primary/40 shadow-sm" : "border-line",
             )}
           >
-            <Icon name="search" size={15} className="text-ink-faint" />
+            <Icon name="search" size={16.5} className="text-ink-faint" />
             <input
               value={query}
               onChange={(e) => {
@@ -133,11 +133,11 @@ export function TopBar() {
               }}
               onBlur={() => setFocused(false)}
               placeholder="Search artists, albums..."
-              className="w-full bg-transparent text-[12px] text-ink placeholder:text-ink-faint focus:outline-none"
+              className="w-full bg-transparent text-[14px] text-ink placeholder:text-ink-faint focus:outline-none"
             />
             {query && (
               <button onClick={() => setQuery("")} aria-label="Clear search" className="text-ink-faint transition-colors hover:text-ink">
-                <Icon name="close" size={13} />
+                <Icon name="close" size={14.5} />
               </button>
             )}
           </motion.div>
@@ -151,7 +151,7 @@ export function TopBar() {
                 transition={{ duration: 0.22, ease: EASE }}
                 className="absolute right-0 top-[calc(100%+10px)] z-40 w-[336px] overflow-hidden rounded-panel border border-line bg-surface p-1.5 shadow-float"
               >
-                <p className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-faint">
+                <p className="px-2.5 py-1.5 text-[12.5px] font-bold uppercase tracking-wider text-ink-faint">
                   {query ? "Results" : "Quick jump"}
                 </p>
                 {(query ? results : [...quick, ...extraPages]).map((r) => (
@@ -166,16 +166,16 @@ export function TopBar() {
                     className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-subtle"
                   >
                     <span className="flex size-7 items-center justify-center rounded-full bg-subtle text-ink-body">
-                      <Icon name={r.icon} size={14} />
+                      <Icon name={r.icon} size={15.5} />
                     </span>
-                    <span className="text-[12.5px] font-semibold text-ink">{r.label}</span>
-                    <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-ink-muted">
+                    <span className="text-[14.5px] font-semibold text-ink">{r.label}</span>
+                    <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[12.5px] font-semibold text-ink-muted">
                       {r.kind}
                     </span>
                   </button>
                 ))}
                 {query && results.length === 0 && (
-                  <p className="px-2.5 py-4 text-center text-[12px] text-ink-muted">Nothing matches “{query}”.</p>
+                  <p className="px-2.5 py-4 text-center text-[14px] text-ink-muted">Nothing matches “{query}”.</p>
                 )}
               </motion.div>
             )}
@@ -201,7 +201,7 @@ export function TopBar() {
                 transition={{ duration: 0.22, ease: EASE }}
                 className="absolute right-0 top-[calc(100%+10px)] z-40 w-[270px] rounded-panel border border-line bg-surface p-2 shadow-float"
               >
-                <p className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-faint">Notifications</p>
+                <p className="px-2 py-1.5 text-[12.5px] font-bold uppercase tracking-wider text-ink-faint">Notifications</p>
                 {notifications.map((n, i) => (
                   <motion.button
                     key={n.id}
@@ -223,8 +223,8 @@ export function TopBar() {
                       )}
                     />
                     <span>
-                      <span className="block text-[12px] font-semibold leading-snug text-ink">{n.title}</span>
-                      <span className="text-[10.5px] text-ink-muted">{n.at}</span>
+                      <span className="block text-[14px] font-semibold leading-snug text-ink">{n.title}</span>
+                      <span className="text-[13px] text-ink-muted">{n.at}</span>
                     </span>
                   </motion.button>
                 ))}
@@ -245,7 +245,7 @@ export function TopBar() {
           >
             <Avatar seed={0} size={38} ring />
             <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-mint ring-2 ring-white">
-              <Icon name="check" size={9} strokeWidth={3} className="text-white" />
+              <Icon name="check" size={11} strokeWidth={3} className="text-white" />
             </span>
           </motion.button>
           <AnimatePresence>
@@ -260,8 +260,8 @@ export function TopBar() {
                 <div className="flex items-center gap-2.5 px-2 py-2">
                   <Avatar seed={0} size={32} />
                   <span>
-                    <span className="block text-[12.5px] font-bold text-ink">Wendy</span>
-                    <span className="text-[10.5px] text-ink-muted">Listener · Premium</span>
+                    <span className="block text-[14.5px] font-bold text-ink">Wendy</span>
+                    <span className="text-[13px] text-ink-muted">Listener · Premium</span>
                   </span>
                 </div>
                 <span className="my-1 block h-px w-full bg-line" />
@@ -276,9 +276,9 @@ export function TopBar() {
                       setProfileOpen(false);
                       notify(r.label);
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12.5px] font-semibold text-ink-body transition-colors hover:bg-subtle hover:text-ink"
+                    className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[14.5px] font-semibold text-ink-body transition-colors hover:bg-subtle hover:text-ink"
                   >
-                    <Icon name={r.icon} size={14} />
+                    <Icon name={r.icon} size={15.5} />
                     {r.label}
                   </button>
                 ))}

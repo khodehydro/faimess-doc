@@ -77,7 +77,7 @@ export function FeedSection() {
               key={shelf.id}
               onClick={() => jumpTo(shelf.id)}
               className={cn(
-                "relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-colors",
+                "relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13.5px] font-semibold transition-colors",
                 isActive ? "text-white" : "text-ink-muted hover:text-ink",
               )}
             >
@@ -90,8 +90,8 @@ export function FeedSection() {
           );
         })}
 
-        <span className="ml-auto flex items-center gap-1.5 text-[10.5px] font-medium text-ink-faint">
-          <Icon name="waveform" size={13} />
+        <span className="ml-auto flex items-center gap-1.5 text-[13px] font-medium text-ink-faint">
+          <Icon name="waveform" size={14.5} />
           scroll for more
         </span>
       </div>

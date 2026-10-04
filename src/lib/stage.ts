@@ -10,8 +10,8 @@
  * ------------------------------------------------------------------ */
 
 export const STAGE = {
-  width: 1680,
-  height: 930,
+  width: 1580,
+  height: 889,
   /** outer breathing room kept around the frame (px, viewport space) */
   padding: 20,
   /** never scale above this — keeps the UI at a comfortable size on 4K */
@@ -22,8 +22,8 @@ export const STAGE = {
 export const HOME_METRICS = {
   topBar: 84,
   gutter: 18,
-  hero: 372,
-  greeting: 330,
+  hero: 356,
+  greeting: 344,
   /** the right column (greeting + messages) keeps this fixed width */
   rightColumn: 520,
 } as const;

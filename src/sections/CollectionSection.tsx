@@ -51,7 +51,7 @@ function PlayFab({ onClick, className }: { onClick: () => void; className?: stri
         className,
       )}
     >
-      <Icon name="play" size={15} strokeWidth={2} />
+      <Icon name="play" size={16.5} strokeWidth={2} />
     </motion.button>
   );
 }
@@ -108,14 +108,14 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <ArtistCover seed={artist.seed} initials={artist.initials} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
         <PlayFab onClick={() => notify(`Playing ${artist.name}`)} className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-        <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[9.5px] font-bold text-ink backdrop-blur">
+        <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[12px] font-bold text-ink backdrop-blur">
           {artist.genre}
         </span>
       </div>
       <div className="flex items-center gap-2 p-3">
         <span className="min-w-0 flex-1">
-          <span className="font-display block truncate text-[13.5px] font-bold text-ink">{artist.name}</span>
-          <Meta icon="headphones" iconSize={11} className="text-[10px]">
+          <span className="font-display block truncate text-[15.5px] font-bold text-ink">{artist.name}</span>
+          <Meta icon="headphones" iconSize={11} className="text-[12.5px]">
             {artist.listeners}
           </Meta>
         </span>
@@ -144,14 +144,14 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <Cover seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
         <PlayFab onClick={() => notify(`Playing “${album.title}”`)} className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-        <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[9.5px] font-bold text-ink backdrop-blur">
+        <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[12px] font-bold text-ink backdrop-blur">
           {album.year}
         </span>
       </div>
       <div className="flex items-center gap-2 p-3">
         <span className="min-w-0 flex-1">
-          <span className="font-display block truncate text-[13.5px] font-bold text-ink">{album.title}</span>
-          <Meta icon="mic" iconSize={11} className="text-[10px]">
+          <span className="font-display block truncate text-[15.5px] font-bold text-ink">{album.title}</span>
+          <Meta icon="mic" iconSize={11} className="text-[12.5px]">
             {album.artist} · {album.tracks} tracks
           </Meta>
         </span>
@@ -177,20 +177,20 @@ function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
         <Cover seed={playlist.seed} className="h-full w-full" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="font-display block truncate text-[13.5px] font-bold text-ink">{playlist.name}</span>
-        <Meta icon="users" iconSize={11} className="text-[10px]">
+        <span className="font-display block truncate text-[15.5px] font-bold text-ink">{playlist.name}</span>
+        <Meta icon="users" iconSize={11} className="text-[12.5px]">
           {playlist.curator}
         </Meta>
         <span className="mt-1.5 flex items-center gap-2">
-          <span className="rounded-full bg-primary-faint px-2 py-0.5 text-[9.5px] font-bold text-primary-deep">{playlist.mood}</span>
-          <Meta icon="music" iconSize={10} className="text-[9.5px]">
+          <span className="rounded-full bg-primary-faint px-2 py-0.5 text-[12px] font-bold text-primary-deep">{playlist.mood}</span>
+          <Meta icon="music" iconSize={10} className="text-[12px]">
             {playlist.tracks} tracks · {playlist.duration}
           </Meta>
         </span>
       </span>
       <span className="mr-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
         <span className="flex size-9 items-center justify-center rounded-full bg-primary text-white shadow-primary">
-          <Icon name="play" size={14} strokeWidth={2} />
+          <Icon name="play" size={15.5} strokeWidth={2} />
         </span>
       </span>
     </motion.button>
@@ -209,8 +209,8 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
       {/* header */}
       <div className="flex items-center gap-3 pb-3.5">
         <div className="min-w-0">
-          <h2 className="font-display text-[24px] font-bold leading-tight tracking-[-0.035em] text-ink">{copy.title}</h2>
-          <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">{copy.subtitle}</p>
+          <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.035em] text-ink">{copy.title}</h2>
+          <p className="mt-0.5 truncate text-[13.5px] text-ink-muted">{copy.subtitle}</p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">
           {copy.filters.map((f) => (

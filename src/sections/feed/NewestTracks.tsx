@@ -40,27 +40,27 @@ function TrackRow({
           }}
           className="absolute inset-0 flex items-center justify-center bg-ink/45 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         >
-          <Icon name={playing ? "pause" : "play"} size={16} strokeWidth={2} />
+          <Icon name={playing ? "pause" : "play"} size={17.5} strokeWidth={2} />
         </span>
       </span>
 
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-[12.5px] font-bold text-ink">{track.title}</span>
+          <span className="truncate text-[14.5px] font-bold text-ink">{track.title}</span>
           {track.isNew && (
-            <span className="shrink-0 rounded-full bg-primary px-1.5 py-[1px] text-[8.5px] font-bold uppercase tracking-wide text-white">
+            <span className="shrink-0 rounded-full bg-primary px-1.5 py-[1px] text-[12px] font-bold uppercase tracking-wide text-white">
               New
             </span>
           )}
         </span>
-        <span className="mt-0.5 flex items-center gap-1.5 text-[10px] text-ink-muted">
+        <span className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-muted">
           <span className="font-semibold text-ink-body">{track.artist}</span>
           <span className="text-ink-faint">·</span>
           <span>{track.ago}</span>
         </span>
       </span>
 
-      <span className="shrink-0 text-[10.5px] font-medium tabular-nums text-ink-faint">{track.duration}</span>
+      <span className="shrink-0 text-[13px] font-medium tabular-nums text-ink-faint">{track.duration}</span>
 
       <motion.button
         whileHover={{ scale: 1.08 }}
@@ -70,7 +70,7 @@ function TrackRow({
         aria-label={`Add ${track.title} to library`}
         className="flex size-7 shrink-0 items-center justify-center rounded-full text-ink-faint opacity-0 transition-all duration-300 hover:bg-white hover:text-primary group-hover:opacity-100"
       >
-        <Icon name="plus" size={14} strokeWidth={2} />
+        <Icon name="plus" size={15.5} strokeWidth={2} />
       </motion.button>
     </motion.div>
   );

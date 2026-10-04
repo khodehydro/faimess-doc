@@ -45,7 +45,7 @@ export function CircleButton({
   type = "button",
   disabled,
 }: CircleButtonProps) {
-  const dims = { sm: 30, md: 36, lg: 42 }[size];
+  const dims = { sm: 32, md: 38, lg: 44 }[size];
   const tones: Record<string, string> = {
     white: "bg-white text-ink shadow-sm ring-1 ring-line hover:text-primary-deep hover:ring-primary/30",
     subtle: "bg-subtle text-ink-body hover:bg-muted",
@@ -72,7 +72,7 @@ export function CircleButton({
       )}
       style={{ width: dims, height: dims }}
     >
-      <Icon name={icon} size={size === "sm" ? 15 : 17} strokeWidth={iconStroke} className={iconClassName} />
+      <Icon name={icon} size={size === "sm" ? 16 : 18} strokeWidth={iconStroke} className={iconClassName} />
     </motion.button>
   );
 }
@@ -101,7 +101,7 @@ export function PillButton({
       whileTap={{ scale: 0.97 }}
       transition={spring}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors",
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13.5px] font-semibold transition-colors",
         tone === "primary" && "bg-primary text-white shadow-primary",
         tone === "outline" &&
           (active
@@ -111,7 +111,7 @@ export function PillButton({
         className,
       )}
     >
-      {icon && <Icon name={icon} size={13} />}
+      {icon && <Icon name={icon} size={15} />}
       {children}
     </motion.button>
   );
@@ -122,7 +122,7 @@ export function Meta({
   icon,
   children,
   className,
-  iconSize = 13,
+  iconSize = 14,
 }: {
   icon: IconName;
   children: ReactNode;

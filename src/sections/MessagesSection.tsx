@@ -25,11 +25,11 @@ function ConversationRow({ convo, active, onSelect }: { convo: Conversation; act
       </span>
       <span className="relative min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-[12px] font-bold text-ink">{convo.name}</span>
+          <span className="truncate text-[14px] font-bold text-ink">{convo.name}</span>
           {convo.online && <span className="size-1.5 shrink-0 rounded-full bg-mint" />}
         </span>
-        <span className="mt-0.5 flex items-center gap-1 text-[10px] text-ink-muted">
-          {!convo.online && <Icon name="clock" size={10} />}
+        <span className="mt-0.5 flex items-center gap-1 text-[12.5px] text-ink-muted">
+          {!convo.online && <Icon name="clock" size={12} />}
           <span className={cn("truncate", convo.online && "text-mint")}>{convo.status}</span>
         </span>
       </span>
@@ -38,7 +38,7 @@ function ConversationRow({ convo, active, onSelect }: { convo: Conversation; act
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={spring}
-          className="relative flex size-[18px] shrink-0 items-center justify-center rounded-full bg-primary text-[9.5px] font-bold text-white"
+          className="relative flex size-[18px] shrink-0 items-center justify-center rounded-full bg-primary text-[12px] font-bold text-white"
         >
           {convo.unread}
         </motion.span>
@@ -62,12 +62,12 @@ function InviteCard({
       initial={{ opacity: 0, scale: 0.96, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.45, ease: EASE }}
-      className="w-[196px] rounded-[16px] bg-white p-2.5 shadow-card ring-1 ring-line/70"
+      className="w-[212px] rounded-[16px] bg-white p-2.5 shadow-card ring-1 ring-line/70"
     >
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-bold text-ink">{message.title}</p>
+        <p className="text-[13.5px] font-bold text-ink">{message.title}</p>
         <span className="text-teal-deep">
-          <Icon name="video" size={13} />
+          <Icon name="video" size={14.5} />
         </span>
       </div>
       <div className="mt-2 flex gap-2">
@@ -75,8 +75,8 @@ function InviteCard({
           <Thumb scene={message.scene} className="h-full w-full" />
         </div>
         <div className="min-w-0">
-          <p className="text-[9.5px] font-semibold leading-snug text-ink-body">{message.when}</p>
-          <p className="mt-0.5 text-[9px] text-ink-muted">with 4 explorers</p>
+          <p className="text-[12px] font-semibold leading-snug text-ink-body">{message.when}</p>
+          <p className="mt-0.5 text-[12px] text-ink-muted">with 4 explorers</p>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ function InviteCard({
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onRespond("declined")}
-              className="flex-1 rounded-full border border-line bg-surface py-1.5 text-[10.5px] font-semibold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
+              className="flex-1 rounded-full border border-line bg-surface py-1.5 text-[13px] font-semibold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
             >
               Reject
             </motion.button>
@@ -95,7 +95,7 @@ function InviteCard({
               whileHover={{ y: -1, scale: 1.02 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onRespond("accepted")}
-              className="flex-1 rounded-full bg-primary py-1.5 text-[10.5px] font-bold text-white shadow-primary"
+              className="flex-1 rounded-full bg-primary py-1.5 text-[13px] font-bold text-white shadow-primary"
             >
               Accept
             </motion.button>
@@ -106,11 +106,11 @@ function InviteCard({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              "mt-2.5 flex items-center justify-center gap-1.5 rounded-full py-1.5 text-[10.5px] font-bold",
+              "mt-2.5 flex items-center justify-center gap-1.5 rounded-full py-1.5 text-[13px] font-bold",
               message.status === "accepted" ? "bg-mint-soft text-teal-deep" : "bg-muted text-ink-muted",
             )}
           >
-            <Icon name={message.status === "accepted" ? "check" : "close"} size={12} strokeWidth={2.6} />
+            <Icon name={message.status === "accepted" ? "check" : "close"} size={13.5} strokeWidth={2.6} />
             {message.status === "accepted" ? "You're going 🎉" : "Declined"}
           </motion.div>
         )}
@@ -138,7 +138,7 @@ function Bubble({
 
   if (message.kind === "system") {
     return (
-      <motion.p layout {...enter} className="mx-auto w-fit rounded-full bg-white/75 px-3 py-1 text-[10px] text-ink-muted">
+      <motion.p layout {...enter} className="mx-auto w-fit rounded-full bg-white/75 px-3 py-1 text-[12.5px] text-ink-muted">
         {message.text}
       </motion.p>
     );
@@ -157,13 +157,13 @@ function Bubble({
     <motion.div layout {...enter} className={cn("flex flex-col", mine ? "items-end" : "items-start")}>
       <div
         className={cn(
-          "max-w-[178px] rounded-[16px] px-3 py-2 text-[11.5px] leading-snug shadow-xs",
+          "max-w-[178px] rounded-[16px] px-3 py-2 text-[13.5px] leading-snug shadow-xs",
           mine ? "rounded-br-md bg-primary-soft text-ink" : "rounded-bl-md bg-white text-ink-body",
         )}
       >
         {message.text}
       </div>
-      <span className="mt-1 px-1 text-[9px] text-ink-faint">{message.at}</span>
+      <span className="mt-1 px-1 text-[12px] text-ink-faint">{message.at}</span>
     </motion.div>
   );
 }
@@ -284,7 +284,7 @@ export function MessagesSection() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Enter Text..."
-              className="w-full bg-transparent text-[11.5px] text-ink placeholder:text-ink-faint focus:outline-none"
+              className="w-full bg-transparent text-[13.5px] text-ink placeholder:text-ink-faint focus:outline-none"
             />
           </div>
           <motion.button
@@ -295,7 +295,7 @@ export function MessagesSection() {
             aria-label="Send message"
             className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-primary"
           >
-            <Icon name="send" size={15} strokeWidth={1.9} />
+            <Icon name="send" size={16.5} strokeWidth={1.9} />
           </motion.button>
         </form>
       </div>

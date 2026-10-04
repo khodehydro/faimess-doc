@@ -7,12 +7,14 @@
  *  docs/design-tokens.json.
  * ------------------------------------------------------------------ */
 @theme {
-  /* Body / UI — Figtree: tall x-height, superb legibility at 10–13px */
-  --font-sans: "Figtree Variable", ui-sans-serif, system-ui, -apple-system,
+  /* Body / UI — Nunito Sans: humanist, tall x-height, very easy to read
+     at 12–15px; the friendly workhorse of the interface. */
+  --font-sans: "Nunito Sans Variable", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
-  /* Display — Outfit: geometric, tight tracking, gives headings their character */
-  --font-display: "Outfit Variable", "Figtree Variable", ui-sans-serif, system-ui,
-    sans-serif;
+  /* Display — Quicksand: rounded, warm and approachable; used for headings,
+     the wordmark and card titles so the product feels friendly. */
+  --font-display: "Quicksand Variable", "Nunito Sans Variable", ui-sans-serif,
+    system-ui, sans-serif;
 
   /* surfaces */
   --color-canvas: #eaeaec;

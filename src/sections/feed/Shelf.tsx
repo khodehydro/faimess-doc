@@ -37,10 +37,10 @@ export function Shelf({
         style={{ top: SHELF_STICKY_TOP }}
       >
         <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-faint text-primary-deep">
-          <Icon name={icon} size={14} strokeWidth={1.9} />
+          <Icon name={icon} size={15.5} strokeWidth={1.9} />
         </span>
-        <h3 className="font-display text-[15px] font-bold tracking-[-0.025em] text-ink">{title}</h3>
-        {hint && <span className="text-[10.5px] font-medium text-ink-muted">{hint}</span>}
+        <h3 className="font-display text-[17px] font-bold tracking-[-0.025em] text-ink">{title}</h3>
+        {hint && <span className="text-[13px] font-medium text-ink-muted">{hint}</span>}
         {action && <span className="ml-auto">{action}</span>}
       </header>
 
@@ -74,7 +74,7 @@ export function PlayDot({ onClick, className }: { onClick: (e: React.MouseEvent)
         className,
       )}
     >
-      <Icon name="play" size={13} strokeWidth={2} />
+      <Icon name="play" size={14.5} strokeWidth={2} />
     </motion.span>
   );
 }

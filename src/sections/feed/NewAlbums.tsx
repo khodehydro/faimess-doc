@@ -44,11 +44,11 @@ export function NewAlbums() {
             role="button"
             tabIndex={0}
             aria-label={album.title}
-            className="group w-[128px] shrink-0 cursor-pointer snap-start"
+            className="group w-[142px] shrink-0 cursor-pointer snap-start"
           >
             <span className="relative block aspect-square overflow-hidden rounded-[16px] shadow-card ring-1 ring-line/70">
               <Cover seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.06]" />
-              <span className="absolute left-2 top-2 rounded-full bg-white/88 px-1.5 py-[2px] text-[9px] font-bold text-ink backdrop-blur">
+              <span className="absolute left-2 top-2 rounded-full bg-white/88 px-1.5 py-[2px] text-[12px] font-bold text-ink backdrop-blur">
                 {album.released}
               </span>
               <PlayDot
@@ -59,12 +59,12 @@ export function NewAlbums() {
                 className="absolute bottom-2 right-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
               />
             </span>
-            <span className="mt-2 block truncate text-[12px] font-bold text-ink">{album.title}</span>
-            <span className="mt-0.5 flex items-center gap-1.5 text-[10px] text-ink-muted">
+            <span className="mt-2 block truncate text-[14px] font-bold text-ink">{album.title}</span>
+            <span className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-muted">
               <span className="truncate font-semibold text-ink-body">{album.artist}</span>
               <span className="text-ink-faint">·</span>
               <span className="flex shrink-0 items-center gap-0.5">
-                <Icon name="music" size={10} />
+                <Icon name="music" size={12} />
                 {album.tracks}
               </span>
             </span>

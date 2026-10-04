@@ -27,11 +27,11 @@ function EventChip({ event, onOpen }: { event: ScheduleEvent; onOpen: (title: st
         onClick={() => onOpen(event.title)}
         className="flex h-full w-full flex-col justify-center rounded-[10px] bg-teal-soft px-2.5 py-1.5 text-left text-teal-deep"
       >
-        <span className="flex items-center gap-1.5 text-[11px] font-bold leading-tight">
-          <Icon name="lock" size={11} strokeWidth={2} />
+        <span className="flex items-center gap-1.5 text-[13.5px] font-bold leading-tight">
+          <Icon name="lock" size={12.5} strokeWidth={2} />
           {event.title}
         </span>
-        <span className="mt-0.5 text-[9.5px] font-medium opacity-70">Private · 10:00 AM</span>
+        <span className="mt-0.5 text-[12px] font-medium opacity-70">Private · 10:00 AM</span>
       </motion.button>
     );
   }
@@ -48,8 +48,8 @@ function EventChip({ event, onOpen }: { event: ScheduleEvent; onOpen: (title: st
           <Thumb scene={event.scene ?? "forest"} className="h-full w-full" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[11.5px] font-bold leading-tight text-ink">{event.title}</span>
-          <Meta icon="clock" iconSize={10} className="mt-0.5 text-[9.5px]">
+          <span className="block truncate text-[13.5px] font-bold leading-tight text-ink">{event.title}</span>
+          <Meta icon="clock" iconSize={10} className="mt-0.5 text-[12px]">
             {event.meta}
           </Meta>
         </span>
@@ -65,8 +65,8 @@ function EventChip({ event, onOpen }: { event: ScheduleEvent; onOpen: (title: st
       onClick={() => onOpen(event.title)}
       className="flex h-full w-full items-center gap-1.5 rounded-[10px] border border-dashed border-line-strong bg-white/70 px-2.5 py-1.5 text-left text-ink-muted backdrop-blur-sm"
     >
-      <Icon name="clock" size={11} strokeWidth={2} />
-      <span className="text-[11px] font-semibold leading-tight">{event.title}</span>
+      <Icon name="clock" size={12.5} strokeWidth={2} />
+      <span className="text-[13.5px] font-semibold leading-tight">{event.title}</span>
     </motion.button>
   );
 }
@@ -90,7 +90,7 @@ export function ScheduleSection() {
     <section ref={panelRef} className="relative h-full w-full overflow-hidden rounded-card bg-surface p-5 shadow-card">
       {/* header */}
       <div className="flex items-start justify-between gap-3">
-        <h2 className="font-display text-[22px] font-bold leading-tight tracking-[-0.03em] text-ink">Upcoming Schedule</h2>
+        <h2 className="font-display text-[24px] font-bold leading-tight tracking-[-0.03em] text-ink">Upcoming Schedule</h2>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-0.5 rounded-full border border-line bg-surface p-1">
@@ -101,7 +101,7 @@ export function ScheduleSection() {
               aria-label="Previous month"
               className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
             >
-              <Icon name="chevronLeft" size={13} strokeWidth={2.1} />
+              <Icon name="chevronLeft" size={14.5} strokeWidth={2.1} />
             </motion.button>
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.span
@@ -110,9 +110,9 @@ export function ScheduleSection() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2 }}
-                className="flex items-center gap-1.5 px-1.5 text-[11.5px] font-semibold text-ink-body"
+                className="flex items-center gap-1.5 px-1.5 text-[13.5px] font-semibold text-ink-body"
               >
-                <Icon name="calendar" size={13} />
+                <Icon name="calendar" size={14.5} />
                 {monthLabel}
               </motion.span>
             </AnimatePresence>
@@ -123,7 +123,7 @@ export function ScheduleSection() {
               aria-label="Next month"
               className="flex size-6 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
             >
-              <Icon name="chevronRight" size={13} strokeWidth={2.1} />
+              <Icon name="chevronRight" size={14.5} strokeWidth={2.1} />
             </motion.button>
           </div>
 
@@ -142,7 +142,7 @@ export function ScheduleSection() {
                   <motion.span layoutId="view-pill" transition={spring} className="absolute inset-0 rounded-full bg-white shadow-xs" />
                 )}
                 <span className="relative">
-                  <Icon name={v} size={13} strokeWidth={1.9} />
+                  <Icon name={v} size={14.5} strokeWidth={1.9} />
                 </span>
               </button>
             ))}
@@ -152,17 +152,17 @@ export function ScheduleSection() {
 
       {/* day headers */}
       <div className="mt-4 grid" style={{ gridTemplateColumns: GRID_COLS }}>
-        <span className="pt-3 text-[9.5px] font-medium uppercase tracking-wide text-ink-faint">Dec</span>
+        <span className="pt-3 text-[12px] font-medium uppercase tracking-wide text-ink-faint">Dec</span>
         {weekDays.map((d, i) => {
           const isActive = i === activeDay;
           return (
             <button key={d.short} onClick={() => setActiveDay(i)} className="group flex flex-col items-center gap-0.5 pb-2">
-              <span className={cn("text-[10.5px] font-medium", d.dimmed && !isActive ? "text-ink-faint" : "text-ink-muted")}>
+              <span className={cn("text-[13px] font-medium", d.dimmed && !isActive ? "text-ink-faint" : "text-ink-muted")}>
                 {d.short}
               </span>
               <span
                 className={cn(
-                  "text-[12.5px] font-bold transition-colors",
+                  "text-[14.5px] font-bold transition-colors",
                   isActive ? "text-primary" : d.dimmed ? "text-ink-faint" : "text-ink-body group-hover:text-ink",
                 )}
               >
@@ -205,7 +205,7 @@ export function ScheduleSection() {
                   className="relative grid border-t border-line/80"
                   style={{ gridTemplateColumns: GRID_COLS, height: ROW }}
                 >
-                  <span className="pt-2 text-[10px] font-medium text-ink-faint">{hour}</span>
+                  <span className="pt-2 text-[12.5px] font-medium text-ink-faint">{hour}</span>
                   {weekDays.map((d) => (
                     <span key={d.short} className="h-full border-l border-line/60" />
                   ))}
@@ -253,11 +253,11 @@ export function ScheduleSection() {
                 className="flex items-center gap-3 rounded-[14px] border border-line bg-subtle px-3 py-3 transition-colors hover:bg-muted"
               >
                 <span className="flex size-9 items-center justify-center rounded-[11px] bg-white text-teal-deep shadow-xs">
-                  <Icon name={ev.kind === "locked" ? "lock" : ev.kind === "rich" ? "compass" : "clock"} size={15} />
+                  <Icon name={ev.kind === "locked" ? "lock" : ev.kind === "rich" ? "compass" : "clock"} size={16.5} />
                 </span>
                 <span className="flex-1">
-                  <span className="block text-[12.5px] font-bold text-ink">{ev.title}</span>
-                  <Meta icon="calendar" iconSize={11} className="text-[10.5px]">
+                  <span className="block text-[14.5px] font-bold text-ink">{ev.title}</span>
+                  <Meta icon="calendar" iconSize={11} className="text-[13px]">
                     {`${weekDays[ev.dayIndex].short} ${weekDays[ev.dayIndex].date} Dec${
                       ev.meta?.includes("·") ? ` · ${ev.meta.split("·")[1]!.trim()}` : ""
                     }`}
@@ -288,16 +288,16 @@ export function ScheduleSection() {
         </div>
         <div className="px-1 pb-0.5 pt-2">
           <div className="flex items-start justify-between gap-2">
-            <h4 className="text-[13px] font-bold leading-tight tracking-[-0.01em] text-ink">{featuredEvent.title}</h4>
+            <h4 className="text-[15px] font-bold leading-tight tracking-[-0.01em] text-ink">{featuredEvent.title}</h4>
             <span className="mt-0.5 text-ink-faint">
-              <Icon name="more" size={13} strokeWidth={2.4} />
+              <Icon name="more" size={14.5} strokeWidth={2.4} />
             </span>
           </div>
           <div className="mt-1.5 flex items-center gap-2.5">
-            <Meta icon="calendar" iconSize={11} className="text-[9.5px]">
+            <Meta icon="calendar" iconSize={11} className="text-[12px]">
               {featuredEvent.dateRange}
             </Meta>
-            <Meta icon="clock" iconSize={11} className="text-[9.5px]">
+            <Meta icon="clock" iconSize={11} className="text-[12px]">
               {featuredEvent.time}
             </Meta>
           </div>
@@ -310,7 +310,7 @@ export function ScheduleSection() {
               aria-label="Open event"
               className="flex size-7 items-center justify-center rounded-full bg-primary-faint text-primary-deep"
             >
-              <Icon name="arrowUpRight" size={13} strokeWidth={2} />
+              <Icon name="arrowUpRight" size={14.5} strokeWidth={2} />
             </motion.button>
           </div>
         </div>

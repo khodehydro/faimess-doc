@@ -118,7 +118,7 @@ export function AvatarStack({ seeds, size = 26, more = 0, className }: StackProp
       {more > 0 && (
         <span
           className="-ml-2 inline-flex items-center justify-center rounded-full bg-primary-soft font-bold text-primary-deep ring-2 ring-white"
-          style={{ width: size, height: size, fontSize: size * 0.4 }}
+          style={{ width: size, height: size, fontSize: Math.max(10, size * 0.42) }}
         >
           +{more}
         </span>

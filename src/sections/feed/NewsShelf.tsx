@@ -60,14 +60,14 @@ export function NewsShelf() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-1.5">
-                <span className={cn("rounded-full px-2 py-[2px] text-[9px] font-bold uppercase tracking-wide", TAG_TONE[item.tag])}>
+                <span className={cn("rounded-full px-2 py-[2px] text-[12px] font-bold uppercase tracking-wide", TAG_TONE[item.tag])}>
                   {item.tag}
                 </span>
-                <span className="truncate text-[9.5px] text-ink-faint">{item.ago}</span>
+                <span className="truncate text-[12px] text-ink-faint">{item.ago}</span>
               </span>
-              <span className="mt-1 block line-clamp-2 text-[12px] font-bold leading-snug text-ink">{item.title}</span>
-              <span className="mt-1 flex items-center gap-1 text-[9.5px] text-ink-muted">
-                <Icon name="news" size={10} />
+              <span className="mt-1 block line-clamp-2 text-[14px] font-bold leading-snug text-ink">{item.title}</span>
+              <span className="mt-1 flex items-center gap-1 text-[12px] text-ink-muted">
+                <Icon name="news" size={12} />
                 {item.source}
               </span>
             </span>
@@ -75,7 +75,7 @@ export function NewsShelf() {
               transition={spring}
               className="mr-0.5 shrink-0 text-ink-faint transition-colors group-hover:text-primary"
             >
-              <Icon name="chevronRight" size={15} strokeWidth={2} />
+              <Icon name="chevronRight" size={16.5} strokeWidth={2} />
             </motion.span>
           </motion.div>
         ))}

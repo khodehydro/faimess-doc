@@ -154,12 +154,12 @@ export function HeroBanner() {
               transition={spring}
               className="w-[296px] rounded-[20px] bg-white/93 p-3 shadow-float backdrop-blur-md"
             >
-              <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-primary-deep">
-                <Icon name="sparkle" size={10} strokeWidth={2.2} />
+              <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[12px] font-bold uppercase tracking-wide text-primary-deep">
+                <Icon name="sparkle" size={12} strokeWidth={2.2} />
                 {banner.eyebrow}
               </span>
-              <h3 className="font-display text-[16px] font-bold leading-tight tracking-[-0.02em] text-ink">{banner.title}</h3>
-              <div className="mt-1.5 flex items-center gap-3 text-[11px] font-medium">
+              <h3 className="font-display text-[18px] font-bold leading-tight tracking-[-0.02em] text-ink">{banner.title}</h3>
+              <div className="mt-1.5 flex items-center gap-3 text-[13.5px] font-medium">
                 <Meta icon="calendar">{banner.dateRange}</Meta>
                 <Meta icon="clock">{banner.time}</Meta>
               </div>
@@ -178,7 +178,7 @@ export function HeroBanner() {
               className="mb-7 flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-primary"
             >
               <motion.span animate={{ y: [0, -2, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}>
-                <Icon name="folder" size={17} />
+                <Icon name="folder" size={18.5} />
               </motion.span>
             </motion.button>
           </motion.div>
