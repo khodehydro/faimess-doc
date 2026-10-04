@@ -43,11 +43,10 @@ export function CommentsSheet({
     setSort("newest");
   }, [trackId]);
 
+  /* no pinning: an artist would have to be signed in to pin, and they aren't */
   const list = useMemo(() => {
-    const pinned = comments.visibleThread.filter((c) => c.pinned);
-    const rest = comments.visibleThread.filter((c) => !c.pinned);
-    const ordered = sort === "top" ? [...rest].sort((a, b) => b.fires - a.fires) : rest;
-    return [...pinned, ...ordered];
+    const ordered = sort === "top" ? [...comments.visibleThread].sort((a, b) => b.fires - a.fires) : comments.visibleThread;
+    return ordered;
   }, [comments.visibleThread, sort]);
 
   return (
@@ -77,16 +76,11 @@ export function CommentsSheet({
               {reportTarget ? "Report this comment" : "Comments"}
             </h2>
             <p className="truncate text-[12.5px] text-ink-muted">
-              {reportTarget ? (
-                <>
-                  {reportTarget.handle} · “{reportTarget.text.slice(0, 46)}
-                  {reportTarget.text.length > 46 ? "…" : ""}”
-                </>
-              ) : (
-                <>
-                  {comments.total} {comments.total === 1 ? "comment" : "comments"} on “{trackTitle}”
-                </>
-              )}
+              {reportTarget
+                ? `${reportTarget.handle} · “${reportTarget.text.slice(0, 46)}${
+                    reportTarget.text.length > 46 ? "…" : ""
+                  }”`
+                : `${comments.total} ${comments.total === 1 ? "comment" : "comments"} on “${trackTitle}”`}
             </p>
           </div>
 
@@ -243,20 +237,18 @@ function CommentRow({
   }
 
   return (
-    <article className={cn("relative", comment.pinned && "rounded-panel bg-primary-faint/60 p-2.5")}>
-      {comment.pinned && (
-        <p className="mb-1.5 flex items-center gap-1 text-[11.5px] font-bold uppercase tracking-wider text-primary-deep">
-          <Icon name="pin" size={12} strokeWidth={2.2} />
-          Pinned by the artist
-        </p>
+    <article
+      className={cn(
+        "relative min-w-0",
+        comment.fromArtist && "rounded-panel bg-primary-faint/50 p-2.5",
       )}
-
-      <header className="flex items-start gap-2.5">
+    >
+      <header className="flex min-w-0 items-start gap-2.5">
         <Avatar src={comment.photo} size={34} badge={comment.badge} ring={comment.fromArtist} />
 
         <div className="min-w-0 flex-1">
-          <p className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[13px] font-bold text-ink">{comment.author}</span>
+          <p className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <span className="min-w-0 truncate text-[13px] font-bold text-ink">{comment.author}</span>
             {comment.verified && (
               <span className="text-primary" title="Verified account">
                 <Icon name="verified" size={13} strokeWidth={2.2} />
@@ -271,13 +263,13 @@ function CommentRow({
             <span className="text-[11.5px] text-ink-faint">·</span>
             <span className="text-[11.5px] font-semibold text-ink-faint">{comment.time}</span>
             {comment.badge && (
-              <span className="truncate rounded-full bg-subtle px-1.5 py-[1px] text-[10.5px] font-bold text-ink-muted">
+              <span className="max-w-[150px] truncate rounded-full bg-subtle px-1.5 py-[1px] text-[10.5px] font-bold text-ink-muted">
                 {comment.badge.label}
               </span>
             )}
           </p>
 
-          <p dir="auto" className="mt-1 text-[13px] leading-relaxed text-ink-body">
+          <p dir="auto" className="mt-1 text-[13px] leading-relaxed text-ink-body [overflow-wrap:anywhere]">
             {comment.text}
           </p>
 
@@ -447,8 +439,8 @@ function ReplyRow({
     <div className="flex items-start gap-2">
       <Avatar src={reply.photo} size={26} badge={reply.badge} ring={reply.fromArtist} />
       <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[12.5px] font-bold text-ink">{reply.author}</span>
+        <p className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <span className="min-w-0 truncate text-[12.5px] font-bold text-ink">{reply.author}</span>
           {reply.verified && (
             <span className="text-primary">
               <Icon name="verified" size={12} strokeWidth={2.2} />
@@ -458,7 +450,7 @@ function ReplyRow({
           <span className="text-[11px] text-ink-faint">·</span>
           <span className="text-[11px] font-semibold text-ink-faint">{reply.time}</span>
         </p>
-        <p dir="auto" className="mt-0.5 text-[12.5px] leading-relaxed text-ink-body">
+        <p dir="auto" className="mt-0.5 text-[12.5px] leading-relaxed text-ink-body [overflow-wrap:anywhere]">
           {reply.text}
         </p>
         <div className="mt-1 flex items-center gap-1">

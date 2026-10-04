@@ -115,3 +115,93 @@ export const LYRICS: Record<string, LyricLine[]> = {
     { at: 104, ko: "이 신호는 너에게 가는 중", fa: "این سیگنال داره به سمت تو می‌ره" },
   ],
 };
+
+/* ------------------------------------------------------------------ *
+ *  Community lyric submissions
+ *
+ *  Lyrics the editorial desk has approved come from fans: they send the
+ *  text, a moderator checks it against the official sheet, and approval
+ *  pays out points to the fan account. Nothing here is auto-published.
+ * ------------------------------------------------------------------ */
+
+/** points a fan earns once a submission is approved */
+export const LYRIC_REWARD = 120;
+
+/** how the sheet asks for the original text */
+export const LYRIC_LANGUAGES = ["한국어", "English", "Mixed"] as const;
+
+export type LyricSubmissionStatus = "pending" | "approved" | "rejected";
+
+export type LyricSubmission = {
+  id: string;
+  trackId: string;
+  trackTitle: string;
+  language: string;
+  /** how many lines the fan sent */
+  lines: number;
+  points: number;
+  status: LyricSubmissionStatus;
+  sentAt: string;
+  /** the raw text, kept so approved submissions can go live */
+  original: string;
+  translation: string;
+};
+
+/** moderation turned this one down — shown as an example of the finished loop */
+export const COMMUNITY_LYRICS: Record<string, { lines: LyricLine[]; by: string }> = {
+  sm1: {
+    by: "you",
+    lines: [
+      { at: 0, ko: "느린 영화처럼 천천히", fa: "مثل یه فیلمِ کُند، آرومآروم" },
+      { at: 14, ko: "Slow motion, we don’t have to run", fa: "اسلوموشن، لازم نیست بدویم" },
+      { at: 30, ko: "네 손끝이 내일을 그려", fa: "نوک انگشتات فردا رو میکشه" },
+      { at: 52, ko: "Hold the frame a little longer", fa: "این قاب رو یهکم بیشتر نگه دار" },
+      { at: 78, ko: "우리는 천천히 번져가", fa: "ما آرومآروم پخش میشیم" },
+      { at: 112, ko: "Slow motion, still moving", fa: "اسلوموشن، هنوز در حرکتی" },
+    ],
+  },
+};
+
+/** "[01:12] line" or plain "line" — timestamps are optional */
+const STAMP = /^\s*[[(]?(\d{1,2}):(\d{2})[\])]?\s*/;
+
+const splitLines = (text: string) =>
+  text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+/**
+ * Turn a fan's text into timed lyric lines. Lines with a `[mm:ss]` stamp keep
+ * it; the rest are spread evenly across the track so the highlight still walks.
+ */
+export function parseSubmission(original: string, translation: string, duration: number): LyricLine[] {
+  const source = splitLines(original);
+  const pairs = splitLines(translation);
+  const step = source.length > 0 ? Math.max(2, duration / source.length) : 8;
+  let stamped = false;
+
+  const lines = source.map((raw, i) => {
+    const match = raw.match(STAMP);
+    let at = Math.round(i * step);
+    let ko = raw;
+    if (match) {
+      stamped = true;
+      at = Number(match[1]) * 60 + Number(match[2]);
+      ko = raw.replace(STAMP, "").trim();
+    }
+    return { at, ko, fa: pairs[i] ?? "" };
+  });
+
+  /* mixed input: keep whatever order the stamps imply */
+  return stamped ? [...lines].sort((a, b) => a.at - b.at) : lines;
+}
+
+/** what stops the form from sending — null when the text is good enough */
+export function submissionProblem(original: string): string | null {
+  const lines = splitLines(original);
+  if (lines.length === 0) return "Paste the lyrics first.";
+  if (lines.length < 2) return "At least two lines, please.";
+  if (original.trim().length < 24) return "That looks too short to be a full sheet.";
+  return null;
+}

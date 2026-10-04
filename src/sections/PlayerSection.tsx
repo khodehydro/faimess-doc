@@ -4,11 +4,14 @@ import { Icon } from "../ui/Icon";
 import { Photo } from "../ui/Cover";
 import { Modal } from "../ui/Modal";
 import { usePlayer } from "../app/PlayerContext";
+import { useContributions } from "../app/ContributionsContext";
 import { useApp } from "../app/AppContext";
 import { activeLineIndex, lyricsFor, mmss, QUEUE, type PlayerTrack } from "../data/player";
 import { playlists } from "../data/library";
 import { CommentsBar } from "./player/CommentsBar";
 import { CommentsSheet } from "./player/CommentsSheet";
+import { SubmitLyrics } from "./player/SubmitLyrics";
+import { LYRIC_REWARD } from "../data/lyrics";
 import { me } from "../data/account";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
@@ -51,7 +54,12 @@ export function PlayerSection({
   const [railOpen, setRailOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const lines = lyricsFor(track);
+  const [lyricsOpen, setLyricsOpen] = useState(false);
+  const { approvedFor } = useContributions();
+  /* the editorial sheet wins; a fan sheet the mods approved fills the gap */
+  const sheet = lyricsFor(track);
+  const community = track && !sheet ? approvedFor(track.id) : null;
+  const lines = sheet ?? community?.lines ?? null;
   const { expanded, onToggleExpand } = params;
 
   const toggleRail = () => {
@@ -68,7 +76,7 @@ export function PlayerSection({
         onSelect={(id) => setPanel((p) => (p === id ? null : id))}
       />
 
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex shrink-0 items-center gap-2 px-3.5 pb-2 pt-3.5">
           <span className="flex size-7 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
             <Icon name="waveform" size={15} strokeWidth={2.2} />
@@ -130,7 +138,14 @@ export function PlayerSection({
                 expanded={expanded}
                 onDownload={() => setDownloadOpen(true)}
               />
-              <LyricsPanel lines={lines} position={player.position} playing={player.playing} />
+              <LyricsPanel
+                track={track}
+                lines={lines}
+                by={community?.by ?? null}
+                position={player.position}
+                playing={player.playing}
+                onSend={() => setLyricsOpen(true)}
+              />
               <CommentsBar trackId={track.id} onOpen={() => setCommentsOpen(true)} />
             </motion.div>
           )}
@@ -142,6 +157,8 @@ export function PlayerSection({
       </div>
 
       <DownloadDialog open={downloadOpen} onClose={() => setDownloadOpen(false)} />
+
+      {track && <SubmitLyrics track={track} open={lyricsOpen} onClose={() => setLyricsOpen(false)} />}
 
       {track && (
         <CommentsSheet
@@ -630,14 +647,23 @@ function LikeButton({ player }: { player: PlayerApi }) {
 /* ----------------------------- lyrics panel ---------------------------- */
 
 function LyricsPanel({
+  track,
   lines,
+  by,
   position,
   playing,
+  onSend,
 }: {
+  track: PlayerTrack;
   lines: ReturnType<typeof lyricsFor>;
+  /** set when the sheet came from a fan whose submission the mods approved */
+  by: string | null;
   position: number;
   playing: boolean;
+  onSend: () => void;
 }) {
+  const { pendingFor } = useContributions();
+  const pending = pendingFor(track.id);
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement>(null);
   const touchedAt = useRef(0);
@@ -669,6 +695,14 @@ function LyricsPanel({
         </span>
       </header>
 
+      {by && (
+        <p className="mx-2.5 mb-1.5 flex items-center gap-1.5 rounded-panel bg-mint-soft/70 px-2.5 py-1.5 text-[12px] font-semibold text-teal-deep">
+          <Icon name="check" size={13} strokeWidth={2.6} />
+          Fan sheet by {by === "you" ? "you" : `@${by}`} · approved by the mods ·{" "}
+          <span className="font-extrabold">+{LYRIC_REWARD} pts</span>
+        </p>
+      )}
+
       <div
         ref={scrollRef}
         onScroll={() => {
@@ -677,9 +711,41 @@ function LyricsPanel({
         className="scroll-slim mask-fade-b min-h-0 flex-1 overflow-y-auto px-2.5 pb-7 pt-0.5"
       >
         {!lines ? (
-          <p className="px-1 py-6 text-center text-[13px] text-ink-faint">
-            Lyrics for this track aren’t in the demo set yet.
-          </p>
+          <div className="flex flex-col items-center px-3 py-6 text-center">
+            <span className="flex size-10 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
+              <Icon name="mic" size={18} strokeWidth={2.1} />
+            </span>
+            <p className="font-display mt-2.5 text-[14px] font-bold text-ink">
+              No lyrics for this one yet
+            </p>
+            <p className="mt-1 max-w-[290px] text-[12.5px] leading-relaxed text-ink-muted">
+              {pending
+                ? "Your sheet is with the moderators. Once it’s approved the words show up right here — and the points land in your fan account."
+                : "Know the words by heart? Send the sheet — a moderator checks it against the official text before it goes live."}
+            </p>
+            {pending ? (
+              <span className="mt-2.5 flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1 text-[12px] font-bold text-ink-muted">
+                <Icon name="clock" size={13} />
+                Pending review
+              </span>
+            ) : (
+              <motion.button
+                whileHover={{ y: -1.5 }}
+                whileTap={{ scale: 0.97 }}
+                transition={spring}
+                onClick={onSend}
+                className="mt-2.5 flex items-center gap-2 rounded-[14px] bg-primary px-3.5 py-2.5 text-[13.5px] font-bold text-white shadow-primary"
+              >
+                <Icon name="send" size={15} strokeWidth={2.1} />
+                Send the lyrics
+              </motion.button>
+            )}
+            <span className="mt-2 text-[12px] font-semibold text-ink-faint">
+              {pending
+                ? "A moderator usually replies within a day"
+                : `Approved sheets pay +${LYRIC_REWARD} fan points`}
+            </span>
+          </div>
         ) : (
           <div className="flex flex-col gap-0.5">
             {lines.map((line, i) => {

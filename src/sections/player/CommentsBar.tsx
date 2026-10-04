@@ -17,7 +17,7 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
   const second = comments.thread.find((c) => c.replies.length > 0);
 
   return (
-    <section className="shrink-0 border-t border-line">
+    <section className="min-w-0 shrink-0 overflow-hidden border-t border-line">
       <header className="flex items-center gap-1.5 px-3.5 pt-2">
         <span className="text-ink-faint">
           <Icon name="message" size={13.5} />
@@ -38,20 +38,24 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
         </motion.button>
       </header>
 
-      {/* the newest comment, as a taster — tap for the whole discussion */}
+      {/* the newest comment, as a taster — tap for the whole discussion.
+          The text lives in its own block so a long comment truncates with an
+          ellipsis instead of pushing the row (and the card) around. */}
       {latest && (
         <button
           onClick={onOpen}
-          className="group mt-1.5 flex w-full items-center gap-2 px-3.5 text-left"
+          className="group mt-1.5 flex w-full min-w-0 items-center gap-2 px-3.5 text-left"
           aria-label="Open the comment thread"
         >
           <Avatar src={latest.photo} size={22} badge={latest.badge} />
-          <span className="min-w-0 flex-1 truncate text-[12.5px] text-ink-muted">
-            <span className="font-bold text-ink-body">{latest.handle}</span>{" "}
-            <span dir="auto">{latest.text}</span>
-          </span>
-          <span className="shrink-0 text-[11px] font-semibold text-ink-faint transition-colors group-hover:text-primary-deep">
-            {latest.time}
+          <span className="min-w-0 flex-1">
+            <span className="flex min-w-0 items-baseline gap-1.5">
+              <span className="min-w-0 truncate text-[12.5px] font-bold text-ink-body">{latest.handle}</span>
+              <span className="shrink-0 text-[11px] font-semibold text-ink-faint">{latest.time}</span>
+            </span>
+            <span dir="auto" className="mt-0.5 block truncate text-[12.5px] text-ink-muted">
+              {latest.text}
+            </span>
           </span>
         </button>
       )}
@@ -59,7 +63,7 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
       {second && (
         <button
           onClick={onOpen}
-          className="group mt-0.5 flex w-full items-center gap-2 px-3.5 text-left"
+          className="group mt-1 flex w-full min-w-0 items-center gap-2 px-3.5 text-left"
           aria-label="Open the comment thread"
         >
           <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-subtle text-ink-faint">
@@ -74,7 +78,7 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
         </button>
       )}
 
-      <CommentComposer trackId={trackId} className="px-3.5 pb-3 pt-2" />
+      <CommentComposer trackId={trackId} className="min-w-0 px-3.5 pb-3 pt-2" />
     </section>
   );
 }

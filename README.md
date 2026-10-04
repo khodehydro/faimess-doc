@@ -69,6 +69,7 @@ src/
 │   ├── AppContext.tsx   کانتکست مشترک: route / navigate / notify (toast)
 │   ├── PlayerContext.tsx  حالت پخش: ترک فعلی · play/pause/next/prev/seek · صدای واقعی
 │   ├── CommentsContext.tsx  ترد کامنت هر ترک: ارسال · ریپلای · فایر · گزارش · حذف
+│   ├── ContributionsContext.tsx  شیت‌های لیریکی که کاربران می‌فرستند: pending · تأیید · امتیاز
 │   ├── router.ts        روتر hash مینیمال (بدون وابستگی) — Home/Artists/Albums/Playlists
 │   └── ToastHost.tsx    نمایش اعلان‌های گذرا
 ├── sections/            ← همهٔ بخش‌ها اینجا؛ هر بخش یک ماژول مستقل
@@ -77,7 +78,8 @@ src/
 │   ├── NavCard.tsx      کارت ۲ — پیل منوی اصلی
 │   ├── AccountCard.tsx  کارت ۳ — پیل سرچ/اعلان/پروفایل
 │   ├── PlayerSection.tsx  کارت ۵ — پلیر (TrackPanel ۴۰٪ + LyricsPanel ۶۰٪ + نوار کامنت)
-│   ├── player/            CommentsBar · CommentComposer · CommentsSheet
+│   ├── player/            CommentsBar · CommentComposer · CommentsSheet · SubmitLyrics (فرم ارسال لیریک)
+│   ├── ContributionsModal.tsx  «Your contributions» — ارسال‌ها، امتیاز، اکشن مدیر
 │   ├── GreetingSection.tsx · MessagesSection.tsx   (در رجیستری می‌مانند، روی Home سوار نیستند)
 │   ├── HeroBanner.tsx   بنر چرخشی با دکمه‌های قبلی/بعدی
 │   ├── ScheduleSection.tsx     (آماده برای صفحات دیگر)
@@ -130,10 +132,10 @@ src/
 | فایل | نقش |
 |---|---|
 | `src/data/player.ts` | صف پخش `QUEUE` از همان آیتم‌های فید + `trackById` · `leadTrackFor` · `lyricsFor` · `mmss` |
-| `src/data/lyrics.ts` | لیریک ۹ ترک با شکل `{ at, ko, fa }` — زمان (ثانیه)، متن اصلی، ترجمهٔ فارسی |
+| `src/data/lyrics.ts` | لیریک ۹ ترک با شکل `{ at, ko, fa }` — زمان (ثانیه)، متن اصلی، ترجمهٔ فارسی (+ بخش شیت‌های کاربران در ادامهٔ همین فایل) |
 | `src/app/PlayerContext.tsx` | `usePlayer()`: ترک فعلی، `playing`، `position`، `progress`، `queue`، `liked`، `realAudio` و `play/toggle/next/prev/seek/stop/toggleLike` |
 | `src/assets/audio/faimess-demo.mp3` | مستر دمو (۲:۴۰، مونو) که همهٔ ترک‌ها فعلاً پخش می‌کنند — ساخته‌شده با `tools/make-demo-audio.py` |
-| `src/sections/PlayerSection.tsx` | UI کارت: ریل مدیریت + `TrackPanel` (۴۰٪) + `LyricsPanel` (۶۰٪) + `PlayerDrawer` + `DownloadButton` + حالت خالی |
+| `src/sections/PlayerSection.tsx` | UI کارت: ریل مدیریت + `TrackPanel` (۴۰٪) + `LyricsPanel` (۶۰٪، شامل حالت «لیریک نداریم») + `PlayerDrawer` + `DownloadButton` + حالت خالی |
 
 **همهٔ دکمه‌های پخش اپ به همین کارت وصل‌اند** — «Newest songs» و «Trending now» در فید و دکمه‌های پخش آرتیست/آلبوم در صفحه‌های Artists/Albums. دو آهنگ هم در «جدیدترین» و هم در «ترند» هستند و صف فقط یک نسخه از هرکدام را نگه می‌دارد (`SAME_SONG`).
 
@@ -145,7 +147,7 @@ src/
 
 - **باکس ارسال کامنت:** آواتار خودت (با نشان آخرین جایزه‌ات) + اینپوت + دکمهٔ ارسال؛ `Enter` می‌فرستد، `Escape` انصراف، شمارندهٔ ۲۴۰ کاراکتر، و متن با `dir="auto"` رندر می‌شود تا کامنت فارسی درست راست‌چین بیفتد.
 - **نمای تیزر:** تازه‌ترین کامنت + تعداد ریپلای‌های انجمن، و دکمهٔ **See all** (بالای نوار) که گفت‌وگوی کامل را باز می‌کند.
-- **شیت کامنت‌ها:** هدر با تعداد + سورت (`Newest` / `Top fired`)، کامنت پین‌شدهٔ آرتیست بالای لیست، ترد ریپلای‌ها (نمایش/مخفی)، دکمهٔ **Load N more comments** و در انتها پیام «همهٔ کامنت‌های این بیلد دمو».
+- **شیت کامنت‌ها:** هدر با تعداد + سورت (`Newest` / `Top fired`)، ترد ریپلای‌ها (نمایش/مخفی)، دکمهٔ **Load N more comments** و در انتها پیام «همهٔ کامنت‌های این بیلد دمو». کامنت خود آرتیست فقط با تینت بنفش (`bg-primary-faint/50`) جدا می‌شود — **پین نداریم**، چون آرتیست خودش داخل سایت نیست که کامنتی را بالا نگه دارد.
 - **ریپلای و بحث:** زیر هر کامنت دکمهٔ Reply → باکس ریپلای درجا (`Reply to @handle…`)، ریپلای‌ها تودرتو با خط راهنما، و پاسخ‌های خود آرتیست با حلقهٔ بنفش + بج `ARTIST`.
 - **گزارش:** منوی ⋯ هر کامنت → `Report comment` → خود شیت به حالت گزارش می‌رود (۵ دلیل: Spam / Harassment / Spoiler / Misinformation / Something else) → ثبت = کامنت به‌شکل «Hidden — you reported this as …» جمع می‌شود با دکمهٔ **Undo**.
 - **نشان کاربران:** هر آواتار می‌تواند کرستِ **آخرین جایزه** را گوشه‌اش داشته باشد (👑 Top listener · Season 12، 📈 Weekly chart #1، ⭐ Fan of the month، ⚡ 30-day streak، 🏅 Community moderator، ✨ Rookie of the week) — با tooltip و چیپ برچسب کنار نام.
@@ -159,6 +161,24 @@ src/
 | `src/sections/player/CommentsBar.tsx` | نوار پایین کارت (شمارش + تیزر + کامپوزر) |
 | `src/sections/player/CommentComposer.tsx` | کامپوزر کامنت و ریپلای (مشترک) |
 | `src/sections/player/CommentsSheet.tsx` | شیت کامل: سورت، ترد، ریپلای، گزارش، Load more |
+
+## لیریک کاربران (ارسال · تأیید مدیریت · امتیاز)
+
+هر ترکی لیریک ندارد، پنل لیریک خودش دعوت‌نامه می‌شود:
+
+- **حالت خالی:** آیکن میکروفن + «No lyrics for this one yet» + یک خط توضیح + دکمهٔ بنفش **Send the lyrics** و خط «Approved sheets pay +120 fan points». اگر همان کاربر قبلاً شیت فرستاده باشد، جای دکمه پیام «Pending review» با آیکن ساعت می‌نشیند.
+- **فرم ارسال (`SubmitLyrics`):** زبان متن اصلی (한국어 / English / Mixed)، متن لیریک (هر خط یک خط؛ تایم‌استمپ `[01:12]` اختیاری) و ترجمهٔ فارسی اختیاری. اعتبارسنجی با `submissionProblem`: حداقل ۲ خط و ۲۴ کاراکتر؛ تا آن حد دکمه غیرفعال و دلیلش زیر فرم نوشته می‌شود.
+- **بعد از ارسال:** مودال حالت «Sent to the moderators» می‌گیرد، توست «Lyrics sent for review — +120 pts once approved» می‌آید و ارسال با وضعیت **Pending review** ثبت می‌شود.
+- **تأیید از سمت مدیریت:** بیلد ادمین‌کنسول ندارد؛ `ContributionsContext` دو اکشن `approve(id)` / `reject(id)` دارد که نقش میز تحریریه را بازی می‌کنند و از پنل **Your contributions** (پاپ‌آور پروفایل، کارت ۳) در دسترس‌اند. با **Approve**: امتیاز به حساب اضافه می‌شود (توست `Sheet approved — +120 points`)، متن به‌عنوان لیریک همان ترک منتشر می‌شود (با تایم‌های پخش‌شده در طول ترک) و زیر هدر لیریک خط اعتبار «Fan sheet by you · approved by the mods · +120 pts» می‌آید.
+- **امتیاز در پروفایل:** `data/account.ts` حالا `points` دارد (`1,840` پایه) و `ContributionsProvider` جمع تأییدشده‌ها را رویش می‌گذارد؛ پاپ‌آور پروفایل موجودی + تعداد در انتظار را نشان می‌دهد و پنل «Your contributions» همهٔ ارسال‌ها را با وضعیت (Pending review / Approved / Sent back)، تعداد خط، زبان و زمان ارسال لیست می‌کند.
+- **نمونهٔ آماده:** `COMMUNITY_LYRICS.sm1` یک شیت تأییدشده برای «Slow Motion» (آلبوم LUNEX) است تا حلقهٔ کامل — از پنل خالی تا اعتبار بنفش و امتیاز — بدون هیچ کلیکی دیده شود. سه ترک `pb1` / `le1` / `sm1` در `QUEUE` همان «برش‌های آلبومی» هستند که شیت تحریریه ندارند.
+
+| فایل | نقش |
+|---|---|
+| `src/data/lyrics.ts` | لیریک تحریریه + `LYRIC_REWARD` · `COMMUNITY_LYRICS` · `parseSubmission` · `submissionProblem` · تایپ `LyricSubmission` |
+| `src/app/ContributionsContext.tsx` | `useContributions()`: `submissions` · `pendingFor` · `approvedFor` · `send` · `approve` / `reject` · `points` |
+| `src/sections/player/SubmitLyrics.tsx` | فرم ارسال + حالت «Sent to the moderators» |
+| `src/sections/ContributionsModal.tsx` | «Your contributions»: موجودی امتیاز، لیست ارسال‌ها، اکشن مدیر (استند-این دمو) |
 
 ## سیستم طراحی (FAIMESS)
 

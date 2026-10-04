@@ -280,6 +280,23 @@ CommentsProvider (src/app/CommentsContext.tsx)      ← دور Shell، کنار 
 - **نشان‌ها:** `src/data/badges.ts` کاتالوگ `BADGES` است؛ `Avatar` پراپ `badge` را می‌گیرد و کرست را گوشهٔ آواتار می‌کشد (`title` = برچسب کامل). حساب خودِ کاربر (`data/account.ts`) هم نشانش را دارد.
 - **وضعیت:** همهٔ نوشتن‌ها در `CommentsProvider` می‌نشینند (`list`، `visible`، `reported`) تا نوار پایین کارت و شیت همیشه یکی باشند؛ رفرش صفحه سید را برمی‌گرداند (دمو بک‌اند ندارد).
 - **گزارش:** هر گزارش با کلید `commentId:replyId` نگه داشته می‌شود؛ کامنت گزارش‌شده از دید کاربر «Hidden» می‌شود و با `Undo` برمی‌گردد (حذف واقعی سمت سرور نیست).
+- **پین نداریم:** آرتیست خودش داخل سایت نیست که کامنتش را بالا نگه دارد، پس کامنت‌های `fromArtist` فقط تینت بنفش می‌گیرند و سورت‌ها کاملاً زمانی/امتیازی‌اند (`pinned` از تایپ `Comment` و از سیدها هم حذف شد).
+
+### ۱۰.۲ شیت‌های لیریک کاربران
+
+```
+ContributionsProvider (src/app/ContributionsContext.tsx)   ← داخل Shell، کنار CommentsProvider
+├── LyricsPanel (PlayerSection)   حالت خالی: «No lyrics for this one yet» + دکمهٔ Send the lyrics
+│                                 لیریک تأییدشدهٔ کاربر: خط اعتبار «Fan sheet by you · approved by the mods»
+├── SubmitLyrics                  مودال فرم: زبان · متن · ترجمه · اعتبارسنجی → ثبت با وضعیت pending
+├── ContributionsModal            «Your contributions»: لیست ارسال‌ها + موجودی امتیاز + Approve / Send back
+└── AccountCard                   پاپ‌آور پروفایل: چیپ امتیاز + تعداد شیت در انتظار + ورود به پنل
+```
+
+- **داده:** لیریک تحریریه در `LYRICS` می‌ماند؛ شیت‌های کاربران شکل `LyricSubmission` دارند (`status: pending | approved | rejected`). `COMMUNITY_LYRICS` یک نمونهٔ تأییدشدهٔ سید دارد تا حلقه در حالت پایانی هم دیده شود.
+- **ورودی آزاد:** `parseSubmission` متن‌های `[mm:ss]` را به `at` تبدیل می‌کند و اگر تایمی نباشد خطوط را یکنواخت روی طول ترک پخش می‌کند؛ پس هایلایت همیشه کار می‌کند. `submissionProblem` دروازهٔ اعتبارسنجی است (۲ خط / ۲۴ کاراکتر) و هم فرم و هم `check:ssr` از آن استفاده می‌کنند.
+- **تأیید مدیریت:** بک‌اندی نیست، پس `approve` / `reject` همان تصمیم میز تحریریه‌اند؛ `approve` امتیاز (`LYRIC_REWARD = 120`) را به جمع حساب اضافه می‌کند، `approvedFor(trackId)` متن را به پلیر می‌دهد و `reject` ارسال را «Sent back» می‌کند. `points = me.points + Σ approved`.
+- **ترتیب اولویت متن:** اگر شیت تحریریه باشد بازی می‌کند (`lyricsFor`)، وگرنه شیت تأییدشدهٔ کاربر (`approvedFor`). سه برش آلبومی `pb1` / `le1` / `sm1` عمداً شیت ندارند تا مسیر ارسال در دسترس باشد.
 
 ## ۱۱. تصویرسازی‌ها
 

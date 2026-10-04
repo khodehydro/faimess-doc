@@ -10,6 +10,7 @@ import { renderToString } from "react-dom/server";
 import { AppProvider } from "../src/app/AppContext";
 import { PlayerProvider } from "../src/app/PlayerContext";
 import { CommentsProvider } from "../src/app/CommentsContext";
+import { ContributionsProvider } from "../src/app/ContributionsContext";
 import { PlayerSection } from "../src/sections/PlayerSection";
 import { DownloadPage } from "../src/pages/DownloadPage";
 import { HomePage } from "../src/pages/HomePage";
@@ -23,7 +24,13 @@ import { activeUsers, newestTracks, trendingTracks } from "../src/data/feed";
 import { conversations } from "../src/data/messages";
 import { me } from "../src/data/account";
 import { QUEUE, lyricsFor, trackById } from "../src/data/player";
-import { LYRICS } from "../src/data/lyrics";
+import {
+  COMMUNITY_LYRICS,
+  LYRICS,
+  LYRIC_REWARD,
+  parseSubmission,
+  submissionProblem,
+} from "../src/data/lyrics";
 import { existsSync, readFileSync, statSync } from "node:fs";
 
 /* minimal browser surface for React + framer-motion */
@@ -66,12 +73,17 @@ function check(name: string, ok: boolean, detail = "") {
   }
 }
 
+/** SSR drops `<!-- -->` between adjacent text nodes — strip them before matching prose */
+const plain = (html: string) => html.replace(/<!--[\s\S]*?-->/g, "");
+
 const render = (Page: () => ReactElement) =>
   renderToString(
     <AppProvider>
       <PlayerProvider>
         <CommentsProvider>
-          <Page />
+          <ContributionsProvider>
+            <Page />
+          </ContributionsProvider>
         </CommentsProvider>
       </PlayerProvider>
     </AppProvider>,
@@ -94,7 +106,11 @@ check("player opens empty", home.includes("nothing playing yet"));
 
 check("queue has every feed song, once", new Set(QUEUE.map((t) => `${t.title}|${t.artist}`)).size === QUEUE.length, `${QUEUE.length} tracks`);
 check("queue entries carry a length", QUEUE.every((t) => t.seconds > 60), `${QUEUE.map((t) => t.seconds).join(", ")}`);
-check("every queue track has lyrics", QUEUE.every((t) => (lyricsFor(t)?.length ?? 0) >= 4));
+check("the feed songs all have an editorial sheet", QUEUE.filter((t) => t.id.startsWith("nt") || t.id.startsWith("tr")).every((t) => (lyricsFor(t)?.length ?? 0) >= 4));
+check("three album cuts ship with no sheet", QUEUE.filter((t) => lyricsFor(t) === null).length >= 3, "so fans can send one");
+check("a fan sheet already covers one of them", (COMMUNITY_LYRICS.sm1?.lines.length ?? 0) >= 4);
+check("a sheet under two lines is refused", submissionProblem("한 줄만") !== null && submissionProblem("") !== null);
+check("a real sheet passes review", submissionProblem("해가 진 뒤에도\n노을이 번져\n우리는 천천히 걸어") === null);
 check("lyrics keys all resolve to queue ids", Object.keys(LYRICS).every((id) => QUEUE.some((t) => t.id === id)), Object.keys(LYRICS).join(", "));
 check("every lyric line is bilingual", Object.values(LYRICS).every((lines) => lines.every((l) => l.ko.length > 0 && l.fa.length > 0)));
 check("lyric timings ascend", Object.values(LYRICS).every((lines) => lines.every((l, i) => i === 0 || l.at > lines[i - 1].at)));
@@ -118,7 +134,9 @@ const playingCard = renderToString(
   <AppProvider>
     <PlayerProvider initialTrackId="nt1">
       <CommentsProvider>
-        <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />
+        <ContributionsProvider>
+          <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />
+        </ContributionsProvider>
       </CommentsProvider>
     </PlayerProvider>
   </AppProvider>,
@@ -146,6 +164,46 @@ check("rail ships behind more", playingCard.includes("More — queue, liked song
 check("rail labels are in the markup", ["Play queue", "Liked songs", "Playlists"].every((l) => playingCard.includes(l)));
 check("rail starts hidden", playingCard.includes("inert=") || playingCard.includes("inert"));
 check("the playing track can be liked", playingCard.includes("Remove from Liked songs") && playingCard.includes('aria-pressed="true"'));
+
+/* a track with no editorial sheet — the fan submission loop */
+const noSheet = renderToString(
+  <AppProvider>
+    <PlayerProvider initialTrackId="pb1">
+      <CommentsProvider>
+        <ContributionsProvider>
+          <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />
+        </ContributionsProvider>
+      </CommentsProvider>
+    </PlayerProvider>
+  </AppProvider>,
+);
+check("a sheetless track invites the fans", noSheet.includes("No lyrics for this one yet"));
+check("the empty panel carries the send button", noSheet.includes("Send the lyrics"));
+check("the panel says what approval pays", noSheet.includes(`+${LYRIC_REWARD} fan points`));
+check("no editorial lines leak into the empty sheet", !noSheet.includes("Paper Boats · SEORA") || noSheet.includes("No lyrics"));
+
+const fanSheet = renderToString(
+  <AppProvider>
+    <PlayerProvider initialTrackId="sm1">
+      <CommentsProvider>
+        <ContributionsProvider>
+          <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />
+        </ContributionsProvider>
+      </CommentsProvider>
+    </PlayerProvider>
+  </AppProvider>,
+);
+check("an approved fan sheet renders as the lyrics", fanSheet.includes("Slow motion, we don’t have to run"));
+check(
+  "the fan gets the credit line",
+  plain(fanSheet).includes("Fan sheet by you") && plain(fanSheet).includes("approved by the mods"),
+);
+check("the account carries a points balance", me.points > 0 && plain(fanSheet).includes(`+${LYRIC_REWARD} pts`));
+check("moderator actions exist in the provider", ["approve", "reject"].every((k) => readFileSync("src/app/ContributionsContext.tsx", "utf8").includes(k)));
+check(
+  "submission parsing keeps the stamps",
+  parseSubmission("[00:30] line one\n[00:12] line two", "", 200).map((l) => l.at).join(",") === "12,30",
+);
 
 /* ------------------------------- comments ----------------------------- */
 

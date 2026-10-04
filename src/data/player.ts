@@ -9,6 +9,9 @@
 
 import demoAudio from "../assets/audio/faimess-demo.mp3";
 import { albums } from "./library";
+import longExposurePhoto from "../assets/photos/albums/long-exposure.webp";
+import paperBoatsPhoto from "../assets/photos/albums/paper-boats.webp";
+import slowMotionPhoto from "../assets/photos/albums/slow-motion.webp";
 import { newestTracks, trendingTracks } from "./feed";
 import { LYRICS, type LyricLine } from "./lyrics";
 
@@ -61,10 +64,44 @@ const fromTrack = (t: FeedTrack): PlayerTrack => ({
 
 const isSameSong = (a: FeedTrack, b: FeedTrack) => a.title === b.title && a.artist === b.artist;
 
+/** older album cuts — reachable from the rail's "Up next" list */
+const DEEP_CUTS: PlayerTrack[] = [
+  {
+    id: "pb1",
+    title: "Paper Boats",
+    artist: "SEORA",
+    album: "Paper Boats",
+    seconds: 224,
+    photo: paperBoatsPhoto,
+    audio: demoAudio,
+  },
+  {
+    id: "le1",
+    title: "Long Exposure",
+    artist: "AXION",
+    album: "Long Exposure",
+    seconds: 252,
+    photo: longExposurePhoto,
+    audio: demoAudio,
+  },
+  {
+    id: "sm1",
+    title: "Slow Motion",
+    artist: "LUNEX",
+    album: "Slow Motion",
+    seconds: 202,
+    photo: slowMotionPhoto,
+    audio: demoAudio,
+  },
+];
+
 /** the queue: the newest songs first, then the trends that aren't in it yet */
 export const QUEUE: PlayerTrack[] = [
   ...newestTracks.map(fromTrack),
   ...trendingTracks.filter((t) => !newestTracks.some((n) => isSameSong(n, t))).map(fromTrack),
+  /* album cuts the shelves don't carry — and the only ones without a lyric
+     sheet yet, so "send the lyrics" has somewhere to show up */
+  ...DEEP_CUTS,
 ];
 
 const BY_ID = new Map(QUEUE.map((t) => [t.id, t]));
@@ -97,10 +134,10 @@ export const leadAlbumFor = (artist: string) => {
   );
 };
 
-/** lyrics for a track — direct hit, or the artist's lead single as a fallback */
+/** the editorial lyric sheet — null means nobody has sent one yet */
 export function lyricsFor(track: PlayerTrack | null): LyricLine[] | null {
   if (!track) return null;
-  return LYRICS[track.id] ?? LYRICS[LEAD_TRACK[track.artist] ?? ""] ?? null;
+  return LYRICS[track.id] ?? null;
 }
 
 /** "1:04" — the seek bar's clock */

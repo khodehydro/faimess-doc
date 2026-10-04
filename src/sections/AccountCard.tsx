@@ -5,6 +5,8 @@ import { Avatar } from "../ui/Avatar";
 import { CircleButton } from "../ui/primitives";
 import { useClickOutside } from "../hooks/useClickOutside";
 import { useApp } from "../app/AppContext";
+import { useContributions } from "../app/ContributionsContext";
+import { ContributionsModal } from "./ContributionsModal";
 import { navItems, notifications } from "../data/navigation";
 import { allRoutes } from "../app/router";
 import { artists, albums, playlists } from "../data/library";
@@ -24,6 +26,9 @@ export function AccountCard() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [contribOpen, setContribOpen] = useState(false);
+  const { points, submissions } = useContributions();
+  const pendingSheets = submissions.filter((s) => s.status === "pending").length;
   const [focused, setFocused] = useState(false);
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -218,13 +223,27 @@ export function AccountCard() {
             >
               <div className="flex items-center gap-2.5 px-2 py-2">
                 <Avatar src={me.photo} seed={0} size={34} />
-                <span>
-                  <span className="block text-[14px] font-bold text-ink">{me.name}</span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[14px] font-bold text-ink">{me.name}</span>
                   <span className="text-[12px] text-ink-muted">{me.tier}</span>
                 </span>
               </div>
+
+              <div className="mx-1 mb-1 flex items-center gap-2 rounded-[13px] bg-primary-faint/70 px-2.5 py-2">
+                <Icon name="star" size={14} className="text-primary-deep" />
+                <span className="text-[12.5px] font-bold text-ink">
+                  {points.toLocaleString("en-US")} fan points
+                </span>
+                {pendingSheets > 0 && (
+                  <span className="ml-auto rounded-full bg-primary px-1.5 py-[1px] text-[11px] font-extrabold text-white">
+                    {pendingSheets}
+                  </span>
+                )}
+              </div>
+
               <span className="my-1 block h-px w-full bg-line" />
               {[
+                { label: "Your contributions", icon: "medal" as const, contributions: true },
                 { label: "Your library", icon: "folder" as const },
                 { label: "Liked tracks", icon: "heart" as const },
                 { label: "Sign out", icon: "arrowUpRight" as const },
@@ -233,7 +252,8 @@ export function AccountCard() {
                   key={r.label}
                   onClick={() => {
                     setProfileOpen(false);
-                    notify(r.label);
+                    if (r.contributions) setContribOpen(true);
+                    else notify(r.label);
                   }}
                   className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[14px] font-semibold text-ink-body transition-colors hover:bg-subtle hover:text-ink"
                 >
@@ -245,6 +265,8 @@ export function AccountCard() {
           )}
         </AnimatePresence>
       </div>
+
+      <ContributionsModal open={contribOpen} onClose={() => setContribOpen(false)} />
     </div>
   );
 }

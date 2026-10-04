@@ -47,7 +47,6 @@ export type Comment = {
   verified?: boolean;
   /** an artist or staff answer — highlighted in the thread */
   fromArtist?: boolean;
-  pinned?: boolean;
   /** written by the signed-in listener, so it can be deleted */
   mine?: boolean;
   replies: Comment[];
@@ -86,7 +85,6 @@ const AFTERGLOW: Comment[] = [
     fires: 4820,
     badge: BADGES.artist,
     verified: true,
-    pinned: true,
     fromArtist: true,
     replies: [
       fan("c-af-1r1", "Yunha", "@yunha", yunhaPhoto, "52 min ago", "we love you so much 🥺 see you in Seoul", 218, BADGES.topListener),
@@ -154,7 +152,6 @@ const MIDNIGHT_SEOUL: Comment[] = [
     fires: 2310,
     badge: BADGES.artist,
     verified: true,
-    pinned: true,
     fromArtist: true,
     replies: [fan("c-ms-1r1", "Yuna", "@yuna", yunaPhoto, "1 hr ago", "you can hear the traffic in the intro, I'm obsessed", 143, BADGES.fanOfMonth)],
   },
@@ -203,7 +200,6 @@ const CHERRY_STATIC: Comment[] = [
     fires: 1640,
     badge: BADGES.artist,
     verified: true,
-    pinned: true,
     fromArtist: true,
     replies: [fan("c-cs-1r1", "Jxnnie", "@jxnnie", jxnniePhoto, "3 hrs ago", "leave it in the mix, it's perfect", 88, BADGES.streak)],
   },

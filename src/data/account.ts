@@ -12,4 +12,6 @@ export const me = {
   photo: mePhoto,
   /** the last award this account picked up — shown on the avatar crest */
   badge: BADGES.topListener,
+  /** fan points balance — approved contributions add to it */
+  points: 1840,
 };
