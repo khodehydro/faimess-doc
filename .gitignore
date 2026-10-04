@@ -36,3 +36,6 @@ pnpm-debug.log*
 
 # raw image-search candidates (working files, not shipped)
 image-search/
+
+# icon build cache (tools/icons/build.mjs downloads it on demand)
+tools/icons/lets-icons.json

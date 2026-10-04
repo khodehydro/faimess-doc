@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Avatar } from "../../ui/Avatar";
-import { Icon } from "../../ui/Icon";
+import { Icon, type IconName } from "../../ui/Icon";
 import { Modal } from "../../ui/Modal";
 import { useApp } from "../../app/AppContext";
 import { usePreferences } from "../../app/PreferencesContext";
@@ -501,7 +501,7 @@ function MenuItem({
   onClick,
   tone,
 }: {
-  icon: string;
+  icon: IconName;
   label: string;
   onClick: () => void;
   tone?: "flame";

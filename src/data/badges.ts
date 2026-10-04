@@ -4,10 +4,12 @@
  *  ordered from the rarest down.
  * ------------------------------------------------------------------ */
 
+import type { IconName } from "../ui/Icon";
+
 export type BadgeTone = "primary" | "mint" | "flame" | "teal";
 
 export type CommentBadge = {
-  icon: string;
+  icon: IconName;
   label: string;
   tone: BadgeTone;
 };

@@ -17,6 +17,7 @@ import { ProfileMenuContent } from "../src/sections/AccountCard";
 import { NavCard } from "../src/sections/NavCard";
 import { Stage } from "../src/app/Stage";
 import { ToastHost } from "../src/app/ToastHost";
+import { Icon } from "../src/ui/Icon";
 import { backIcon, dirSign, forwardIcon, trackRatio } from "../src/lib/rtl";
 import { LANGS, STRINGS, THEMES, fill, type Lang, type Theme } from "../src/data/i18n";
 import { PlayerSection } from "../src/sections/PlayerSection";
@@ -830,6 +831,78 @@ check(
   "no language is missing a string",
   Object.values(STRINGS).every((entry) => entry.en.trim() && entry.fa.trim() && entry.ko.trim()),
   `${Object.keys(STRINGS).length} keys`,
+);
+
+/* ------------- icons: one pack, one mapping table (v27) --------------- */
+
+const iconBodySrc = readFileSync("src/ui/icons.gen.ts", "utf8");
+const generatorSrc = readFileSync("tools/icons/build.mjs", "utf8");
+
+/** the generated file: one `siteName: "body"` row per icon */
+const generated = [...iconBodySrc.matchAll(/^ {2}([A-Za-z][\w]*): (".*"),$/gm)].map((m) => ({
+  name: m[1],
+  body: JSON.parse(m[2]) as string,
+}));
+/** the generator's table: `siteName: "pack-name",` */
+const mapped = [...generatorSrc.matchAll(/^ {2}([A-Za-z][\w]*): "([\w-]+)",/gm)].map(
+  (m) => [m[1], m[2]] as const,
+);
+
+check(
+  "every icon in the app is a pack icon",
+  iconSrc.includes('from "./icons.gen"') &&
+    !iconSrc.includes("const paths") &&
+    iconBodySrc.includes("Lets Icons") &&
+    iconBodySrc.includes("CC BY 4.0"),
+  "Icon.tsx draws nothing of its own; the artwork is generated from the pack",
+);
+check(
+  "the mapping table and the generated file agree",
+  generated.length > 0 &&
+    generated.length === mapped.length &&
+    mapped.every(([site], i) => generated[i].name === site),
+  `${mapped.length} rows, ${generated.length} icons`,
+);
+check(
+  "every icon named in the app exists in the pack file",
+  (() => {
+    const used = new Set<string>();
+    for (const file of sources) {
+      const code = readFileSync(file, "utf8");
+      for (const m of code.matchAll(/(?:name|icon)=["']([A-Za-z][\w]*)["']/g)) used.add(m[1]);
+      for (const m of code.matchAll(/icon: ["']([A-Za-z][\w]*)["']/g)) used.add(m[1]);
+    }
+    const known = new Set(generated.map((g) => g.name));
+    const missing = [...used].filter((n) => !known.has(n));
+    return missing.length === 0;
+  })(),
+);
+check(
+  "icon artwork carries no colour and no baked-in weight",
+  generated.every((g) => {
+    /* mask references keep their id on purpose — only real colours matter */
+    const withoutMasks = g.body.replace(/<mask[\s\S]*?<\/mask>/g, "").replace(/url\(#\w+\)/g, "");
+    return (
+      g.body.includes("currentColor") &&
+      !withoutMasks.includes("#") &&
+      !withoutMasks.includes("stroke-width=\"2\"")
+    );
+  }),
+  "the skeleton comes from the pack, the paint comes from the call site",
+);
+check(
+  "two copies of a masked icon don't fight over one id",
+  (() => {
+    const html = renderToString(
+      <div>
+        <Icon name="verified" size={14} />
+        <Icon name="verified" size={14} />
+      </div>,
+    );
+    const ids = [...html.matchAll(/id="(SVG[^"]*)"/g)].map((m) => m[1]);
+    return ids.length === 2 && ids[0] !== ids[1] && html.includes(`url(#${ids[1]})`);
+  })(),
+  "useId() gives each render its own mask",
 );
 
 console.log(results.join("\n"));

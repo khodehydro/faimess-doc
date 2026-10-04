@@ -230,6 +230,14 @@ src/
 آرتیست‌های فالو‌شده، جدیدترین آهنگ‌ها، ترندها با مقدار آتش، آخرین اخبار (با صفحهٔ `#/news`)، تازه‌ترین آلبوم‌ها و کاربران فعال با امتیاز/سطح — همه در `src/data/feed.ts`.
 آهنگ‌های «جدیدترین» و «ترند» هم‌زمان صف پلیر را می‌سازند (`src/data/player.ts`) و لیریک دوزبانه‌شان در `src/data/lyrics.ts` است.
 
+## کردیت‌ها
+
+- **آیکون‌ها:** [Lets Icons](https://www.figma.com/community/file/886554014393250663/free-icon-pack-1800-icons)
+  اثر **Leonid Tsvetkov** — لایسنس **CC BY 4.0**، از آینهٔ Iconify (`lets-icons`).
+  نگاشت و جزئیات: `docs/icons.md`.
+- **فونت‌ها:** Pretendard · Vazirmatn (self-hosted).
+- **عکس‌ها:** فهرست منبع‌ها و جانشین‌ها در `docs/photos.md` (همه موقت و برای دمو).
+
 ## مستندات
 - [`docs/font-research.md`](docs/font-research.md) — تحلیل فونت‌ها بر پایهٔ فهرست Figma و انتخاب نهایی (Pretendard)
 - [`docs/photos.md`](docs/photos.md) — خط لولهٔ عکس‌ها: ابعاد، دستور ImageMagick، منابع و هشدار لایسنس

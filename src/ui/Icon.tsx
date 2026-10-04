@@ -1,143 +1,23 @@
-import type { SVGProps } from "react";
+import { useId, useMemo, type SVGProps } from "react";
 import { cn } from "../lib/cn";
+import { ICON_BODIES } from "./icons.gen";
 
 /* ------------------------------------------------------------------ *
- *  Icon set — thin linear strokes with round caps. Inlined so the app
- *  ships with zero external icon dependencies.
+ *  Icon — every glyph in the app, drawn from one pack.
+ *
+ *  The artwork is "Lets Icons" by Leonid Tsvetkov (CC BY 4.0): the exact
+ *  set the Figma community file "Free Icon Pack 1800+ icons" ships, taken
+ *  from Iconify's mirror of it. tools/icons/build.mjs holds the table that
+ *  maps the site's names onto the pack's and writes icons.gen.ts; the
+ *  reasoning for the handful of substitutions is in docs/icons.md.
+ *
+ *  Nothing here draws geometry: call sites keep using the same names they
+ *  always did, and the bodies inherit the colour, the weight and the size
+ *  from this element — so a pack icon still scales with the stage and
+ *  still mirrors in RTL exactly like the hand-drawn set it replaced.
  * ------------------------------------------------------------------ */
 
-const paths: Record<string, string[]> = {
-  home: ["M4 10.9 12 4.2l8 6.7V20a1 1 0 0 1-1 1h-4.4v-6.2H9.4V21H5a1 1 0 0 1-1-1z"],
-  calendar: [
-    "M4.5 5.5h15a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19V7a1.5 1.5 0 0 1 1.5-1.5Z",
-    "M3 10h18M8 3.5v3.6M16 3.5v3.6",
-  ],
-  activity: ["M3.5 12.2h3.1l2-5 3.2 10 2.2-6.2h2.4l1.5-2.4h2.6"],
-  message: [
-    "M20.5 12.2c0 4-3.8 7.2-8.5 7.2-1 0-2-.15-2.9-.42L4.5 20.5l1.2-3.5C4.2 15.7 3.5 14 3.5 12.2c0-4 3.8-7.2 8.5-7.2s8.5 3.2 8.5 7.2Z",
-  ],
-  settings: [
-    "M12 15.4a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z",
-    "M19.2 14.6a1.6 1.6 0 0 0 .3 1.8l.1.06a1.9 1.9 0 1 1-2.7 2.7l-.06-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-.95 1.44V21a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.06.1a1.9 1.9 0 1 1-2.7-2.7l.1-.06a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.45-1H3a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.06a1.9 1.9 0 1 1 2.7-2.7l.06.1a1.6 1.6 0 0 0 1.8.3h.08a1.6 1.6 0 0 0 .96-1.45V3a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 .96 1.45 1.6 1.6 0 0 0 1.8-.3l.06-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.06a1.6 1.6 0 0 0-.3 1.8v.08a1.6 1.6 0 0 0 1.45.96H21a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.44.96Z",
-  ],
-  search: ["M11 18.5a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15Z", "M16.6 16.6 21 21"],
-  bell: [
-    "M18 8.6a6 6 0 1 0-12 0c0 6.4-2.6 7.4-2.6 7.4h17.2S18 15 18 8.6Z",
-    "M13.8 19.6a2 2 0 0 1-3.6 0",
-  ],
-  folder: [
-    "M3.2 7.6A2.6 2.6 0 0 1 5.8 5h2.8a2 2 0 0 1 1.6.82l.9 1.18h6.9a2.6 2.6 0 0 1 2.6 2.6v7.8a2.6 2.6 0 0 1-2.6 2.6H5.8a2.6 2.6 0 0 1-2.6-2.6z",
-  ],
-  clock: ["M12 20.6a8.6 8.6 0 1 0 0-17.2 8.6 8.6 0 0 0 0 17.2Z", "M12 7.7v4.6l3 1.8"],
-  lock: [
-    "M6.4 10.6h11.2c.9 0 1.6.7 1.6 1.6v6.6c0 .9-.7 1.6-1.6 1.6H6.4c-.9 0-1.6-.7-1.6-1.6v-6.6c0-.9.7-1.6 1.6-1.6Z",
-    "M8.4 10.6V8a3.6 3.6 0 0 1 7.2 0v2.6",
-  ],
-  star: ["M12 3.6l2.7 5.7 6.1.85-4.5 4.3 1.1 6.1-5.4-2.94L6.6 20.5l1.1-6.1-4.5-4.3 6.1-.85z"],
-  send: ["M21 3 10.5 13.5", "M21 3l-6.6 18-3.9-7.5L3 9.6z"],
-  chevronLeft: ["M14.5 6.5 9 12l5.5 5.5"],
-  chevronRight: ["M9.5 6.5 15 12l-5.5 5.5"],
-  grid: [
-    "M4.6 5h4.2c.3 0 .5.2.5.5v4.2c0 .3-.2.5-.5.5H4.6c-.3 0-.5-.2-.5-.5V5.5c0-.3.2-.5.5-.5Z",
-    "M15.2 5h4.2c.3 0 .5.2.5.5v4.2c0 .3-.2.5-.5.5h-4.2c-.3 0-.5-.2-.5-.5V5.5c0-.3.2-.5.5-.5Z",
-    "M4.6 13.8h4.2c.3 0 .5.2.5.5v4.2c0 .3-.2.5-.5.5H4.6c-.3 0-.5-.2-.5-.5v-4.2c0-.3.2-.5.5-.5Z",
-    "M15.2 13.8h4.2c.3 0 .5.2.5.5v4.2c0 .3-.2.5-.5.5h-4.2c-.3 0-.5-.2-.5-.5v-4.2c0-.3.2-.5.5-.5Z",
-  ],
-  list: ["M9 6.5h11M9 12h11M9 17.5h11", "M4.6 6.5h.01M4.6 12h.01M4.6 17.5h.01"],
-  check: ["M5 12.8 9.4 17 19 7"],
-  plus: ["M12 5.5v13M5.5 12h13"],
-  sparkle: [
-    "M12 3.5l1.85 5.1 5.15 1.85-5.15 1.9L12 17.6l-1.85-5.25L5 10.45l5.15-1.85z",
-    "M18.4 16.2l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z",
-  ],
-  pin: [
-    "M12 21s6.8-6.3 6.8-11a6.8 6.8 0 1 0-13.6 0C5.2 14.7 12 21 12 21Z",
-    "M12 12.6a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2Z",
-  ],
-  users: [
-    "M15.6 20v-1.6a4 4 0 0 0-4-4H6.4a4 4 0 0 0-4 4V20",
-    "M9 11.2a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Z",
-    "M21.6 20v-1.6a4 4 0 0 0-3-3.86M16.4 4.24a4 4 0 0 1 0 7.72",
-  ],
-  video: [
-    "M3.6 7.4h9.8c.9 0 1.6.7 1.6 1.6v6c0 .9-.7 1.6-1.6 1.6H3.6c-.9 0-1.6-.7-1.6-1.6V9c0-.9.7-1.6 1.6-1.6Z",
-    "M15 10.6l6.4-3.3v9.4L15 13.4z",
-  ],
-  compass: ["M12 20.6a8.6 8.6 0 1 0 0-17.2 8.6 8.6 0 0 0 0 17.2Z", "M15.3 8.7l-1.7 4.9-4.9 1.7 1.7-4.9z"],
-  arrowUpRight: ["M7 17 17 7", "M8.6 7H17v8.4"],
-  arrowLeft: ["M19 12H5", "M11 6l-6 6 6 6"],
-  arrowRight: ["M5 12h14", "M13 6l6 6-6 6"],
-  close: ["M6 6l12 12M18 6 6 18"],
-  radio: ["M12 20.6a8.6 8.6 0 1 0 0-17.2 8.6 8.6 0 0 0 0 17.2Z", "M12 15.6a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Z"],
-  more: ["M6 12h.01M12 12h.01M18 12h.01"],
-  trend: ["M20 15.5 14.6 10 11 13.6 4 6.6", "M15.4 6.6H20v4.6"],
-  map: ["M9 3.6 3.6 6v14.4L9 18l6 2.4 5.4-2.4V3.6L15 6z", "M9 3.6V18M15 6v14.4"],
-  play: ["M8 5.6 19 12 8 18.4z"],
-  pause: ["M9.5 5.5v13M14.5 5.5v13"],
-  mic: [
-    "M12 15.2a3.6 3.6 0 0 0 3.6-3.6V6.6a3.6 3.6 0 1 0-7.2 0v5A3.6 3.6 0 0 0 12 15.2Z",
-    "M5.5 11.6a6.5 6.5 0 0 0 13 0M12 18.1V21M8.8 21h6.4",
-  ],
-  disc: ["M12 20.6a8.6 8.6 0 1 0 0-17.2 8.6 8.6 0 0 0 0 17.2Z", "M12 14.4a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z"],
-  music: ["M9 18.4V6.6l9-2v11.8", "M9 18.4a2.6 2.6 0 1 1-5.2 0 2.6 2.6 0 0 1 5.2 0Z", "M18 16.4a2.6 2.6 0 1 1-5.2 0 2.6 2.6 0 0 1 5.2 0Z"],
-  heart: ["M12 20.3 4.7 13a4.6 4.6 0 0 1 6.5-6.5l.8.8.8-.8A4.6 4.6 0 0 1 19.3 13z"],
-  shuffle: ["M17 4.5 20.5 8 17 11.5", "M17 12.5 20.5 16 17 19.5", "M3.5 8h3.2c2 0 3 1.4 4.2 3.2s2.4 3.6 4.4 3.6H20.5", "M3.5 16h3.2c2 0 3-1.4 4.2-3.2"],
-  headphones: [
-    "M4.5 15.5v-3a7.5 7.5 0 0 1 15 0v3",
-    "M4.5 14.2h1.9c.7 0 1.2.5 1.2 1.2v3.2c0 .7-.5 1.2-1.2 1.2H5.7a1.2 1.2 0 0 1-1.2-1.2z",
-    "M19.5 14.2h-1.9c-.7 0-1.2.5-1.2 1.2v3.2c0 .7.5 1.2 1.2 1.2h.7a1.2 1.2 0 0 0 1.2-1.2z",
-  ],
-  waveform: ["M4 9.5v5M8 6.5v11M12 4.5v15M16 7.5v9M20 10.5v3"],
-  download: ["M12 3.8v11.4", "M7.6 11 12 15.4l4.4-4.4", "M4.6 19.6h14.8"],
-  expand: ["M4.6 9.6v-5h5", "M19.4 14.4v5h-5", "M14.4 4.6h5v5", "M9.6 19.4h-5v-5"],
-  collapse: ["M9.6 4.6v5h-5", "M14.4 19.4v-5h5", "M19.4 9.6h-5v-5", "M4.6 14.4h5v5"],
-  flame: [
-    "M12 21c3.6 0 6.2-2.4 6.2-5.8 0-2.4-1.3-4.4-3-6.2-1.4-1.5-2.4-3-2.6-4.6-1.9 2.2-3.4 4.4-3.4 6.2 0 1 .3 1.8.8 2.5-1.2-.3-2.1-1.2-2.5-2.6-1.2 1.6-1.7 3.1-1.7 4.7C5.8 18.6 8.4 21 12 21Z",
-    "M12 21c1.7 0 3-1.2 3-2.9 0-1.6-1.3-2.9-3-5-1.7 2.1-3 3.4-3 5 0 1.7 1.3 2.9 3 2.9Z",
-  ],
-  crown: ["M4.2 17.4 3 7.6l4.8 3.2L12 4.6l4.2 6.2L21 7.6l-1.2 9.8z", "M5.2 20.4h13.6"],
-  medal: [
-    "M12 14.8a4.6 4.6 0 1 0 0-9.2 4.6 4.6 0 0 0 0 9.2Z",
-    "M8.4 14.4 6.6 21l5.4-2.6L17.4 21l-1.8-6.6",
-  ],
-  verified: [
-    "M12 3.4l2.1 1.6 2.6-.2.8 2.5 2.2 1.4-.7 2.5.7 2.5-2.2 1.4-.8 2.5-2.6-.2-2.1 1.6-2.1-1.6-2.6.2-.8-2.5-2.2-1.4.7-2.5-.7-2.5L5.5 7.3l.8-2.5 2.6.2z",
-    "M9.2 12.2l2 2 3.6-3.9",
-  ],
-  news: [
-    "M4.4 5.4h11c.9 0 1.6.7 1.6 1.6v11.6c0 .9.7 1.6 1.6 1.6H6c-.9 0-1.6-.7-1.6-1.6z",
-    "M17 9.4h1.6c.9 0 1.6.7 1.6 1.6v6.2c0 .9-.7 1.6-1.6 1.6",
-    "M7.4 8.6h6.6M7.4 11.6h6.6M7.4 14.6h4",
-  ],
-  bolt: ["M13.4 3.4 6.6 13.2h5l-1.6 7.4 6.8-9.8h-5z"],
-  /* appearance + language */
-  /* your playlists + sharing */
-  share: [
-    "M12 15.4V3.8",
-    "M7.8 8 12 3.8 16.2 8",
-    "M5.4 13.4v6.2c0 .55.45 1 1 1h11.2c.55 0 1-.45 1-1v-6.2",
-  ],
-  copy: [
-    "M9.6 9.6h8c.55 0 1 .45 1 1v8c0 .55-.45 1-1 1h-8c-.55 0-1-.45-1-1v-8c0-.55.45-1 1-1Z",
-    "M15.4 9.6v-3c0-.55-.45-1-1-1h-8c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h3",
-  ],
-  folderPlus: [
-    "M3.2 7.6A2.6 2.6 0 0 1 5.8 5h2.8a2 2 0 0 1 1.6.82l.9 1.18h6.9a2.6 2.6 0 0 1 2.6 2.6v7.8a2.6 2.6 0 0 1-2.6 2.6H5.8a2.6 2.6 0 0 1-2.6-2.6z",
-    "M12 13.4v5.2M9.4 16h5.2",
-  ],
-  sun: [
-    "M12 16.4a4.4 4.4 0 1 0 0-8.8 4.4 4.4 0 0 0 0 8.8Z",
-    "M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M18.6 5.4l-1.5 1.5M6.9 17.1l-1.5 1.5",
-  ],
-  moon: ["M20.2 14.4A8.5 8.5 0 0 1 9.6 3.8a8.7 8.7 0 1 0 10.6 10.6Z"],
-  globe: [
-    "M12 20.6a8.6 8.6 0 1 0 0-17.2 8.6 8.6 0 0 0 0 17.2Z",
-    "M3.4 12h17.2",
-    "M12 3.4c2.2 2.4 3.3 5.4 3.3 8.6S14.2 18.2 12 20.6c-2.2-2.4-3.3-5.4-3.3-8.6S9.8 5.8 12 3.4Z",
-  ],
-};
-
-export type IconName = keyof typeof paths;
+export type IconName = keyof typeof ICON_BODIES;
 
 type Props = SVGProps<SVGSVGElement> & {
   name: IconName;
@@ -154,8 +34,17 @@ type Props = SVGProps<SVGSVGElement> & {
  */
 const MIRRORED_IN_RTL: IconName[] = ["arrowUpRight", "send"];
 
+/** `<mask id>` is global to the document, so two icons on one screen would
+ *  fight over it: each render gets its own copy of the id. */
+const scopeIds = (body: string, scope: string) =>
+  body
+    .replace(/id="(SVG[^"]*)"/g, `id="$1-${scope}"`)
+    .replace(/url\(#(SVG[^)]*)\)/g, `url(#$1-${scope})`);
+
 export function Icon({ name, size = 18, strokeWidth = 1.6, className, ...rest }: Props) {
-  const d = paths[name as string] ?? [];
+  const scope = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const body = useMemo(() => scopeIds(ICON_BODIES[name], scope), [name, scope]);
+
   return (
     <svg
       viewBox="0 0 24 24"
@@ -168,11 +57,8 @@ export function Icon({ name, size = 18, strokeWidth = 1.6, className, ...rest }:
       strokeLinejoin="round"
       aria-hidden="true"
       className={cn(MIRRORED_IN_RTL.includes(name) && "dir-flip", className)}
+      dangerouslySetInnerHTML={{ __html: body }}
       {...rest}
-    >
-      {d.map((p) => (
-        <path key={p} d={p} />
-      ))}
-    </svg>
+    />
   );
 }
