@@ -19,19 +19,19 @@ import { EASE } from "../lib/motion";
  *  them:
  *
  *    ┌───────────────────────────────┐
- *    │ (spacer)   FAIMESS   🔔  👤   │   brand centred, controls at the end
+ *    │ 🔔       FAIMESS          👤  │   alert · centred brand · profile
  *    │ [ search ……………………………… ]      │   full-width card of its own
  *    │ ┌───────────────────────────┐ │
- *    │ │  page or detail, scrolling│ │   one content card, no side column
+ *    │ │  page or detail, scrolling│ │   translucent white content card
  *    │ └───────────────────────────┘ │
  *    ├───────────────────────────────┤
- *    │ ▶  playing ············  ⏭   │   mini player (fixed)
- *    │ Home Artists Albums Lists Shop│   bottom navigation (fixed)
+ *    │ ▶  playing               ⏭   │   purple mini player (fixed)
+ *    │ Home Artists Albums Lists Shop│   white capsule navigation
  *    └───────────────────────────────┘
  *
- *  The player never leaves: it is a bar above the menu until you tap it,
- *  then the full card (PlayerSection itself) slides over the screen. The
- *  feed's quick-jump strip is not rendered here at all — on a phone the
+ *  The player never leaves: it is a purple bar above the menu until you tap
+ *  it, then the full card (PlayerSection itself) slides over the screen.
+ *  The feed's quick-jump strip is not rendered here at all — on a phone the
  *  shelves are meant to be scrolled, not jumped between.
  *
  *  Both fixed bars share one centred, width-capped column so a tablet does
@@ -45,22 +45,25 @@ export function CompactShell() {
   const Page = PAGES[route];
 
   return (
-    <div dir={dir} className="flex min-h-dvh w-full flex-col gap-3 px-3 pt-3 pb-[11rem]">
-      {/* top row — brand in the middle, search controls at the end */}
-      <div className="relative mx-auto flex w-full max-w-[720px] shrink-0 items-center justify-end">
-        {/* physically centred: `justify-center` would only centre it between
-            two unequal neighbours (the controls pill is wider than nothing) */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+    <div dir={dir} className="flex min-h-dvh w-full flex-col gap-4 px-4 pt-4 pb-[11rem]">
+      {/* physical left-to-right order: notifications / centered brand / profile */}
+      <div
+        dir="ltr"
+        className="relative mx-auto flex w-full max-w-[720px] shrink-0 items-center justify-between"
+      >
+        <AccountCard part="notification" className="relative z-20" />
+        {/* physically centred so equal or unequal controls never shift the wordmark */}
+        <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
           <BrandCard compact />
         </div>
-        <AccountCard part="controls" />
+        <AccountCard part="profile" className="relative z-20" />
       </div>
 
       {/* search — its own full-width card, under the top row */}
       <AccountCard part="search" className="mx-auto w-full max-w-[720px]" />
 
       {/* content — the page, or the detail card, in one scrolling card */}
-      <SurfaceCard dir={dir} className="mx-auto w-full max-w-[720px] shrink-0">
+      <SurfaceCard glass dir={dir} className="mx-auto w-full max-w-[720px] shrink-0">
         <div data-content-scroll className="flex min-h-0 flex-1 flex-col">
           <AnimatePresence mode="wait" initial={false}>
             {detail ? (

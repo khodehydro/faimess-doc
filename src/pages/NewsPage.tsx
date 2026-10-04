@@ -41,7 +41,7 @@ export function NewsPage() {
 
   return (
     /* content only: the Shell owns the card, so the player stays beside it */
-    <div className="flex min-h-0 flex-1 flex-col p-6">
+    <div className="flex min-h-0 flex-1 flex-col p-6 lg:p-7">
       <div className="flex items-center gap-4 pb-5">
         <div className="min-w-0">
           <h2 className="font-display text-[26px] font-bold leading-tight tracking-[-0.018em] text-ink">

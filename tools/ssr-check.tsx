@@ -271,11 +271,12 @@ check("every feed row maps to a playable track", [...newestTracks, ...trendingTr
 const css = readFileSync("src/index.css", "utf8");
 const fontFiles = [
   ...[400, 500, 600, 700, 800].map((w) => `src/assets/fonts/pretendard-ko-${w}.woff2`),
-  ...[400, 500, 600, 700].map((w) => `src/assets/fonts/vazirmatn-${w}.woff2`),
+  ...[400, 500, 600, 700, 800].map((w) => `src/assets/fonts/vazirmatn-${w}.woff2`),
+  ...[400, 500, 600, 700, 800].map((w) => `src/assets/fonts/vazirmatn-latin-${w}.woff2`),
 ];
-check("korean + persian faces ship locally", fontFiles.every((f) => existsSync(f)), `${fontFiles.length} files`);
-check("korean faces are declared", css.includes("pretendard-ko-") && css.includes("unicode-range: U+AC00-D7A3"));
-check("persian token + utility", css.includes("--font-fa:") && css.includes('"Vazirmatn"'));
+check("Korean + Latin/Persian faces ship locally", fontFiles.every((f) => existsSync(f)), `${fontFiles.length} files`);
+check("Korean faces are declared", css.includes("pretendard-ko-") && css.includes("unicode-range: U+AC00-D7A3"));
+check("Vazirmatn is the global English/Persian face", css.includes("--font-fa:") && css.includes('--font-sans: "Vazirmatn"') && css.includes('--font-display: "Vazirmatn"'));
 check("empty player invites a first play", shell.includes("Start with") && shell.includes("دوست داری"));
 
 /* ---------------------------- preferences ---------------------------- */
@@ -548,13 +549,15 @@ check(
   "basis-full under 1024px, ms-auto above it",
 );
 check(
-  "the compact top row is brand · search controls, with the brand centred",
-  compactSrc.includes('part="controls"') &&
+  "the compact header is notification · centred brand · profile",
+  compactSrc.includes('part="notification"') &&
+    compactSrc.includes('part="profile"') &&
+    compactSrc.includes('dir="ltr"') &&
     compactSrc.includes('part="search"') &&
-    compactSrc.includes("absolute left-1/2 top-1/2 -translate-x-1/2") &&
+    compactSrc.includes("absolute left-1/2 top-1/2 z-10 -translate-x-1/2") &&
     brandSrc.includes("compact ? \"h-[56px] gap-2 px-3\"") &&
     brandSrc.includes("max-[374px]:hidden"),
-  "physically centred, and the wordmark drops out under 375px",
+  "notifications left, wordmark physically centred, profile right",
 );
 check(
   "search is its own full-width card on the compact shell",
@@ -564,13 +567,14 @@ check(
   "the same search field, re-homed — not a second implementation",
 );
 check(
-  "the main menu moves to the bottom, purple tab + rule",
+  "the main menu moves to the bottom, purple tab + rule in a glass capsule",
   mobileNavSrc.includes('layoutId="mobile-nav-rule"') &&
     mobileNavSrc.includes("h-[2.5px]") &&
     mobileNavSrc.includes("text-primary-deep") &&
+    mobileNavSrc.includes("rounded-full bg-white/80") &&
     !mobileNavSrc.includes("bg-primary text-white") &&
     compactSrc.includes("<MobileNav />"),
-  "same five destinations, thumb-reachable, same active mark",
+  "same five destinations, thumb-reachable, translucent capsule and active mark",
 );
 check(
   "the player collapses to a bar that opens the full card",
@@ -580,6 +584,26 @@ check(
     compactSrc.includes("<MiniPlayer") &&
     sheetSrc.includes("PlayerSection"),
   "the sheet renders PlayerSection itself — the desktop card, not a copy",
+);
+check(
+  "the mini player is purple without a status/progress strip",
+  miniSrc.includes("bg-primary shadow-[0_18px_36px_-14px") &&
+    miniSrc.includes("const { track, playing, toggle, next } = player") &&
+    !miniSrc.includes("absolute inset-x-4 bottom-1.5") &&
+    !miniSrc.includes("progress : 0"),
+  "a clean violet bar with no progress indicator",
+);
+check(
+  "comments and nested dialogs sit above the full player sheet",
+  readFileSync("src/ui/Modal.tsx", "utf8").includes("z-[70]") &&
+    sheetSrc.includes("z-[60]"),
+  "modal layer above the compact player sheet",
+);
+check(
+  "compact page views use a translucent white surface",
+  compactSrc.includes("<SurfaceCard glass") &&
+    readFileSync("src/ui/primitives.tsx", "utf8").includes("bg-white/80 ring-1"),
+  "light glass surface, with a dark-theme surface counterpart",
 );
 check(
   "the feed strip is not shown on phones and tablets",

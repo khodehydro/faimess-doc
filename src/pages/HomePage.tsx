@@ -12,7 +12,7 @@ import { SectionSlot } from "../sections/registry";
 export function HomePage() {
   return (
     <>
-      <div className="shrink-0 p-4 pb-2">
+      <div className="shrink-0 p-5 pb-3">
         <div className="h-[300px] sm:h-[330px] lg:h-[340px]">
           <SectionSlot id="hero" params={undefined} />
         </div>

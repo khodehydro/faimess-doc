@@ -12,12 +12,16 @@ import { spring } from "../lib/motion";
 export function SurfaceCard({
   children,
   className,
+  glass = false,
   ...rest
-}: { children: ReactNode; className?: string } & ComponentProps<typeof motion.section>) {
+}: { children: ReactNode; className?: string; glass?: boolean } & ComponentProps<typeof motion.section>) {
   return (
     <motion.section
       className={cn(
-        "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-card bg-surface shadow-card",
+        "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-card shadow-card",
+        glass
+          ? "bg-white/80 ring-1 ring-white/70 backdrop-blur-md dark:bg-surface/80 dark:ring-white/[0.06]"
+          : "bg-surface",
         className,
       )}
       {...rest}

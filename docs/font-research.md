@@ -1,4 +1,7 @@
 # انتخاب فونت برای FAIMESS
+
+> **وضعیت فعلی محصول:** تمام متن‌های انگلیسی و فارسی با Vazirmatn رندر می‌شوند؛ subset لاتین و عربیِ Vazirmatn به‌صورت محلی و با `unicode-range` بارگذاری می‌شوند. Pretendard فقط برای متن‌های کره‌ای به‌عنوان fallback باقی مانده است. بخش‌های پایین‌تر، تاریخچهٔ انتخاب اولیهٔ فونت را ثبت می‌کنند.
+
 ### مرحلهٔ ۱: تحلیل مقالهٔ «24 best fonts for websites» از Figma
 ### مرحلهٔ ۲: بررسی فونت خود Weverse و جایگزینی آن (وضعیت فعلی)
 
@@ -96,11 +99,11 @@ done
 - `@font-face`ها در `src/index.css` همان خانوادهٔ `"Pretendard"` هستند با `unicode-range: U+AC00-D7A3`؛ مرورگر خودش برای متن لاتین فایل لاتین و برای هانگول فایل کره‌ای را می‌گیرد.
 - اگر متن کره‌ای تازه‌ای اضافه شد که سیلاب‌هایش در subset نیست، همان یک کاراکتر به فونت سیستم برمی‌گردد؛ برای پوشش کامل، دستور بالا را دوباره با فهرست کاراکترهای تازه اجرا کن.
 
-### فارسی (لیریک) — Vazirmatn
-ترجمهٔ فارسی زیر هر خط لیریک با **Vazirmatn** رندر می‌شود (`--font-fa`، کلاس `font-fa`، `dir="rtl"`):
+### لاتین + فارسی — Vazirmatn (وضعیت فعلی)
+تمام UI انگلیسی و فارسی، از جمله ترجمهٔ لیریک، با **Vazirmatn** رندر می‌شود (`--font-sans`, `--font-display`, `--font-fa`). دو subset با `unicode-range` جدا، برای Latin و Arabic/Persian انتخاب می‌شوند:
 
-- منبع: `npm i -D @fontsource/vazirmatn` → فایل‌های subset عربی (`vazirmatn-arabic-{400,500,600,700}-normal.woff2`، ~۲۴KB هر وزن) در `src/assets/fonts/vazirmatn-<weight>.woff2` کپی شده‌اند + `LICENSE-Vazirmatn.txt` (OFL).
-- زیرمجموعهٔ عربی شامل حروف فارسی (پ چ ژ گ) است و فقط برای متن RTL استفاده می‌شود؛ پس قاعدهٔ «یک خانواده برای لاتین» دست‌نخورده می‌ماند.
+- منبع: `@fontsource/vazirmatn` → `vazirmatn-latin-{400,500,600,700,800}-normal.woff2` در فایل‌های `vazirmatn-latin-<weight>.woff2` و `vazirmatn-arabic-{400,500,600,700,800}-normal.woff2` در `vazirmatn-<weight>.woff2` کپی شده‌اند؛ همه self-hosted هستند و لایسنس `LICENSE-Vazirmatn.txt` (OFL) کنارشان است.
+- subset عربی حروف فارسی (پ، چ، ژ، گ و نیم‌فاصله) را پوشش می‌دهد؛ subset لاتین متن انگلیسی/اعداد را. Pretendard فقط برای Hangul به‌عنوان fallback استفاده می‌شود.
 
 ### عوض کردن فونت در ۲ خط
 ```css

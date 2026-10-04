@@ -49,10 +49,10 @@ export function Shell() {
   return (
     <div
       dir={dir}
-      className="flex h-full w-full min-h-0 flex-col gap-4 rounded-[24px] bg-shell p-3.5 shadow-frame ring-1 ring-black/[0.035] lg:gap-4 lg:rounded-shell lg:p-4 dark:ring-white/[0.05]"
+      className="flex h-full w-full min-h-0 flex-col gap-5 rounded-[24px] bg-shell p-4 shadow-frame ring-1 ring-black/[0.035] lg:gap-5 lg:rounded-shell dark:ring-white/[0.05]"
     >
       {/* top row — three separate pills */}
-      <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap">
+      <div className="flex flex-wrap items-center gap-4 lg:flex-nowrap">
         <SectionSlot id="brand" params={undefined} />
         <SectionSlot id="nav" params={undefined} />
         <div className="ms-auto flex items-center">

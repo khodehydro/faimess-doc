@@ -24,8 +24,11 @@ export function BrandCard({ compact = false }: { compact?: boolean } = {}) {
       whileTap={{ scale: 0.98 }}
       aria-label={t("brand.home")}
       className={cn(
-        "flex shrink-0 items-center rounded-full bg-surface shadow-card ring-1 ring-black/[0.03] dark:ring-white/[0.05]",
-        /* the compact header is a tighter pill: it has to sit dead centre
+        "flex shrink-0 items-center rounded-full shadow-card ring-1",
+        compact
+          ? "bg-white/80 ring-white/70 backdrop-blur-md dark:bg-surface/80 dark:ring-white/[0.06]"
+          : "bg-surface ring-black/[0.03] dark:ring-white/[0.05]",
+        /* the compact header is a tighter glass pill: it has to sit dead centre
            between the edge of the screen and the controls beside it, and
            the full-size wordmark collides with them under ~400px */
         compact ? "h-[56px] gap-2 px-3" : "h-[62px] gap-3 px-4.5",

@@ -195,7 +195,7 @@ export function ArtistCover({
           x="100"
           y="176"
           textAnchor="middle"
-          fontFamily="Pretendard, sans-serif"
+          fontFamily="Vazirmatn, Pretendard, sans-serif"
           fontWeight="800"
           fontSize="54"
           fill="#FFFFFF"

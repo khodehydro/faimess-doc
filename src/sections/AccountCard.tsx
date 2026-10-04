@@ -20,22 +20,23 @@ import { EASE, spring } from "../lib/motion";
 
 /* ------------------------------------------------------------------ *
  *  Card 3 — search + alerts + profile.
- *  One pill: search field, bell and avatar live inside it, so the whole
- *  card is a pill with semicircular ends. Popovers open below it.
+ *  One pill on desktop; on compact layouts the search, notification bell
+ *  and profile can be placed independently around the centred brand. Popovers
+ *  open below their own control.
  * ------------------------------------------------------------------ */
 
 /**
  * The search field, the bell and the avatar — together in one pill on
  * desktop, and split apart on phones: the compact shell takes the search
- * out as a full-width card of its own and keeps the two controls in a pill
- * beside the brand. `part` asks for one half or the other; the desktop call
- * site passes nothing and gets the whole pill.
+ * out as a full-width card of its own and places the notification and
+ * profile controls on opposite sides of the centred brand. `part` asks for
+ * one section; the desktop call site passes nothing and gets the whole pill.
  */
 export function AccountCard({
   part = "all",
   className,
 }: {
-  part?: "all" | "search" | "controls";
+  part?: "all" | "search" | "controls" | "notification" | "profile";
   className?: string;
 } = {}) {
   const { route, navigate, notify, openDetail } = useApp();
@@ -50,6 +51,11 @@ export function AccountCard({
   const [contribOpen, setContribOpen] = useState(false);
   const [pointsOpen, setPointsOpen] = useState(false);
   const [focused, setFocused] = useState(false);
+  const showSearch = part === "all" || part === "search";
+  const showNotifications = part === "all" || part === "controls" || part === "notification";
+  const showProfile = part === "all" || part === "controls" || part === "profile";
+  const isolatedControl = part === "notification" || part === "profile";
+  const glassSurface = isolatedControl || part === "search";
 
   /** the lifetime record plus whatever the moderators approved just now */
   const myActivity = useMyActivity();
@@ -146,200 +152,207 @@ export function AccountCard({
       ref={rootRef}
       dir={dir}
       className={cn(
-        "flex shrink-0 items-center gap-2 bg-surface shadow-card ring-1 ring-black/[0.03] dark:ring-white/[0.05]",
+        "flex shrink-0 items-center gap-2",
+        glassSurface
+          ? "bg-white/80 shadow-card ring-1 ring-white/70 backdrop-blur-md dark:bg-surface/80 dark:ring-white/[0.06]"
+          : "bg-surface shadow-card ring-1 ring-black/[0.03] dark:ring-white/[0.05]",
+        isolatedControl && "h-[52px] w-[52px] justify-center rounded-full p-1",
         part === "search"
           ? "rounded-card p-2"
           : part === "controls"
             ? "h-[56px] rounded-full p-1.5"
-            : "h-[62px] rounded-full p-2",
+            : part === "all"
+              ? "h-[62px] rounded-full p-2"
+              : "",
         className,
       )}
     >
-      {part !== "controls" && (
-      /* search */
-      <div ref={searchRef} className={cn("relative", part === "search" && "min-w-0 flex-1")}>
-        <motion.div
-          animate={{ width: part === "search" ? "100%" : focused || query ? 330 : 268 }}
-          transition={spring}
-          className={cn(
-            "flex items-center gap-2.5 rounded-full bg-subtle px-4 py-2.5 transition-colors",
-            focused || searchOpen
-              ? "bg-primary-faint ring-1 ring-primary/25"
-              : "ring-1 ring-transparent hover:ring-line",
-          )}
-        >
-          <Icon name="search" size={16} className="text-ink-faint" />
-          <input
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setSearchOpen(true);
-            }}
-            onFocus={() => {
-              setFocused(true);
-              setSearchOpen(true);
-            }}
-            onBlur={() => setFocused(false)}
-            placeholder={t("account.search")}
-            className="w-full bg-transparent text-[14px] text-ink placeholder:text-ink-faint focus:outline-none"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              aria-label={t("account.clear")}
-              className="text-ink-faint transition-colors hover:text-ink"
-            >
-              <Icon name="close" size={14} />
-            </button>
-          )}
-        </motion.div>
+      {showSearch && (
+        <div ref={searchRef} className={cn("relative", part === "search" && "min-w-0 flex-1")}>
+          <motion.div
+            animate={{ width: part === "search" ? "100%" : focused || query ? 330 : 268 }}
+            transition={spring}
+            className={cn(
+              "flex items-center gap-2.5 rounded-full bg-subtle px-4 py-2.5 transition-colors",
+              focused || searchOpen
+                ? "bg-primary-faint ring-1 ring-primary/25"
+                : "ring-1 ring-transparent hover:ring-line",
+            )}
+          >
+            <Icon name="search" size={16} className="text-ink-faint" />
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSearchOpen(true);
+              }}
+              onFocus={() => {
+                setFocused(true);
+                setSearchOpen(true);
+              }}
+              onBlur={() => setFocused(false)}
+              placeholder={t("account.search")}
+              className="w-full bg-transparent text-[14px] text-ink placeholder:text-ink-faint focus:outline-none"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                aria-label={t("account.clear")}
+                className="text-ink-faint transition-colors hover:text-ink"
+              >
+                <Icon name="close" size={14} />
+              </button>
+            )}
+          </motion.div>
 
-        <AnimatePresence>
-          {searchOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.98 }}
-              transition={{ duration: 0.22, ease: EASE }}
-              className={cn(
-                "absolute top-[calc(100%+12px)] z-40 overflow-hidden rounded-panel border border-line bg-surface p-2.5 shadow-float",
-                part === "search"
-                  ? "inset-x-0"
-                  : "start-0 w-[336px]",
-              )}
-            >
-              <p className="px-3 py-2 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
-                {query ? t("account.results") : t("account.quickJump")}
-              </p>
-              {(query ? results : quick).map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => go(r)}
-                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start transition-colors hover:bg-subtle"
-                >
-                  <span className="flex size-7 items-center justify-center rounded-full bg-subtle text-ink-body">
-                    <Icon name={r.icon} size={15} />
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink">
-                    {r.labelKey ? label(r.labelKey, r.label) : r.label}
-                  </span>
-                  <span className="ms-auto rounded-full bg-muted px-2.5 py-1 text-[12px] font-semibold text-ink-muted">
-                    {t(`account.kind.${r.kind}`)}
-                  </span>
-                </button>
-              ))}
-              {query && results.length === 0 && (
-                <p className="px-2.5 py-4 text-center text-[13px] text-ink-muted">
-                  {t("account.noMatch", { q: query })}
+          <AnimatePresence>
+            {searchOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.22, ease: EASE }}
+                className={cn(
+                  "absolute top-[calc(100%+12px)] z-40 overflow-hidden rounded-panel border border-line bg-surface p-2.5 shadow-float",
+                  part === "search"
+                    ? "inset-x-0"
+                    : "start-0 w-[336px]",
+                )}
+              >
+                <p className="px-3 py-2 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
+                  {query ? t("account.results") : t("account.quickJump")}
                 </p>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
+                {(query ? results : quick).map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => go(r)}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start transition-colors hover:bg-subtle"
+                  >
+                    <span className="flex size-7 items-center justify-center rounded-full bg-subtle text-ink-body">
+                      <Icon name={r.icon} size={15} />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink">
+                      {r.labelKey ? label(r.labelKey, r.label) : r.label}
+                    </span>
+                    <span className="ms-auto rounded-full bg-muted px-2.5 py-1 text-[12px] font-semibold text-ink-muted">
+                      {t(`account.kind.${r.kind}`)}
+                    </span>
+                  </button>
+                ))}
+                {query && results.length === 0 && (
+                  <p className="px-2.5 py-4 text-center text-[13px] text-ink-muted">
+                    {t("account.noMatch", { q: query })}
+                  </p>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
-      {part !== "search" && (
-      <>
-      {/* alerts */}
-      <div ref={bellRef} className="group relative">
-        <CircleButton
-          icon="bell"
-          tone="subtle"
-          label={t("account.notifications")}
-          iconClassName="anim-bell"
-          onClick={() => setBellOpen((v) => !v)}
-        />
-        <span className="pointer-events-none absolute end-2 top-2 size-2 rounded-full bg-primary ring-2 ring-surface" />
-        <AnimatePresence>
-          {bellOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.98 }}
-              transition={{ duration: 0.22, ease: EASE }}
-              className="absolute end-0 top-[calc(100%+12px)] z-40 w-[292px] rounded-panel border border-line bg-surface p-2.5 shadow-float"
-            >
-              <p className="px-2.5 py-1.5 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
-                {t("account.notifications")}
-              </p>
-              {notifications.map((n, i) => (
-                <motion.button
-                  key={n.id}
-                  initial={{ opacity: 0, x: 8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.04 * i, duration: 0.3 }}
-                  onClick={() => {
-                    setBellOpen(false);
-                    notify(n.title, n.tone);
-                  }}
-                  className="flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-start transition-colors hover:bg-subtle"
-                >
-                  <span
-                    className={cn(
-                      "mt-1 size-2 shrink-0 rounded-full",
-                      n.tone === "primary" && "bg-primary",
-                      n.tone === "teal" && "bg-teal",
-                      n.tone === "mint" && "bg-mint",
-                    )}
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13.5px] font-semibold leading-snug text-ink">
-                      {n.title}
+      {showNotifications && (
+        <div ref={bellRef} className="group relative">
+          <CircleButton
+            icon="bell"
+            tone="subtle"
+            label={t("account.notifications")}
+            iconClassName="anim-bell"
+            onClick={() => setBellOpen((v) => !v)}
+          />
+          <span className="pointer-events-none absolute end-2 top-2 size-2 rounded-full bg-primary ring-2 ring-surface" />
+          <AnimatePresence>
+            {bellOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.22, ease: EASE }}
+                className={cn(
+                  "absolute top-[calc(100%+12px)] z-40 w-[292px] rounded-panel border border-line bg-surface p-2.5 shadow-float",
+                  part === "notification" ? "left-0" : "end-0",
+                )}
+              >
+                <p className="px-2.5 py-1.5 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
+                  {t("account.notifications")}
+                </p>
+                {notifications.map((n, i) => (
+                  <motion.button
+                    key={n.id}
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.04 * i, duration: 0.3 }}
+                    onClick={() => {
+                      setBellOpen(false);
+                      notify(n.title, n.tone);
+                    }}
+                    className="flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-start transition-colors hover:bg-subtle"
+                  >
+                    <span
+                      className={cn(
+                        "mt-1 size-2 shrink-0 rounded-full",
+                        n.tone === "primary" && "bg-primary",
+                        n.tone === "teal" && "bg-teal",
+                        n.tone === "mint" && "bg-mint",
+                      )}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13.5px] font-semibold leading-snug text-ink">
+                        {n.title}
+                      </span>
+                      <span className="mt-0.5 block text-[12px] text-ink-muted">{n.at}</span>
                     </span>
-                    <span className="mt-0.5 block text-[12px] text-ink-muted">{n.at}</span>
-                  </span>
-                </motion.button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
-      {/* profile */}
-      <div ref={profileRef} className="relative">
-        <motion.button
-          onClick={() => setProfileOpen((v) => !v)}
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.94 }}
-          transition={spring}
-          className="relative ms-0.5"
-          aria-label={t("account.account")}
-        >
-          <Avatar src={me.photo} seed={0} size={40} ring />
-          <span className="absolute -bottom-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full bg-mint ring-2 ring-surface">
-            <Icon
-              name="check"
-              size={10}
-              strokeWidth={3}
-              className="text-white"
-            />
-          </span>
-        </motion.button>
-        <AnimatePresence>
-          {profileOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.98 }}
-              transition={{ duration: 0.22, ease: EASE }}
-              className="absolute end-0 top-[calc(100%+14px)] z-40"
-            >
-              <ProfileMenuContent
-                onClose={() => setProfileOpen(false)}
-                onContributions={() => setContribOpen(true)}
-                onPoints={() => {
-                  setProfileOpen(false);
-                  setPointsOpen(true);
-                }}
+      {showProfile && (
+        <div ref={profileRef} className="relative">
+          <motion.button
+            onClick={() => setProfileOpen((v) => !v)}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.94 }}
+            transition={spring}
+            className="relative ms-0.5"
+            aria-label={t("account.account")}
+          >
+            <Avatar src={me.photo} seed={0} size={40} ring />
+            <span className="absolute -bottom-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full bg-mint ring-2 ring-surface">
+              <Icon
+                name="check"
+                size={10}
+                strokeWidth={3}
+                className="text-white"
               />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      </>
+            </span>
+          </motion.button>
+          <AnimatePresence>
+            {profileOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.22, ease: EASE }}
+                className={cn(
+                  "absolute top-[calc(100%+14px)] z-40",
+                  part === "profile" ? "right-0" : "end-0",
+                )}
+              >
+                <ProfileMenuContent
+                  onClose={() => setProfileOpen(false)}
+                  onContributions={() => setContribOpen(true)}
+                  onPoints={() => {
+                    setProfileOpen(false);
+                    setPointsOpen(true);
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
       <ContributionsModal

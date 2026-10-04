@@ -10,7 +10,8 @@ import { EASE } from "../lib/motion";
  *  Modal — a centred dialog above everything else.
  *
  *  Rendered through a portal so the cards' `overflow-hidden` can never clip
- *  it, and so it lives in real screen pixels instead of the stage scale.
+ *  it, and so it lives in real screen pixels instead of the stage scale. Its
+ *  layer sits above the full player sheet, so nested dialogs stay on top.
  *  Mounted on the client only: the server render emits nothing.
  * ------------------------------------------------------------------ */
 
@@ -54,7 +55,7 @@ export function Modal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18, ease: EASE }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          className="fixed inset-0 z-[70] flex items-center justify-center p-6"
         >
           <div className="absolute inset-0 bg-ink/35 backdrop-blur-[3px]" onClick={onClose} aria-hidden="true" />
 

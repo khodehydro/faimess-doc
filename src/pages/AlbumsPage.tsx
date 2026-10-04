@@ -7,7 +7,7 @@ import { SectionSlot } from "../sections/registry";
  */
 export function AlbumsPage() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col p-6">
+    <div className="flex min-h-0 flex-1 flex-col p-6 lg:p-7">
       <SectionSlot id="collection" params={{ kind: "albums" }} />
     </div>
   );

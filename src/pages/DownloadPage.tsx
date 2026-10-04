@@ -41,7 +41,7 @@ export function DownloadPage() {
 
   return (
     /* content only: the Shell owns the card and its scrollbar */
-    <div className="p-6">
+    <div className="p-6 lg:p-7">
       <div className="flex items-center gap-2.5">
         <span className="flex size-9 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
           <Icon name="download" size={17} strokeWidth={2.1} />

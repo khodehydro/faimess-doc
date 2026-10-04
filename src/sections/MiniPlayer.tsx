@@ -12,9 +12,9 @@ import { spring } from "../lib/motion";
  *
  *  It floats above the bottom navigation and carries exactly what a
  *  listener needs without looking: what is playing, whether it is playing,
- *  a way to skip, and how far in we are. Everything else — cover art,
- *  scrubber, bilingual lyrics, comments — waits behind a tap, in the full
- *  player sheet (PlayerSheet.tsx).
+ *  and a way to skip. The purple bar deliberately has no progress/status
+ *  strip; cover art, scrubber, bilingual lyrics and comments wait behind a
+ *  tap, in the full player sheet (PlayerSheet.tsx).
  *
  *  Markup note: the bar is not one big <button>. A covering button does the
  *  "open the player" job and the two transport buttons sit above it on
@@ -25,10 +25,10 @@ import { spring } from "../lib/motion";
 export function MiniPlayer({ onOpen }: { onOpen: () => void }) {
   const { t, dir } = usePreferences();
   const player = usePlayer();
-  const { track, playing, progress, toggle, next } = player;
+  const { track, playing, toggle, next } = player;
 
   return (
-    <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] bg-surface/95 shadow-float ring-1 ring-black/[0.04] backdrop-blur-md dark:ring-white/[0.06]">
+    <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] bg-primary shadow-[0_18px_36px_-14px_rgba(107,79,221,0.68)] ring-1 ring-white/20">
       <button
         type="button"
         onClick={onOpen}
@@ -41,17 +41,17 @@ export function MiniPlayer({ onOpen }: { onOpen: () => void }) {
           {track ? (
             <Photo src={track.photo} alt="" />
           ) : (
-            <span className="flex h-full items-center justify-center bg-subtle text-ink-faint">
+            <span className="flex h-full items-center justify-center bg-white/15 text-white/75">
               <Icon name="music" size={18} />
             </span>
           )}
         </span>
 
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13.5px] font-bold text-ink">
+          <span className="block truncate text-[13.5px] font-bold text-white">
             {track ? track.title : t("player.miniPick")}
           </span>
-          <span className="mt-0.5 block truncate text-[12px] font-semibold text-ink-muted">
+          <span className="mt-0.5 block truncate text-[12px] font-semibold text-white/75">
             {track ? `${track.artist} · ${track.album}` : t("player.nothingPlaying")}
           </span>
         </span>
@@ -68,8 +68,8 @@ export function MiniPlayer({ onOpen }: { onOpen: () => void }) {
             className={cn(
               "flex size-10 items-center justify-center rounded-full transition-colors",
               track
-                ? "bg-primary text-white shadow-primary"
-                : "bg-subtle text-ink-muted",
+                ? "bg-white text-primary-deep shadow-sm"
+                : "bg-white/20 text-white/70",
             )}
           >
             <Icon name={track && playing ? "pause" : "play"} size={17} strokeWidth={2.1} />
@@ -83,7 +83,7 @@ export function MiniPlayer({ onOpen }: { onOpen: () => void }) {
               onClick={() => next()}
               aria-label={t("player.nextTrack")}
               title={t("player.nextTrack")}
-              className="flex size-9 items-center justify-center rounded-full text-ink-muted transition-colors hover:text-ink"
+              className="flex size-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
             >
               <Icon name={forwardIcon(dir)} size={17} strokeWidth={2.2} />
             </motion.button>
@@ -91,13 +91,6 @@ export function MiniPlayer({ onOpen }: { onOpen: () => void }) {
         </span>
       </div>
 
-      {/* how far in we are, without a full scrubber in the bar */}
-      <span className="absolute inset-x-4 bottom-1.5 h-[2px] overflow-hidden rounded-full bg-line/80">
-        <span
-          className="block h-full rounded-full bg-primary transition-[width] duration-300"
-          style={{ width: `${Math.round((track ? progress : 0) * 100)}%` }}
-        />
-      </span>
     </div>
   );
 }

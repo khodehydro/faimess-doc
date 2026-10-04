@@ -85,7 +85,7 @@ export function ShopPage() {
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col p-6">
+    <div className="flex min-h-0 flex-1 flex-col p-6 lg:p-7">
       {/* header */}
       <div className="flex items-start gap-4 pb-1.5">
         <div className="min-w-0">
