@@ -105,8 +105,7 @@ curl -L -H "Accept: application/vnd.github.raw" \
 | `folderPlus` | `folder-add` | |
 | `sun` / `moon` | `sun` / `moon` | |
 | `globe` | `globe` | |
-| `shop` | `shop` | سایبان مغازه — آیکن بخش فروشگاه در منوی اصلی |
-| `bag` | `bag` | کیف خرید — سبد/«افزودن به سبد» در خود صفحه |
+| `shop` | `shop-light` | مغازه، و **خطی** مثل بقیهٔ آیکن‌های منو. `shop` خودِ پک پُر است (`fill`) و در ردیف منو جا نمی‌افتاد |
 
 ### آیکن‌های پُر (fill)
 

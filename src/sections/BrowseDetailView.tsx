@@ -9,7 +9,7 @@ import { QUEUE, leadTrackFor, trackById, type PlayerTrack } from "../data/player
 import { coverPhoto } from "../data/playlists";
 import { ArtistCover, Cover } from "../ui/Cover";
 import { Icon } from "../ui/Icon";
-import { CircleButton, PillButton } from "../ui/primitives";
+import { CircleButton, ExpandPill, PillButton } from "../ui/primitives";
 import { CreatePlaylistDialog } from "../ui/PlaylistDialogs";
 import { ShareDialog } from "../ui/ShareDialog";
 import { librarySubject, type LibraryKind } from "../data/share";
@@ -33,7 +33,10 @@ type Heading = {
   kind: LibraryKind;
   id: string;
   title: string;
-  sub: string;
+  /** who it is by — sits opposite the title, on the far side of the row */
+  byline: string;
+  /** year · tracks · minutes — one line, read at a glance */
+  facts: string;
   cover: string;
   seed: number;
   /** circular art for artists, square for records and lists */
@@ -45,6 +48,15 @@ type Heading = {
 
 const minutesOf = (tracks: PlayerTrack[]) =>
   Math.max(1, Math.round(tracks.reduce((sum, track) => sum + track.seconds, 0) / 60));
+
+/** "12 tracks" / "1 track" — the count line never says "1 tracks" */
+const countOf = (
+  tracks: PlayerTrack[],
+  t: (key: string, vars?: Record<string, string | number>) => string,
+) =>
+  tracks.length === 1
+    ? t("playlist.trackOne")
+    : t("playlist.trackCount", { count: tracks.length });
 
 export function BrowseDetailView() {
   const { t, dir } = usePreferences();
@@ -67,7 +79,8 @@ export function BrowseDetailView() {
         kind: "artist",
         id: artist.id,
         title: artist.name,
-        sub: `${artist.kind} · ${artist.listeners} · ${t("playlist.trackCount", { count: tracks.length })}`,
+        byline: artist.kind,
+        facts: `${artist.listeners} · ${countOf(tracks, t)} · ${t("detail.minutes", { n: minutesOf(tracks) })}`,
         cover: artist.photo,
         seed: artist.seed,
         round: true,
@@ -87,7 +100,8 @@ export function BrowseDetailView() {
         kind: "album",
         id: album.id,
         title: album.title,
-        sub: `${album.artist} · ${album.year} · ${t("playlist.trackCount", { count: tracks.length })}`,
+        byline: album.artist,
+        facts: `${album.year} · ${countOf(tracks, t)} · ${t("detail.minutes", { n: minutesOf(tracks) })}`,
         cover: album.photo,
         seed: album.seed,
         tracks,
@@ -103,7 +117,8 @@ export function BrowseDetailView() {
         kind: "playlist",
         id: own.id,
         title: own.name,
-        sub: `${t("playlist.yours")} · ${t("playlist.trackCount", { count: tracks.length })}`,
+        byline: t("playlist.yours"),
+        facts: `${countOf(tracks, t)} · ${t("detail.minutes", { n: minutesOf(tracks) })}`,
         cover: coverPhoto(own.cover),
         seed: 0,
         tracks,
@@ -120,7 +135,8 @@ export function BrowseDetailView() {
           kind: "playlist",
           id: curated.id,
           title: curated.name,
-          sub: `${curated.curator} · ${curated.mood} · ${t("playlist.trackCount", { count: tracks.length })}`,
+          byline: `${curated.curator} · ${curated.mood}`,
+          facts: `${countOf(tracks, t)} · ${t("detail.minutes", { n: minutesOf(tracks) })}`,
           cover: curated.photo,
           seed: curated.seed,
           tracks,
@@ -196,39 +212,40 @@ export function BrowseDetailView() {
           )}
         </span>
 
-        <div className="min-w-0 flex-1">
-          <h2 className="font-display truncate text-[23px] font-bold leading-tight tracking-[-0.016em] text-ink">
-            {heading.title}
-          </h2>
-          <p className="mt-1 truncate text-[13px] font-medium text-ink-muted">{heading.sub}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-2.5">
-            <PillButton tone="primary" icon="play" onClick={playAll}>
-              {t("detail.playAll")}
-            </PillButton>
-            <PillButton tone="outline" icon="shuffle" onClick={shuffleAll}>
-              {t("detail.shuffle")}
-            </PillButton>
-            <CircleButton
-              icon="share"
-              size="sm"
-              tone="white"
-              label={t("detail.share")}
-              onClick={() => setSharing(true)}
-            />
-            {heading.editableId && (
-              /* the pencil is the edit door for a list of your own — the card
-                 itself opens the songs */
-              <CircleButton
-                icon="edit"
-                size="sm"
-                tone="white"
-                label={t("detail.edit")}
-                onClick={() => setEditing(true)}
-              />
-            )}
-            <span className="text-[12.5px] font-semibold text-ink-faint">
-              {t("detail.minutes", { n: minutesOf(heading.tracks) })}
-            </span>
+        <div className="flex min-w-0 flex-1 items-start gap-4">
+          {/* the title owns the line; the controls stay minimal under it and
+              unfold their words on hover — the words never push the row */}
+          <div className="min-w-0 flex-1">
+            <h2 className="font-display truncate text-[23px] font-bold leading-tight tracking-[-0.016em] text-ink">
+              {heading.title}
+            </h2>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <ExpandPill tone="primary" icon="play" onClick={playAll}>
+                {t("detail.playAll")}
+              </ExpandPill>
+              <ExpandPill icon="shuffle" onClick={shuffleAll}>
+                {t("detail.shuffle")}
+              </ExpandPill>
+              <ExpandPill icon="share" onClick={() => setSharing(true)}>
+                {t("detail.share")}
+              </ExpandPill>
+              {heading.editableId && (
+                /* the pencil is the edit door for a list of your own — the
+                   card itself opens the songs */
+                <ExpandPill icon="edit" onClick={() => setEditing(true)}>
+                  {t("detail.edit")}
+                </ExpandPill>
+              )}
+            </div>
+          </div>
+
+          {/* who made it, and the numbers a listener reads before playing:
+              year · tracks · minutes, opposite the title */}
+          <div className="shrink-0 text-end">
+            <p className="truncate text-[13.5px] font-bold text-ink">{heading.byline}</p>
+            <p className="mt-1 text-[12.5px] font-semibold tabular-nums text-ink-muted">
+              {heading.facts}
+            </p>
           </div>
         </div>
       </div>
@@ -313,7 +330,7 @@ export function BrowseDetailView() {
           heading.kind,
           heading.id,
           heading.title,
-          heading.sub,
+          `${heading.byline} · ${heading.facts}`,
           heading.cover,
         )}
       />

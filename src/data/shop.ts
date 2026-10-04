@@ -1,9 +1,9 @@
 /* ------------------------------------------------------------------ *
  *  Shop — the merch shelf the main menu links to.
  *
- *  Same shape as the rest of `data/`: content only, no logic. Artwork is
- *  self-hosted like every other photo in the app, and the demo "assets"
- *  carry a lilac accent so the shelf reads as FAIMESS.
+ *  This is a *link-out* catalogue, not a checkout: every card opens the
+ *  product on the store site (STORE_HOST) and nothing is bought inside
+ *  the app. Prices are in Toman, the way the store prices them.
  * ------------------------------------------------------------------ */
 
 import hoodiePhoto from "../assets/photos/shop/hoodie.webp";
@@ -14,6 +14,21 @@ import capPhoto from "../assets/photos/shop/cap.webp";
 import totePhoto from "../assets/photos/shop/tote.webp";
 import lightstickPhoto from "../assets/photos/shop/lightstick.webp";
 import teePhoto from "../assets/photos/shop/tee.webp";
+import buckethatPhoto from "../assets/photos/shop/buckethat.webp";
+import phonecasePhoto from "../assets/photos/shop/phonecase.webp";
+import keyringPhoto from "../assets/photos/shop/keyring.webp";
+import postersPhoto from "../assets/photos/shop/posters.webp";
+import mugPhoto from "../assets/photos/shop/mug.webp";
+import socksPhoto from "../assets/photos/shop/socks.webp";
+import backpackPhoto from "../assets/photos/shop/backpack.webp";
+import bomberPhoto from "../assets/photos/shop/bomber.webp";
+import earringsPhoto from "../assets/photos/shop/earrings.webp";
+import stickersPhoto from "../assets/photos/shop/stickers.webp";
+
+/** where a product card takes you — the store lives on its own host */
+export const STORE_HOST = "store.faimess.app";
+
+export const productUrl = (id: string) => `https://${STORE_HOST}/p/${id}`;
 
 export type ShopCategoryId = "all" | "apparel" | "accessories" | "collectibles";
 
@@ -25,19 +40,15 @@ export type ShopBadge = "new" | "bestseller" | "low";
 
 export type ShopProduct = {
   id: string;
-  /** the artwork's own alt text; the name comes from i18n */
+  /** the product name itself; the same words go to the store site */
   name: string;
   photo: string;
   category: Exclude<ShopCategoryId, "all">;
-  /** in USD — the demo sells worldwide */
+  /** in Toman — grouped per locale by `toman()` */
   price: number;
   /** the old price, when the item is on sale */
   wasPrice?: number;
-  rating: number;
-  reviews: number;
   badge?: ShopBadge;
-  /** true once someone tapped the heart */
-  saved?: boolean;
 };
 
 export const shopProducts: ShopProduct[] = [
@@ -46,10 +57,8 @@ export const shopProducts: ShopProduct[] = [
     name: "On Stage hoodie",
     photo: hoodiePhoto,
     category: "apparel",
-    price: 68,
-    wasPrice: 82,
-    rating: 4.9,
-    reviews: 412,
+    price: 1_890_000,
+    wasPrice: 2_350_000,
     badge: "bestseller",
   },
   {
@@ -57,9 +66,7 @@ export const shopProducts: ShopProduct[] = [
     name: "Lilac court sneakers",
     photo: sneakersPhoto,
     category: "apparel",
-    price: 119,
-    rating: 4.7,
-    reviews: 188,
+    price: 3_240_000,
     badge: "new",
   },
   {
@@ -67,18 +74,14 @@ export const shopProducts: ShopProduct[] = [
     name: "Star charm bracelet",
     photo: braceletPhoto,
     category: "accessories",
-    price: 34,
-    rating: 4.8,
-    reviews: 265,
+    price: 640_000,
   },
   {
     id: "photocards",
     name: "Photocard set",
     photo: photocardsPhoto,
     category: "collectibles",
-    price: 22,
-    rating: 5,
-    reviews: 921,
+    price: 380_000,
     badge: "bestseller",
   },
   {
@@ -86,28 +89,22 @@ export const shopProducts: ShopProduct[] = [
     name: "Midnight cap",
     photo: capPhoto,
     category: "apparel",
-    price: 41,
-    rating: 4.6,
-    reviews: 143,
+    price: 720_000,
   },
   {
     id: "tote-canvas",
     name: "Canvas tote",
     photo: totePhoto,
     category: "accessories",
-    price: 29,
-    wasPrice: 36,
-    rating: 4.7,
-    reviews: 208,
+    price: 540_000,
+    wasPrice: 680_000,
   },
   {
     id: "lightstick-heart",
     name: "Heart lightstick",
     photo: lightstickPhoto,
     category: "collectibles",
-    price: 54,
-    rating: 4.9,
-    reviews: 763,
+    price: 1_450_000,
     badge: "new",
   },
   {
@@ -115,13 +112,84 @@ export const shopProducts: ShopProduct[] = [
     name: "Lavender tee",
     photo: teePhoto,
     category: "apparel",
-    price: 39,
-    rating: 4.5,
-    reviews: 96,
+    price: 780_000,
+    badge: "low",
+  },
+  {
+    id: "bomber-black",
+    name: "Satin bomber",
+    photo: bomberPhoto,
+    category: "apparel",
+    price: 2_980_000,
+  },
+  {
+    id: "buckethat-lilac",
+    name: "Lilac bucket hat",
+    photo: buckethatPhoto,
+    category: "apparel",
+    price: 690_000,
+  },
+  {
+    id: "socks-star",
+    name: "Star crew socks",
+    photo: socksPhoto,
+    category: "apparel",
+    price: 260_000,
+  },
+  {
+    id: "backpack-tour",
+    name: "Tour backpack",
+    photo: backpackPhoto,
+    category: "accessories",
+    price: 1_680_000,
+    badge: "bestseller",
+  },
+  {
+    id: "phonecase-lilac",
+    name: "Photocard phone case",
+    photo: phonecasePhoto,
+    category: "accessories",
+    price: 420_000,
+    badge: "new",
+  },
+  {
+    id: "keyring-star",
+    name: "Acrylic keyring",
+    photo: keyringPhoto,
+    category: "accessories",
+    price: 190_000,
+  },
+  {
+    id: "earrings-crystal",
+    name: "Crystal hoop earrings",
+    photo: earringsPhoto,
+    category: "accessories",
+    price: 480_000,
+  },
+  {
+    id: "poster-set",
+    name: "Poster set · 3 prints",
+    photo: postersPhoto,
+    category: "collectibles",
+    price: 460_000,
+  },
+  {
+    id: "stickers-pack",
+    name: "Sticker pack · 24 pcs",
+    photo: stickersPhoto,
+    category: "collectibles",
+    price: 150_000,
+  },
+  {
+    id: "mug-lilac",
+    name: "Lilac mug",
+    photo: mugPhoto,
+    category: "collectibles",
+    price: 350_000,
     badge: "low",
   },
 ];
 
-/** `$68` when it is a round number, `$68.50` when it is not */
-export const money = (value: number) =>
-  Number.isInteger(value) ? `$${value}` : `$${value.toFixed(2)}`;
+/** `1890000` → `1,890,000` — grouped the way the reader's locale groups */
+export const toman = (value: number, locale: string) =>
+  new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value);

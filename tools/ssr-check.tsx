@@ -856,24 +856,34 @@ check(
     routerSrc.includes('"shop"'),
 );
 check(
-  "the shop sells something: products, categories and prices",
-  (shopData.match(/^    id: "/gm) ?? []).length >= 6 &&
+  "the shop is a long shelf of products with prices in Toman",
+  (shopData.match(/^    id: "/gm) ?? []).length >= 12 &&
     shopData.includes("SHOP_CATEGORIES") &&
-    shopData.includes("export const money") &&
+    shopData.includes("export const toman") &&
+    shopData.includes("STORE_HOST") &&
     shopSrc.includes("shopProducts") &&
-    shopSrc.includes("money(product.price)"),
+    shopSrc.includes("toman(product.price, locale)") &&
+    /* no currency symbol anywhere: the store prices in Toman */
+    !/[$€£]\d/.test(shopData) &&
+    !/[$€£]\d/.test(shopSrc),
 );
 check(
-  "the shop is honest that it is a demo",
-  shopSrc.includes('t("shop.demoNote")') && shopSrc.includes('t("shop.checkout")'),
-  "no checkout is pretended",
+  "a product card is a link to the store, not a cart button",
+  shopSrc.includes("href={productUrl(product.id)}") &&
+    shopSrc.includes('target="_blank"') &&
+    shopSrc.includes('rel="noopener noreferrer"') &&
+    shopSrc.includes("<Photo") &&
+    !shopSrc.includes("setBag") &&
+    !shopSrc.includes('t("shop.add")') &&
+    !shopSrc.includes('t("shop.checkout")'),
+  "no bag, no payment — the purchase happens on the store site",
 );
 check(
-  "a product card has a photo, a price and a way to add it",
-  shopSrc.includes("<Photo") &&
-    shopSrc.includes('t("shop.add")') &&
-    shopSrc.includes("onAdd") &&
-    shopSrc.includes("setBag((n) => n + 1)"),
+  "the shop says out loud that a tap leaves for the store",
+  shopSrc.includes('t("shop.redirectNote")') &&
+    shopSrc.includes('t("shop.onStore")') &&
+    !shopSrc.includes('t("shop.demoNote")'),
+  "the note is about the redirect, not about being a demo",
 );
 
 /* -------- the details the last pass fixed (v27) ----------------------- */
@@ -884,6 +894,42 @@ const playerCtxSrc = readFileSync("src/app/PlayerContext.tsx", "utf8");
 const detailSrc = readFileSync("src/sections/BrowseDetailView.tsx", "utf8");
 const mineSrc = readFileSync("src/sections/CollectionSection.tsx", "utf8");
 const shareSrc = readFileSync("src/data/share.ts", "utf8");
+
+/* -------- the detail header, minimal (v29) ---------------------------- */
+
+const primitivesSrc = readFileSync("src/ui/primitives.tsx", "utf8");
+
+check(
+  "the detail controls are icons that unfold their word on hover",
+  primitivesSrc.includes("export function ExpandPill") &&
+    primitivesSrc.includes("max-w-0") &&
+    primitivesSrc.includes("group-hover:max-w-[12rem]") &&
+    primitivesSrc.includes("group-focus-visible:max-w-[12rem]") &&
+    primitivesSrc.includes("max-lg:max-w-[12rem]"),
+  "the row never jumps: the hidden word is width-animated, and shows on touch",
+);
+check(
+  "every detail control is one of those pills",
+  (detailSrc.match(/<ExpandPill/g) ?? []).length === 4 &&
+    detailSrc.includes('icon="shuffle"') &&
+    detailSrc.includes('icon="share"') &&
+    detailSrc.includes('icon="edit"') &&
+    /* the only fixed-label button left belongs to the empty state */
+    (detailSrc.match(/<PillButton/g) ?? []).length === 1 &&
+    detailSrc.includes('t("detail.addSongs")'),
+  "play all · shuffle · share · edit, nothing with a fixed label",
+);
+check(
+  "the facts sit opposite the title, and the duration next to the count",
+  detailSrc.includes("byline:") &&
+    detailSrc.includes("facts:") &&
+    detailSrc.includes("countOf(tracks, t)") &&
+    detailSrc.includes("t(\"detail.minutes\"") &&
+    detailSrc.includes("text-end") &&
+    !detailSrc.includes("heading.sub"),
+  "12 tracks · 44 min on the far side, not a second line under the name",
+);
+
 
 check(
   "the download arrow points down and share is the share mark",
@@ -995,6 +1041,15 @@ check(
   }),
   "the skeleton comes from the pack, the paint comes from the call site",
 );
+check(
+  "the shop icon is an outline, like the rest of the menu",
+  (() => {
+    const body = generated.find((g) => g.name === "shop")?.body ?? "";
+    return body.includes('stroke="currentColor"') && !body.includes('fill="currentColor"');
+  })(),
+  "the pack's own `shop` is filled; the menu uses its stroke cut",
+);
+
 check(
   "two copies of a masked icon don't fight over one id",
   (() => {

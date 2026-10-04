@@ -105,6 +105,56 @@ type PillButtonProps = {
   onClick?: () => void;
 };
 
+/* ------------------------------------------------------------------ *
+ *  ExpandPill — the minimal control the detail cards use.
+ *
+ *  At rest it is only its glyph; the word unfolds beside it on hover (and
+ *  for keyboards, and on phone widths, where there is no hover to give).
+ *  The width animates with CSS, so the label never reflows the row while
+ *  it is hidden — nothing in the header jumps when the pointer arrives.
+ * ------------------------------------------------------------------ */
+
+type ExpandPillProps = {
+  icon: IconName;
+  children: string;
+  tone?: "primary" | "outline";
+  /** the accessible name, when the visible word is shorter */
+  label?: string;
+  onClick?: () => void;
+};
+
+export function ExpandPill({ icon, children, tone = "outline", label, onClick }: ExpandPillProps) {
+  return (
+    <motion.button
+      type="button"
+      whileTap={{ scale: 0.97 }}
+      transition={spring}
+      onClick={onClick}
+      aria-label={label ?? children}
+      title={label ?? children}
+      className={cn(
+        "group flex shrink-0 items-center rounded-full border px-3 py-2 text-[13px] font-semibold transition-colors",
+        tone === "primary"
+          ? "border-transparent bg-primary text-white shadow-primary hover:bg-primary-deep"
+          : "border-line bg-surface text-ink-body hover:border-primary/35 hover:bg-primary-faint hover:text-primary-deep",
+      )}
+    >
+      <Icon name={icon} size={15.5} strokeWidth={2.1} className="shrink-0" />
+      <span
+        className={cn(
+          "max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-[max-width,opacity,margin] duration-300 ease-out",
+          "group-hover:ms-2 group-hover:max-w-[12rem] group-hover:opacity-100",
+          "group-focus-visible:ms-2 group-focus-visible:max-w-[12rem] group-focus-visible:opacity-100",
+          /* under 1024px there is no hover to give away the word */
+          "max-lg:ms-2 max-lg:max-w-[12rem] max-lg:opacity-100",
+        )}
+      >
+        {children}
+      </span>
+    </motion.button>
+  );
+}
+
 export function PillButton({
   children,
   icon,
