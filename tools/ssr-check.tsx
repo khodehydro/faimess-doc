@@ -133,7 +133,30 @@ check("home shows photography", (home.split(".webp").length - 1) >= 20, `${home.
 for (const title of ["Artists you follow", "Newest songs", "Trending now", "Latest news", "Fresh albums", "Active listeners"]) {
   check(`shelf “${title}”`, home.includes(title));
 }
-check("hero banner wired", banners.every((b) => home.includes(b.title) || true) && home.includes(banners[0].title));
+/* the banner is artwork + two glass rails, and nothing else (v17) */
+const heroSrc = readFileSync("src/sections/HeroBanner.tsx", "utf8");
+check(
+  "hero banner still shows its art",
+  home.includes(banners[0].photo) && home.includes(banners[0].title),
+  `${banners.length} slides in the data, the live one on screen (sr-only title)`,
+);
+check(
+  "the banner's two arrows are full-height glass rails",
+  heroSrc.includes("items-stretch") &&
+    heroSrc.includes("self-stretch") &&
+    heroSrc.includes("backdrop-blur-xl") &&
+    heroSrc.includes("backIcon(writing)") &&
+    heroSrc.includes("forwardIcon(writing)"),
+  "one rail per side, arrows swapped by writing direction",
+);
+check(
+  "no card, badge, bell or dot is left on the banner",
+  !heroSrc.includes("bell") &&
+    !heroSrc.includes("openTickets") &&
+    !heroSrc.includes("stops.map") &&
+    !heroSrc.includes("withThousands") &&
+    !heroSrc.includes("CircleButton"),
+);
 
 /* ------------------------------ the player ---------------------------- */
 

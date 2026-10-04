@@ -8,27 +8,25 @@ import {
   useTransform,
 } from "framer-motion";
 import { Photo } from "../ui/Cover";
-import { CircleButton, Meta } from "../ui/primitives";
-import { Icon } from "../ui/Icon";
+import { Icon, type IconName } from "../ui/Icon";
 import { banners } from "../data/banners";
-import { useApp } from "../app/AppContext";
 import { cn } from "../lib/cn";
-import { withThousands } from "../lib/format";
-import { EASE, spring } from "../lib/motion";
+import { EASE } from "../lib/motion";
 import { usePreferences } from "../app/PreferencesContext";
 import { backIcon, dirSign, forwardIcon } from "../lib/rtl";
 
 const AUTOPLAY_MS = 7000;
 
 /* ------------------------------------------------------------------ *
- *  Home hero — a banner carousel with previous / next controls.
- *  Each slide is a real photograph (data/banners.ts) with its event
- *  card floating on top. Add an entry there and it becomes a new slide.
+ *  Home hero — a full-bleed photograph per slide (data/banners.ts) with
+ *  exactly two controls: a frosted rail down each side of the banner,
+ *  previous on the inline start, next on the inline end. No cards, no
+ *  badges, no dots — the artwork and the two arrows are the whole banner.
+ *  Add an entry to the data and it becomes a new slide.
  * ------------------------------------------------------------------ */
 
 export function HeroBanner() {
   const { t, dir: writing } = usePreferences();
-  const { notify } = useApp();
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState(1);
   const [paused, setPaused] = useState(false);
@@ -132,134 +130,64 @@ export function HeroBanner() {
             <Photo src={banner.photo} className="scale-[1.03]" />
           </motion.div>
 
-          {/* legibility scrims */}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/50 via-black/12 to-transparent" />
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/28 to-transparent" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/45 to-transparent" />
-
-          {/* fans going + alerts */}
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25, ease: EASE }}
-            className="absolute end-5 top-5 flex items-center gap-3"
-          >
-            <div className="flex items-center gap-1.5 rounded-full bg-surface/92 px-3 py-2">
-              <Icon name="flame" size={14} className="text-flame" />
-              <span className="text-[13.5px] font-extrabold tabular-nums text-ink">{withThousands(banner.going)}</span>
-              <span className="text-[12.5px] font-semibold text-ink-muted">{t("shelf.going")}</span>
-            </div>
-            <div className="group">
-              <CircleButton
-                icon="bell"
-                tone="white"
-                label={t("hero.showAlerts")}
-                iconClassName="anim-bell"
-                className="bg-surface/92"
-                onClick={() => notify(t("toast.caughtUp"))}
-              />
-            </div>
-          </motion.div>
-
-          {/* floating event card */}
-          <motion.div
-            initial={{ opacity: 0, y: 22, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
-            className="absolute bottom-6 start-5 flex items-end gap-3"
-          >
-            <motion.div
-              whileHover={{ y: -4 }}
-              transition={spring}
-              className="w-[302px] rounded-[20px] bg-surface/96 p-3 shadow-float"
-            >
-              <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[12px] font-bold uppercase tracking-wide text-primary-deep">
-                <Icon name="sparkle" size={12} strokeWidth={2.2} />
-                {banner.eyebrow}
-              </span>
-              <h3 className="font-display text-[18px] font-bold leading-tight tracking-[-0.01em] text-ink">{banner.title}</h3>
-              <div className="mt-1.5 flex items-center gap-3 text-[13px] font-medium">
-                <Meta icon="calendar" iconSize={13}>
-                  {banner.dateRange}
-                </Meta>
-                <Meta icon="pin" iconSize={13} className="max-w-[130px] overflow-hidden whitespace-nowrap">
-                  {banner.location}
-                </Meta>
-              </div>
-              <ul className="mt-2.5 flex flex-col gap-1.5">
-                {banner.stops.map((stop) => (
-                  <li
-                    key={stop.city}
-                    className="flex items-center justify-between rounded-[12px] bg-subtle/75 px-2.5 py-1.5 text-[12.5px] font-semibold text-ink-body"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <Icon name="compass" size={12} className="text-primary" />
-                      {stop.city}
-                    </span>
-                    <span className="tabular-nums text-ink-muted">{stop.date}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-
-            <motion.button
-              whileHover={{ y: -3, rotate: -4 }}
-              whileTap={{ scale: 0.92 }}
-              transition={spring}
-              onClick={() => notify(t("toast.tickets", { title: banner.title }))}
-              aria-label={t("hero.openTickets")}
-              title={t("hero.openTickets")}
-              className="mb-7 flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-primary"
-            >
-              <motion.span animate={{ y: [0, -2, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}>
-                <Icon name="star" size={18.5} />
-              </motion.span>
-            </motion.button>
-          </motion.div>
+          {/* the artwork is the whole slide; only its accessible name is left */}
+          <span className="sr-only">{banner.title}</span>
         </motion.div>
       </AnimatePresence>
 
-      {/* carousel controls */}
-      <div className="absolute bottom-5 end-5 z-20 flex items-center gap-2">
-        <CircleButton
+      {/* The banner's only chrome: one rail per side, as tall as the banner
+          itself. The arrow rides on its own chip above the glass, so the
+          parallax moving the photo behind it can't drag the glyph around. */}
+      <div className="pointer-events-none absolute inset-0 z-20 flex items-stretch justify-between">
+        <GlassStep
+          side="start"
           icon={backIcon(writing)}
-          tone="white"
-          size="md"
           label={t("hero.prev")}
-          className="bg-surface/94"
           onClick={() => go(-1)}
         />
-        <div className="flex items-center gap-1.5 rounded-full bg-surface/94 px-2.5 py-2">
-          {banners.map((b, i) => (
-            <button
-              key={b.id}
-              onClick={() => {
-                setDir(i > index ? 1 : -1);
-                setIndex(i);
-              }}
-              aria-label={b.title}
-              className="group relative flex h-2 items-center"
-            >
-              <motion.span
-                animate={{ width: i === index ? 20 : 6, opacity: i === index ? 1 : 0.42 }}
-                transition={spring}
-                className={cn(
-                  "block h-2 rounded-full transition-colors",
-                  i === index ? "bg-primary" : "bg-ink-faint group-hover:bg-ink-muted",
-                )}
-              />
-            </button>
-          ))}
-        </div>
-        <CircleButton
+        <GlassStep
+          side="end"
           icon={forwardIcon(writing)}
-          tone="white"
-          size="md"
           label={t("hero.next")}
-          className="bg-surface/94"
           onClick={() => go(1)}
         />
       </div>
     </div>
+  );
+}
+
+/* -------------------------------- the rails ----------------------------- */
+
+/**
+ * A full-height frosted rail. `side` is the *inline* side it hugs, so the two
+ * swap places with the writing direction while previous / next keep meaning.
+ */
+function GlassStep({
+  side,
+  icon,
+  label,
+  onClick,
+}: {
+  side: "start" | "end";
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      whileTap={{ scale: 0.99 }}
+      className={cn(
+        "group pointer-events-auto flex w-[50px] self-stretch items-center justify-center bg-white/10 backdrop-blur-xl transition-colors duration-300 hover:bg-white/20 lg:w-[70px]",
+        side === "start" ? "border-e border-white/15" : "border-s border-white/15",
+      )}
+    >
+      <span className="flex size-10 items-center justify-center rounded-full bg-white/20 text-white ring-1 ring-white/30 shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-all duration-300 group-hover:bg-white/30 group-hover:ring-white/45 lg:size-11">
+        <Icon name={icon} size={19} strokeWidth={2.2} />
+      </span>
+    </motion.button>
   );
 }

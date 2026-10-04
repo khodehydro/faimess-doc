@@ -126,12 +126,9 @@ export const STRINGS: Record<string, Entry> = {
   "shelf.hintDesk": { en: "K-pop desk", fa: "میز K-pop", ko: "K-pop 데스크" },
   "shelf.hintWeek": { en: "this week", fa: "این هفته", ko: "이번 주" },
   "shelf.hintLive": { en: "updated live", fa: "زنده به‌روز می‌شود", ko: "실시간 업데이트" },
-  "shelf.going": { en: "going", fa: "شرکت‌کننده", ko: "참석" },
   "shelf.wasLiveSuffix": { en: "was live", fa: "لایو بود", ko: "라이브 했어요" },
 
   /* ------------------------------- hero ------------------------------- */
-  "hero.showAlerts": { en: "Show alerts", fa: "نمایش هشدارها", ko: "알림 보기" },
-  "hero.openTickets": { en: "Open tickets", fa: "خرید بلیت", ko: "티켓 열기" },
   "hero.prev": { en: "Previous banner", fa: "بنر قبلی", ko: "이전 배너" },
   "hero.next": { en: "Next banner", fa: "بنر بعدی", ko: "다음 배너" },
 
@@ -559,7 +556,6 @@ export const STRINGS: Record<string, Entry> = {
   "toast.leaderboard": { en: "Opening the season leaderboard", fa: "باز کردن جدول فصل", ko: "시즌 리더보드 여는 중" },
   "toast.findMore": { en: "Find more artists to follow", fa: "هنرمندهای بیشتری برای دنبال کردن پیدا کن", ko: "팔로우할 아티스트 더 찾기" },
   "toast.caughtUp": { en: "You’re all caught up ✨", fa: "همه را دیدی ✨", ko: "모두 확인했어요 ✨" },
-  "toast.tickets": { en: "{title} · tickets", fa: "{title} · بلیت‌ها", ko: "{title} · 티켓" },
 
   /* ------------------------- reporting reasons ------------------------ */
   "report.label.spam": { en: "Spam or advertising", fa: "اسپم یا تبلیغ", ko: "스팸 또는 광고" },
