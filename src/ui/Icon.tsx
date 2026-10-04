@@ -1,14 +1,12 @@
 import type { SVGProps } from "react";
 
 /* ------------------------------------------------------------------ *
- *  Icon set — thin linear strokes with round caps (Lucide-like),
- *  inlined so the app has zero external asset dependencies.
+ *  Icon set — thin linear strokes with round caps. Inlined so the app
+ *  ships with zero external icon dependencies.
  * ------------------------------------------------------------------ */
 
 const paths: Record<string, string[]> = {
-  home: [
-    "M4 10.9 12 4.2l8 6.7V20a1 1 0 0 1-1 1h-4.4v-6.2H9.4V21H5a1 1 0 0 1-1-1z",
-  ],
+  home: ["M4 10.9 12 4.2l8 6.7V20a1 1 0 0 1-1 1h-4.4v-6.2H9.4V21H5a1 1 0 0 1-1-1z"],
   calendar: [
     "M4.5 5.5h15a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19V7a1.5 1.5 0 0 1 1.5-1.5Z",
     "M3 10h18M8 3.5v3.6M16 3.5v3.6",
@@ -51,20 +49,44 @@ const paths: Record<string, string[]> = {
     "M12 3.5l1.85 5.1 5.15 1.85-5.15 1.9L12 17.6l-1.85-5.25L5 10.45l5.15-1.85z",
     "M18.4 16.2l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z",
   ],
-  pin: ["M12 21s6.8-6.3 6.8-11a6.8 6.8 0 1 0-13.6 0C5.2 14.7 12 21 12 21Z", "M12 12.6a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2Z"],
+  pin: [
+    "M12 21s6.8-6.3 6.8-11a6.8 6.8 0 1 0-13.6 0C5.2 14.7 12 21 12 21Z",
+    "M12 12.6a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2Z",
+  ],
   users: [
     "M15.6 20v-1.6a4 4 0 0 0-4-4H6.4a4 4 0 0 0-4 4V20",
     "M9 11.2a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Z",
     "M21.6 20v-1.6a4 4 0 0 0-3-3.86M16.4 4.24a4 4 0 0 1 0 7.72",
   ],
-  video: ["M3.6 7.4h9.8c.9 0 1.6.7 1.6 1.6v6c0 .9-.7 1.6-1.6 1.6H3.6c-.9 0-1.6-.7-1.6-1.6V9c0-.9.7-1.6 1.6-1.6Z", "M15 10.6l6.4-3.3v9.4L15 13.4z"],
+  video: [
+    "M3.6 7.4h9.8c.9 0 1.6.7 1.6 1.6v6c0 .9-.7 1.6-1.6 1.6H3.6c-.9 0-1.6-.7-1.6-1.6V9c0-.9.7-1.6 1.6-1.6Z",
+    "M15 10.6l6.4-3.3v9.4L15 13.4z",
+  ],
   compass: ["M12 20.6a8.6 8.6 0 1 0 0-17.2 8.6 8.6 0 0 0 0 17.2Z", "M15.3 8.7l-1.7 4.9-4.9 1.7 1.7-4.9z"],
   arrowUpRight: ["M7 17 17 7", "M8.6 7H17v8.4"],
+  arrowLeft: ["M19 12H5", "M11 6l-6 6 6 6"],
+  arrowRight: ["M5 12h14", "M13 6l6 6-6 6"],
   close: ["M6 6l12 12M18 6 6 18"],
   radio: ["M12 20.6a8.6 8.6 0 1 0 0-17.2 8.6 8.6 0 0 0 0 17.2Z", "M12 15.6a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Z"],
   more: ["M6 12h.01M12 12h.01M18 12h.01"],
   trend: ["M20 15.5 14.6 10 11 13.6 4 6.6", "M15.4 6.6H20v4.6"],
   map: ["M9 3.6 3.6 6v14.4L9 18l6 2.4 5.4-2.4V3.6L15 6z", "M9 3.6V18M15 6v14.4"],
+  play: ["M8 5.6 19 12 8 18.4z"],
+  pause: ["M9.5 5.5v13M14.5 5.5v13"],
+  mic: [
+    "M12 15.2a3.6 3.6 0 0 0 3.6-3.6V6.6a3.6 3.6 0 1 0-7.2 0v5A3.6 3.6 0 0 0 12 15.2Z",
+    "M5.5 11.6a6.5 6.5 0 0 0 13 0M12 18.1V21M8.8 21h6.4",
+  ],
+  disc: ["M12 20.6a8.6 8.6 0 1 0 0-17.2 8.6 8.6 0 0 0 0 17.2Z", "M12 14.4a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z"],
+  music: ["M9 18.4V6.6l9-2v11.8", "M9 18.4a2.6 2.6 0 1 1-5.2 0 2.6 2.6 0 0 1 5.2 0Z", "M18 16.4a2.6 2.6 0 1 1-5.2 0 2.6 2.6 0 0 1 5.2 0Z"],
+  heart: ["M12 20.3 4.7 13a4.6 4.6 0 0 1 6.5-6.5l.8.8.8-.8A4.6 4.6 0 0 1 19.3 13z"],
+  shuffle: ["M17 4.5 20.5 8 17 11.5", "M17 12.5 20.5 16 17 19.5", "M3.5 8h3.2c2 0 3 1.4 4.2 3.2s2.4 3.6 4.4 3.6H20.5", "M3.5 16h3.2c2 0 3-1.4 4.2-3.2"],
+  headphones: [
+    "M4.5 15.5v-3a7.5 7.5 0 0 1 15 0v3",
+    "M4.5 14.2h1.9c.7 0 1.2.5 1.2 1.2v3.2c0 .7-.5 1.2-1.2 1.2H5.7a1.2 1.2 0 0 1-1.2-1.2z",
+    "M19.5 14.2h-1.9c-.7 0-1.2.5-1.2 1.2v3.2c0 .7.5 1.2 1.2 1.2h.7a1.2 1.2 0 0 0 1.2-1.2z",
+  ],
+  waveform: ["M4 9.5v5M8 6.5v11M12 4.5v15M16 7.5v9M20 10.5v3"],
 };
 
 export type IconName = keyof typeof paths;
@@ -93,26 +115,6 @@ export function Icon({ name, size = 18, strokeWidth = 1.6, ...rest }: Props) {
       {d.map((p) => (
         <path key={p} d={p} />
       ))}
-    </svg>
-  );
-}
-
-/** The Fiplan mark: a warm hill + tent, coral ridge over a teal slope. */
-export function Logo({ size = 30 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 40 40" width={size} height={size} aria-hidden="true">
-      <defs>
-        <linearGradient id="logo-sky" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#FBE6CE" />
-          <stop offset="100%" stopColor="#F7B26A" />
-        </linearGradient>
-      </defs>
-      <circle cx="20" cy="20" r="19" fill="url(#logo-sky)" />
-      <path d="M8 27.5 20 12l12 15.5z" fill="#79BFB3" />
-      <path d="M16.6 27.5 24.5 17l7.5 10.5z" fill="#4E8E86" opacity="0.55" />
-      <path d="M20 27.5 14 20.8 8 27.5z" fill="#F18069" />
-      <path d="M20 27.5 17.3 23.8 14.6 27.5z" fill="#FFFFFF" opacity="0.9" />
-      <circle cx="27.4" cy="13.6" r="2.6" fill="#F18069" />
     </svg>
   );
 }

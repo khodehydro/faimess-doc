@@ -1,0 +1,225 @@
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArtistCover, Cover } from "../ui/Cover";
+import { Icon } from "../ui/Icon";
+import { Meta, PillButton, CircleButton } from "../ui/primitives";
+import { albums, artists, playlists } from "../data/library";
+import { useApp } from "../app/AppContext";
+import { cn } from "../lib/cn";
+import { EASE, spring, staggerParent, popChild } from "../lib/motion";
+
+export type LibraryKind = "artists" | "albums" | "playlists";
+
+/* ------------------------------------------------------------------ *
+ *  Collection — one section that renders the Artists / Albums /
+ *  Playlists pages. Switch `kind` from the page and it re-skins itself.
+ * ------------------------------------------------------------------ */
+
+const COPY: Record<LibraryKind, { title: string; subtitle: string; filters: string[] }> = {
+  artists: {
+    title: "Artists",
+    subtitle: "The voices shaping your library right now",
+    filters: ["All", "Following", "Top played", "New"],
+  },
+  albums: {
+    title: "Albums",
+    subtitle: "Full records, saved and ready to play",
+    filters: ["All", "Recent", "Saved", "2025"],
+  },
+  playlists: {
+    title: "Playlists",
+    subtitle: "Mixes built by you and the Faimess editors",
+    filters: ["All", "Made by you", "Liked", "Moods"],
+  },
+};
+
+/** hover-revealed play control shared by every card */
+function PlayFab({ onClick, className }: { onClick: () => void; className?: string }) {
+  return (
+    <motion.button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      initial={{ opacity: 0, y: 8, scale: 0.9 }}
+      whileHover={{ scale: 1.08 }}
+      whileTap={{ scale: 0.92 }}
+      transition={spring}
+      aria-label="Play"
+      className={cn(
+        "absolute flex size-10 items-center justify-center rounded-full bg-primary text-white shadow-primary",
+        className,
+      )}
+    >
+      <Icon name="play" size={15} strokeWidth={2} />
+    </motion.button>
+  );
+}
+
+function CardShell({
+  children,
+  onClick,
+  className,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  className?: string;
+}) {
+  return (
+    <motion.button
+      variants={popChild}
+      onClick={onClick}
+      whileHover={{ y: -5 }}
+      transition={spring}
+      className={cn(
+        "group relative flex min-h-0 flex-col overflow-hidden rounded-card bg-surface text-left shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float",
+        className,
+      )}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+/* ------------------------------- cards -------------------------------- */
+
+function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
+  const { notify } = useApp();
+  const [following, setFollowing] = useState(artist.following);
+
+  return (
+    <CardShell onClick={() => notify(`Opening ${artist.name}`)}>
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <ArtistCover seed={artist.seed} initials={artist.initials} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
+        <PlayFab onClick={() => notify(`Playing ${artist.name}`)} className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[9.5px] font-bold text-ink backdrop-blur">
+          {artist.genre}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 p-3">
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[13px] font-bold text-ink">{artist.name}</span>
+          <Meta icon="headphones" iconSize={11} className="text-[10px]">
+            {artist.listeners}
+          </Meta>
+        </span>
+        <PillButton
+          tone={following ? "primary" : "outline"}
+          icon={following ? "check" : "plus"}
+          onClick={() => {
+            setFollowing((v) => !v);
+            notify(following ? `Unfollowed ${artist.name}` : `Following ${artist.name}`, following ? "primary" : "mint");
+          }}
+          className="shrink-0 px-2.5 py-1"
+        >
+          {following ? "Following" : "Follow"}
+        </PillButton>
+      </div>
+    </CardShell>
+  );
+}
+
+function AlbumCard({ album }: { album: (typeof albums)[number] }) {
+  const { notify } = useApp();
+  return (
+    <CardShell onClick={() => notify(`Opening “${album.title}”`)}>
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <Cover seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.05]" />
+        <PlayFab onClick={() => notify(`Playing “${album.title}”`)} className="bottom-3 right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[9.5px] font-bold text-ink backdrop-blur">
+          {album.year}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 p-3">
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[13px] font-bold text-ink">{album.title}</span>
+          <Meta icon="mic" iconSize={11} className="text-[10px]">
+            {album.artist} · {album.tracks} tracks
+          </Meta>
+        </span>
+        <CircleButton icon="heart" size="sm" tone="ghost" label="Save album" onClick={() => notify(`Saved “${album.title}”`, "mint")} />
+      </div>
+    </CardShell>
+  );
+}
+
+function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
+  const { notify } = useApp();
+  return (
+    <motion.button
+      variants={popChild}
+      onClick={() => notify(`Opening “${playlist.name}”`)}
+      whileHover={{ y: -3 }}
+      transition={spring}
+      className="group flex min-h-0 items-center gap-3 overflow-hidden rounded-card bg-surface p-2.5 text-left shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float"
+    >
+      <span className="relative size-[68px] shrink-0 overflow-hidden rounded-[16px]">
+        <Cover seed={playlist.seed} className="h-full w-full" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] font-bold text-ink">{playlist.name}</span>
+        <Meta icon="users" iconSize={11} className="text-[10px]">
+          {playlist.curator}
+        </Meta>
+        <span className="mt-1.5 flex items-center gap-2">
+          <span className="rounded-full bg-primary-faint px-2 py-0.5 text-[9.5px] font-bold text-primary-deep">{playlist.mood}</span>
+          <Meta icon="music" iconSize={10} className="text-[9.5px]">
+            {playlist.tracks} tracks · {playlist.duration}
+          </Meta>
+        </span>
+      </span>
+      <span className="mr-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        <span className="flex size-9 items-center justify-center rounded-full bg-primary text-white shadow-primary">
+          <Icon name="play" size={14} strokeWidth={2} />
+        </span>
+      </span>
+    </motion.button>
+  );
+}
+
+/* ------------------------------ section ------------------------------- */
+
+export function CollectionSection({ params }: { params: { kind: LibraryKind } }) {
+  const { kind } = params;
+  const copy = COPY[kind];
+  const [filter, setFilter] = useState(copy.filters[0]);
+
+  return (
+    <section className="flex h-full w-full flex-col">
+      {/* header */}
+      <div className="flex items-center gap-3 pb-3.5">
+        <div className="min-w-0">
+          <h2 className="text-[24px] font-bold leading-tight tracking-[-0.035em] text-ink">{copy.title}</h2>
+          <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">{copy.subtitle}</p>
+        </div>
+        <div className="ml-auto flex items-center gap-1.5">
+          {copy.filters.map((f) => (
+            <PillButton key={f} active={filter === f} onClick={() => setFilter(f)}>
+              {f}
+            </PillButton>
+          ))}
+          <CircleButton icon="shuffle" size="sm" tone="white" label="Shuffle all" onClick={() => setFilter(copy.filters[0])} />
+        </div>
+      </div>
+
+      {/* grid */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={kind + filter}
+          variants={staggerParent(0.04)}
+          initial="initial"
+          animate="animate"
+          exit={{ opacity: 0, y: -8, transition: { duration: 0.18, ease: EASE } }}
+          className={cn(
+            "grid min-h-0 flex-1 gap-3.5",
+            kind === "playlists" ? "grid-cols-1 content-start sm:grid-cols-2 lg:grid-cols-2 lg:grid-rows-3" : "grid-cols-2 lg:grid-cols-4 lg:grid-rows-2",
+          )}
+        >
+          {kind === "artists" && artists.map((a) => <ArtistCard key={a.id} artist={a} />)}
+          {kind === "albums" && albums.map((a) => <AlbumCard key={a.id} album={a} />)}
+          {kind === "playlists" && playlists.map((p) => <PlaylistRow key={p.id} playlist={p} />)}
+        </motion.div>
+      </AnimatePresence>
+    </section>
+  );
+}

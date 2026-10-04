@@ -1,17 +1,17 @@
 import { cn } from "../lib/cn";
 
 /* ------------------------------------------------------------------ *
- *  Illustrated avatars — flat vector people, generated from a seed so
- *  the app ships with zero external image requests.
- *  Swap `Avatar` for an <img> later; the API is the same.
+ *  Illustrated avatars — flat vector people generated from a seed, so
+ *  the app ships with zero external image requests. Swap for <img>
+ *  later; the component API stays the same.
  * ------------------------------------------------------------------ */
 
 const PALETTE = [
-  { bg: "#FDEAE4", skin: "#F0C29B", hair: "#382A22", shirt: "#F18069" },
+  { bg: "#EFEBFE", skin: "#F0C29B", hair: "#382A22", shirt: "#8267F0" },
   { bg: "#E4F2EF", skin: "#E8B48C", hair: "#5B3A22", shirt: "#79BFB3" },
   { bg: "#EEF0FB", skin: "#C98A5E", hair: "#241E1B", shirt: "#8AA9E0" },
-  { bg: "#FFF3E0", skin: "#F5D2B4", hair: "#7A4B2A", shirt: "#F7B26A" },
-  { bg: "#F3EAFB", skin: "#8D5A3B", hair: "#1F1B18", shirt: "#C99BE0" },
+  { bg: "#FDF0E4", skin: "#F5D2B4", hair: "#7A4B2A", shirt: "#E3A46A" },
+  { bg: "#F5EAFB", skin: "#8D5A3B", hair: "#1F1B18", shirt: "#C99BE0" },
   { bg: "#E9F6EE", skin: "#DE9E73", hair: "#2F2A26", shirt: "#58B879" },
 ];
 
@@ -19,7 +19,7 @@ type AvatarProps = {
   seed?: number;
   size?: number;
   className?: string;
-  /** coral ring like the top-bar profile chip */
+  /** violet ring, like the top-bar profile chip */
   ring?: boolean;
 };
 
@@ -32,7 +32,7 @@ export function Avatar({ seed = 0, size = 36, className, ring }: AvatarProps) {
     <span
       className={cn(
         "relative inline-flex shrink-0 items-center justify-center rounded-full bg-white",
-        ring && "ring-2 ring-coral ring-offset-2 ring-offset-white",
+        ring && "ring-2 ring-primary ring-offset-2 ring-offset-white",
         className,
       )}
       style={{ width: size, height: size }}
@@ -45,15 +45,9 @@ export function Avatar({ seed = 0, size = 36, className, ring }: AvatarProps) {
         </defs>
         <g clipPath={`url(#${id}-clip)`}>
           <rect width="40" height="40" fill={p.bg} />
-          {/* shoulders */}
-          <path
-            d="M4.5 40c1-8 7.4-12.6 15.5-12.6S34.5 32 35.5 40z"
-            fill={p.shirt}
-          />
+          <path d="M4.5 40c1-8 7.4-12.6 15.5-12.6S34.5 32 35.5 40z" fill={p.shirt} />
           <path d="M17.4 22.4h5.2v6h-5.2z" fill={p.skin} />
-          {/* head */}
           <ellipse cx="20" cy="17.2" rx="8.1" ry="8.9" fill={p.skin} />
-          {/* ears */}
           <circle cx="11.9" cy="18" r="1.5" fill={p.skin} />
           <circle cx="28.1" cy="18" r="1.5" fill={p.skin} />
 
@@ -83,7 +77,6 @@ export function Avatar({ seed = 0, size = 36, className, ring }: AvatarProps) {
             </>
           )}
 
-          {/* face */}
           <ellipse cx="17.2" cy="17.6" rx="0.95" ry="1.15" fill="#2B2B2B" />
           <ellipse cx="22.8" cy="17.6" rx="0.95" ry="1.15" fill="#2B2B2B" />
           <path
@@ -93,8 +86,8 @@ export function Avatar({ seed = 0, size = 36, className, ring }: AvatarProps) {
             strokeLinecap="round"
             fill="none"
           />
-          <circle cx="15.1" cy="19.9" r="1.15" fill="#F18069" opacity="0.3" />
-          <circle cx="24.9" cy="19.9" r="1.15" fill="#F18069" opacity="0.3" />
+          <circle cx="15.1" cy="19.9" r="1.15" fill="#8267F0" opacity="0.28" />
+          <circle cx="24.9" cy="19.9" r="1.15" fill="#8267F0" opacity="0.28" />
         </g>
       </svg>
     </span>
@@ -124,7 +117,7 @@ export function AvatarStack({ seeds, size = 26, more = 0, className }: StackProp
       </div>
       {more > 0 && (
         <span
-          className="-ml-2 inline-flex items-center justify-center rounded-full bg-mint-soft font-bold text-teal-deep ring-2 ring-white"
+          className="-ml-2 inline-flex items-center justify-center rounded-full bg-primary-soft font-bold text-primary-deep ring-2 ring-white"
           style={{ width: size, height: size, fontSize: size * 0.4 }}
         >
           +{more}

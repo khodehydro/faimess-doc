@@ -30,3 +30,6 @@ pnpm-debug.log*
 # vite / ts caches
 .vite/
 *.tsbuildinfo
+
+# local ssr check
+.ssrcheck/

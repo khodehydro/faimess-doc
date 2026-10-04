@@ -1,20 +1,22 @@
 import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Icon, Logo } from "./Icon";
-import { Avatar } from "./Avatar";
-import { CircleButton } from "./ui";
+import { Icon } from "../ui/Icon";
+import { Logo } from "../ui/Logo";
+import { Avatar } from "../ui/Avatar";
+import { CircleButton } from "../ui/primitives";
 import { useClickOutside } from "../hooks/useClickOutside";
-import { conversations, navItems, notifications, scheduleEvents } from "../lib/data";
+import { useApp } from "../app/AppContext";
+import { navItems, notifications } from "../data/navigation";
+import { artists, albums, playlists } from "../data/library";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
 
-type Props = {
-  active: string;
-  onNavigate: (id: string) => void;
-  onToast: (text: string, tone?: "coral" | "teal" | "mint") => void;
-};
+/* ------------------------------------------------------------------ *
+ *  Top bar — brand, page switcher, search, alerts and profile.
+ * ------------------------------------------------------------------ */
 
-export function TopBar({ active, onNavigate, onToast }: Props) {
+export function TopBar() {
+  const { route, navigate, notify } = useApp();
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
@@ -29,41 +31,50 @@ export function TopBar({ active, onNavigate, onToast }: Props) {
   useClickOutside([bellRef], () => setBellOpen(false), bellOpen);
   useClickOutside([profileRef], () => setProfileOpen(false), profileOpen);
 
+  const quick = useMemo(
+    () =>
+      navItems.map((n) => ({ id: n.id, label: n.label, kind: "Page", icon: n.icon })),
+    [],
+  );
+
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     const pool = [
       ...navItems.map((n) => ({ id: `nav-${n.id}`, label: n.label, kind: "Page", icon: n.icon })),
-      ...scheduleEvents.map((e) => ({ id: e.id, label: e.title, kind: "Event", icon: "calendar" as const })),
-      ...conversations.map((c) => ({ id: c.id, label: c.name, kind: "Chat", icon: "message" as const })),
+      ...artists.map((a) => ({ id: a.id, label: a.name, kind: "Artist", icon: "mic" as const })),
+      ...albums.map((a) => ({ id: a.id, label: a.title, kind: "Album", icon: "disc" as const })),
+      ...playlists.map((p) => ({ id: p.id, label: p.name, kind: "Playlist", icon: "music" as const })),
     ];
     return pool.filter((p) => p.label.toLowerCase().includes(q)).slice(0, 5);
   }, [query]);
 
   return (
-    <header className="flex flex-wrap items-center gap-3 px-5 py-3">
+    <header className="flex items-center gap-3 px-5 py-3.5">
       {/* brand */}
-      <motion.div
+      <motion.button
+        onClick={() => navigate("home")}
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
         className="flex shrink-0 items-center gap-2.5"
+        aria-label="FAIMESS home"
       >
-        <Logo size={30} />
-        <span className="text-[19px] font-extrabold tracking-[-0.03em] text-ink">Fiplan</span>
-      </motion.div>
+        <Logo size={32} />
+        <span className="text-[18px] font-extrabold tracking-[-0.045em] text-ink">FAIMESS</span>
+      </motion.button>
 
-      {/* segmented navigation */}
-      <nav className="ml-0 flex items-center gap-0.5 rounded-full bg-subtle p-1 lg:ml-4">
+      {/* page switcher */}
+      <nav className="ml-4 flex items-center gap-0.5 rounded-full bg-subtle p-1">
         {navItems.map((item, i) => {
-          const isActive = active === item.id;
+          const isActive = route === item.id;
           return (
             <motion.button
               key={item.id}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => navigate(item.id)}
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.06 * i, ease: EASE }}
+              transition={{ duration: 0.45, delay: 0.05 * i, ease: EASE }}
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.97 }}
               className={cn(
@@ -75,11 +86,11 @@ export function TopBar({ active, onNavigate, onToast }: Props) {
                 <motion.span
                   layoutId="nav-pill"
                   transition={spring}
-                  className="absolute inset-0 rounded-full bg-coral shadow-coral"
+                  className="absolute inset-0 rounded-full bg-primary shadow-primary"
                 />
               )}
               <span className="relative flex items-center gap-2">
-                <Icon name={item.icon} size={16} strokeWidth={isActive ? 1.9 : 1.6} />
+                <Icon name={item.icon} size={15} strokeWidth={isActive ? 1.9 : 1.6} />
                 {item.label}
               </span>
             </motion.button>
@@ -89,13 +100,13 @@ export function TopBar({ active, onNavigate, onToast }: Props) {
 
       <div className="ml-auto flex items-center gap-2.5">
         {/* search */}
-        <div ref={searchRef} className="relative hidden md:block">
+        <div ref={searchRef} className="relative">
           <motion.div
-            animate={{ width: focused || query ? 300 : 250 }}
+            animate={{ width: focused || query ? 296 : 244 }}
             transition={spring}
             className={cn(
               "flex items-center gap-2 rounded-full border bg-surface px-3.5 py-2 transition-colors",
-              focused || searchOpen ? "border-coral/40 shadow-sm" : "border-line",
+              focused || searchOpen ? "border-primary/40 shadow-sm" : "border-line",
             )}
           >
             <Icon name="search" size={15} className="text-ink-faint" />
@@ -110,15 +121,11 @@ export function TopBar({ active, onNavigate, onToast }: Props) {
                 setSearchOpen(true);
               }}
               onBlur={() => setFocused(false)}
-              placeholder="Search here..."
-              className="w-full bg-transparent text-[12.5px] text-ink placeholder:text-ink-faint focus:outline-none"
+              placeholder="Search artists, albums..."
+              className="w-full bg-transparent text-[12px] text-ink placeholder:text-ink-faint focus:outline-none"
             />
             {query && (
-              <button
-                onClick={() => setQuery("")}
-                aria-label="Clear search"
-                className="text-ink-faint transition-colors hover:text-ink"
-              >
+              <button onClick={() => setQuery("")} aria-label="Clear search" className="text-ink-faint transition-colors hover:text-ink">
                 <Icon name="close" size={13} />
               </button>
             )}
@@ -131,43 +138,39 @@ export function TopBar({ active, onNavigate, onToast }: Props) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.98 }}
                 transition={{ duration: 0.22, ease: EASE }}
-                className="absolute right-0 top-[calc(100%+10px)] z-40 w-[300px] overflow-hidden rounded-panel border border-line bg-surface p-1.5 shadow-float"
+                className="absolute right-0 top-[calc(100%+10px)] z-40 w-[296px] overflow-hidden rounded-panel border border-line bg-surface p-1.5 shadow-float"
               >
-                <p className="px-2.5 py-1.5 text-[10.5px] font-bold uppercase tracking-wider text-ink-faint">
+                <p className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-faint">
                   {query ? "Results" : "Quick jump"}
                 </p>
-                {(query ? results : navItems.slice(0, 4).map((n) => ({ id: n.id, label: n.label, kind: "Page", icon: n.icon }))).map(
-                  (r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => {
-                        setSearchOpen(false);
-                        onToast(`Opened ${r.label}`);
-                      }}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-subtle"
-                    >
-                      <span className="flex size-7 items-center justify-center rounded-full bg-subtle text-ink-body">
-                        <Icon name={r.icon} size={14} />
-                      </span>
-                      <span className="text-[12.5px] font-semibold text-ink">{r.label}</span>
-                      <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-ink-muted">
-                        {r.kind}
-                      </span>
-                    </button>
-                  ),
-                )}
+                {(query ? results : quick).map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => {
+                      setSearchOpen(false);
+                      notify(`Opened ${r.label}`);
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-subtle"
+                  >
+                    <span className="flex size-7 items-center justify-center rounded-full bg-subtle text-ink-body">
+                      <Icon name={r.icon} size={14} />
+                    </span>
+                    <span className="text-[12.5px] font-semibold text-ink">{r.label}</span>
+                    <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-ink-muted">
+                      {r.kind}
+                    </span>
+                  </button>
+                ))}
                 {query && results.length === 0 && (
-                  <p className="px-2.5 py-4 text-center text-[12px] text-ink-muted">
-                    Nothing matches “{query}”.
-                  </p>
+                  <p className="px-2.5 py-4 text-center text-[12px] text-ink-muted">Nothing matches “{query}”.</p>
                 )}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* notifications */}
-        <div ref={bellRef} className="relative">
+        {/* alerts */}
+        <div ref={bellRef} className="group relative">
           <CircleButton
             icon="bell"
             tone="white"
@@ -175,7 +178,7 @@ export function TopBar({ active, onNavigate, onToast }: Props) {
             iconClassName="anim-bell"
             onClick={() => setBellOpen((v) => !v)}
           />
-          <span className="pointer-events-none absolute right-2.5 top-2 size-2 rounded-full bg-coral ring-2 ring-white" />
+          <span className="pointer-events-none absolute right-2.5 top-2 size-2 rounded-full bg-primary ring-2 ring-white" />
           <AnimatePresence>
             {bellOpen && (
               <motion.div
@@ -183,11 +186,9 @@ export function TopBar({ active, onNavigate, onToast }: Props) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.98 }}
                 transition={{ duration: 0.22, ease: EASE }}
-                className="absolute right-0 top-[calc(100%+10px)] z-40 w-[268px] rounded-panel border border-line bg-surface p-2 shadow-float"
+                className="absolute right-0 top-[calc(100%+10px)] z-40 w-[270px] rounded-panel border border-line bg-surface p-2 shadow-float"
               >
-                <p className="px-2 py-1.5 text-[10.5px] font-bold uppercase tracking-wider text-ink-faint">
-                  Notifications
-                </p>
+                <p className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-faint">Notifications</p>
                 {notifications.map((n, i) => (
                   <motion.button
                     key={n.id}
@@ -196,14 +197,14 @@ export function TopBar({ active, onNavigate, onToast }: Props) {
                     transition={{ delay: 0.04 * i, duration: 0.3 }}
                     onClick={() => {
                       setBellOpen(false);
-                      onToast(n.title, n.tone);
+                      notify(n.title, n.tone);
                     }}
                     className="flex w-full items-start gap-2.5 rounded-xl px-2 py-2 text-left transition-colors hover:bg-subtle"
                   >
                     <span
                       className={cn(
                         "mt-1 size-2 shrink-0 rounded-full",
-                        n.tone === "coral" && "bg-coral",
+                        n.tone === "primary" && "bg-primary",
                         n.tone === "teal" && "bg-teal",
                         n.tone === "mint" && "bg-mint",
                       )}
@@ -241,26 +242,26 @@ export function TopBar({ active, onNavigate, onToast }: Props) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.98 }}
                 transition={{ duration: 0.22, ease: EASE }}
-                className="absolute right-0 top-[calc(100%+12px)] z-40 w-[196px] rounded-panel border border-line bg-surface p-1.5 shadow-float"
+                className="absolute right-0 top-[calc(100%+12px)] z-40 w-[198px] rounded-panel border border-line bg-surface p-1.5 shadow-float"
               >
                 <div className="flex items-center gap-2.5 px-2 py-2">
                   <Avatar seed={0} size={32} />
                   <span>
                     <span className="block text-[12.5px] font-bold text-ink">Wendy</span>
-                    <span className="text-[10.5px] text-ink-muted">Explorer · Pro</span>
+                    <span className="text-[10.5px] text-ink-muted">Listener · Premium</span>
                   </span>
                 </div>
                 <span className="my-1 block h-px w-full bg-line" />
                 {[
-                  { label: "My trips", icon: "map" as const },
-                  { label: "Saved places", icon: "star" as const },
+                  { label: "Your library", icon: "folder" as const },
+                  { label: "Liked tracks", icon: "heart" as const },
                   { label: "Sign out", icon: "arrowUpRight" as const },
                 ].map((r) => (
                   <button
                     key={r.label}
                     onClick={() => {
                       setProfileOpen(false);
-                      onToast(r.label);
+                      notify(r.label);
                     }}
                     className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12.5px] font-semibold text-ink-body transition-colors hover:bg-subtle hover:text-ink"
                   >

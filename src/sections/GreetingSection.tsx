@@ -1,17 +1,31 @@
 import { useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Icon } from "./Icon";
-import { Sprig } from "./Scenes";
-import { greeting, intentFilters } from "../lib/data";
+import { Icon } from "../ui/Icon";
+import { Sprig } from "../ui/Scenes";
+import { useApp } from "../app/AppContext";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
 
 /* ------------------------------------------------------------------ *
- *  Greeting — the emotional anchor of the screen: a warm hello, a
- *  “what do you want to do?” prompt and quick time filters.
+ *  Greeting — the emotional anchor of the page: a warm hello, a
+ *  “what do you feel like?” prompt and quick time filters.
  * ------------------------------------------------------------------ */
 
-export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) {
+const GREETING = {
+  line1: "Have a Good day,",
+  name: "Wendy",
+  subtitle: "Fuel your days with the boundless enthusiasm of a fellow explorer.",
+};
+
+const FILTERS = [
+  { id: "now", label: "Now" },
+  { id: "tomorrow", label: "Tomorrow" },
+  { id: "next-week", label: "Next week" },
+  { id: "custom", label: "Custom" },
+];
+
+export function GreetingSection() {
+  const { notify } = useApp();
   const [draft, setDraft] = useState("");
   const [filter, setFilter] = useState("now");
   const [plan, setPlan] = useState<string | null>(null);
@@ -20,20 +34,20 @@ export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) 
     e?.preventDefault();
     const text = draft.trim();
     if (!text) return;
-    const label = intentFilters.find((f) => f.id === filter)?.label ?? "Now";
+    const label = FILTERS.find((f) => f.id === filter)?.label ?? "Now";
     setPlan(text);
     setDraft("");
-    onToast(`Planning “${text}” · ${label}`);
+    notify(`Planning “${text}” · ${label}`);
   };
 
   return (
-    <section className="relative overflow-hidden rounded-card bg-surface px-6 pb-6 pt-7 shadow-card">
+    <section className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-card bg-surface px-6 py-6 shadow-card">
       {/* decorative sprigs */}
       <motion.div
         initial={{ opacity: 0, x: -12, rotate: -6 }}
         animate={{ opacity: 1, x: 0, rotate: 0 }}
         transition={{ duration: 0.9, delay: 0.3, ease: EASE }}
-        className="pointer-events-none absolute -left-1 top-[42%] h-24 text-teal/40"
+        className="pointer-events-none absolute left-1 top-[46%] h-[86px]"
       >
         <Sprig />
       </motion.div>
@@ -41,7 +55,7 @@ export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) 
         initial={{ opacity: 0, x: 12, rotate: 6 }}
         animate={{ opacity: 1, x: 0, rotate: 0 }}
         transition={{ duration: 0.9, delay: 0.38, ease: EASE }}
-        className="pointer-events-none absolute -right-2 top-[30%] h-20"
+        className="pointer-events-none absolute right-1 top-[26%] h-[74px]"
       >
         <Sprig flip />
       </motion.div>
@@ -50,18 +64,18 @@ export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) 
         <motion.h1
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
-          className="text-[33px] font-extrabold leading-[1.14] tracking-[-0.035em] text-ink"
+          transition={{ duration: 0.7, delay: 0.12, ease: EASE }}
+          className="text-[32px] font-extrabold leading-[1.14] tracking-[-0.04em] text-ink"
         >
-          {greeting.line1}
+          {GREETING.line1}
           <br />
           <span className="inline-flex items-center gap-1.5">
-            {greeting.name}
+            {GREETING.name}
             <motion.span
               animate={{ rotate: [0, 16, -8, 14, 0] }}
               transition={{ duration: 1.8, delay: 0.9, repeat: Infinity, repeatDelay: 3.4 }}
               style={{ transformOrigin: "70% 80%", display: "inline-block" }}
-              className="text-[28px]"
+              className="text-[27px]"
             >
               👋
             </motion.span>
@@ -71,10 +85,10 @@ export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) 
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: EASE }}
-          className="mx-auto mt-2.5 max-w-[290px] text-[11.5px] leading-relaxed text-ink-muted"
+          transition={{ duration: 0.6, delay: 0.26, ease: EASE }}
+          className="mx-auto mt-3 max-w-[320px] text-[11.5px] leading-relaxed text-ink-muted"
         >
-          {greeting.subtitle}
+          {GREETING.subtitle}
         </motion.p>
       </div>
 
@@ -83,10 +97,10 @@ export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) 
         onSubmit={submit}
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.42, ease: EASE }}
-        className="relative mt-5 flex items-center gap-2"
+        transition={{ duration: 0.6, delay: 0.36, ease: EASE }}
+        className="relative flex items-center gap-2.5"
       >
-        <div className="flex flex-1 items-center gap-1.5 rounded-full border border-line bg-subtle py-1.5 pl-4 pr-1.5 transition-colors focus-within:border-coral/40 focus-within:bg-surface">
+        <div className="flex flex-1 items-center gap-1.5 rounded-full border border-line bg-subtle py-1.5 pl-4 pr-1.5 transition-colors focus-within:border-primary/40 focus-within:bg-surface">
           <label htmlFor="intent" className="whitespace-nowrap text-[12px] font-semibold text-ink">
             I want to...
           </label>
@@ -94,7 +108,7 @@ export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) 
             id="intent"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="plan a sunrise hike"
+            placeholder="start a late-night mix"
             className="min-w-0 flex-1 bg-transparent px-1 text-[12px] text-ink placeholder:text-ink-faint focus:outline-none"
           />
           <motion.button
@@ -122,7 +136,7 @@ export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) 
           whileTap={{ scale: 0.94 }}
           transition={spring}
           aria-label="Start planning"
-          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-coral text-white shadow-coral"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-primary"
         >
           <Icon name="send" size={17} strokeWidth={1.8} />
         </motion.button>
@@ -132,10 +146,10 @@ export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) 
       <motion.div
         initial="initial"
         animate="animate"
-        variants={{ animate: { transition: { staggerChildren: 0.06, delayChildren: 0.5 } } }}
-        className="relative mt-3 flex items-center justify-between gap-2"
+        variants={{ animate: { transition: { staggerChildren: 0.06, delayChildren: 0.44 } } }}
+        className="relative flex items-center justify-between gap-2"
       >
-        {intentFilters.map((f) => {
+        {FILTERS.map((f) => {
           const isActive = filter === f.id;
           return (
             <motion.button
@@ -147,21 +161,12 @@ export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) 
               className={cn(
                 "relative flex flex-1 items-center justify-center gap-1.5 rounded-full border py-1.5 text-[11px] font-semibold transition-colors",
                 isActive
-                  ? "border-coral/35 bg-coral-faint text-coral-deep"
+                  ? "border-primary/35 bg-primary-faint text-primary-deep"
                   : "border-line bg-surface text-ink-body hover:border-line-strong",
               )}
             >
-              <span
-                className={cn(
-                  "flex size-3 items-center justify-center rounded-full border",
-                  isActive ? "border-coral" : "border-ink-faint",
-                )}
-              >
-                <motion.span
-                  animate={{ scale: isActive ? 1 : 0 }}
-                  transition={spring}
-                  className="block size-1.5 rounded-full bg-coral"
-                />
+              <span className={cn("flex size-3 items-center justify-center rounded-full border", isActive ? "border-primary" : "border-ink-faint")}>
+                <motion.span animate={{ scale: isActive ? 1 : 0 }} transition={spring} className="block size-1.5 rounded-full bg-primary" />
               </span>
               {f.label}
             </motion.button>
@@ -169,7 +174,7 @@ export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) 
         })}
       </motion.div>
 
-      {/* the plan the user just asked for */}
+      {/* confirmation of the drafted plan */}
       <AnimatePresence>
         {plan && (
           <motion.div
@@ -179,22 +184,18 @@ export function GreetingPanel({ onToast }: { onToast: (text: string) => void }) 
             transition={{ duration: 0.35, ease: EASE }}
             className="relative overflow-hidden"
           >
-            <div className="mt-3 flex items-center gap-2 rounded-[14px] bg-coral-faint px-3 py-2">
+            <div className="mt-3 flex items-center gap-2 rounded-[14px] bg-primary-faint px-3 py-2">
               <motion.span
                 animate={{ rotate: [0, 18, -12, 0], scale: [1, 1.15, 1] }}
                 transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 2.2 }}
-                className="text-coral"
+                className="text-primary"
               >
                 <Icon name="sparkle" size={15} />
               </motion.span>
               <p className="flex-1 text-[11.5px] font-semibold text-ink">
-                Drafting a plan for <span className="text-coral-deep">“{plan}”</span>
+                Drafting a plan for <span className="text-primary-deep">“{plan}”</span>
               </p>
-              <button
-                onClick={() => setPlan(null)}
-                aria-label="Dismiss"
-                className="text-ink-faint transition-colors hover:text-ink"
-              >
+              <button onClick={() => setPlan(null)} aria-label="Dismiss" className="text-ink-faint transition-colors hover:text-ink">
                 <Icon name="close" size={13} />
               </button>
             </div>
