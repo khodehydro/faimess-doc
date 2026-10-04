@@ -37,6 +37,7 @@ export function toSeconds(duration: string): number {
 
 /** which record each track belongs to — mirrors the shelf artwork */
 const ALBUM_OF: Record<string, string> = {
+  nt7: "Afterimage · single",
   nt1: "Afterglow",
   nt2: "Midnight Seoul · single",
   nt3: "Paper Heart · single",
@@ -60,6 +61,7 @@ type FeedTrack = (typeof newestTracks)[number] | (typeof trendingTracks)[number]
  * leave the header blank.
  */
 const PLAYS: Record<string, number> = {
+  nt7: 18_940,
   nt1: 2_431_902,
   nt2: 1_876_540,
   nt3: 1_204_318,

@@ -17,6 +17,7 @@ import velvetStaticPhoto from "../assets/photos/albums/velvet-static.webp";
 import tokyoWindowPhoto from "../assets/photos/albums/tokyo-window.webp";
 import nightbloomPhoto from "../assets/photos/albums/nightbloom.webp";
 import blueHourPhoto from "../assets/photos/albums/blue-hour.webp";
+import afterimagePhoto from "../assets/photos/albums/afterimage.webp";
 
 import yunhaPhoto from "../assets/photos/users/yunha.webp";
 import misoPhoto from "../assets/photos/users/miso.webp";
@@ -46,6 +47,10 @@ export type Track = {
 };
 
 export const newestTracks: Track[] = [
+  /* the release that has just landed — and the one song in the feed nobody
+     has sent a lyric sheet for yet, so the player's empty sheet is one
+     click from home (see lyricsFor in data/player.ts) */
+  { id: "nt7", title: "Afterimage", artist: "NOVAE", duration: "3:24", ago: "6 min ago", seed: 7, photo: afterimagePhoto, isNew: true },
   { id: "nt1", title: "Afterglow", artist: "NOVAE", duration: "3:12", ago: "12 min ago", seed: 0, photo: afterglowPhoto, isNew: true },
   { id: "nt2", title: "Midnight Seoul", artist: "AXION", duration: "3:28", ago: "40 min ago", seed: 4, photo: midnightSeoulPhoto, isNew: true },
   { id: "nt3", title: "Paper Heart", artist: "SEORA", duration: "2:58", ago: "1 hr ago", seed: 2, photo: paperHeartPhoto },

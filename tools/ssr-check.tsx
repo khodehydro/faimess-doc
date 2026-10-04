@@ -244,7 +244,18 @@ check(
 
 check("queue has every feed song, once", new Set(QUEUE.map((t) => `${t.title}|${t.artist}`)).size === QUEUE.length, `${QUEUE.length} tracks`);
 check("queue entries carry a length", QUEUE.every((t) => t.seconds > 60), `${QUEUE.map((t) => t.seconds).join(", ")}`);
-check("the feed songs all have an editorial sheet", QUEUE.filter((t) => t.id.startsWith("nt") || t.id.startsWith("tr")).every((t) => (lyricsFor(t)?.length ?? 0) >= 4));
+check(
+  "every feed song has an editorial sheet — bar the fresh release",
+  QUEUE.filter((t) => (t.id.startsWith("nt") || t.id.startsWith("tr")) && t.id !== "nt7").every(
+    (t) => (lyricsFor(t)?.length ?? 0) >= 4,
+  ) &&
+    /* nt7 is the deliberate no-sheet case: a song that landed minutes ago,
+       first on the Newest shelf, so the player's empty sheet is one click
+       from home and the "send the lyrics" door has a real reason to exist */
+    lyricsFor(trackById("nt7")) === null &&
+    newestTracks[0].id === "nt7",
+  "Afterimage (nt7) is the newest row and the one with no sheet",
+);
 check("three album cuts ship with no sheet", QUEUE.filter((t) => lyricsFor(t) === null).length >= 3, "so fans can send one");
 check("a fan sheet already covers one of them", (COMMUNITY_LYRICS.sm1?.lines.length ?? 0) >= 4);
 check("a sheet under two lines is refused", submissionProblem("한 줄만") !== null && submissionProblem("") !== null);
@@ -481,6 +492,16 @@ check(
 );
 const feedIndexSrc = readFileSync("src/sections/feed/index.tsx", "utf8");
 const playerSrc = readFileSync("src/sections/PlayerSection.tsx", "utf8");
+check(
+  /* an empty sheet is centred in the whole slot and still fits: the CTA and
+     its reward line must never slide under the comments strip */
+  "the empty sheet centres itself in the slot",
+  playerSrc.includes("m-auto flex flex-col items-center") &&
+    playerSrc.includes("flex min-h-0 flex-1 flex-col overflow-y-auto") &&
+    playerSrc.includes('lines ? "pb-8" : "pt-2 pb-2"') &&
+    playerSrc.includes("t(\"lyrics.pay\""),
+  "m-auto, no min-h-full guesswork",
+);
 check(
   "the lyrics sheet has no header of its own",
   !playerSrc.includes("lyrics.title") && !playerSrc.includes("한국어"),

@@ -869,23 +869,33 @@ function LyricsPanel({
         onScroll={() => {
           touchedAt.current = Date.now();
         }}
-        className="scroll-slim mask-fade-b min-h-0 flex-1 overflow-y-auto px-3 pb-8 pt-2.5"
+        className={cn(
+          /* a column, so the empty sheet can centre itself with `m-auto` and
+             still scroll from the top when it is taller than the slot */
+          "scroll-slim mask-fade-b flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pt-2.5",
+          /* a sheet that runs to the last line keeps its tail padding, so the
+             closing line still centres when the scroll lands at the bottom */
+          lines ? "pb-8" : "pt-2 pb-2",
+        )}
       >
         {!lines ? (
-          <div className="flex flex-col items-center px-3 py-8 text-center">
-            <span className="flex size-10 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
-              <Icon name="mic" size={18} strokeWidth={2.1} />
+          /* nothing to read yet: the sheet's own empty state, centred in the
+             whole slot — as tall as the panel, so the CTA and its reward line
+             sit on the midline instead of clinging to the top */
+          <div className="m-auto flex flex-col items-center px-3 py-1.5 text-center">
+            <span className="flex size-9 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
+              <Icon name="mic" size={16.5} strokeWidth={2.1} />
             </span>
             <p className="font-display mt-3 text-[14px] font-bold text-ink">
               {t("lyrics.emptyTitle")}
             </p>
-            <p className="mt-1.5 max-w-[290px] text-[12.5px] leading-relaxed text-ink-muted">
+            <p className="mt-1.5 max-w-[330px] text-[12.5px] leading-relaxed text-ink-muted">
               {pending
                 ? t("lyrics.emptyBodyPending")
                 : t("lyrics.emptyBody")}
             </p>
             {pending ? (
-              <span className="mt-2.5 flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1.5 text-[12px] font-bold text-ink-muted">
+              <span className="mt-3 flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1.5 text-[12px] font-bold text-ink-muted">
                 <Icon name="clock" size={13} />
                 {t("lyrics.pending")}
               </span>

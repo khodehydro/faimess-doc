@@ -370,10 +370,12 @@ PlayerProvider  (src/app/PlayerContext.tsx)      ← در app/App.tsx دور She
   «12/12» قبلی را نگه می‌دارد. `next/prev` هم روی همان صف می‌چرخند (با ref تا رویداد
   `ended` هم صف تازه را ببیند) و ترک بیرون از صف از ردیف اول ادامه می‌دهد.
 - **صف پخش:** `src/data/player.ts` آن را از `newestTracks` + `trendingTracks` می‌سازد؛ ترک‌های تکراری فید با `SAME_SONG` (`tr1→nt2`, `tr2→nt1`, `tr4→nt3`) به یک آیتم نگاشت می‌شوند تا `trackById` برای هر ردیف فید جواب بدهد. `leadTrackFor(artist)` هم دکمهٔ پخش هر آرتیست/آلبوم را به یک لید سینگل وصل می‌کند.
-- **لیریک:** خطوط (اصلی + ترجمه) **وسط‌چین**‌اند و متن فارسی با `dir="rtl"` و `font-fa` می‌نشیند؛ `src/data/lyrics.ts` — `Record<trackId, { at, ko, fa }[]>` برای ۹ ترک؛ `lyricsFor()` برای ترک‌های بدون لیریک، لیدِ همان آرتیست را برمی‌گرداند. خط فعال با `activeLineIndex(lines, position)` حساب می‌شود.
+- **لیریک:** خطوط (اصلی + ترجمه) **وسط‌چین**‌اند و متن فارسی با `dir="rtl"` و `font-fa` می‌نشیند؛ `src/data/lyrics.ts` — `Record<trackId, { at, ko, fa }[]>` برای ۹ ترک؛ `lyricsFor(track)` اگر شیتی نباشد `null` برمی‌گرداند و پنل حالت خالی خودش را نشان می‌دهد. خط فعال با `activeLineIndex(lines, position)` حساب می‌شود.
 - **سایدبار مدیریت:** ریل با دکمهٔ `⋯` هدر باز/بسته می‌شود (`animate={{ width: open ? 46 : 0 }}` + `inert` در حالت بسته) و سه تب دارد؛ تب فعال یک `PlayerDrawer` روی کارت می‌کشد (`absolute inset-0 z-20`). تب صف همان `player.queue` (اجرای فعلی) را با شماره/کاور/زمان نشان می‌دهد و با کلیک پخش می‌کند، تب لایک‌شده‌ها همان لیست فیلترشده با `player.liked` است (دکمهٔ ♥ در نوار پخش، `aria-pressed`) و تب پلی‌لیست‌ها شش لیست `data/library.ts` را می‌آورد و به صفحهٔ Playlists می‌برد. دکمهٔ دانلود اندروید پایین همین ریل است تا هدر کارت شلوغ نشود.
 - **هدر کارت:** به‌جای کلمهٔ «Player»، **تعداد پخش آهنگ** را نشان می‌دهد: `PlayerTrack.plays` (هر ترک یک عدد؛ `PLAYS` در `data/player.ts`، و برای ترک تازه یک fallback پایدار) با `compactNumber` به شکل `2.4M`/`318K` و عدد دقیق روی `title`. «Lyrics» و چیپ‌های زبان هم از بالای شیت حذف شده‌اند: خطوط مستقیم زیر پلیر شروع می‌شوند و تنها چیزی که می‌تواند بالای آن‌ها بنشیند خط اعتبار (شیت تأییدشدهٔ کاربران) است.
-- **حالت خالی:** بدون ترک، کارت 👋 + «یه آهنگ که دوست داری رو پخش کن» + سه پیشنهاد سریع نشان می‌دهد.
+- **حالت خالی کارت (بدون ترک):** 👋 + «یه آهنگ که دوست داری رو پخش کن» + سه پیشنهاد سریع (`QUEUE.slice(0,3)`).
+- **حالت خالی شیت (ترک بدون لیریک):** پنل لیریک نصف پایین کارت است و در آن حالت یک بلوک وسط‌چین نشان می‌دهد: بج میکروفون، «No lyrics for this one yet»، متن راهنما، دکمهٔ «Send the lyrics» و خط پاداش (+۱۲۰ امتیاز). بلوک با `m-auto` داخل یک اسکرولر `flex flex-col` **دقیقاً وسطِ جایگاه** می‌نشیند و چون پدینگ اسکرولر در این حالت `pt-2 pb-2` است، متن پاداش زیر نوار کامنت‌ها نمی‌افتد (قبلاً `py-8` بالانشین بود و همان خط بریده می‌شد). اگر کاربر قبلاً شیت فرستاده باشد جای دکمه، پیل «در انتظار تأیید» و متن انتظار می‌آید.
+- **یک ترک عمداً بی‌شیت:** `nt7` («Afterimage» از NOVAE) تازه‌ترین ردیف شلف Newest است و شیت ندارد؛ پس حالت خالی شیت یک کلیک از خانه فاصله دارد و «Send the lyrics» دلیلی واقعی دارد. گارد `check:ssr` همین را تضمین می‌کند (بقیهٔ ترک‌های `nt*`/`tr*` هرکدام ≥۴ خط دارند).
 - **دانلود:** پیل `Android` در هدر؛ فقط توست می‌دهد — دانلود مال نسخهٔ اندروید است.
 - **صدا:** `PlayerTrack.audio` (فعلاً همه = `src/assets/audio/faimess-demo.mp3`) در یک `HTMLAudioElement` پخش می‌شود؛ `position` از `timeupdate`، `duration` از `durationchange`، و `ended` با `advance` ref ترک را جلو می‌برد. نبود `Audio` (مثل SSR) → همان کنترل‌ها با پالس شبیه‌سازی‌شدهٔ ۲۵۰ms. جزئیات: [`audio.md`](./audio.md).
 - **اگزپند/کولپس:** `HomePage` یک state (`wide`) دارد، کلاس `home-split-wide` را به ردیف می‌دهد و `{ expanded, onToggleExpand }` را به‌عنوان `params` بخش `player` پاس می‌دهد؛ قاعدهٔ CSS در `src/index.css` سهم کارت‌ها را ۲۵/۷۵ ↔ ۵۵/۴۵ می‌برد (transition روی `flex-basis`، با احترام به `prefers-reduced-motion`).
@@ -399,7 +401,7 @@ CommentsProvider (src/app/CommentsContext.tsx)      ← دور Shell، کنار 
 
 ```
 ContributionsProvider (src/app/ContributionsContext.tsx)   ← داخل Shell، کنار CommentsProvider
-├── LyricsPanel (PlayerSection)   حالت خالی: «No lyrics for this one yet» + دکمهٔ Send the lyrics
+├── LyricsPanel (PlayerSection)   حالت خالی وسط‌چین (m-auto): «No lyrics for this one yet» + دکمهٔ Send the lyrics + خط پاداش
 │                                 لیریک تأییدشدهٔ کاربر: خط اعتبار «Fan sheet by you · approved by the mods»
 ├── SubmitLyrics                  مودال فرم: زبان · متن · ترجمه · اعتبارسنجی → ثبت با وضعیت pending
 ├── ContributionsModal            «Your contributions»: لیست ارسال‌ها + موجودی امتیاز + Approve / Send back
