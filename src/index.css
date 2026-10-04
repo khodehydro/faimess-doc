@@ -7,14 +7,14 @@
  *  docs/design-tokens.json.
  * ------------------------------------------------------------------ */
 @theme {
-  /* Body / UI — Nunito Sans: humanist, tall x-height, very easy to read
-     at 12–15px; the friendly workhorse of the interface. */
-  --font-sans: "Nunito Sans Variable", ui-sans-serif, system-ui, -apple-system,
+  /* Body / UI — DM Sans: built for small screen sizes, geometric but warm.
+     Carries every list, label, counter and message in the interface. */
+  --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
-  /* Display — Quicksand: rounded, warm and approachable; used for headings,
-     the wordmark and card titles so the product feels friendly. */
-  --font-display: "Quicksand Variable", "Nunito Sans Variable", ui-sans-serif,
-    system-ui, sans-serif;
+  /* Display — Poppins: the geometric sans K-pop and Gen-Z brands lean on.
+     Used for the wordmark, headings, card titles and big numbers. */
+  --font-display: "Poppins", "DM Sans Variable", ui-sans-serif, system-ui,
+    sans-serif;
 
   /* surfaces */
   --color-canvas: #eaeaec;

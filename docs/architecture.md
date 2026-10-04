@@ -200,8 +200,10 @@ export const routes = [
 
 | نقش | فونت | کاربرد |
 |---|---|---|
-| نمایشی | `Quicksand Variable` (`font-display`) | برند، تیتر بخش‌ها، خوش‌آ‌مد، نام کارت‌ها، مونوگرام کاورها |
-| بدنه/UI | `Nunito Sans Variable` (`font-sans`) | متن‌ها، متادیتا، دکمه‌ها، ورودی‌ها |
+| نمایشی | `Poppins` (`font-display`) | برند، تیتر بخش‌ها، خوش‌آ‌مد، نام کارت‌ها، مونوگرام کاورها |
+| بدنه/UI | `DM Sans Variable` (`font-sans`) | متن‌ها، متادیتا، دکمه‌ها، ورودی‌ها |
+
+مبنای انتخاب و بررسی گزینه‌ها: [`font-research.md`](./font-research.md) — بر پایهٔ مقالهٔ «۲۴ فونت برتر وب» از Figma. فقط زیرمجموعهٔ latin از Poppins و در چهار وزن ایمپورت می‌شود؛ اعداد شمارنده‌ای با `tabular-nums` رندر می‌شوند.
 
 ### مقیاس تایپ (authoring در فضای صحنه)
 
@@ -216,7 +218,7 @@ export const routes = [
 
 > کف مقیاس ۱۲px است (قبلاً ۹px بود). اگر باز هم بزرگ‌تر خواستی، فقط اعداد `text-[…px]` را تغییر بده یا مقدار `STAGE.width` را کمتر کن (کل رابط بزرگ‌تر رندر می‌شود).
 
-برای عوض کردن فونت‌ها فقط دو متغیر `--font-sans` و `--font-display` در `src/index.css` را تغییر بده و پکیج `@fontsource-variable/<font>` را اضافه/جایگزین کن.
+برای عوض کردن فونت‌ها فقط دو متغیر `--font-sans` و `--font-display` در `src/index.css` را تغییر بده و ایمپورت مربوطه را در `src/main.tsx` عوض کن (`@fontsource-variable/<font>` یا `@fontsource/<font>/latin-<weight>.css`).
 
 ## ۹. تصویرسازی‌ها
 
