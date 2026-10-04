@@ -11,6 +11,8 @@ import { ArtistCover, Cover } from "../ui/Cover";
 import { Icon } from "../ui/Icon";
 import { CircleButton, PillButton } from "../ui/primitives";
 import { CreatePlaylistDialog } from "../ui/PlaylistDialogs";
+import { ShareDialog } from "../ui/ShareDialog";
+import { librarySubject, type LibraryKind } from "../data/share";
 import { spring } from "../lib/motion";
 import { backIcon } from "../lib/rtl";
 import { cn } from "../lib/cn";
@@ -26,6 +28,10 @@ import { cn } from "../lib/cn";
  * ------------------------------------------------------------------ */
 
 type Heading = {
+  /** which of the three kinds of list this is — the share link and the
+      player's run label are both built from it */
+  kind: LibraryKind;
+  id: string;
   title: string;
   sub: string;
   cover: string;
@@ -46,6 +52,7 @@ export function BrowseDetailView() {
   const { mine } = usePlaylists();
   const player = usePlayer();
   const [editing, setEditing] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   /* ------------------------------- resolve ------------------------------ */
   let heading: Heading | null = null;
@@ -57,6 +64,8 @@ export function BrowseDetailView() {
       const lead = leadTrackFor(artist.name);
       const tracks = found.length ? found : lead ? [lead] : [];
       heading = {
+        kind: "artist",
+        id: artist.id,
         title: artist.name,
         sub: `${artist.kind} · ${artist.listeners} · ${t("playlist.trackCount", { count: tracks.length })}`,
         cover: artist.photo,
@@ -75,6 +84,8 @@ export function BrowseDetailView() {
       const lead = leadTrackFor(album.artist);
       const tracks = found.length ? found : lead ? [lead] : [];
       heading = {
+        kind: "album",
+        id: album.id,
         title: album.title,
         sub: `${album.artist} · ${album.year} · ${t("playlist.trackCount", { count: tracks.length })}`,
         cover: album.photo,
@@ -89,6 +100,8 @@ export function BrowseDetailView() {
         .map((id) => trackById(id))
         .filter((track): track is PlayerTrack => !!track);
       heading = {
+        kind: "playlist",
+        id: own.id,
         title: own.name,
         sub: `${t("playlist.yours")} · ${t("playlist.trackCount", { count: tracks.length })}`,
         cover: coverPhoto(own.cover),
@@ -104,6 +117,8 @@ export function BrowseDetailView() {
         const offset = curated.name.length % QUEUE.length;
         const tracks = [...QUEUE.slice(offset), ...QUEUE.slice(0, offset)];
         heading = {
+          kind: "playlist",
+          id: curated.id,
           title: curated.name,
           sub: `${curated.curator} · ${curated.mood} · ${t("playlist.trackCount", { count: tracks.length })}`,
           cover: curated.photo,
@@ -122,11 +137,34 @@ export function BrowseDetailView() {
 
   if (!heading) return null;
 
+  /* the player numbers its pill against the list it was handed, so every
+     play out of this card passes the run it belongs to */
+  const runOf = (trackIds: string[]) => ({
+    type: heading!.kind,
+    label: heading!.title,
+    trackIds,
+  });
+
+  const start = (track: PlayerTrack, trackIds: string[]) => {
+    player.play(track, runOf(trackIds));
+    notify(t("player.playing", { artist: track.artist, title: track.title }));
+  };
+
   const playAll = () => {
     const first = heading!.tracks[0];
     if (!first) return;
-    player.play(first);
-    notify(t("player.playing", { artist: first.artist, title: first.title }));
+    start(first, heading!.tracks.map((track) => track.id));
+  };
+
+  const shuffleAll = () => {
+    const ids = heading!.tracks.map((track) => track.id);
+    /* Fisher–Yates, so a long list does not get a lazy sort() shuffle */
+    for (let i = ids.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+    }
+    const first = ids[0] ? trackById(ids[0]) : null;
+    if (first) start(first, ids);
   };
 
   return (
@@ -167,10 +205,26 @@ export function BrowseDetailView() {
             <PillButton tone="primary" icon="play" onClick={playAll}>
               {t("detail.playAll")}
             </PillButton>
+            <PillButton tone="outline" icon="shuffle" onClick={shuffleAll}>
+              {t("detail.shuffle")}
+            </PillButton>
+            <CircleButton
+              icon="share"
+              size="sm"
+              tone="white"
+              label={t("detail.share")}
+              onClick={() => setSharing(true)}
+            />
             {heading.editableId && (
-              <PillButton tone="outline" icon="folderPlus" onClick={() => setEditing(true)}>
-                {t("detail.edit")}
-              </PillButton>
+              /* the pencil is the edit door for a list of your own — the card
+                 itself opens the songs */
+              <CircleButton
+                icon="edit"
+                size="sm"
+                tone="white"
+                label={t("detail.edit")}
+                onClick={() => setEditing(true)}
+              />
             )}
             <span className="text-[12.5px] font-semibold text-ink-faint">
               {t("detail.minutes", { n: minutesOf(heading.tracks) })}
@@ -203,10 +257,7 @@ export function BrowseDetailView() {
               <motion.li key={`${track.id}-${i}`} whileHover={{ x: 2 }} transition={spring}>
                 <button
                   type="button"
-                  onClick={() => {
-                    player.play(track);
-                    notify(t("player.playing", { artist: track.artist, title: track.title }));
-                  }}
+                  onClick={() => start(track, heading!.tracks.map((t) => t.id))}
                   className={cn(
                     "group flex w-full items-center gap-3.5 rounded-[16px] border px-3 py-2.5 text-start transition-colors",
                     playing
@@ -254,6 +305,18 @@ export function BrowseDetailView() {
           onClose={() => setEditing(false)}
         />
       )}
+
+      <ShareDialog
+        open={sharing}
+        onClose={() => setSharing(false)}
+        subject={librarySubject(
+          heading.kind,
+          heading.id,
+          heading.title,
+          heading.sub,
+          heading.cover,
+        )}
+      />
     </section>
   );
 }

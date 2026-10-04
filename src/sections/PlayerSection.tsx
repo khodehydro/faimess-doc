@@ -5,6 +5,7 @@ import { Photo } from "../ui/Cover";
 import { Modal } from "../ui/Modal";
 import { AddToPlaylistDialog, CreatePlaylistDialog } from "../ui/PlaylistDialogs";
 import { ShareDialog } from "../ui/ShareDialog";
+import { trackSubject } from "../data/share";
 import { usePlayer } from "../app/PlayerContext";
 import { usePlaylists } from "../app/PlaylistsContext";
 import { useContributions } from "../app/ContributionsContext";
@@ -100,9 +101,11 @@ export function PlayerSection({
           )}
           <span className="ms-auto flex items-center gap-1.5">
             {track && (
+              /* the row inside the run that is playing: opening a playlist
+                 and hitting its sixth song reads "6/9", not "6/12" */
               <span className="flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1.5 text-[12px] font-bold tabular-nums text-ink-muted">
                 <Icon name="list" size={12} />
-                {QUEUE.findIndex((t) => t.id === track.id) + 1}/{QUEUE.length}
+                {(player.queueIndex >= 0 ? player.queueIndex : 0) + 1}/{player.queue.length}
               </span>
             )}
             <motion.button
@@ -258,7 +261,9 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
   };
 
   const rows: PlayerTrack[] =
-    panel === "liked" ? QUEUE.filter((t) => player.liked.includes(t.id)) : QUEUE;
+    panel === "liked"
+      ? player.queue.filter((t) => player.liked.includes(t.id))
+      : player.queue;
 
   return (
     <motion.aside
@@ -679,7 +684,11 @@ function ShareSongButton() {
   return (
     <>
       <IconAction icon="share" label={t("player.shareTip")} onClick={() => setSharing(true)} />
-      <ShareDialog open={sharing} onClose={() => setSharing(false)} track={player.track} />
+      <ShareDialog
+        open={sharing}
+        onClose={() => setSharing(false)}
+        subject={player.track ? trackSubject(player.track) : null}
+      />
     </>
   );
 }

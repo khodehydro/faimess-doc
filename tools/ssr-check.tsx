@@ -833,10 +833,72 @@ check(
   `${Object.keys(STRINGS).length} keys`,
 );
 
-/* ------------- icons: one pack, one mapping table (v27) --------------- */
+/* -------- the details the last pass fixed (v27) ----------------------- */
 
 const iconBodySrc = readFileSync("src/ui/icons.gen.ts", "utf8");
 const generatorSrc = readFileSync("tools/icons/build.mjs", "utf8");
+const playerCtxSrc = readFileSync("src/app/PlayerContext.tsx", "utf8");
+const detailSrc = readFileSync("src/sections/BrowseDetailView.tsx", "utf8");
+const mineSrc = readFileSync("src/sections/CollectionSection.tsx", "utf8");
+const shareSrc = readFileSync("src/data/share.ts", "utf8");
+
+check(
+  "the download arrow points down and share is the share mark",
+  generatorSrc.includes('download: "arhive-load"') &&
+    generatorSrc.includes('share: "group-share"') &&
+    /** the pack's own download is a cloud with an arrow pointing *up* */
+    !generatorSrc.includes('download: "download"'),
+  "both were unreadable as themselves before",
+);
+check(
+  "the player numbers the row inside the run it was handed",
+  playerCtxSrc.includes("export type QueueSource") &&
+    playerCtxSrc.includes("queueIndex") &&
+    playerCtxSrc.includes("setSource((prev)") &&
+    playerSrc.includes("player.queueIndex") &&
+    playerSrc.includes("player.queue.length"),
+  "a playlist play reads 6/9, not 6/12",
+);
+check(
+  "every play out of the detail card carries its list",
+  detailSrc.includes("runOf(") &&
+    (detailSrc.match(/player\.play\(/g) ?? []).length === 1 &&
+    (detailSrc.match(/start\(track, heading!\.tracks\.map/g) ?? []).length === 1 &&
+    detailSrc.includes("if (first) start(first, ids)"),
+  "the rows, play-all and shuffle all pass their track ids through one door",
+);
+check(
+  "a saved-playlist card opens the songs, not the editor",
+  mineSrc.includes('openDetail({ kind: "playlist", id: list.id })') &&
+    mineSrc.includes("setEditingId(list.id)") &&
+    !mineSrc.includes("setEditOpen(true)"),
+  "edit and share are buttons of their own under the card",
+);
+check(
+  "the playlist card offers edit and share",
+  mineSrc.includes('t("playlist.editTip")') &&
+    mineSrc.includes('t("playlist.shareTip")') &&
+    mineSrc.includes('icon="edit"') === false &&
+    mineSrc.includes('name="edit"') &&
+    mineSrc.includes('name="share"'),
+);
+check(
+  "the detail card can be shared and edited too",
+  detailSrc.includes("<ShareDialog") &&
+    detailSrc.includes("librarySubject(") &&
+    detailSrc.includes('icon="share"') &&
+    detailSrc.includes('icon="edit"'),
+);
+check(
+  "one share sheet, whichever thing is being shared",
+  shareSrc.includes("export type ShareSubject") &&
+    shareSrc.includes("export function trackSubject") &&
+    shareSrc.includes("export function librarySubject") &&
+    readFileSync("src/ui/ShareDialog.tsx", "utf8").includes("subject: ShareSubject | null"),
+);
+
+/* ------------- icons: one pack, one mapping table (v27) --------------- */
+
 
 /** the generated file: one `siteName: "body"` row per icon */
 const generated = [...iconBodySrc.matchAll(/^ {2}([A-Za-z][\w]*): (".*"),$/gm)].map((m) => ({

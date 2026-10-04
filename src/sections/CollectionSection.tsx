@@ -4,6 +4,8 @@ import { ArtistCover, Cover, Photo } from "../ui/Cover";
 import { Icon } from "../ui/Icon";
 import { Meta, PillButton, CircleButton } from "../ui/primitives";
 import { CreatePlaylistDialog } from "../ui/PlaylistDialogs";
+import { ShareDialog } from "../ui/ShareDialog";
+import { librarySubject } from "../data/share";
 import { albums, artists, playlists } from "../data/library";
 import { coverPhoto, type UserPlaylist } from "../data/playlists";
 import { useApp } from "../app/AppContext";
@@ -266,9 +268,36 @@ function listMeta(list: UserPlaylist, t: (key: string, vars?: Record<string, str
  * The listener's own playlists, above the curated grid and on their own
  * track, so the editorial six keep the layout they were designed for.
  */
-function MineStrip({ onOpen, onNew }: { onOpen: (id: string) => void; onNew: () => void }) {
+/**
+ * The listener's own playlists, above the curated grid and on their own
+ * track, so the editorial six keep the layout they were designed for.
+ *
+ * The card opens the *songs* — the same detail card the collection grid
+ * uses — and keeps the two things a list owner actually reaches for (edit,
+ * share) as their own buttons underneath. Their own buttons, not an overlay,
+ * because "edit" was previously what a click on the card did, and that is
+ * exactly what it must not do.
+ */
+function MineStrip({ onNew }: { onNew: () => void }) {
   const { t } = usePreferences();
   const { mine } = usePlaylists();
+  const { openDetail, notify } = useApp();
+  const player = usePlayer();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [sharingId, setSharingId] = useState<string | null>(null);
+  const sharing = mine.find((list) => list.id === sharingId) ?? null;
+
+  /* the hover play button starts the whole list as its own run, so the
+     player's "6 / 9" counts rows of this playlist */
+  const playList = (list: UserPlaylist) => {
+    const first = list.trackIds[0] ? trackById(list.trackIds[0]) : null;
+    if (!first) {
+      openDetail({ kind: "playlist", id: list.id });
+      return;
+    }
+    player.play(first, { type: "playlist", label: list.name, trackIds: list.trackIds });
+    notify(t("player.playing", { artist: first.artist, title: first.title }));
+  };
 
   return (
     <div className="pb-4">
@@ -283,47 +312,123 @@ function MineStrip({ onOpen, onNew }: { onOpen: (id: string) => void; onNew: () 
         )}
       </div>
 
-      <div className="scroll-slim flex gap-3 overflow-x-auto pb-1.5">
+      <div className="scroll-slim flex gap-3.5 overflow-x-auto pb-1.5">
         <motion.button
           variants={popChild}
           onClick={onNew}
           whileHover={{ y: -2 }}
           transition={spring}
-          className="group flex w-[128px] shrink-0 flex-col rounded-[16px] border border-dashed border-line p-2.5 text-start transition-colors hover:border-primary/40 hover:bg-primary-faint/40"
+          className="group flex w-[168px] shrink-0 flex-col rounded-[20px] border border-dashed border-line p-2.5 text-start transition-colors hover:border-primary/40 hover:bg-primary-faint/40"
         >
-          <span className="flex h-[64px] w-full items-center justify-center rounded-[12px] bg-subtle text-ink-muted transition-colors group-hover:bg-primary-soft group-hover:text-primary-deep">
-            <Icon name="plus" size={18} strokeWidth={2.4} />
+          <span className="flex h-[96px] w-full items-center justify-center rounded-[14px] bg-subtle text-ink-muted transition-colors group-hover:bg-primary-soft group-hover:text-primary-deep">
+            <Icon name="plus" size={20} strokeWidth={2.4} />
           </span>
-          <span className="mt-2 block truncate text-[13px] font-bold text-ink">{t("playlist.new")}</span>
+          <span className="mt-2 block truncate text-[13.5px] font-bold text-ink">{t("playlist.new")}</span>
           <span className="block truncate text-[12px] font-semibold text-ink-faint">{t("playlist.newTip")}</span>
         </motion.button>
 
         {mine.map((list) => {
           const meta = listMeta(list, t);
+          const lead = list.trackIds[0] ? trackById(list.trackIds[0]) : null;
+          const running = !!player.playing && !!player.track && list.trackIds.includes(player.track.id);
           return (
-            <motion.button
+            <motion.article
               key={list.id}
               variants={popChild}
-              onClick={() => onOpen(list.id)}
-              whileHover={{ y: -2 }}
-              transition={spring}
-              className="group flex w-[128px] shrink-0 flex-col rounded-[16px] bg-surface p-2.5 text-start shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float"
+              className="group flex w-[168px] shrink-0 flex-col rounded-[20px] bg-surface p-2.5 shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float"
             >
-              <span className="relative block h-[64px] w-full overflow-hidden rounded-[12px]">
-                <Photo src={coverPhoto(list.cover)} alt="" />
-                <span className="absolute inset-0 flex items-center justify-center bg-ink/35 text-white opacity-0 transition-opacity group-hover:opacity-100">
-                  <Icon name="folderPlus" size={17} strokeWidth={2.2} />
+              {/* the cover opens the list; the play button starts it right
+                  here — the standard pair, and neither one hides the other */}
+              <span className="relative block h-[96px] w-full overflow-hidden rounded-[14px]">
+                <Photo
+                  src={coverPhoto(list.cover)}
+                  alt=""
+                  className="transition-transform duration-500 group-hover:scale-[1.06]"
+                />
+                <button
+                  type="button"
+                  onClick={() => openDetail({ kind: "playlist", id: list.id })}
+                  aria-label={t("playlist.openMine", { name: list.name })}
+                  className="absolute inset-0"
+                />
+                <span className="absolute inset-0 bg-ink/25 opacity-0 transition-opacity group-hover:opacity-100" />
+                <button
+                  type="button"
+                  onClick={() => (running ? player.toggle() : playList(list))}
+                  aria-label={t(running ? "player.pause" : "playlist.playTip")}
+                  title={t(running ? "player.pause" : "playlist.playTip")}
+                  className="absolute bottom-2 end-2 z-10 flex size-9 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-primary transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                >
+                  <Icon name={running ? "pause" : "play"} size={15} strokeWidth={2.2} />
+                </button>
+                <span className="absolute start-2 top-2 rounded-full bg-surface/92 px-2 py-0.5 text-[12px] font-bold tabular-nums text-ink">
+                  {meta.count}
                 </span>
               </span>
-              <span className="mt-1.5 block truncate text-[13px] font-bold text-ink">{list.name}</span>
-              <span className="block truncate text-[12px] font-semibold text-ink-faint">
-                {meta.count} · {meta.minutes}
+
+              <button
+                type="button"
+                onClick={() => openDetail({ kind: "playlist", id: list.id })}
+                aria-label={t("playlist.openMine", { name: list.name })}
+                className="mt-2 block w-full truncate text-start text-[13.5px] font-bold text-ink"
+              >
+                {list.name}
+              </button>
+              <span className="mt-0.5 flex items-center gap-1.5 text-[12px] font-semibold text-ink-faint">
+                <Icon name="clock" size={11.5} strokeWidth={2.2} />
+                {meta.minutes}
+                {lead && <span className="truncate">· {lead.artist}</span>}
               </span>
-              <span className="sr-only">{t("playlist.openMine", { name: list.name })}</span>
-            </motion.button>
+
+              {/* the two things a list owner reaches for, as their own buttons */}
+              <div className="mt-2 flex items-center gap-1 border-t border-line/70 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingId(list.id)}
+                  aria-label={t("playlist.editTip")}
+                  title={t("playlist.editTip")}
+                  className="flex size-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-primary-deep"
+                >
+                  <Icon name="edit" size={14} strokeWidth={2.2} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSharingId(list.id)}
+                  aria-label={t("playlist.shareTip")}
+                  title={t("playlist.shareTip")}
+                  className="flex size-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-primary-deep"
+                >
+                  <Icon name="share" size={14} strokeWidth={2.2} />
+                </button>
+                <span className="ms-auto pe-1 text-[12px] font-semibold text-ink-faint">
+                  {t("playlist.yours")}
+                </span>
+              </div>
+            </motion.article>
           );
         })}
       </div>
+
+      <CreatePlaylistDialog
+        open={!!editingId}
+        playlistId={editingId}
+        onClose={() => setEditingId(null)}
+      />
+      <ShareDialog
+        open={!!sharing}
+        onClose={() => setSharingId(null)}
+        subject={
+          sharing
+            ? librarySubject(
+                "playlist",
+                sharing.id,
+                sharing.name,
+                `${t("playlist.yours")} · ${listMeta(sharing, t).count}`,
+                coverPhoto(sharing.cover),
+              )
+            : null
+        }
+      />
     </div>
   );
 }
@@ -335,11 +440,8 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
   const { t } = usePreferences();
   const copy = COPY[kind];
   const [filter, setFilter] = useState(copy.filters[0].key);
-  /* your own playlists: one sheet to make one, one to edit one */
+  /* your own playlists: one sheet to make one — editing lives on the card */
   const [creating, setCreating] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  /* kept while the sheet animates out, so its title doesn't flicker back */
-  const [editId, setEditId] = useState<string | null>(null);
 
   const filterLabel = (f: { key: string; text?: string }) => f.text ?? t(f.key);
 
@@ -379,15 +481,7 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
         </div>
       </div>
 
-      {kind === "playlists" && (
-        <MineStrip
-          onOpen={(id) => {
-            setEditId(id);
-            setEditOpen(true);
-          }}
-          onNew={() => setCreating(true)}
-        />
-      )}
+      {kind === "playlists" && <MineStrip onNew={() => setCreating(true)} />}
 
       {/* grid */}
       <AnimatePresence mode="wait" initial={false}>
@@ -409,14 +503,7 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
       </AnimatePresence>
 
       {kind === "playlists" && (
-        <>
-          <CreatePlaylistDialog open={creating} onClose={() => setCreating(false)} />
-          <CreatePlaylistDialog
-            open={editOpen}
-            playlistId={editId}
-            onClose={() => setEditOpen(false)}
-          />
-        </>
+        <CreatePlaylistDialog open={creating} onClose={() => setCreating(false)} />
       )}
     </section>
   );

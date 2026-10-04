@@ -21,6 +21,22 @@ import { QUEUE, trackById, type PlayerTrack } from "../data/player";
  *  controls fall back to a simulated 250ms clock, so the UI never breaks.
  * ------------------------------------------------------------------ */
 
+/**
+ * Where a run of playback came from.
+ *
+ * The player numbers what is playing against this, so "6 / 9" in the header
+ * means the sixth row of the list the listener clicked — a playlist, an
+ * album or an artist — instead of the sixth row of the whole demo queue.
+ * The page itself is just another source (the full queue), which is why the
+ * old 12 / 12 behaviour still shows up when playback starts from the feed.
+ */
+export type QueueSource = {
+  type: "page" | "album" | "artist" | "playlist";
+  /** what the run is called, for the queue panel later on */
+  label: string;
+  trackIds: string[];
+};
+
 type PlayerValue = {
   track: PlayerTrack | null;
   playing: boolean;
@@ -30,11 +46,13 @@ type PlayerValue = {
   /** 0 → 1, for the seek bar */
   progress: number;
   queue: PlayerTrack[];
+  /** the current track's row inside `queue`, or -1 if it is not in it */
+  queueIndex: number;
   /** ids the listener hearted — the rail's "Liked songs" panel reads this */
   liked: string[];
   /** true once a real <audio> element is driving the card */
   realAudio: boolean;
-  play: (track: PlayerTrack) => void;
+  play: (track: PlayerTrack, from?: QueueSource) => void;
   toggle: () => void;
   next: () => void;
   prev: () => void;
@@ -44,6 +62,13 @@ type PlayerValue = {
 };
 
 const PlayerContext = createContext<PlayerValue | null>(null);
+
+/** the whole demo queue — what plays when nothing more specific was clicked */
+const PAGE_SOURCE: QueueSource = {
+  type: "page",
+  label: "",
+  trackIds: QUEUE.map((track) => track.id),
+};
 
 /** a demo starts with a couple of favourites so the panel isn't empty */
 const SEED_LIKES = ["nt1", "tr3", "tr5"];
@@ -66,12 +91,25 @@ export function PlayerProvider({
   const [playing, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const [liked, setLiked] = useState<string[]>(SEED_LIKES);
+  /* which list the current run belongs to — see QueueSource above */
+  const [source, setSource] = useState<QueueSource>(PAGE_SOURCE);
   const [realAudio, setRealAudio] = useState(false);
   /* the element's own duration, once metadata is in */
   const [mediaDuration, setMediaDuration] = useState(0);
 
+  /* the queue the player owns right now, in the order it will play */
+  const queue = useMemo<PlayerTrack[]>(() => {
+    const list = source.trackIds
+      .map((id) => trackById(id))
+      .filter((track): track is PlayerTrack => !!track);
+    return list.length ? list : QUEUE;
+  }, [source]);
+
   /* the current track, readable from callbacks without re-creating them */
   const current = useRef<PlayerTrack | null>(initial);
+  /* …and the same trick for the queue: `step` is called from the audio
+     element's own `ended` event, so it cannot wait for a re-render */
+  const activeQueue = useRef<PlayerTrack[]>(QUEUE);
   /* guards the simulated roll-over so a finished track only advances once */
   const rolled = useRef(false);
   const audio = useRef<HTMLAudioElement | null>(null);
@@ -79,9 +117,12 @@ export function PlayerProvider({
   const advance = useRef<(delta: number) => void>(() => {});
 
   const step = useCallback((delta: number) => {
+    const list = activeQueue.current;
     const from = current.current;
-    const index = from ? QUEUE.findIndex((t) => t.id === from.id) : -1;
-    const next = QUEUE[(index + delta + QUEUE.length) % QUEUE.length];
+    const found = from ? list.findIndex((t) => t.id === from.id) : -1;
+    /* a track that is not in this run starts it from the top */
+    const index = found < 0 ? 0 : found;
+    const next = list[(index + delta + list.length) % list.length] ?? list[0];
     if (!next) return;
 
     const element = audio.current;
@@ -127,11 +168,21 @@ export function PlayerProvider({
     setRealAudio(true);
   }, []);
 
+  useEffect(() => {
+    activeQueue.current = queue;
+  }, [queue]);
+
   const duration = mediaDuration || track?.seconds || 0;
 
-  const play = useCallback((next: PlayerTrack) => {
+  const play = useCallback((next: PlayerTrack, from?: QueueSource) => {
     const element = audio.current;
     const changed = current.current?.id !== next.id;
+
+    /* an explicit source wins; a loose play (a feed row, say) keeps the
+       current run if the song is in it and falls back to the page queue */
+    setSource((prev) =>
+      from ?? (prev.trackIds.includes(next.id) ? prev : PAGE_SOURCE),
+    );
 
     if (element) {
       if (changed && element.getAttribute("src") !== next.audio) {
@@ -159,7 +210,7 @@ export function PlayerProvider({
   const toggle = useCallback(() => {
     const element = audio.current;
     if (!current.current) {
-      const first = QUEUE[0];
+      const first = activeQueue.current[0] ?? QUEUE[0];
       if (!first) return;
       if (element) {
         element.src = first.audio;
@@ -250,6 +301,8 @@ export function PlayerProvider({
     step(1);
   }, [realAudio, position, playing, track, step]);
 
+  const queueIndex = track ? queue.findIndex((t) => t.id === track.id) : -1;
+
   const value = useMemo<PlayerValue>(
     () => ({
       track,
@@ -257,7 +310,8 @@ export function PlayerProvider({
       position,
       duration,
       progress: duration ? Math.min(position / duration, 1) : 0,
-      queue: QUEUE,
+      queue,
+      queueIndex,
       liked,
       realAudio,
       play,
@@ -273,6 +327,8 @@ export function PlayerProvider({
       playing,
       position,
       duration,
+      queue,
+      queueIndex,
       liked,
       realAudio,
       play,

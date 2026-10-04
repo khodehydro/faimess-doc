@@ -90,7 +90,7 @@ curl -L -H "Accept: application/vnd.github.raw" \
 | `shuffle` | `sort-random` | |
 | `headphones` | `headphones-fill-light` | فقط نسخهٔ `-light` خطی است (بقیه پُر هستند) |
 | `waveform` | `stat` | سه میلهٔ گرد = نوار «در حال پخش» |
-| `download` | `download` | پُر (fill) — بقیهٔ حالت‌های پک هم پُرند |
+| `download` | `arhive-load` | سینی با فلش رو به داخل. `download` خودِ پک ابری است با فلش رو به **بالا** و شبیه آپلود می‌شد |
 | `expand` | `full-screen-corner` | پُر، جفتِ `collapse` |
 | `collapse` | `collapse` | |
 | `flame` | `fire` | پُر |
@@ -99,8 +99,9 @@ curl -L -H "Accept: application/vnd.github.raw" \
 | `verified` | `chield-check` | املا خودِ پک همین است |
 | `news` | `paper` | |
 | `bolt` | `lightning` | |
-| `share` | `export` | پک آیکن «share» ندارد؛ جعبه + فلش رو به بالا |
+| `share` | `group-share` | دو آدم + نشانهٔ اشتراک؛ «جعبه + فلش رو به بالا» (export) شبیه دانلود/آپلود می‌شد |
 | `copy` | `copy` | |
+| `edit` | `edit` | مداد — روی کارت پلی‌لیست‌ها و در هدر کارت جزئیات |
 | `folderPlus` | `folder-add` | |
 | `sun` / `moon` | `sun` / `moon` | |
 | `globe` | `globe` | |

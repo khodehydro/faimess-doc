@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useApp } from "../app/AppContext";
 import { usePreferences } from "../app/PreferencesContext";
-import type { PlayerTrack } from "../data/player";
-import { SHARE_TARGETS, trackBlurb, trackUrl, trackUrlLabel } from "../data/share";
+import { SHARE_TARGETS, type ShareSubject } from "../data/share";
 import { cn } from "../lib/cn";
 import { spring } from "../lib/motion";
 import { Photo } from "./Cover";
@@ -11,7 +10,7 @@ import { Icon } from "./Icon";
 import { Modal } from "./Modal";
 
 /* ------------------------------------------------------------------ *
- *  Share a track.
+ *  Share one thing — a track, a playlist, an album or an artist.
  *
  *  Copy-to-clipboard first — that is what most people actually want — and
  *  the web intents underneath it. The canonical URL is shown as text as
@@ -22,11 +21,12 @@ import { Modal } from "./Modal";
 export function ShareDialog({
   open,
   onClose,
-  track,
+  subject,
 }: {
   open: boolean;
   onClose: () => void;
-  track: PlayerTrack | null;
+  /** build it with `trackSubject()` or `librarySubject()` */
+  subject: ShareSubject | null;
 }) {
   const { t, dir } = usePreferences();
   const { notify } = useApp();
@@ -37,10 +37,9 @@ export function ShareDialog({
     if (!open) setCopied(false);
   }, [open]);
 
-  if (!track) return null;
+  if (!subject) return null;
 
-  const url = trackUrl(track.id);
-  const blurb = trackBlurb(track.title, track.artist);
+  const { url, blurb } = subject;
 
   const copy = async () => {
     try {
@@ -64,18 +63,18 @@ export function ShareDialog({
       </span>
 
       <h2 className="font-display mt-3.5 text-[17.5px] font-bold leading-snug text-ink">
-        {t("share.title", { title: track.title })}
+        {t("share.title", { title: subject.title })}
       </h2>
       <p className="mt-2 text-[13.5px] leading-relaxed text-ink-muted">{t("share.body")}</p>
 
       <div className="mt-3.5 flex items-center gap-3.5 rounded-[16px] bg-subtle p-3">
         <span className="size-[46px] shrink-0 overflow-hidden rounded-[13px] shadow-xs">
-          <Photo src={track.photo} alt="" />
+          <Photo src={subject.photo} alt="" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[14px] font-bold text-ink">{track.title}</span>
+          <span className="block truncate text-[14px] font-bold text-ink">{subject.title}</span>
           <span className="block truncate text-[12.5px] font-semibold text-ink-muted">
-            {track.artist} · {track.album}
+            {subject.subtitle}
           </span>
         </span>
       </div>
@@ -85,7 +84,7 @@ export function ShareDialog({
         dir="ltr"
         className="mt-3 truncate rounded-[12px] bg-subtle px-3.5 py-2.5 text-[12.5px] font-semibold text-ink-muted"
       >
-        {trackUrlLabel(track.id)}
+        {subject.urlLabel}
       </p>
 
       <motion.button

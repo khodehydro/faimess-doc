@@ -82,7 +82,8 @@ const MAP = {
   shuffle: "sort-random",
   headphones: "headphones-fill-light", // only the `-light` cut is a stroke
   waveform: "stat", // three rounded bars, the "now playing" equaliser
-  download: "download",
+  download: "arhive-load", // the tray the arrow drops into — the pack's own
+  // `download` is a cloud with an arrow pointing *up*, which read as an upload
   expand: "full-screen-corner",
   collapse: "collapse",
   flame: "fire",
@@ -91,7 +92,8 @@ const MAP = {
   verified: "chield-check", // the pack's own spelling
   news: "paper",
   bolt: "lightning",
-  share: "export",
+  share: "group-share", // people + a share mark — the pack has no plain "share"
+  edit: "edit", // the pencil behind every "rename / edit this list" affordance
   copy: "copy",
   folderPlus: "folder-add",
   sun: "sun",
