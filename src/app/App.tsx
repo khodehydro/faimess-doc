@@ -9,6 +9,7 @@ import { ArtistsPage } from "../pages/ArtistsPage";
 import { AlbumsPage } from "../pages/AlbumsPage";
 import { PlaylistsPage } from "../pages/PlaylistsPage";
 import { NewsPage } from "../pages/NewsPage";
+import { DownloadPage } from "../pages/DownloadPage";
 import { EASE } from "../lib/motion";
 
 const PAGES = {
@@ -17,6 +18,7 @@ const PAGES = {
   albums: AlbumsPage,
   playlists: PlaylistsPage,
   news: NewsPage,
+  download: DownloadPage,
 } as const;
 
 /* ------------------------------------------------------------------ *

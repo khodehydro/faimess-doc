@@ -179,7 +179,7 @@ export const routes = [
 
 دو لیست مسیر وجود دارد:
 - `routes` → صفحات ناوبری (Home / Artists / Albums / Playlists)
-- `contextualRoutes` → صفحاتی که در منو نیستند ولی از داخل اپ باز می‌شوند (News)
+- `contextualRoutes` → صفحاتی که در منو نیستند ولی از داخل اپ باز می‌شوند (News · Get the app → `#/download`)
 
 افزودن صفحه: یک آیتم در یکی از این دو لیست + یک کامپوننت در `pages/` + یک خط در `PAGES` در `app/App.tsx`.
 ناوبری، پنل جست‌وجو و «Quick jump» **خودکار** از همین لیست‌ها تغذیه می‌شوند.
@@ -252,17 +252,18 @@ PlayerProvider  (src/app/PlayerContext.tsx)      ← در app/App.tsx دور She
     ├── PlayerRail   46px        سایدبار مدیریت: queue · liked · playlists + دانلود اندروید
     ├── TrackPanel   lg:h-[40%]  کاور ۸۸/۱۱۸px · عنوان/آرتیست/آلبوم · نوار پیشرفت · ♥ + قبلی/پخش/بعدی + ⤓
     ├── LyricsPanel  flex-1      تنها ناحیهٔ اسکرول کارت — خطوط دوزبانه با هایلایت خط فعال
-    └── PlayerDrawer absolute    پنل تب‌ها روی کارت (صف / لایک‌شده‌ها / پلی‌لیست‌ها)
+    ├── PlayerDrawer absolute    پنل تب‌ها روی کارت (صف / لایک‌شده‌ها / پلی‌لیست‌ها)
+    └── DownloadDialog portal    «دانلود مخصوص اندروید» + دکمهٔ صفحهٔ `#/download`
 ```
 
 - **صف پخش:** `src/data/player.ts` آن را از `newestTracks` + `trendingTracks` می‌سازد؛ ترک‌های تکراری فید با `SAME_SONG` (`tr1→nt2`, `tr2→nt1`, `tr4→nt3`) به یک آیتم نگاشت می‌شوند تا `trackById` برای هر ردیف فید جواب بدهد. `leadTrackFor(artist)` هم دکمهٔ پخش هر آرتیست/آلبوم را به یک لید سینگل وصل می‌کند.
 - **لیریک:** `src/data/lyrics.ts` — `Record<trackId, { at, ko, fa }[]>` برای ۹ ترک؛ `lyricsFor()` برای ترک‌های بدون لیریک، لیدِ همان آرتیست را برمی‌گرداند. خط فعال با `activeLineIndex(lines, position)` حساب می‌شود.
-- **سایدبار مدیریت:** `PlayerRail` سه تب دارد؛ تب فعال یک `PlayerDrawer` روی کارت می‌کشد (`absolute inset-0 z-20`). تب صف همهٔ `QUEUE` را با شماره/کاور/زمان نشان می‌دهد و با کلیک پخش می‌کند، تب لایک‌شده‌ها همان لیست فیلترشده با `player.liked` است (دکمهٔ ♥ در نوار پخش، `aria-pressed`) و تب پلی‌لیست‌ها شش لیست `data/library.ts` را می‌آورد و به صفحهٔ Playlists می‌برد. دکمهٔ دانلود اندروید پایین همین ریل است تا هدر کارت شلوغ نشود.
+- **سایدبار مدیریت:** ریل با دکمهٔ `⋯` هدر باز/بسته می‌شود (`animate={{ width: open ? 46 : 0 }}` + `inert` در حالت بسته) و سه تب دارد؛ تب فعال یک `PlayerDrawer` روی کارت می‌کشد (`absolute inset-0 z-20`). تب صف همهٔ `QUEUE` را با شماره/کاور/زمان نشان می‌دهد و با کلیک پخش می‌کند، تب لایک‌شده‌ها همان لیست فیلترشده با `player.liked` است (دکمهٔ ♥ در نوار پخش، `aria-pressed`) و تب پلی‌لیست‌ها شش لیست `data/library.ts` را می‌آورد و به صفحهٔ Playlists می‌برد. دکمهٔ دانلود اندروید پایین همین ریل است تا هدر کارت شلوغ نشود.
 - **حالت خالی:** بدون ترک، کارت 👋 + «یه آهنگ که دوست داری رو پخش کن» + سه پیشنهاد سریع نشان می‌دهد.
 - **دانلود:** پیل `Android` در هدر؛ فقط توست می‌دهد — دانلود مال نسخهٔ اندروید است.
 - **صدا:** `PlayerTrack.audio` (فعلاً همه = `src/assets/audio/faimess-demo.mp3`) در یک `HTMLAudioElement` پخش می‌شود؛ `position` از `timeupdate`، `duration` از `durationchange`، و `ended` با `advance` ref ترک را جلو می‌برد. نبود `Audio` (مثل SSR) → همان کنترل‌ها با پالس شبیه‌سازی‌شدهٔ ۲۵۰ms. جزئیات: [`audio.md`](./audio.md).
 - **اگزپند/کولپس:** `HomePage` یک state (`wide`) دارد، کلاس `home-split-wide` را به ردیف می‌دهد و `{ expanded, onToggleExpand }` را به‌عنوان `params` بخش `player` پاس می‌دهد؛ قاعدهٔ CSS در `src/index.css` سهم کارت‌ها را ۲۵/۷۵ ↔ ۵۵/۴۵ می‌برد (transition روی `flex-basis`، با احترام به `prefers-reduced-motion`).
-- **دانلود:** `DownloadButton` در ردیف کنترل‌ها (آینهٔ ♥) فایل ترک را با `<a download>` ذخیره می‌کند.
+- **دانلود:** `DownloadButton` در ردیف کنترل‌ها آینهٔ ♥ است (تک‌رنگ، هم‌اندازه) و فقط یک `Modal` باز می‌کند: «Downloads live in the Android app» + دکمهٔ رفتن به `#/download`. وب چیزی ذخیره نمی‌کند؛ `Modal` (در `src/ui/Modal.tsx`) با `createPortal` روی `document.body` می‌نشیند تا `overflow-hidden` کارت‌ها و اسکیل صحنه به آن دست نزنند (و در SSR چیزی رندر نمی‌کند).
 - **پیش‌بارگذاری:** `PlayerProvider initialTrackId="nt1"` کارت را پاز‌شده با یک ترک بالا می‌آورد (هوک دیپ‌لینک؛ `check:ssr` هم با همین حالتِ پخش‌دار رندر می‌گیرد).
 
 ## ۱۱. تصویرسازی‌ها

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
  *  in pages/ (see docs/architecture.md).
  * ------------------------------------------------------------------ */
 
-export type RouteId = "home" | "artists" | "albums" | "playlists" | "news";
+export type RouteId = "home" | "artists" | "albums" | "playlists" | "news" | "download";
 
 type RouteDef = { id: RouteId; label: string; path: string };
 
@@ -19,7 +19,10 @@ export const routes: RouteDef[] = [
 ];
 
 /** pages reachable from inside the app but not in the nav */
-export const contextualRoutes: RouteDef[] = [{ id: "news", label: "News", path: "#/news" }];
+export const contextualRoutes: RouteDef[] = [
+  { id: "news", label: "News", path: "#/news" },
+  { id: "download", label: "Get the app", path: "#/download" },
+];
 
 export const allRoutes: RouteDef[] = [...routes, ...contextualRoutes];
 

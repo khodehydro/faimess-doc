@@ -39,7 +39,7 @@ node tools/encode-demo-audio.mjs /tmp/faimess-demo.wav src/assets/audio/faimess-
 |---|---|
 | `src/data/player.ts` | هر `PlayerTrack` یک فیلد `audio` دارد (فعلاً همه = `faimess-demo.mp3`) |
 | `src/app/PlayerContext.tsx` | یک `HTMLAudioElement` ساخته می‌شود؛ `position` از `timeupdate`، `duration` از `durationchange`، و `ended` ترک را جلو می‌برد |
-| `src/sections/PlayerSection.tsx` | `DownloadButton` همان فایل ترک فعلی را با `<a download>` ذخیره می‌کند |
+| `src/sections/PlayerSection.tsx` | `DownloadButton` (تک‌رنگ، آینهٔ ♥) دیالوگ اندروید را باز می‌کند — هیچ فایلی در وب ذخیره نمی‌شود |
 
 اگر مرورگر (یا محیطی مثل SSR) سازندهٔ `Audio` نداشته باشد، همان کنترل‌ها روی **زمان شبیه‌سازی‌شدهٔ ۲۵۰ms** کار می‌کنند تا UI از کار نیفتد.
 
@@ -47,4 +47,4 @@ node tools/encode-demo-audio.mjs /tmp/faimess-demo.wav src/assets/audio/faimess-
 
 1. هر ترک یک فایل **لایسنس‌دار** خودش بگیرد و `audio` در `data/player.ts` به آن اشاره کند (و اگر لازم شد `seconds` و `at`های لیریک با مدت واقعی هم‌تراز شوند).
 2. `faimess-demo.mp3` و اسکریپت‌های ساختش می‌توانند بمانند (اثر خود پروژه‌اند) یا حذف شوند.
-3. دانلود در نسخهٔ وب فقط «دمو» است؛ دانلود کیفیت اصلی همچنان مخصوص اپ اندروید تعریف شده است.
+3. **در وب دانلود نداریم:** دکمهٔ ⤓ پلیر فقط دیالوگ «Downloads live in the Android app» را باز می‌کند و دکمهٔ آن به صفحهٔ `#/download` می‌برد (`src/pages/DownloadPage.tsx`). فایل دمو فقط برای تست پخش/سیک است، نه برای ذخیره‌کردن توسط کاربر.

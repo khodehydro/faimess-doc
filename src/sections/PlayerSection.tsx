@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ComponentProps, type PointerEvent as 
 import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "../ui/Icon";
 import { Photo } from "../ui/Cover";
+import { Modal } from "../ui/Modal";
 import { usePlayer } from "../app/PlayerContext";
 import { useApp } from "../app/AppContext";
 import { activeLineIndex, lyricsFor, mmss, QUEUE, type PlayerTrack } from "../data/player";
@@ -13,7 +14,8 @@ import { EASE, spring } from "../lib/motion";
 /* ------------------------------------------------------------------ *
  *  Card 5 (right) — the player.
  *
- *    rail (46px)   the music-management sidebar: queue · liked · playlists
+ *    more (⋯)      reveals the music-management rail on demand:
+ *                  queue · liked songs · playlists
  *    card          Player · feed position · expand/collapse
  *      top 40%     cover · title/artist/album · seek bar · transport
  *      bottom 60%  bilingual lyrics (original + فارسی), one scroll surface,
@@ -42,12 +44,25 @@ export function PlayerSection({
   const player = usePlayer();
   const { track } = player;
   const [panel, setPanel] = useState<PanelId | null>(null);
+  /* the management rail is a drawer now — hidden until "more" asks for it */
+  const [railOpen, setRailOpen] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
   const lines = lyricsFor(track);
   const { expanded, onToggleExpand } = params;
 
+  const toggleRail = () => {
+    const next = !railOpen;
+    setRailOpen(next);
+    if (!next) setPanel(null);
+  };
+
   return (
     <div className="flex min-h-0 flex-1">
-      <PlayerRail active={panel} onSelect={(id) => setPanel((p) => (p === id ? null : id))} />
+      <PlayerRail
+        open={railOpen}
+        active={panel}
+        onSelect={(id) => setPanel((p) => (p === id ? null : id))}
+      />
 
       <div className="relative flex min-h-0 flex-1 flex-col">
         <header className="flex shrink-0 items-center gap-2 px-3.5 pb-2 pt-3.5">
@@ -62,6 +77,21 @@ export function PlayerSection({
                 {QUEUE.findIndex((t) => t.id === track.id) + 1}/{QUEUE.length}
               </span>
             )}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              transition={spring}
+              onClick={toggleRail}
+              aria-expanded={railOpen}
+              title={railOpen ? "Hide the music sidebar" : "More — queue, liked songs, playlists"}
+              aria-label={railOpen ? "Hide the music sidebar" : "More — queue, liked songs, playlists"}
+              className={cn(
+                "flex size-7 items-center justify-center rounded-full transition-colors",
+                railOpen ? "bg-primary text-white shadow-primary" : "text-ink-muted hover:bg-subtle hover:text-ink",
+              )}
+            >
+              <Icon name="more" size={15} strokeWidth={2.2} />
+            </motion.button>
+
             <motion.button
               whileTap={{ scale: 0.9 }}
               transition={spring}
@@ -91,7 +121,11 @@ export function PlayerSection({
               transition={{ duration: 0.28, ease: EASE }}
               className="flex min-h-0 flex-1 flex-col"
             >
-              <TrackPanel player={player} expanded={expanded} />
+              <TrackPanel
+                player={player}
+                expanded={expanded}
+                onDownload={() => setDownloadOpen(true)}
+              />
               <LyricsPanel lines={lines} position={player.position} playing={player.playing} />
             </motion.div>
           )}
@@ -101,13 +135,23 @@ export function PlayerSection({
           {panel && <PlayerDrawer panel={panel} onClose={() => setPanel(null)} />}
         </AnimatePresence>
       </div>
+
+      <DownloadDialog open={downloadOpen} onClose={() => setDownloadOpen(false)} />
     </div>
   );
 }
 
 /* --------------------------- management rail --------------------------- */
 
-function PlayerRail({ active, onSelect }: { active: PanelId | null; onSelect: (id: PanelId) => void }) {
+function PlayerRail({
+  open,
+  active,
+  onSelect,
+}: {
+  open: boolean;
+  active: PanelId | null;
+  onSelect: (id: PanelId) => void;
+}) {
   const items: { id: PanelId; icon: IconName; label: string }[] = [
     { id: "queue", icon: "list", label: "Play queue" },
     { id: "liked", icon: "heart", label: "Liked songs" },
@@ -115,7 +159,15 @@ function PlayerRail({ active, onSelect }: { active: PanelId | null; onSelect: (i
   ];
 
   return (
-    <nav className="flex w-[46px] shrink-0 flex-col items-center gap-1 border-r border-line py-3">
+    <motion.nav
+      initial={false}
+      animate={{ width: open ? 46 : 0, opacity: open ? 1 : 0 }}
+      transition={{ duration: 0.28, ease: EASE }}
+      inert={!open}
+      aria-label="Music management"
+      className={cn("shrink-0 overflow-hidden", open && "border-r border-line")}
+    >
+      <div className="flex h-full w-[46px] flex-col items-center gap-1 py-3">
       {items.map((item) => (
         <motion.button
           key={item.id}
@@ -135,8 +187,8 @@ function PlayerRail({ active, onSelect }: { active: PanelId | null; onSelect: (i
           <Icon name={item.icon} size={16.5} strokeWidth={2} />
         </motion.button>
       ))}
-
-    </nav>
+      </div>
+    </motion.nav>
   );
 }
 
@@ -317,7 +369,15 @@ function EmptyState({ onPick }: { onPick: (track: PlayerTrack) => void }) {
 
 /* ------------------------------ track panel ----------------------------- */
 
-function TrackPanel({ player, expanded }: { player: PlayerApi; expanded: boolean }) {
+function TrackPanel({
+  player,
+  expanded,
+  onDownload,
+}: {
+  player: PlayerApi;
+  expanded: boolean;
+  onDownload: () => void;
+}) {
   const { track, playing, position, duration, progress, toggle, next, prev, seek } = player;
   const barRef = useRef<HTMLDivElement>(null);
   const [scrubbing, setScrubbing] = useState(false);
@@ -452,7 +512,7 @@ function TrackPanel({ player, expanded }: { player: PlayerApi; expanded: boolean
           </motion.button>
         </div>
 
-        <DownloadButton track={track} />
+        <DownloadButton onOpen={onDownload} />
       </div>
     </section>
   );
@@ -461,37 +521,68 @@ function TrackPanel({ player, expanded }: { player: PlayerApi; expanded: boolean
 /* -------------------------------- download ------------------------------ */
 
 /**
- * Saves the file the card is playing. The demo master is the only audio that
- * ships, so this is what lands on disk — full, master-quality downloads belong
- * to the Android app (docs/audio.md). Sits opposite the heart: the transport
- * row is a mirror — like · prev · play · next · download.
+ * Downloads are an Android feature — the web build streams. So this button is
+ * a twin of the heart (same size, same single tone) and opening it explains
+ * where to get the app instead of pretending to save a file.
  */
-function DownloadButton({ track }: { track: PlayerTrack }) {
-  const { notify } = useApp();
-
-  const save = () => {
-    if (typeof document === "undefined") return;
-    const link = document.createElement("a");
-    link.href = track.audio;
-    link.download = `${track.title} — FAIMESS demo.mp3`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    notify("Saved the demo take — full downloads ship with the Android app", "teal");
-  };
-
+function DownloadButton({ onOpen }: { onOpen: () => void }) {
   return (
     <motion.button
       whileHover={{ y: -1.5 }}
       whileTap={{ scale: 0.9 }}
       transition={spring}
-      onClick={save}
-      title="Download this take — the Android app gets the full-quality files"
-      aria-label={`Download ${track.title}`}
-      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-mint-soft text-teal-deep transition-colors hover:bg-teal-soft"
+      onClick={onOpen}
+      title="Download — Android app only"
+      aria-label="Download — Android app only"
+      className="flex size-9 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
     >
       <Icon name="download" size={17} strokeWidth={2.1} />
     </motion.button>
+  );
+}
+
+/* ------------------------------ download note --------------------------- */
+
+function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { navigate } = useApp();
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
+        <Icon name="download" size={20} strokeWidth={2.1} />
+      </span>
+
+      <h2 className="font-display mt-3 text-[17.5px] font-bold leading-snug text-ink">
+        Downloads live in the Android app
+      </h2>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-muted">
+        Songs stream free in the browser — saving a track for offline listening, and the
+        full-quality files, are Android-only.
+      </p>
+
+      <div className="mt-4 flex items-center gap-2">
+        <motion.button
+          whileHover={{ y: -1.5 }}
+          whileTap={{ scale: 0.97 }}
+          transition={spring}
+          onClick={() => {
+            onClose();
+            navigate("download");
+          }}
+          className="flex items-center gap-2 rounded-[14px] bg-primary px-3.5 py-2.5 text-[13.5px] font-bold text-white shadow-primary"
+        >
+          Android download page
+          <Icon name="arrowRight" size={15} strokeWidth={2.2} />
+        </motion.button>
+
+        <button
+          onClick={onClose}
+          className="rounded-[14px] px-3 py-2.5 text-[13.5px] font-bold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
+        >
+          Not now
+        </button>
+      </div>
+    </Modal>
   );
 }
 

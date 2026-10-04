@@ -10,6 +10,7 @@ import { renderToString } from "react-dom/server";
 import { AppProvider } from "../src/app/AppContext";
 import { PlayerProvider } from "../src/app/PlayerContext";
 import { PlayerSection } from "../src/sections/PlayerSection";
+import { DownloadPage } from "../src/pages/DownloadPage";
 import { HomePage } from "../src/pages/HomePage";
 import { ArtistsPage } from "../src/pages/ArtistsPage";
 import { AlbumsPage } from "../src/pages/AlbumsPage";
@@ -122,7 +123,11 @@ check("loaded player shows details", playingCard.includes("Afterglow") && playin
 check("korean lyrics render", /[\uac00-\ud7a3]/.test(playingCard) && playingCard.includes("한국어"));
 check("persian translation renders", playingCard.includes("نور"));
 check("seek bar is a slider", playingCard.includes('role="slider"') && playingCard.includes("aria-valuetext"));
-check("download button ships", playingCard.includes("Download Afterglow"));
+check("download button ships", playingCard.includes("Download — Android app only"));
+check(
+  "download is a single-tone twin of the heart",
+  !playingCard.includes("bg-mint-soft") && !playingCard.includes("bg-teal-soft"),
+);
 check("expand button ships", playingCard.includes("Expand the player"));
 check("every track carries the demo audio", QUEUE.every((t) => typeof t.audio === "string" && t.audio.length > 0));
 {
@@ -132,7 +137,9 @@ check("every track carries the demo audio", QUEUE.every((t) => typeof t.audio ==
   check("demo master is on disk", size > 500_000, `${(size / 1048576).toFixed(2)}MB`);
 }
 check("expanded player has a layout rule", readFileSync("src/index.css", "utf8").includes("home-split-wide"));
-check("management rail ships", ["Play queue", "Liked songs", "Playlists"].every((l) => playingCard.includes(l)));
+check("rail ships behind more", playingCard.includes("More — queue, liked songs, playlists"));
+check("rail labels are in the markup", ["Play queue", "Liked songs", "Playlists"].every((l) => playingCard.includes(l)));
+check("rail starts hidden", playingCard.includes("inert=") || playingCard.includes("inert"));
 check("the playing track can be liked", playingCard.includes("Remove from Liked songs") && playingCard.includes('aria-pressed="true"'));
 {
   const liked = ["nt1", "tr3", "tr5"];
@@ -140,6 +147,10 @@ check("the playing track can be liked", playingCard.includes("Remove from Liked 
 }
 
 const artistsPage = render(ArtistsPage);
+const downloadPage = render(DownloadPage);
+check("download page renders", downloadPage.includes("Get the FAIMESS app") && downloadPage.includes("Google Play"));
+check("download page is honest about the web build", downloadPage.includes("Android feature"));
+
 check("artists page renders", artistsPage.includes("Artists"));
 check("every roster artist on the page", artists.every((a) => artistsPage.includes(a.name)), `${artists.length} artists`);
 
