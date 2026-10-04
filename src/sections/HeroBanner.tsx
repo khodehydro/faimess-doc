@@ -138,7 +138,13 @@ export function HeroBanner() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.08, ease: EASE }}
-            className="pointer-events-none absolute bottom-7 start-7 max-w-[46%]"
+            /* `dir="auto"`: the two lines are demo copy and may be English,
+               Persian or Korean, so they align by their own first strong
+               character instead of inheriting the interface's direction.
+               On phones the block sits higher than the centred indicator, so
+               the two can never overlap on a narrow banner. */
+            dir="auto"
+            className="pointer-events-none absolute bottom-[4.75rem] start-5 max-w-[80%] sm:bottom-7 sm:start-7 sm:max-w-[46%]"
           >
             <h2 className="font-display text-[27px] font-bold leading-[1.15] tracking-[-0.018em] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
               {banner.title}

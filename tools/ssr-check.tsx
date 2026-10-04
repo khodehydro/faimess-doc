@@ -402,6 +402,13 @@ check(
   activeUsersSrc.includes("LeaderboardDialog") && activeUsersSrc.includes("fanPoints(user.activity)"),
 );
 check(
+  "the banner caption declares its own direction",
+  heroSrc.includes('dir="auto"') &&
+    heroSrc.includes("sm:bottom-7") &&
+    heroSrc.includes("sm:max-w-[46%]"),
+  "demo copy aligns by its own script; on phones the block clears the indicator",
+);
+check(
   "the breakdown panel shows a line per rule",
   pointsDialogSrc.includes("fanLines(") && pointsDialogSrc.includes("rule.rateKey"),
 );
