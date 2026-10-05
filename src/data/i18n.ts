@@ -1055,6 +1055,21 @@ export const STRINGS: Record<string, Entry> = {
     fa: "{n} میلیون شنوندهٔ ماهانه",
     ko: "월간 리스너 {n}M",
   },
+  "artist.followers": {
+    en: "{n} followers",
+    fa: "{n} دنبال‌کننده",
+    ko: "팔로워 {n}",
+  },
+  "artist.followersK": {
+    en: "{n}K followers",
+    fa: "{n} هزار دنبال‌کننده",
+    ko: "팔로워 {n}K",
+  },
+  "artist.followersM": {
+    en: "{n}M followers",
+    fa: "{n} میلیون دنبال‌کننده",
+    ko: "팔로워 {n}M",
+  },
 
   /* how long ago something landed — a line per unit, one and many */
   "ago.justNow": { en: "just now", fa: "همین حالا", ko: "방금" },
@@ -1263,6 +1278,8 @@ const LABEL_KEYS: Record<string, string> = {
 
 /** “4.8M monthly”, “1.4M monthly” … — the number and its magnitude */
 const LISTENERS = /^([\d.,]+)\s*([KM])?\s*monthly$/i;
+/** “2.4M followers”, “890K followers” … */
+const FOLLOWERS = /^([\d.,]+)\s*([KM])?\s*followers?$/i;
 /** “12 min ago”, “2 hrs ago”, “1 day ago”, “3 weeks ago” … */
 const AGO = /^(\d+)\s*(min|mins|minute|minutes|hr|hrs|hour|hours|day|days|week|weeks|month|months)\s*ago$/i;
 /** “3h 12m” — a playlist's running time */
@@ -1360,6 +1377,14 @@ export function tData(t: Translate, value: string | undefined, lang: Lang): stri
     const [, digits, unit = ""] = listeners;
     const magnitude = unit.toUpperCase();
     const key = magnitude === "M" ? "artist.monthlyM" : magnitude === "K" ? "artist.monthlyK" : "artist.monthly";
+    return t(key, { n: localizeDigits(digits, lang) });
+  }
+
+  const followers = raw.match(FOLLOWERS);
+  if (followers) {
+    const [, digits, unit = ""] = followers;
+    const magnitude = unit.toUpperCase();
+    const key = magnitude === "M" ? "artist.followersM" : magnitude === "K" ? "artist.followersK" : "artist.followers";
     return t(key, { n: localizeDigits(digits, lang) });
   }
 

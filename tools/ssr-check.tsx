@@ -1773,14 +1773,14 @@ check(
 );
 check(
   "every detail control is one of those pills",
-  (detailSrc.match(/<ExpandPill/g) ?? []).length === 4 &&
+  (detailSrc.match(/<ExpandPill/g) ?? []).length === 5 &&
     detailSrc.includes('icon="shuffle"') &&
     detailSrc.includes('icon="share"') &&
     detailSrc.includes('icon="edit"') &&
     /* the only fixed-label button left belongs to the empty state */
     (detailSrc.match(/<PillButton/g) ?? []).length === 1 &&
     detailSrc.includes('t("detail.addSongs")'),
-  "play all · shuffle · share · edit, nothing with a fixed label",
+  "play all · follow · shuffle · share · edit, nothing with a fixed label",
 );
 check(
   "the details sit under the name, the duration next to the count",

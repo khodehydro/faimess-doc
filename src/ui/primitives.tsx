@@ -121,7 +121,7 @@ type PillButtonProps = {
 type ExpandPillProps = {
   icon: IconName;
   children: string;
-  tone?: "primary" | "outline";
+  tone?: "primary" | "outline" | "soft";
   /** the accessible name, when the visible word is shorter */
   label?: string;
   onClick?: () => void;
@@ -140,7 +140,9 @@ export function ExpandPill({ icon, children, tone = "outline", label, onClick }:
         "group flex shrink-0 items-center rounded-full border px-2.5 py-1.5 text-[12.5px] font-semibold transition-colors lg:px-3 lg:py-2 lg:text-[13px]",
         tone === "primary"
           ? "border-transparent bg-primary text-white shadow-primary hover:bg-primary-deep"
-          : "border-line bg-surface text-ink-body hover:border-primary/35 hover:bg-primary-faint hover:text-primary-deep",
+          : tone === "soft"
+            ? "border-primary/25 bg-primary-faint text-primary-deep hover:border-primary/40 hover:bg-primary-faint/80"
+            : "border-line bg-surface text-ink-body hover:border-primary/35 hover:bg-primary-faint hover:text-primary-deep",
       )}
     >
       <Icon name={icon} size={14.5} strokeWidth={2.1} className="shrink-0 lg:hidden" />
