@@ -346,7 +346,11 @@ Shell (app/App.tsx)          ← مالک هر دو کارت در همهٔ مس�
 
 - نام: `TopBar.tsx` (وردمارک) + `index.html` (title).
 - رنگ لهجه: فقط `--color-primary*` را در `src/index.css` عوض کن؛ همهٔ دکمه‌ها/بج‌ها/پین‌ها/روز فعال خودکار عوض می‌شوند.
-- لوگو: `src/ui/Logo.tsx`.
+- لوگو: تک‌تصویر `src/assets/brand/faimess-logo.png` (گربهٔ سفید روی بنفش برند)؛
+  `src/ui/Logo.tsx` همان PNG را رندر می‌کند و `tools/appicons.py` از همان فایل
+  برش‌های تب/لانچر را می‌سازد (`python3 tools/appicons.py`). اسپلش موبایل
+  (`src/ui/Splash.tsx`) هم همان تصویر را روی `bg-primary` وسط می‌چیند، با
+  «HYDRO team» زیرش و نام اپ روی لبهٔ پایین.
 
 
 ---

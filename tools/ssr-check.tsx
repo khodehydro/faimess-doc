@@ -929,13 +929,16 @@ check(
     return (
       manifest.display === "standalone" &&
       manifest.theme_color.toLowerCase() === brand &&
-      manifest.background_color === "#eaeaec" &&
+      /* the boot screen is brand purple, so the installed app's window is
+         the same purple before and after the splash — no colour jump */
+      manifest.background_color === brand &&
       filesExist &&
       purposes.includes("maskable") &&
       sizes.includes("192x192") &&
       sizes.includes("512x512") &&
-      /* every icon the head promises is really on disk */
-      ["favicon-32.png", "apple-touch-icon.png", "icon.svg"].every((file) =>
+      /* every icon the head promises is really on disk — the tab mark and
+         its launcher cuts, all made from the same artwork */
+      ["favicon-32.png", "apple-touch-icon.png"].every((file) =>
         existsSync(join("public", file)),
       ) &&
       indexHtml.includes('href="/manifest.webmanifest"') &&
@@ -944,6 +947,30 @@ check(
     );
   })(),
   "a tab, a home-screen icon and a launcher entry, all in brand purple",
+);
+check(
+  "one artwork is the whole brand — site, tab and splash",
+  (() => {
+    /* the cat raster is the single source: `Logo` shows it in the app,
+       `tools/appicons.py` re-cuts it into the tab and launcher PNGs, and
+       the mobile splash wears it on the exact field colour */
+    const art = existsSync(join("src/assets/brand/faimess-logo.png"));
+    const logo = readFileSync("src/ui/Logo.tsx", "utf8");
+    const splash = readFileSync("src/ui/Splash.tsx", "utf8");
+    return (
+      art &&
+      logo.includes('from "../assets/brand/faimess-logo.png"') &&
+      splash.includes('from "../assets/brand/faimess-logo.png"') &&
+      /* the sheet only exists on the compact layout, above everything */
+      splash.includes("COMPACT_QUERY") &&
+      splash.includes("z-[90]") &&
+      /* the sheet's purple is the token itself, not a copy of the hex */
+      splash.includes("bg-primary") &&
+      splash.includes("HYDRO team") &&
+      readFileSync("src/app/App.tsx", "utf8").includes("<Splash")
+    );
+  })(),
+  "the cat on #8267f0, with HYDRO team under it, on every phone boot",
 );
 check(
   "the browser's own chrome wears the brand colour",

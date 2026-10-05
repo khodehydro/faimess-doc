@@ -18,6 +18,7 @@ import { CompactShell } from "./CompactShell";
 import { useCompact } from "../hooks/useCompact";
 import { AuthProvider } from "./AuthContext";
 import { AccountDoor } from "../sections/AccountDoor";
+import { Splash } from "../ui/Splash";
 
 /* ------------------------------------------------------------------ *
  *  Shell — the parent card and the five cards inside it.
@@ -144,6 +145,7 @@ export default function App() {
           <PlayerProvider>
             <CommentsProvider>
               <ContributionsProvider>
+                <Splash />
                 <Screen />
                 <AccountDoor />
                 {/* the door sits above the app rather than in place of it:

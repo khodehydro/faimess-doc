@@ -1,123 +1,239 @@
-"""App icons for FAIMESS — generated, not hand-drawn.
+"""App icons for FAIMESS — cut from the brand mark, not hand-drawn.
 
-The favicon and the launcher icons are the same mark the app draws in
-`src/ui/Logo.tsx` (a violet tile with a rounded "F" and two sound waves),
-rasterised here with no dependencies: the tile, the strokes and the arcs
-are distance functions, sampled 3x3 per pixel, and the PNG is written
-straight out of `zlib`.
+The tab icon, the iOS touch icon and the Android launcher icons are all
+one raster, re-rendered at each size:
+
+    src/assets/brand/faimess-logo.png   ← the mark itself (150×150)
+                │
+                ▼
+    public/favicon-32.png · apple-touch-icon.png · icon-192.png
+    public/icon-512.png · icon-maskable-512.png
+
+The artwork is flat: exactly two colours — the field `#8267F0` (the same
+hex as `--color-primary`) and the white cat `#F8F8F8` — with anti-aliased
+edges. So rather than scaling pixels (which drags the source's resize
+ringing and its half-transparent border along), this script decodes the
+PNG into a *coverage* field — the green channel is a clean 103→248 ramp
+between the two colours — and re-renders that field at every target size
+with supersampling. The result is the mark itself: crisp edges, two
+colours, no fringes, at any resolution.
 
     python3 tools/appicons.py        # writes public/*.png
 
-`icon-maskable-512.png` is the Android "maskable" variant: full-bleed
-purple with the mark scaled into the safe zone, so a launcher can crop it
-to a circle, a squircle or a rounded square without eating the letter.
+No third-party libraries: the PNG it reads and the PNGs it writes are
+handled by `zlib` and `struct` alone, so a bare python3 is enough. Run it
+again whenever `src/assets/brand/faimess-logo.png` changes — the file
+names are stable, so nothing else in the repo has to move.
 """
 
-import math, struct, zlib, pathlib
+import math
+import pathlib
+import struct
+import zlib
 
-W = "#9B82F6"; M = "#8267F0"; D = "#6B4FDD"   # logo tile gradient
-FW = "#FFFFFF"; FE = "#E7DEFE"               # logo "F" gradient
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SOURCE = ROOT / "src/assets/brand/faimess-logo.png"
+OUT = ROOT / "public"
 
-def hexc(h):
-    h = h.lstrip("#")
-    return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+# the two colours of the artwork; `--color-primary` in src/index.css is the
+# first of them, which is why the tab, the splash and the cards agree
+FIELD = (0x82, 0x67, 0xF0)
+MARK = (0xF8, 0xF8, 0xF8)
+FIELD_G, MARK_G = FIELD[1], MARK[1]
 
-def lerp(a, b, t):
-    return tuple(a[i] + (b[i] - a[i]) * t for i in range(3))
 
-def tile_at(t):
-    if t < 0.55:
-        return lerp(hexc(W), hexc(M), t / 0.55)
-    return lerp(hexc(M), hexc(D), (t - 0.55) / 0.45)
+# ------------------------------------------------------------------ #
+#  PNG in / PNG out — standard library only
+# ------------------------------------------------------------------ #
 
-def f_at(t):
-    return lerp(hexc(FW), hexc(FE), t)
+def decode(path):
+    """Read an 8-bit RGBA PNG into `(width, height, rows)` of RGBA bytes."""
+    data = path.read_bytes()
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise SystemExit(f"{path}: not a PNG")
+    pos, idat, head = 8, b"", None
+    while pos < len(data):
+        length = struct.unpack(">I", data[pos:pos + 4])[0]
+        tag = data[pos + 4:pos + 8]
+        body = data[pos + 8:pos + 8 + length]
+        if tag == b"IHDR":
+            head = struct.unpack(">IIBBBBB", body)
+        elif tag == b"IDAT":
+            idat += body
+        pos += 12 + length
+    width, height, depth, colour, _, _, interlace = head
+    if (depth, colour, interlace) != (8, 6, 0):
+        raise SystemExit(f"{path}: expected an 8-bit non-interlaced RGBA PNG")
 
-def seg_d(px, py, ax, ay, bx, by):
-    vx, vy = bx - ax, by - ay
-    wx, wy = px - ax, py - ay
-    L = vx * vx + vy * vy
-    t = 0.0 if L == 0 else max(0.0, min(1.0, (wx * vx + wy * vy) / L))
-    dx, dy = px - (ax + t * vx), py - (ay + t * vy)
-    return math.hypot(dx, dy)
+    raw = zlib.decompress(idat)
+    stride = width * 4
+    rows, prev, at = [], bytearray(stride), 0
+    for _ in range(height):
+        kind = raw[at]
+        at += 1
+        line = bytearray(raw[at:at + stride])
+        at += stride
+        if kind == 1:
+            for i in range(4, stride):
+                line[i] = (line[i] + line[i - 4]) & 255
+        elif kind == 2:
+            for i in range(stride):
+                line[i] = (line[i] + prev[i]) & 255
+        elif kind == 3:
+            for i in range(stride):
+                a = line[i - 4] if i >= 4 else 0
+                line[i] = (line[i] + ((a + prev[i]) >> 1)) & 255
+        elif kind == 4:
+            for i in range(stride):
+                a = line[i - 4] if i >= 4 else 0
+                b = prev[i]
+                c = prev[i - 4] if i >= 4 else 0
+                pa, pb, pc = abs(b - c), abs(a - c), abs(a + b - 2 * c)
+                near = a if (pa <= pb and pa <= pc) else (b if pb <= pc else c)
+                line[i] = (line[i] + near) & 255
+        rows.append(bytes(line))
+        prev = line
+    return width, height, rows
 
-def arc_d(px, py, cx, cy, r, a0, a1):
-    dx, dy = px - cx, py - cy
-    ang = math.atan2(dy, dx)
-    if a0 <= ang <= a1:
-        return abs(math.hypot(dx, dy) - r)
-    ends = [(cx + r * math.cos(a), cy + r * math.sin(a)) for a in (a0, a1)]
-    return min(math.hypot(px - ex, py - ey) for ex, ey in ends)
 
-def rr_d(px, py, x, y, w, h, r):
-    qx, qy = abs(px - (x + w / 2)) - (w / 2 - r), abs(py - (y + h / 2)) - (h / 2 - r)
-    return math.hypot(max(qx, 0), max(qy, 0)) + min(max(qx, qy), 0) - r
+def encode(size, rgba):
+    def chunk(tag, body):
+        return (struct.pack(">I", len(body)) + tag + body
+                + struct.pack(">I", zlib.crc32(tag + body) & 0xFFFFFFFF))
 
-def render(size, radius_frac, ink_scale=1.0, waves=True):
-    """Draw the brand tile in a 40x40 space, supersampled 3x3 per pixel."""
-    px = bytearray()
-    ss = 3
-    half_f = 1.8            # stroke half-width of the "F"
-    half_w = 1.0            # stroke half-width of the sound waves
-    cx = cy = 20.0
-    for y in range(size):
-        for x in range(size):
-            acc = [0.0, 0.0, 0.0, 0.0]
-            for sy in range(ss):
-                for sx in range(ss):
-                    ux = (x + (sx + 0.5) / ss) / size * 40.0
-                    uy = (y + (sy + 0.5) / ss) / size * 40.0
-                    # scale the mark around the centre (for the maskable safe zone)
-                    mx = cx + (ux - cx) / ink_scale
-                    my = cy + (uy - cy) / ink_scale
-                    tile = 1.0 if radius_frac == 0 else max(0.0, min(1.0, 0.5 - rr_d(ux, uy, 0, 0, 40, 40, 40 * radius_frac)))
-                    if tile <= 0:
-                        continue
-                    col = tile_at(min(1.0, max(0.0, (ux + uy) / 80.0)))
-                    # the F: stem + top bar (with the rounded corner) + middle arm
-                    d = min(
-                        seg_d(mx, my, 15.4, 29.0, 15.4, 14.8),
-                        arc_d(mx, my, 17.2, 14.8, 1.8, math.pi, math.pi * 1.5),
-                        seg_d(mx, my, 17.2, 11.6, 26.6, 11.6),
-                        seg_d(mx, my, 15.4, 20.4, 22.8, 20.4),
-                    )
-                    f = max(0.0, min(1.0, half_f + 0.5 - d))
-                    fcol = f_at(min(1.0, max(0.0, (ux + uy) / 80.0)))
-                    col = lerp(col, fcol, f)
-                    if waves:
-                        wd = min(
-                            arc_d(mx, my, 24.6, 20.0, 3.9, -math.pi / 3, math.pi / 3),
-                            arc_d(mx, my, 24.6, 20.0, 8.0, -math.pi / 3, math.pi / 3),
-                        )
-                        w = max(0.0, min(1.0, half_w + 0.5 - wd)) * 0.75
-                        col = lerp(col, (255, 255, 255), w)
-                    acc[0] += col[0] * tile
-                    acc[1] += col[1] * tile
-                    acc[2] += col[2] * tile
-                    acc[3] += 255.0 * tile
-            n = ss * ss
-            px += bytes(int(round(min(255.0, c / n))) for c in acc)
-    return bytes(px)
-
-def png(size, rgba):
     raw = b"".join(b"\x00" + rgba[y * size * 4:(y + 1) * size * 4] for y in range(size))
-    def chunk(tag, data):
-        return (struct.pack(">I", len(data)) + tag + data +
-                struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF))
     return (b"\x89PNG\r\n\x1a\n"
             + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0))
             + chunk(b"IDAT", zlib.compress(raw, 9))
             + chunk(b"IEND", b""))
 
-out = pathlib.Path("/home/user/faimess-doc/public")
-jobs = [
-    ("favicon-32.png", 32, 13 / 40, 1.0, False),
-    ("apple-touch-icon.png", 180, 0.0, 0.92, True),
-    ("icon-192.png", 192, 13 / 40, 1.0, True),
-    ("icon-512.png", 512, 13 / 40, 1.0, True),
-    ("icon-maskable-512.png", 512, 0.0, 0.78, True),
+
+# ------------------------------------------------------------------ #
+#  The coverage field — one float per source pixel
+# ------------------------------------------------------------------ #
+
+def coverage(rows, width, height):
+    """`0.0` = the purple field, `1.0` = the white mark, in between = an edge.
+
+    The artwork is two flat colours, so the green channel carries the whole
+    shape: 103 in the field, 248 in the mark. Alpha is ignored on purpose —
+    the only transparency in the source is a one-pixel border that is
+    already field-coloured, i.e. invisible once composited.
+    """
+    span = MARK_G - FIELD_G
+    return [min(1.0, max(0.0, (row[i * 4 + 1] - FIELD_G) / span))
+            for row in rows for i in range(width)]
+
+
+def smooth(field, width, height):
+    """One 3×3 binomial pass over the field.
+
+    The source's edges are exactly one pixel of anti-aliasing; blown up
+    3.4× they would show their stairs. Widening the edge to ~2px first
+    lets the supersampler render a soft ramp instead — the same look a
+    browser gives the 150px original.
+    """
+    kern = (1, 2, 1, 2, 4, 2, 1, 2, 1)
+    out = []
+    for y in range(height):
+        for x in range(width):
+            acc = tot = 0
+            for dy in (-1, 0, 1):
+                yy = 0 if y + dy < 0 else (height - 1 if y + dy > height - 1 else y + dy)
+                for dx in (-1, 0, 1):
+                    xx = 0 if x + dx < 0 else (width - 1 if x + dx > width - 1 else x + dx)
+                    k = kern[(dy + 1) * 3 + (dx + 1)]
+                    acc += field[yy * width + xx] * k
+                    tot += k
+            out.append(acc / tot)
+    return out
+
+
+def catmull(p0, p1, p2, p3, t):
+    return 0.5 * (2 * p1 + (-p0 + p2) * t
+                  + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t
+                  + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t)
+
+
+def sample(field, width, height, x, y):
+    """Catmull-Rom lookup on the field, clamped at the borders.
+
+    Catmull-Rom keeps the two-colour edges from turning into the flat,
+    soft saucers a bilinear upscale gives them; the result is clipped, so
+    its slight overshoot can only round an edge, never tint it.
+    """
+    x = min(max(x, 0.0), width - 1.0)
+    y = min(max(y, 0.0), height - 1.0)
+    xi, yi = int(x), int(y)
+    fx, fy = x - xi, y - yi
+
+    def at(i, j):
+        j = 0 if j < 0 else (height - 1 if j > height - 1 else j)
+        i = 0 if i < 0 else (width - 1 if i > width - 1 else i)
+        return field[j * width + i]
+
+    columns = [catmull(at(xi - 1, yi + k), at(xi, yi + k),
+                       at(xi + 1, yi + k), at(xi + 2, yi + k), fx)
+               for k in (-1, 0, 1, 2)]
+    return min(1.0, max(0.0, catmull(columns[0], columns[1], columns[2], columns[3], fy)))
+
+
+def rounded_square(x, y, size, radius):
+    """Signed distance to a rounded square — negative inside."""
+    qx = abs(x - size / 2) - (size / 2 - radius)
+    qy = abs(y - size / 2) - (size / 2 - radius)
+    return math.hypot(max(qx, 0.0), max(qy, 0.0)) + min(max(qx, qy), 0.0) - radius
+
+
+def render(field, width, height, size, radius_frac=0.0, ink_scale=1.0):
+    """Draw the mark at `size`, supersampled — 3×3 for the launcher sizes,
+    4×4 for the small ones, where a single edge pixel is whole percent."""
+    step = 1.0 / (4 if size <= 64 else 3)
+    radius = radius_frac * size
+    pixels = bytearray()
+    for y in range(size):
+        for x in range(size):
+            light = 0.0
+            alpha = 0.0
+            for sy in range(int(1 / step)):
+                for sx in range(int(1 / step)):
+                    px = x + (sx + 0.5) * step
+                    py = y + (sy + 0.5) * step
+                    # the mask belongs to the icon, the mark to the artwork:
+                    # the same rounded square the app draws in CSS
+                    # (`rounded-[32.5%]`), and the mark centred inside it
+                    mask = 1.0 if radius_frac == 0 else min(
+                        1.0, max(0.0, 0.5 - rounded_square(px, py, size, radius)))
+                    u = ((px / size) - 0.5) / ink_scale + 0.5
+                    v = ((py / size) - 0.5) / ink_scale + 0.5
+                    light += sample(field, width, height, u * width - 0.5, v * height - 0.5) * mask
+                    alpha += mask
+            n = (int(1 / step)) ** 2
+            light /= n
+            alpha /= n
+            pixels += bytes(round(FIELD[c] + (MARK[c] - FIELD[c]) * light) for c in range(3))
+            pixels.append(round(255 * alpha))
+    return bytes(pixels)
+
+
+# ------------------------------------------------------------------ #
+
+JOBS = [
+    # name,                  size, radius (fraction of the side), art scale
+    ("favicon-32.png",         32, 13 / 40, 1.0),
+    ("apple-touch-icon.png",  180, 0.0,     1.0),   # iOS masks it itself
+    ("icon-192.png",          192, 13 / 40, 1.0),
+    ("icon-512.png",          512, 13 / 40, 1.0),
+    # Android paints a maskable icon full-bleed and crops it to whatever
+    # shape the launcher likes; the cat already sits well inside the safe
+    # zone of the source artwork, so it needs no extra inset
+    ("icon-maskable-512.png", 512, 0.0,     1.0),
 ]
-for name, size, radius, scale, waves in jobs:
-    data = png(size, render(size, radius, scale, waves))
-    (out / name).write_bytes(data)
-    print(f"{name:28} {size}x{size}  {len(data) / 1024:6.2f} KB")
+
+width, height, rows = decode(SOURCE)
+field = smooth(coverage(rows, width, height), width, height)
+print(f"source  {SOURCE.relative_to(ROOT)}  {width}×{height}")
+for name, size, radius, ink_scale in JOBS:
+    data = encode(size, render(field, width, height, size, radius, ink_scale))
+    (OUT / name).write_bytes(data)
+    print(f"  → public/{name:24} {size}×{size}  {len(data) / 1024:6.2f} KB")

@@ -178,7 +178,7 @@ export function AccountDoor() {
               {/* the brand — this panel is the app's front door, wherever it
                   is standing in the room */}
               <div className="flex flex-col items-center gap-2.5">
-                <span className="rounded-[18px] shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+                <span className="rounded-[32.5%] shadow-card ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
                   <Logo size={46} />
                 </span>
                 <span className="font-display text-[20px] font-extrabold tracking-[-0.026em] text-ink">
