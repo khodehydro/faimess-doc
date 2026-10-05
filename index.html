@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#eaeaec" />
+    <!-- the browser's own chrome (Android Chrome's address bar, the task
+         switcher) wears the brand purple, not the grey canvas. The same hex
+         is `--color-primary` in src/index.css; PreferencesContext re-reads
+         that token when the appearance flips, so dark mode gets the dark
+         theme's purple instead of this one. -->
+    <meta name="theme-color" content="#8267f0" />
     <meta name="description" content="FAIMESS — a warm, soft-minimal studio dashboard." />
     <title>FAIMESS</title>
   </head>

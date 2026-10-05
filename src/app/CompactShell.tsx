@@ -58,15 +58,24 @@ export function CompactShell() {
           themselves were pushed off by the same amount. */}
       <div
         dir="ltr"
-        className="relative mx-auto grid w-full max-w-[720px] shrink-0 grid-cols-[1fr_auto_1fr] items-center"
+        /* `z-40` keeps this row (and the bell/profile popovers inside it)
+           above the search capsule, which sits one layer below it */
+        className="relative z-40 mx-auto grid w-full max-w-[720px] shrink-0 grid-cols-[1fr_auto_1fr] items-center"
       >
         <AccountCard part="notification" className="relative z-20 justify-self-start" />
         <BrandCard compact />
         <AccountCard part="profile" className="relative z-20 justify-self-end" />
       </div>
 
-      {/* search — its own full-width capsule, under the top row */}
-      <AccountCard part="search" className="mx-auto w-full max-w-[720px]" />
+      {/* search — its own full-width capsule, under the top row.
+          `relative z-30` is what puts its panel of results in a layer above
+          everything below it: the story rail and the content card are glass
+          surfaces, and `backdrop-blur` gives each of them its own stacking
+          context. They come later in the DOM with `z-index: auto`, so they
+          painted over the panel — a `z-40` *inside* the search capsule can
+          never beat a sibling stacking context, because a z-index does not
+          escape its own context. The capsule's context has to win instead. */}
+      <AccountCard part="search" className="relative z-30 mx-auto w-full max-w-[720px]" />
 
       {/* the artists you follow — a story rail of their own, between the
           search field and the banner. Home is where the banner is, so the

@@ -105,6 +105,20 @@ export function PreferencesProvider({
     root.dir = dir;
   }, [theme, lang, dir]);
 
+  /* the browser's own chrome follows the brand: `index.html` declares the
+     light theme's purple, and this re-reads the token after `data-theme`
+     lands — so the address bar turns purple with the dark theme's purple in
+     dark mode. Read, not duplicated: `--color-primary` stays the one place
+     the brand colour is written. */
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) return;
+    const brand = getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-primary")
+      .trim();
+    if (brand) meta.setAttribute("content", brand);
+  }, [theme]);
+
   const setLang = useCallback((next: Lang) => {
     setLangState(next);
     try {

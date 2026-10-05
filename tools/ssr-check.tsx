@@ -164,6 +164,8 @@ for (const title of ["Artists you follow", "Newest songs", "Trending now", "Late
 /* ------------------------------- density (v21) ------------------------ */
 
 const cssSrc = readFileSync("src/index.css", "utf8");
+/* the static shell: the meta the browser reads before any React runs */
+const indexHtml = readFileSync("index.html", "utf8");
 const feedSrc = readFileSync("src/sections/feed/index.tsx", "utf8");
 const shelfSrc = readFileSync("src/sections/feed/Shelf.tsx", "utf8");
 check(
@@ -602,6 +604,37 @@ check(
     /\.anim-bell\s*\{[^}]*transform-box:\s*fill-box[^}]*transform-origin:\s*top center/.test(cssSrc) &&
     cssSrc.includes("@keyframes fi-bell-shake"),
   "without `fill-box` the rotate() pivot is the svg's top-left corner",
+);
+check(
+  "the search panel sits in a layer above the glass cards under it",
+  compactSrc.includes('className="relative z-30 mx-auto w-full max-w-[720px]"') &&
+    compactSrc.includes("relative z-40 mx-auto grid w-full max-w-[720px]") &&
+    accountSrc.includes("absolute top-[calc(100%+12px)] z-40") &&
+    /* the rail and the content card are glass surfaces: `backdrop-blur` gives
+       each its own stacking context, and both come later in the DOM, so a
+       `z-40` *inside* the search capsule could never beat them */
+    readFileSync("src/sections/ArtistStories.tsx", "utf8").includes("backdrop-blur-md") &&
+    readFileSync("src/ui/primitives.tsx", "utf8").includes("backdrop-blur-md"),
+  "a z-index cannot escape its own stacking context — the capsule's has to win",
+);
+check(
+  "the browser's own chrome wears the brand colour",
+  (() => {
+    /* one source for the hex: what `index.html` declares must be the same
+       purple as the `--color-primary` token, and the provider must re-read
+       that token when the appearance changes */
+    const brand = (cssSrc.match(/--color-primary:\s*(#[0-9a-fA-F]{6})/) ?? [])[1];
+    const declared = (indexHtml.match(/<meta name="theme-color" content="(#[0-9a-fA-F]{6})"/) ?? [])[1];
+    const prefs = readFileSync("src/app/PreferencesContext.tsx", "utf8");
+    return (
+      !!brand &&
+      declared?.toLowerCase() === brand.toLowerCase() &&
+      prefs.includes('meta[name="theme-color"]') &&
+      prefs.includes('"--color-primary"') &&
+      prefs.includes('meta.setAttribute("content", brand)')
+    );
+  })(),
+  "Android Chrome's address bar takes `--color-primary`, light and dark",
 );
 check(
   "search is its own full-width capsule on the compact shell",
