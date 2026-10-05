@@ -19,6 +19,7 @@ import { me } from "../data/account";
 import { cn } from "../lib/cn";
 import { forwardIcon } from "../lib/rtl";
 import { EASE, spring } from "../lib/motion";
+import { usePwaInstall } from "../lib/pwa";
 
 /* ------------------------------------------------------------------ *
  *  Card 3 — search + alerts + profile.
@@ -439,9 +440,26 @@ export function ProfileMenuContent({
   const { notify } = useApp();
   const { signedIn, openAccount } = useAuth();
   const { points, submissions } = useContributions();
+  const { canInstall, isInstalled, isIOS, install } = usePwaInstall();
   const pendingSheets = submissions.filter(
     (s) => s.status === "pending",
   ).length;
+
+  const handlePwa = async () => {
+    onClose();
+    if (isInstalled) {
+      notify(t("pwa.installed"), "primary");
+      return;
+    }
+    if (canInstall) {
+      const ok = await install();
+      if (ok) notify(t("pwa.installedToast"), "mint");
+    } else if (isIOS) {
+      notify(t("pwa.iosGuide"), "primary");
+    } else {
+      notify(t("pwa.installPrompt"), "primary");
+    }
+  };
 
   return (
     <div className="w-[252px] rounded-panel border border-line bg-surface p-2.5 shadow-float">
@@ -570,6 +588,16 @@ export function ProfileMenuContent({
         <p className="px-0.5 pt-1.5 text-[12px] leading-relaxed text-ink-faint">
           {lang === "fa" ? t("pref.persianNote") : t("pref.note")}
         </p>
+
+        {!isInstalled && (
+          <button
+            onClick={handlePwa}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-[10px] bg-primary/10 px-2.5 py-1.5 text-[12px] font-bold text-primary-deep transition-colors hover:bg-primary/20"
+          >
+            <Icon name="bolt" size={13} strokeWidth={2.2} />
+            <span>{t("pwa.installButton")}</span>
+          </button>
+        )}
       </div>
 
       {/* everything below belongs to somebody: your contributions, your

@@ -655,6 +655,26 @@ export const STRINGS: Record<string, Entry> = {
     ko: "웹 플레이어의 이중 언어 가사를 곡마다 동기화해 내려받을 수 있어요.",
   },
 
+  /* ------------------------------ PWA -------------------------------- */
+  "pwa.installButton": { en: "Install Web App (PWA)", fa: "نصب وب‌اپلیکیشن (PWA)", ko: "웹 앱 설치 (PWA)" },
+  "pwa.installed": { en: "App installed", fa: "اپلیکیشن نصب شده است", ko: "앱 설치됨" },
+  "pwa.installPrompt": {
+    en: "Install FAIMESS on your phone or desktop for an app-like streaming experience.",
+    fa: "FAIMESS را برای تجربهٔ روان و بدون نیاز به استور روی گوشی یا رایانه نصب کنید.",
+    ko: "스토어 없이 기기에 FAIMESS를 설치하여 매끄러운 스트리밍을 경험하세요.",
+  },
+  "pwa.iosGuide": {
+    en: "In Safari, tap Share and select 'Add to Home Screen'.",
+    fa: "در سافاری، دکمه Share (اشتراک) را بزنید و گزینه «Add to Home Screen» را انتخاب کنید.",
+    ko: "Safari에서 공유 버튼을 누르고 '홈 화면에 추가'를 선택하세요.",
+  },
+  "pwa.installedToast": {
+    en: "FAIMESS installed successfully!",
+    fa: "وب‌اپلیکیشن FAIMESS با موفقیت نصب شد!",
+    ko: "FAIMESS 웹 앱이 성공적으로 설치되었습니다!",
+  },
+  "pwa.badge": { en: "PWA Web App", fa: "وب‌اپلیکیشن PWA", ko: "PWA 웹 앱" },
+
   /* ------------------------------ toasts ------------------------------ */
   "toast.opened": { en: "Opened {name}", fa: "{name} باز شد", ko: "{name} 열었어요" },
   "toast.opening": { en: "Opening “{name}”", fa: "باز کردن «{name}»", ko: "“{name}” 여는 중" },

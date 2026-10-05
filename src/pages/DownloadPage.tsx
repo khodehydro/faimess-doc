@@ -5,6 +5,7 @@ import { useApp } from "../app/AppContext";
 import { spring, staggerParent, popChild } from "../lib/motion";
 import { forwardIcon } from "../lib/rtl";
 import { usePreferences } from "../app/PreferencesContext";
+import { usePwaInstall } from "../lib/pwa";
 
 /* ------------------------------------------------------------------ *
  *  Get the app (#/download) — where the player's download button sends
@@ -38,6 +39,22 @@ const FEATURES = [
 export function DownloadPage() {
   const { notify, navigate } = useApp();
   const { t, dir } = usePreferences();
+  const { canInstall, isInstalled, isIOS, install } = usePwaInstall();
+
+  const handlePwaInstall = async () => {
+    if (isInstalled) {
+      notify(t("pwa.installed"), "primary");
+      return;
+    }
+    if (canInstall) {
+      const ok = await install();
+      if (ok) notify(t("pwa.installedToast"), "mint");
+    } else if (isIOS) {
+      notify(t("pwa.iosGuide"), "primary");
+    } else {
+      notify(t("pwa.installPrompt"), "primary");
+    }
+  };
 
   return (
     /* content only: the Shell owns the card and its scrollbar */
@@ -72,6 +89,17 @@ export function DownloadPage() {
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-2.5 lg:mt-5 lg:gap-3">
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={spring}
+              onClick={handlePwaInstall}
+              className="flex items-center gap-2 rounded-[13px] bg-primary px-3.5 py-2.5 text-[12.5px] font-bold text-white shadow-primary transition-colors hover:bg-primary-deep lg:rounded-[14px] lg:px-4 lg:py-3 lg:text-[13.5px]"
+            >
+              <Icon name={isInstalled ? "check" : "bolt"} size={16} strokeWidth={2.2} />
+              <span>{isInstalled ? t("pwa.installed") : t("pwa.installButton")}</span>
+            </motion.button>
+
             <motion.button
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
