@@ -428,6 +428,26 @@ export const STRINGS: Record<string, Entry> = {
   "comments.close": { en: "Close comments", fa: "بستن کامنت‌ها", ko: "댓글 닫기" },
   "comments.copied": { en: "Link copied", fa: "لینک کپی شد", ko: "링크를 복사했어요" },
   "comments.deletedToast": { en: "Comment deleted", fa: "کامنت حذف شد", ko: "댓글을 삭제했어요" },
+  "comments.deletedWithRepliesToast": {
+    en: "Comment and all replies deleted",
+    fa: "کامنت و تمامی پاسخ‌های آن حذف شدند",
+    ko: "댓글과 모든 답글이 삭제되었습니다",
+  },
+  "comments.deleteConfirmTitle": {
+    en: "Delete comment and all replies?",
+    fa: "حذف کامنت و تمامی پاسخ‌ها؟",
+    ko: "댓글과 모든 답글을 삭제하시겠어요?",
+  },
+  "comments.deleteConfirmDesc": {
+    en: "This comment has {n} replies. Deleting it will permanently remove the entire thread.",
+    fa: "این کامنت {n} پاسخ دارد. با حذف آن، تمامی پاسخ‌های این گفتگو نیز به‌طور کامل حذف خواهند شد.",
+    ko: "이 댓글에 {n}개의 답글이 있습니다. 삭제 시 모든 답글도 함께 영구 삭제됩니다.",
+  },
+  "comments.deleteAsAdmin": {
+    en: "Delete as Admin",
+    fa: "حذف توسط مدیر",
+    ko: "관리자 권한으로 삭제",
+  },
   "comments.reportWithdrawn": { en: "Report withdrawn", fa: "گزارش پس گرفته شد", ko: "신고를 취소했어요" },
   "comments.reportedToast": { en: "Reported to the mods", fa: "برای مدیران گزارش شد", ko: "관리자에게 신고했어요" },
   "comments.postedToast": {

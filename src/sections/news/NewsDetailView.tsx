@@ -9,6 +9,7 @@ import { Avatar } from "../../ui/Avatar";
 import { Icon } from "../../ui/Icon";
 import { PillButton } from "../../ui/primitives";
 import { Modal } from "../../ui/Modal";
+import { ConfirmDialog } from "../../ui/ConfirmDialog";
 import { REPORT_REASONS } from "../../data/comments";
 import { backIcon } from "../../lib/rtl";
 import { cn } from "../../lib/cn";
@@ -69,10 +70,32 @@ function addReplyToTree(
   });
 }
 
+// Find comment by ID anywhere in the tree
+function findCommentInTree(list: NewsComment[], targetId: string): NewsComment | null {
+  for (const c of list) {
+    if (c.id === targetId) return c;
+    if (c.replies && c.replies.length > 0) {
+      const found = findCommentInTree(c.replies, targetId);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+// Recursively delete comment and all its replies from the tree
+function deleteCommentFromTree(list: NewsComment[], targetId: string): NewsComment[] {
+  return list
+    .filter((c) => c.id !== targetId)
+    .map((c) => ({
+      ...c,
+      replies: c.replies && c.replies.length > 0 ? deleteCommentFromTree(c.replies, targetId) : [],
+    }));
+}
+
 export function NewsDetailView({ newsId }: { newsId: string }) {
   const { t, dir, dataLabel, text, locale } = usePreferences();
   const { closeNews, notify } = useApp();
-  const { signedIn, openAccount } = useAuth();
+  const { signedIn, openAccount, isAdmin } = useAuth();
 
   const item = newsItems.find((n) => n.id === newsId) ?? newsItems[0];
 
@@ -89,7 +112,27 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
   const [reportTarget, setReportTarget] = useState<NewsComment | null>(null);
   const [selectedReason, setSelectedReason] = useState<string>("spam");
 
+  // Delete confirm state for comments with replies
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; replyCount: number } | null>(null);
+
   const totalComments = useMemo(() => countAllComments(comments), [comments]);
+
+  const handleRequestDeleteComment = (c: NewsComment) => {
+    const replyCount = c.replies ? countAllComments(c.replies) : 0;
+    if (replyCount > 0) {
+      setDeleteTarget({ id: c.id, replyCount });
+    } else {
+      setComments((prev) => deleteCommentFromTree(prev, c.id));
+      notify(t("comments.deletedToast"), "teal");
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteTarget) return;
+    setComments((prev) => deleteCommentFromTree(prev, deleteTarget.id));
+    setDeleteTarget(null);
+    notify(t("comments.deletedWithRepliesToast"), "teal");
+  };
 
   const handleToggleLike = () => {
     if (liked) {
@@ -373,6 +416,7 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
                 comment={comment}
                 depth={0}
                 locale={locale}
+                isAdmin={isAdmin}
                 replyTarget={replyTarget}
                 replyInput={replyInput}
                 onReplyInputChange={setReplyInput}
@@ -388,6 +432,7 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
                 onLikeComment={handleToggleCommentLike}
                 onReportComment={(c) => setReportTarget(c)}
                 onUndoReport={handleUndoReport}
+                onDeleteComment={handleRequestDeleteComment}
               />
             ))}
           </AnimatePresence>
@@ -460,6 +505,21 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
           </div>
         </Modal>
       )}
+
+      {/* Delete Confirmation Modal for comments with replies */}
+      {deleteTarget && (
+        <ConfirmDialog
+          open={true}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleConfirmDelete}
+          title={t("comments.deleteConfirmTitle")}
+          body={t("comments.deleteConfirmDesc", { n: deleteTarget.replyCount })}
+          confirmKey="comments.delete"
+          cancelKey="comments.cancel"
+          icon="close"
+          tone="flame"
+        />
+      )}
     </motion.article>
   );
 }
@@ -471,6 +531,7 @@ function CommentCard({
   comment,
   depth = 0,
   locale,
+  isAdmin,
   replyTarget,
   replyInput,
   onReplyInputChange,
@@ -480,10 +541,12 @@ function CommentCard({
   onLikeComment,
   onReportComment,
   onUndoReport,
+  onDeleteComment,
 }: {
   comment: NewsComment;
   depth: number;
   locale: string;
+  isAdmin: boolean;
   replyTarget: { id: string; handle: string; author: string } | null;
   replyInput: string;
   onReplyInputChange: (v: string) => void;
@@ -493,9 +556,11 @@ function CommentCard({
   onLikeComment: (id: string) => void;
   onReportComment: (c: NewsComment) => void;
   onUndoReport: (id: string) => void;
+  onDeleteComment: (c: NewsComment) => void;
 }) {
   const { t, dataLabel } = usePreferences();
   const isReplyingThis = replyTarget?.id === comment.id;
+  const canDelete = isAdmin || comment.author === me.name || comment.handle === me.handle;
 
   if (comment.reported) {
     return (
@@ -503,12 +568,22 @@ function CommentCard({
         <span>
           {t("comments.hidden")}: <strong className="font-bold text-ink">{comment.reportReason}</strong>
         </span>
-        <button
-          onClick={() => onUndoReport(comment.id)}
-          className="font-bold text-primary-deep hover:underline"
-        >
-          {t("comments.undo")}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onUndoReport(comment.id)}
+            className="font-bold text-primary-deep hover:underline"
+          >
+            {t("comments.undo")}
+          </button>
+          {canDelete && (
+            <button
+              onClick={() => onDeleteComment(comment)}
+              className="ms-2 font-bold text-flame transition-colors hover:underline"
+            >
+              {t("comments.delete")}
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -535,7 +610,7 @@ function CommentCard({
       {/* Comment text */}
       <p className="mt-2 text-[13px] leading-relaxed text-ink-body">{comment.text}</p>
 
-      {/* Action buttons (Like, Reply, Report) */}
+      {/* Action buttons (Like, Reply, Report, Delete) */}
       <div className="mt-2.5 flex items-center gap-3 text-[12px] text-ink-faint">
         <button
           onClick={() => onLikeComment(comment.id)}
@@ -555,6 +630,17 @@ function CommentCard({
           <Icon name="message" size={12} strokeWidth={2} />
           <span>{t("comments.reply")}</span>
         </button>
+
+        {canDelete && (
+          <button
+            onClick={() => onDeleteComment(comment)}
+            className="flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-ink-faint transition-colors hover:text-flame"
+            title={t(isAdmin ? "comments.deleteAsAdmin" : "comments.delete")}
+          >
+            <Icon name="close" size={12} strokeWidth={2.2} />
+            <span>{t("comments.delete")}</span>
+          </button>
+        )}
 
         <button
           onClick={() => onReportComment(comment)}
@@ -623,6 +709,7 @@ function CommentCard({
               comment={reply}
               depth={depth + 1}
               locale={locale}
+              isAdmin={isAdmin}
               replyTarget={replyTarget}
               replyInput={replyInput}
               onReplyInputChange={onReplyInputChange}
@@ -632,6 +719,7 @@ function CommentCard({
               onLikeComment={onLikeComment}
               onReportComment={onReportComment}
               onUndoReport={onUndoReport}
+              onDeleteComment={onDeleteComment}
             />
           ))}
         </div>
