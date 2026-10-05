@@ -12,8 +12,22 @@ interface BeforeInstallPromptEvent extends Event {
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
 const promptListeners = new Set<(canInstall: boolean) => void>();
 
+// Attach listeners immediately when the module is imported to never miss early events
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e as BeforeInstallPromptEvent;
+    promptListeners.forEach((fn) => fn(true));
+  });
+
+  window.addEventListener("appinstalled", () => {
+    deferredPrompt = null;
+    promptListeners.forEach((fn) => fn(false));
+  });
+}
+
 /**
- * Registers the Service Worker and sets up PWA install event listeners.
+ * Registers the Service Worker.
  */
 export function registerPwa() {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
@@ -27,7 +41,6 @@ export function registerPwa() {
           if (worker) {
             worker.onstatechange = () => {
               if (worker.state === "installed" && navigator.serviceWorker.controller) {
-                // New version available
                 console.info("PWA: New version available");
               }
             };
@@ -37,17 +50,6 @@ export function registerPwa() {
       .catch((err) => {
         console.warn("PWA: Service Worker registration error:", err);
       });
-  });
-
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e as BeforeInstallPromptEvent;
-    promptListeners.forEach((fn) => fn(true));
-  });
-
-  window.addEventListener("appinstalled", () => {
-    deferredPrompt = null;
-    promptListeners.forEach((fn) => fn(false));
   });
 }
 
@@ -70,6 +72,16 @@ export function usePwaInstall() {
     if (typeof navigator === "undefined" || !navigator.userAgent) return false;
     const ua = navigator.userAgent.toLowerCase();
     return /iphone|ipad|ipod/.test(ua);
+  });
+
+  const [isAndroid, setIsAndroid] = useState<boolean>(() => {
+    if (typeof navigator === "undefined" || !navigator.userAgent) return false;
+    return /android/i.test(navigator.userAgent);
+  });
+
+  const [isSecure, setIsSecure] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return window.isSecureContext ?? true;
   });
 
   useEffect(() => {
@@ -109,5 +121,5 @@ export function usePwaInstall() {
     return false;
   };
 
-  return { canInstall, isInstalled, isIOS, install };
+  return { canInstall, isInstalled, isIOS, isAndroid, isSecure, install };
 }

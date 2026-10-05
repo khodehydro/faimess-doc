@@ -39,7 +39,7 @@ const FEATURES = [
 export function DownloadPage() {
   const { notify, navigate } = useApp();
   const { t, dir } = usePreferences();
-  const { canInstall, isInstalled, isIOS, install } = usePwaInstall();
+  const { canInstall, isInstalled, isIOS, isAndroid, isSecure, install } = usePwaInstall();
 
   const handlePwaInstall = async () => {
     if (isInstalled) {
@@ -51,6 +51,12 @@ export function DownloadPage() {
       if (ok) notify(t("pwa.installedToast"), "mint");
     } else if (isIOS) {
       notify(t("pwa.iosGuide"), "primary");
+    } else if (isAndroid) {
+      if (!isSecure) {
+        notify(t("pwa.insecureNotice"), "primary");
+      } else {
+        notify(t("pwa.androidGuide"), "primary");
+      }
     } else {
       notify(t("pwa.installPrompt"), "primary");
     }

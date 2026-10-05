@@ -440,7 +440,7 @@ export function ProfileMenuContent({
   const { notify } = useApp();
   const { signedIn, openAccount } = useAuth();
   const { points, submissions } = useContributions();
-  const { canInstall, isInstalled, isIOS, install } = usePwaInstall();
+  const { canInstall, isInstalled, isIOS, isAndroid, isSecure, install } = usePwaInstall();
   const pendingSheets = submissions.filter(
     (s) => s.status === "pending",
   ).length;
@@ -456,6 +456,12 @@ export function ProfileMenuContent({
       if (ok) notify(t("pwa.installedToast"), "mint");
     } else if (isIOS) {
       notify(t("pwa.iosGuide"), "primary");
+    } else if (isAndroid) {
+      if (!isSecure) {
+        notify(t("pwa.insecureNotice"), "primary");
+      } else {
+        notify(t("pwa.androidGuide"), "primary");
+      }
     } else {
       notify(t("pwa.installPrompt"), "primary");
     }

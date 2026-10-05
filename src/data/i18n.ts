@@ -673,6 +673,16 @@ export const STRINGS: Record<string, Entry> = {
     fa: "وب‌اپلیکیشن FAIMESS با موفقیت نصب شد!",
     ko: "FAIMESS 웹 앱이 성공적으로 설치되었습니다!",
   },
+  "pwa.androidGuide": {
+    en: "Tap the browser menu (⋮) and select 'Install app' or 'Add to Home screen'.",
+    fa: "منوی سه‌نقطه (⋮) بالای مرورگر را بزنید و «نصب برنامه» یا «افزودن به صفحه اصلی» را انتخاب کنید.",
+    ko: "브라우저 메뉴(⋮)를 누르고 '앱 설치' 또는 '홈 화면에 추가'를 선택하세요.",
+  },
+  "pwa.insecureNotice": {
+    en: "PWA on mobile requires HTTPS or localhost port forwarding via USB.",
+    fa: "نصب وب‌اپلیکیشن در موبایل نیازمند HTTPS یا فوروارد پورت localhost است.",
+    ko: "모바일에서 웹 앱을 설치하려면 HTTPS 또는 localhost 포트 포워딩이 필요합니다.",
+  },
   "pwa.badge": { en: "PWA Web App", fa: "وب‌اپلیکیشن PWA", ko: "PWA 웹 앱" },
 
   /* ------------------------------ toasts ------------------------------ */

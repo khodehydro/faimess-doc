@@ -20,10 +20,18 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_ASSETS))
+      .then((cache) =>
+        Promise.all(
+          PRECACHE_ASSETS.map((asset) =>
+            cache.add(asset).catch((err) => {
+              console.warn('PWA: precache asset fallback warning:', asset, err);
+            })
+          )
+        )
+      )
       .then(() => self.skipWaiting())
       .catch((err) => {
-        console.warn('PWA: precache partial warning:', err);
+        console.warn('PWA: precache install warning:', err);
       })
   );
 });
