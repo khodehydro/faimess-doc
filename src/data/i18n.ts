@@ -280,6 +280,7 @@ export const STRINGS: Record<string, Entry> = {
   "player.startWith": { en: "Start with", fa: "شروع کن با", ko: "이 곡으로 시작" },
   "player.nothingPlaying": { en: "nothing playing yet", fa: "هنوز چیزی پخش نمی‌شود", ko: "아직 재생 중인 곡이 없어요" },
   "player.hey": { en: "Hey {name},", fa: "سلام {name}،", ko: "{name}님," },
+  "player.heyGuest": { en: "Hey,", fa: "سلام،", ko: "안녕하세요," },
   "player.pickOne": {
     en: "Pick a song and the player fills up — cover, seek bar and the bilingual lyrics.",
     fa: "یک آهنگ انتخاب کن تا پلیر پر شود — کاور، نوار پخش و لیریک دوزبانه.",
@@ -861,9 +862,57 @@ export const STRINGS: Record<string, Entry> = {
    *  The door, and the one account this demo knows.                     */
   "auth.title": { en: "Sign in", fa: "ورود", ko: "로그인" },
   "auth.subtitle": {
-    en: "Sign in to reach your feed, your playlists and the player.",
-    fa: "وارد شو تا به فید، پلی‌لیست‌ها و پلیر خودت برسی.",
-    ko: "로그인하면 내 피드와 플레이리스트, 플레이어로 들어가요.",
+    en: "Your account is only needed for the things that belong to you: a comment, a follow, a playlist of your own.",
+    fa: "حساب فقط برای کارهایی لازم است که مال خودت هستند: یک کامنت، یک فالو، پلی‌لیست خودت.",
+    ko: "계정은 내 것인 활동에만 필요해요: 댓글, 팔로우, 나만의 플레이리스트.",
+  },
+  "auth.tabIn": { en: "Sign in", fa: "ورود", ko: "로그인" },
+  "auth.tabUp": { en: "Create account", fa: "ایجاد حساب", ko: "계정 만들기" },
+  "auth.upTitle": { en: "Create an account", fa: "ساخت حساب کاربری", ko: "계정 만들기" },
+  "auth.upSubtitle": {
+    en: "A name and a password, and the comment box, the follow button and your own playlists open up.",
+    fa: "یک نام و یک گذرواژه — و کادر کامنت، دکمهٔ فالو و پلی‌لیست‌های خودت باز می‌شوند.",
+    ko: "이름과 비밀번호만 있으면 댓글창, 팔로우 버튼, 내 플레이리스트가 열려요.",
+  },
+  "auth.newUser": { en: "Choose a username", fa: "یک نام کاربری انتخاب کن", ko: "사용자 이름 정하기" },
+  "auth.newPassword": { en: "Choose a password", fa: "یک گذرواژه انتخاب کن", ko: "비밀번호 정하기" },
+  "auth.upRules": {
+    en: "At least {n} characters for the name and {m} for the password.",
+    fa: "دست‌کم {n} نویسه برای نام و {m} نویسه برای گذرواژه.",
+    ko: "이름은 {n}자, 비밀번호는 {m}자 이상이어야 해요.",
+  },
+  "auth.upSubmit": { en: "Create and sign in", fa: "ساخت حساب و ورود", ko: "만들고 로그인" },
+  "auth.upWorking": { en: "Making it…", fa: "در حال ساخت…", ko: "만드는 중…" },
+  "auth.upLocal": {
+    en: "No backend here: the account is written to this browser's local storage and never sent anywhere. It stays until you clear the site's data.",
+    fa: "بک‌اندی در کار نیست: حساب در حافظهٔ محلی همین مرورگر نوشته می‌شود و جایی فرستاده نمی‌شود. تا وقتی دادهٔ سایت را پاک نکنی می‌ماند.",
+    ko: "백엔드가 없어서 계정은 이 브라우저의 로컬 스토리지에만 저장돼요. 사이트 데이터를 지우기 전까지 유지됩니다.",
+  },
+  "auth.nameShort": {
+    en: "That name is too short.",
+    fa: "این نام کاربری کوتاه است.",
+    ko: "사용자 이름이 너무 짧아요.",
+  },
+  "auth.nameTaken": {
+    en: "That name is taken.",
+    fa: "این نام کاربری گرفته شده است.",
+    ko: "이미 사용 중인 이름이에요.",
+  },
+  "auth.nameTakenHint": {
+    en: "\"{demo}\" is the demo account — pick another name, or sign in with it.",
+    fa: "«{demo}» حساب دموست — نام دیگری انتخاب کن، یا با همان وارد شو.",
+    ko: "\"{demo}\"는 데모 계정이에요 — 다른 이름을 고르거나 그 계정으로 로그인하세요.",
+  },
+  "auth.passwordShort": {
+    en: "That password is too short.",
+    fa: "این گذرواژه کوتاه است.",
+    ko: "비밀번호가 너무 짧아요.",
+  },
+  "auth.gateTitle": { en: "An account is needed here", fa: "این‌جا حساب لازم است", ko: "여기서는 계정이 필요해요" },
+  "auth.resume": {
+    en: "Sign in and this goes through by itself — you do not have to start over.",
+    fa: "وارد شو و همین کار خودش انجام می‌شود — لازم نیست از اول شروع کنی.",
+    ko: "로그인하면 하던 일이 그대로 이어져요.",
   },
   "auth.user": { en: "Username", fa: "نام کاربری", ko: "사용자 이름" },
   "auth.password": { en: "Password", fa: "گذرواژه", ko: "비밀번호" },
@@ -901,7 +950,58 @@ export const STRINGS: Record<string, Entry> = {
   },
   "auth.role": { en: "Administrator · Demo build", fa: "مدیر · بیلد دمو", ko: "관리자 · 데모 빌드" },
 
+  /* ---------------------- what the door stands in front of -------------- *
+   *  One line per action that needs an account. The door prints the one
+   *  that fits, so nobody is asked to sign in "for no reason".          */
+  "gate.follow": {
+    en: "Follow an artist, and the news and the new releases reach you.",
+    fa: "برای فالو کردن آرتیست — تا خبر و انتشارهای تازه به دستت برسد.",
+    ko: "아티스트를 팔로우하려면 계정이 필요해요.",
+  },
+  "gate.unfollow": {
+    en: "Unfollow an artist.",
+    fa: "برای لغو فالو یک آرتیست.",
+    ko: "아티스트 팔로우를 취소하려면 계정이 필요해요.",
+  },
+  "gate.comment": {
+    en: "Write a comment on a track.",
+    fa: "برای نوشتن کامنت روی یک ترک.",
+    ko: "트랙에 댓글을 남기려면 계정이 필요해요.",
+  },
+  "gate.reply": {
+    en: "Reply to a comment.",
+    fa: "برای پاسخ دادن به یک کامنت.",
+    ko: "댓글에 답글을 달려면 계정이 필요해요.",
+  },
+  "gate.lyrics": {
+    en: "Send the lyrics of a track — the moderators review them, and points come back.",
+    fa: "برای فرستادن لیریک یک ترک — مدیران بررسی می‌کنند و امتیاز برمی‌گردد.",
+    ko: "가사의 번역을 보내려면 계정이 필요해요. 검수 후 포인트가 쌓여요.",
+  },
+  "gate.playlist": {
+    en: "Keep a playlist of your own.",
+    fa: "برای ساختن و نگه‌داشتن پلی‌لیست خودت.",
+    ko: "나만의 플레이리스트를 만들려면 계정이 필요해요.",
+  },
+  "gate.like": {
+    en: "Save a track to your liked songs.",
+    fa: "برای ذخیرهٔ یک ترک در آهنگ‌های پسندیده.",
+    ko: "좋아요한 곡에 저장하려면 계정이 필요해요.",
+  },
+  "gate.invite": {
+    en: "Answer a collaboration invite.",
+    fa: "برای پاسخ دادن به دعوت همکاری.",
+    ko: "협업 초대에 답하려면 계정이 필요해요.",
+  },
+
   /* signing out asks first — it is the one destructive thing in the menu */
+  "account.guest": { en: "Guest", fa: "مهمان", ko: "게스트" },
+  "account.guestBody": {
+    en: "You are reading the demo without an account. Everything is open — the account is only asked for when you comment, follow or keep a playlist.",
+    fa: "داری دمو را بدون حساب می‌بینی. همه‌چیز باز است — حساب فقط وقتی خواسته می‌شود که کامنت بگذاری، فالو کنی یا پلی‌لیست بسازی.",
+    ko: "계정 없이 데모를 보고 있어요. 댓글·팔로우·플레이리스트 때만 계정을 요청해요.",
+  },
+  "account.enter": { en: "Sign in / create account", fa: "ورود / ایجاد حساب", ko: "로그인 / 계정 만들기" },
   "account.signOutTitle": { en: "Sign out of FAIMESS?", fa: "از فیمس خارج شوی؟", ko: "FAIMESS에서 로그아웃할까요?" },
   "account.signOutBody": {
     en: "Your playlists and points stay on this device; the door locks behind you.",

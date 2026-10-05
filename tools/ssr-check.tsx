@@ -5,6 +5,8 @@
  *    npm run check:ssr
  * ------------------------------------------------------------------ */
 
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 import type { ReactElement } from "react";
 import { renderToString } from "react-dom/server";
 import { AppProvider } from "../src/app/AppContext";
@@ -36,7 +38,8 @@ import { PlayerSection } from "../src/sections/PlayerSection";
 import { ActiveUsers } from "../src/sections/feed/ActiveUsers";
 import { DownloadPage } from "../src/pages/DownloadPage";
 import { HomePage } from "../src/pages/HomePage";
-import { Gate, Shell } from "../src/app/App";
+import App, { Screen, Shell } from "../src/app/App";
+import { AccountDoor } from "../src/sections/AccountDoor";
 import type { Detail } from "../src/app/AppContext";
 import { ArtistsPage } from "../src/pages/ArtistsPage";
 import { AlbumsPage } from "../src/pages/AlbumsPage";
@@ -44,7 +47,7 @@ import { PlaylistsPage } from "../src/pages/PlaylistsPage";
 import { NewsPage } from "../src/pages/NewsPage";
 import { albums, artists, playlists } from "../src/data/library";
 import { banners } from "../src/data/banners";
-import { DEMO_ACCOUNT, checkCredential } from "../src/data/auth";
+import { DEMO_ACCOUNT, checkCredential, checkNewAccount } from "../src/data/auth";
 import {
   activeUsers,
   followedArtists,
@@ -119,8 +122,10 @@ const plain = (html: string) => html.replace(/<!--[\s\S]*?-->/g, "");
 type RenderOpts = {
   /** force the interface language instead of reading localStorage */
   lang?: Lang;
-  /** `null` renders the door; a name renders the signed-in app */
+  /** `null` browses as a guest; a name renders a signed-in app */
   user?: string | null;
+  /** open the account door on this reason (an i18n key) */
+  door?: string;
   /** force the appearance */
   theme?: Theme;
   /** load the player with this track — omit for the empty state */
@@ -140,7 +145,10 @@ const render = (Page: () => ReactElement, opts: RenderOpts = {}) =>
             <PreferencesProvider initialLang={opts.lang} initialTheme={opts.theme}>
               {/* `user: null` is a real value — the door — so only an
                   *absent* option falls back to a session */}
-              <AuthProvider initialUser={opts.user === undefined ? "admin" : opts.user}>
+              <AuthProvider
+                initialUser={opts.user === undefined ? "admin" : opts.user}
+                initialDoorReason={opts.door}
+              >
                 <PlaylistsProvider initial={opts.playlists}>
                   <Page />
                 </PlaylistsProvider>
@@ -594,41 +602,88 @@ check(
     collectionSrc.includes("lg:flex-none lg:overflow-visible"),
   "basis-full under 1024px, ms-auto above it",
 );
-/* ------------------------ the door (login / logout) -------------------- *
- *  The demo credential is admin/admin, and the dashboard is only mounted
- *  once there is a session — the gate is the difference between the two
- *  renders below, not a hidden div.                                    */
+/* ------------------- the account door (sign in / sign up) -------------- *
+ *  Nobody starts at a wall. The app is readable by anyone: the shelves,
+ *  the player, every page. An account is asked for at the door of an
+ *  action that needs one — a follow, a comment, lyrics, a playlist of
+ *  your own — and the door remembers the action and replays it when the
+ *  sign-in lands. The checks below split into: the app is open, the door
+ *  opens on demand with a reason, the rules are the rules, and every
+ *  action that needs an account goes through `requireAccount`.         */
 
-const door = render(Gate, { user: null });
-const inside = render(Gate, { user: "admin" });
+const guest = render(Screen, { user: null });
+const door = render(AccountDoor, { user: null, door: "gate.follow" });
+const inside = render(Screen, { user: "admin" });
+const guestMenu = render(ProfileMenu, { user: null });
+const memberMenu = render(ProfileMenu, { user: "admin" });
+
+/* the whole tree, providers and all, exactly as `main.tsx` mounts it —
+   the strongest form of "there is no wall at the front of this app":
+   nothing is passed in, so a guest is whatever localStorage says (nothing,
+   on a server), and the first screen is still the dashboard */
+const firstScreen = renderToString(<App />);
 check(
-  "with no session the app renders the door, not the dashboard",
-  plain(door).includes("Sign in") &&
-    plain(door).includes("Demo account") &&
-    /* the dashboard's own chrome must not be behind it */
-    !door.includes("feed-newest") &&
-    !door.includes("data-content-scroll") &&
-    /* and the door shows the menu in the room the room speaks */
-    plain(door).includes("Username") &&
-    plain(door).includes("Password"),
-  "the dashboard is not mounted behind the sign-in screen",
+  "the app opens on the dashboard, not on a sign-in wall",
+  /* the shelves are there for somebody with no account at all … */
+  firstScreen.includes("feed-newest") &&
+    firstScreen.includes("data-content-scroll") &&
+    plain(firstScreen).includes(STRINGS["feed.newSongs"].en) &&
+    /* … and the door is not even in the markup until it is asked for */
+    !plain(firstScreen).includes("Demo account") &&
+    !firstScreen.includes('aria-label="Sign in"') &&
+    /* the same render through the harness, for the rest of the checks */
+    guest.includes("feed-newest") &&
+    !plain(guest).includes("Demo account"),
+  "a guest reads the feed, the player and every page",
+);
+check(
+  "the door is a layer, not a replacement",
+  (() => {
+    const appSrc = readFileSync("src/app/App.tsx", "utf8");
+    const doorSrc = readFileSync("src/sections/AccountDoor.tsx", "utf8");
+    /* whitespace-insensitive: the shape of the tree matters, not its layout */
+    const flat = appSrc.replace(/\s+/g, " ");
+    return (
+      /* the dashboard and the door are siblings, both always mounted … */
+      flat.includes("<Screen />") &&
+      flat.includes("<AccountDoor />") &&
+      flat.includes("<ToastHost />") &&
+      /* … there is no `signedIn` branch around the app any more … */
+      !appSrc.includes("if (!signedIn)") &&
+      /* … and the door paints nothing while it is closed */
+      doorSrc.includes("{doorOpen && (") &&
+      doorSrc.includes("fixed inset-0 z-[80]")
+    );
+  })(),
+  "the app is one screen, the door is an overlay on it",
+);
+check(
+  "the door says why it opened, and that the action is waiting",
+  plain(door).includes("An account is needed here") &&
+    plain(door).includes("Follow an artist") &&
+    plain(door).includes("Sign in and this goes through by itself"),
+  "an interrupted action is named on the panel, not a bare sign-in form",
 );
 check(
   "the door reads in the reader's language",
   (() => {
-    const doorFa = render(Gate, { user: null, lang: "fa" });
-    const doorKo = render(Gate, { user: null, lang: "ko" });
+    const doorFa = render(AccountDoor, { user: null, door: "gate.follow", lang: "fa" });
+    const doorKo = render(AccountDoor, { user: null, door: "gate.follow", lang: "ko" });
     return (
       plain(doorFa).includes("ورود") &&
+      plain(doorFa).includes("ایجاد حساب") &&
       plain(doorFa).includes("نام کاربری") &&
       plain(doorFa).includes("گذرواژه") &&
       plain(doorFa).includes("حساب دمو") &&
+      /* the reason is translated too, not left in the key's language */
+      plain(doorFa).includes("فالو کردن آرتیست") &&
       doorFa.includes('dir="rtl"') &&
       plain(doorKo).includes("로그인") &&
+      plain(doorKo).includes("계정 만들기") &&
       plain(doorKo).includes("데모 계정")
     );
   })(),
-  "username, password, the demo hint and the footnote, in fa and ko",
+  "tabs, fields, the demo hint and the reason, in fa and ko",
 );
 check(
   "the demo credential on the screen is the one the check reads",
@@ -636,13 +691,14 @@ check(
     /* printing a password the code no longer accepts is worse than printing
        none — the hint and the rule read the same record */
     const authSrc = readFileSync("src/data/auth.ts", "utf8");
+    const doorSrc = readFileSync("src/sections/AccountDoor.tsx", "utf8");
     return (
       authSrc.includes('user: "admin"') &&
       authSrc.includes('password: "admin"') &&
       door.includes(DEMO_ACCOUNT.user) &&
       door.includes(DEMO_ACCOUNT.password) &&
-      readFileSync("src/sections/SignInPage.tsx", "utf8").includes("{demo.user} / {demo.password}") &&
-      readFileSync("src/sections/SignInPage.tsx", "utf8").includes("const demo = useMemo(() => DEMO_ACCOUNT, [])")
+      doorSrc.includes("{demo.user} / {demo.password}") &&
+      doorSrc.includes("const demo = useMemo(() => DEMO_ACCOUNT, [])")
     );
   })(),
   "one source for the demo account: data/auth.ts",
@@ -661,30 +717,138 @@ check(
   "admin/admin signs in; a wrong name and a wrong password are not the same answer",
 );
 check(
+  "an account made here is an account that signs in",
+  /* the accounts this browser created are part of the rule, and the demo
+     account cannot be shadowed by one of them */
+  checkCredential("sara", "1234", [{ user: "sara", password: "1234" }]) === "ok" &&
+    checkCredential("SARA", "1234", [{ user: "sara", password: "1234" }]) === "ok" &&
+    checkCredential("sara", "12345", [{ user: "sara", password: "1234" }]) === "bad-password" &&
+    checkCredential("nobody", "1234", [{ user: "sara", password: "1234" }]) === "unknown-user" &&
+    checkCredential("admin", "elsewhere", [{ user: "admin", password: "elsewhere" }]) === "bad-password",
+  "a created name signs back in; the demo name stays the demo name",
+);
+check(
+  "a new account is refused for the right reason",
+  checkNewAccount("ab", "1234", []) === "name-short" &&
+    checkNewAccount("sara", "123", []) === "password-short" &&
+    checkNewAccount("sara", "1234", []) === "ok" &&
+    /* the demo name is always taken, whatever this browser has stored */
+    checkNewAccount("admin", "1234", []) === "name-taken" &&
+    checkNewAccount(" ADMIN ", "1234", []) === "name-taken" &&
+    checkNewAccount("SARA", "1234", ["sara"]) === "name-taken",
+  "short name, short password, taken name — three different sentences",
+);
+check(
   "a session outlives a reload",
   readFileSync("src/app/AuthContext.tsx", "utf8").includes('const USER_KEY = "faimess.user"') &&
     readFileSync("src/app/AuthContext.tsx", "utf8").includes("window.localStorage.getItem(USER_KEY)") &&
-    readFileSync("src/app/AuthContext.tsx", "utf8").includes("window.localStorage.setItem(USER_KEY, signedIn)") &&
+    readFileSync("src/app/AuthContext.tsx", "utf8").includes("window.localStorage.setItem(USER_KEY, key)") &&
     readFileSync("src/app/AuthContext.tsx", "utf8").includes("window.localStorage.removeItem(USER_KEY)"),
   "kept in localStorage, cleared on the way out, no backend involved",
 );
 check(
-  "the gate mounts the dashboard only when somebody is in",
+  "accounts created here live in this browser, and say so",
   (() => {
-    const appSrc = readFileSync("src/app/App.tsx", "utf8");
-    /* whitespace-insensitive: the shape of the branch matters, not its layout */
-    const flat = appSrc.replace(/\s+/g, " ");
+    const src = readFileSync("src/app/AuthContext.tsx", "utf8");
+    const doorSrc = readFileSync("src/sections/AccountDoor.tsx", "utf8");
     return (
-      appSrc.includes("const { signedIn } = useAuth()") &&
-      flat.includes("if (!signedIn) { return <SignInPage ") &&
-      appSrc.includes("<AuthProvider>") &&
-      /* the toast host stays outside the gate: the welcome toast fires as
-         the door closes, and a toast must survive the swap */
-      appSrc.includes("<Gate />") &&
-      appSrc.includes("<ToastHost />")
+      src.includes('const ACCOUNTS_KEY = "faimess.accounts"') &&
+      src.includes("JSON.parse(raw)") &&
+      src.includes("JSON.stringify(accounts)") &&
+      /* and the panel tells the reader before they type a password */
+      doorSrc.includes('t("auth.upLocal")') &&
+      STRINGS["auth.upLocal"].en.includes("local storage"),
     );
   })(),
-  "no dashboard, no player, no shelves while nobody is signed in",
+  "a local file, named as one on the create-account tab",
+);
+check(
+  "the interrupted action is replayed, not lost",
+  (() => {
+    const src = readFileSync("src/app/AuthContext.tsx", "utf8");
+    /* the door keeps the action in a ref, and the one place a session
+       begins plays it back after closing the panel */
+    return (
+      src.includes("const pending = useRef<(() => void) | null>(null)") &&
+      src.includes("pending.current = run ?? null") &&
+      /pending\.current = null;[\s\S]{0,240}run\?\.\(\)/.test(src) &&
+      src.includes("requireAccount")
+    );
+  })(),
+  "sign in from an action and the action runs — no starting over",
+);
+check(
+  "every action that needs an account asks for one first",
+  (() => {
+    /* the door is only as good as the actions that call it: one line per
+       action that would otherwise write in somebody else's name */
+    const guarded: [string, string][] = [
+      ["src/sections/CollectionSection.tsx", "gate.follow"],
+      ["src/sections/CollectionSection.tsx", "gate.unfollow"],
+      ["src/sections/CollectionSection.tsx", "gate.playlist"],
+      ["src/sections/player/CommentComposer.tsx", "gate.comment"],
+      ["src/sections/player/CommentComposer.tsx", "gate.reply"],
+      ["src/sections/PlayerSection.tsx", "gate.lyrics"],
+      ["src/sections/PlayerSection.tsx", "gate.like"],
+      ["src/sections/PlayerSection.tsx", "gate.playlist"],
+      ["src/sections/BrowseDetailView.tsx", "gate.playlist"],
+      ["src/sections/MessagesSection.tsx", "gate.invite"],
+    ];
+    return guarded.every(([file, key]) => {
+      const src = readFileSync(file, "utf8");
+      return src.includes(`requireAccount("${key}"`) ||
+        src.includes(`requireAccount(following ? "gate.unfollow" : "gate.follow"`);
+    });
+  })(),
+  "follow, comment, reply, lyrics, like, playlist and invites all go through it",
+);
+check(
+  "the panel is the only thing that signs anybody in",
+  (() => {
+    /* nothing else may call `signIn`/`signUp`: an action that wants an
+       account asks the door to open, it does not collect a password itself */
+    const walk = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+        entry.isDirectory()
+          ? walk(join(dir, entry.name))
+          : /\.tsx?$/.test(entry.name)
+            ? [join(dir, entry.name)]
+            : [],
+      );
+    const callers = walk("src").filter((file) =>
+      /\bsign(In|Up)\(/.test(readFileSync(file, "utf8")),
+    );
+    return callers.length > 0 && callers.every((f) => /AuthContext|AccountDoor/.test(f));
+  })(),
+  "one form, one password field, one place a session begins",
+);
+check(
+  "the create-account tab is a tab, not a separate wall",
+  (() => {
+    const doorSrc = readFileSync("src/sections/AccountDoor.tsx", "utf8");
+    return (
+      doorSrc.includes('{ id: "in", key: "auth.tabIn" }') &&
+      doorSrc.includes('{ id: "up", key: "auth.tabUp" }') &&
+      doorSrc.includes('signUp(user, password)') &&
+      /* a guest can leave the panel without signing in — the app is
+         behind it, not gone */
+      doorSrc.includes("onClick={closeDoor}") &&
+      doorSrc.includes('event.key === "Escape"')
+    );
+  })(),
+  "sign in and create account live on one panel, and Escape closes it",
+);
+check(
+  "a guest is offered an account, not shown somebody else's",
+  /* the header control and the menu both tell the truth about who is looking */
+  !guestMenu.includes(me.name) &&
+    plain(guestMenu).includes("Guest") &&
+    plain(guestMenu).includes("Sign in / create account") &&
+    !plain(guestMenu).includes("Sign out") &&
+    /* …and signing in brings all of it back */
+    plain(memberMenu).includes(me.name) &&
+    plain(memberMenu).includes("Sign out"),
+  "no avatar, no points and no sign-out row for a guest",
 );
 check(
   "signing out asks first, and answers in the language of the menu",

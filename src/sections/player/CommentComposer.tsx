@@ -4,6 +4,7 @@ import { Avatar } from "../../ui/Avatar";
 import { Icon } from "../../ui/Icon";
 import { useT } from "../../app/PreferencesContext";
 import { useApp } from "../../app/AppContext";
+import { useAuth } from "../../app/AuthContext";
 import { useTrackComments } from "../../app/CommentsContext";
 import { me } from "../../data/account";
 import { spring } from "../../lib/motion";
@@ -88,16 +89,21 @@ export function CommentComposer({
 }) {
   const t = useT();
   const { notify } = useApp();
+  const { requireAccount } = useAuth();
   const comments = useTrackComments(trackId);
   const [text, setText] = useState("");
 
-  const send = () => {
+  const post = () => {
     if (!text.trim()) return;
     comments.addComment(text.trim());
     setText("");
     notify(t("comments.postedToast"), "primary");
     onPosted?.();
   };
+
+  /* a comment is written in somebody's name, so the box asks for the
+     account first — and the draft stays in the field until it is posted */
+  const send = () => requireAccount("gate.comment", post);
 
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
@@ -121,15 +127,18 @@ export function ReplyComposer({
 }) {
   const t = useT();
   const { notify } = useApp();
+  const { requireAccount } = useAuth();
   const comments = useTrackComments(trackId);
   const [text, setText] = useState("");
 
-  const send = () => {
+  const post = () => {
     if (!text.trim()) return;
     comments.addReply(parentId, text.trim());
     notify(t("comments.repliedToast", { handle }), "primary");
     onDone();
   };
+
+  const send = () => requireAccount("gate.reply", post);
 
   return (
     <div className="mt-2.5 flex items-center gap-2.5">

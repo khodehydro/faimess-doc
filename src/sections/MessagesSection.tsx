@@ -5,6 +5,7 @@ import { Avatar } from "../ui/Avatar";
 import { Thumb } from "../ui/Scenes";
 import { cannedReplies, conversations, type Conversation, type Message } from "../data/messages";
 import { useApp } from "../app/AppContext";
+import { useAuth } from "../app/AuthContext";
 import { usePreferences } from "../app/PreferencesContext";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
@@ -180,6 +181,7 @@ function Bubble({
 
 export function MessagesSection() {
   const { notify } = useApp();
+  const { requireAccount } = useAuth();
   const { t, locale, dir } = usePreferences();
   const [convos, setConvos] = useState<Conversation[]>(conversations);
   const [activeId, setActiveId] = useState(conversations[0].id);
@@ -202,7 +204,7 @@ export function MessagesSection() {
     patch(id, (c) => ({ ...c, unread: 0 }));
   };
 
-  const send = () => {
+  const post = () => {
     const text = draft.trim();
     if (!text) return;
     const id = activeId;
@@ -221,7 +223,12 @@ export function MessagesSection() {
     }, 1500);
   };
 
-  const respond = (messageId: string, status: "accepted" | "declined") => {
+  /* answering an invite is a decision in somebody's name, so it is one of
+     the actions that asks for an account first */
+  const respond = (messageId: string, status: "accepted" | "declined") =>
+    requireAccount("gate.invite", () => respondNow(messageId, status));
+
+  const respondNow = (messageId: string, status: "accepted" | "declined") => {
     const name = active.name.split(" ")[0];
     patch(activeId, (c) => ({
       ...c,
@@ -287,7 +294,7 @@ export function MessagesSection() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            send();
+            requireAccount("gate.comment", post);
           }}
           className="flex items-center gap-2 border-t border-line/70 px-2.5 py-2.5"
         >

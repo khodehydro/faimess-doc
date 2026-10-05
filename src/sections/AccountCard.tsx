@@ -43,7 +43,7 @@ export function AccountCard({
 } = {}) {
   const { route, navigate, notify, openDetail } = useApp();
   const { t, has, dir, dataLabel } = usePreferences();
-  const { signOut } = useAuth();
+  const { signOut, signedIn } = useAuth();
   /** the menu is inside a popover that closes on click, so the dialog the
       `Sign out` row asks for has to live here, one level up from the menu */
   const [signOutOpen, setSignOutOpen] = useState(false);
@@ -328,15 +328,25 @@ export function AccountCard({
             className="relative ms-0.5"
             aria-label={t("account.account")}
           >
-            <Avatar src={me.photo} seed={0} size={40} ring />
-            <span className="absolute -bottom-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full bg-mint ring-2 ring-surface">
-              <Icon
-                name="check"
-                size={10}
-                strokeWidth={3}
-                className="text-white"
-              />
-            </span>
+            {/* nobody signed in ⇒ nobody's face: the control shows the
+                guest mark, and the menu behind it is where an account is made */}
+            {signedIn ? (
+              <>
+                <Avatar src={me.photo} seed={0} size={40} ring />
+                <span className="absolute -bottom-0.5 -end-0.5 flex size-4 items-center justify-center rounded-full bg-mint ring-2 ring-surface">
+                  <Icon
+                    name="check"
+                    size={10}
+                    strokeWidth={3}
+                    className="text-white"
+                  />
+                </span>
+              </>
+            ) : (
+              <span className="flex size-10 items-center justify-center rounded-full bg-subtle text-ink-muted ring-1 ring-line">
+                <Icon name="users" size={17} strokeWidth={2} />
+              </span>
+            )}
           </motion.button>
           <AnimatePresence>
             {profileOpen && (
@@ -427,6 +437,7 @@ export function ProfileMenuContent({
 }) {
   const { t, lang, setLang, theme, setTheme, locale, dir, dataLabel } = usePreferences();
   const { notify } = useApp();
+  const { signedIn, openAccount } = useAuth();
   const { points, submissions } = useContributions();
   const pendingSheets = submissions.filter(
     (s) => s.status === "pending",
@@ -434,16 +445,50 @@ export function ProfileMenuContent({
 
   return (
     <div className="w-[252px] rounded-panel border border-line bg-surface p-2.5 shadow-float">
-      <div className="flex items-center gap-3 px-2.5 py-2.5">
-        <Avatar src={me.photo} seed={0} size={34} />
-        <span className="min-w-0">
-          <span className="block truncate text-[14px] font-bold text-ink">
-            {me.name}
+      {signedIn ? (
+        <div className="flex items-center gap-3 px-2.5 py-2.5">
+          <Avatar src={me.photo} seed={0} size={34} />
+          <span className="min-w-0">
+            <span className="block truncate text-[14px] font-bold text-ink">
+              {me.name}
+            </span>
+            <span className="text-[12px] text-ink-muted">{dataLabel(me.tier)}</span>
           </span>
-          <span className="text-[12px] text-ink-muted">{dataLabel(me.tier)}</span>
-        </span>
-      </div>
+        </div>
+      ) : (
+        /* the guest header tells the truth about who is looking and offers
+           the one thing the menu is for at that point: an account */
+        <div className="px-2.5 py-2">
+          <div className="flex items-center gap-3">
+            <span className="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-subtle text-ink-muted ring-1 ring-line">
+              <Icon name="users" size={15} strokeWidth={2} />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[14px] font-bold text-ink">
+                {t("account.guest")}
+              </span>
+              <span className="text-[12px] text-ink-muted">{t("auth.role")}</span>
+            </span>
+          </div>
+          <p className="mt-2 text-[12px] leading-relaxed text-ink-muted">
+            {t("account.guestBody")}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              openAccount();
+            }}
+            className="mt-2.5 flex h-[38px] w-full items-center justify-center gap-2 rounded-[12px] bg-primary text-[13px] font-bold text-white shadow-primary transition-colors hover:bg-primary-deep"
+          >
+            <Icon name="lock" size={14} strokeWidth={2.2} />
+            {t("account.enter")}
+          </button>
+        </div>
+      )}
 
+      {/* points only exist for an account, so the row only exists with one */}
+      {signedIn && (
       <button
         type="button"
         onClick={onPoints}
@@ -468,6 +513,7 @@ export function ProfileMenuContent({
           className={cn("shrink-0 text-primary-deep/70", pendingSheets === 0 && "ms-auto")}
         />
       </button>
+      )}
 
       {/* preferences — language + appearance, both kept in the browser */}
       <div className="mt-2 rounded-[13px] bg-subtle px-2.5 py-2.5">
@@ -526,6 +572,11 @@ export function ProfileMenuContent({
         </p>
       </div>
 
+      {/* everything below belongs to somebody: your contributions, your
+          library, your liked tracks — and the way out. A guest gets none of
+          those rows, because none of them are theirs yet */}
+      {signedIn && (
+        <>
       <span className="my-1.5 block h-px w-full bg-line" />
       {[
         {
@@ -555,6 +606,8 @@ export function ProfileMenuContent({
           {t(r.labelKey)}
         </button>
       ))}
+        </>
+      )}
     </div>
   );
 }

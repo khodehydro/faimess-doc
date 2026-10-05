@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useApp } from "../app/AppContext";
 import { usePlayer } from "../app/PlayerContext";
 import { usePlaylists } from "../app/PlaylistsContext";
+import { useAuth } from "../app/AuthContext";
 import { usePreferences } from "../app/PreferencesContext";
 import { albums, artists, playlists, type Album } from "../data/library";
 import { QUEUE, leadTrackFor, trackById, type PlayerTrack } from "../data/player";
@@ -77,6 +78,7 @@ export function BrowseDetailView() {
   const { t, dir, dataLabel, num } = usePreferences();
   const { detail, closeDetail, notify, openDetail } = useApp();
   const { mine } = usePlaylists();
+  const { requireAccount } = useAuth();
   const player = usePlayer();
   const [editing, setEditing] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -210,7 +212,11 @@ export function BrowseDetailView() {
           {t("detail.emptyBody")}
         </p>
         {heading.editableId && (
-          <PillButton tone="primary" icon="plus" onClick={() => setEditing(true)}>
+          <PillButton
+            tone="primary"
+            icon="plus"
+            onClick={() => requireAccount("gate.playlist", () => setEditing(true))}
+          >
             {t("detail.addSongs")}
           </PillButton>
         )}
@@ -367,7 +373,10 @@ export function BrowseDetailView() {
           {heading.editableId && (
             /* the pencil is the edit door for a list of your own — the card
                itself opens the songs */
-            <ExpandPill icon="edit" onClick={() => setEditing(true)}>
+            <ExpandPill
+              icon="edit"
+              onClick={() => requireAccount("gate.playlist", () => setEditing(true))}
+            >
               {t("detail.edit")}
             </ExpandPill>
           )}

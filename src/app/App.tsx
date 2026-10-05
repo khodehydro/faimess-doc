@@ -16,8 +16,8 @@ import { EASE } from "../lib/motion";
 import { PAGES } from "./pages";
 import { CompactShell } from "./CompactShell";
 import { useCompact } from "../hooks/useCompact";
-import { AuthProvider, useAuth } from "./AuthContext";
-import { SignInPage } from "../sections/SignInPage";
+import { AuthProvider } from "./AuthContext";
+import { AccountDoor } from "../sections/AccountDoor";
 
 /* ------------------------------------------------------------------ *
  *  Shell — the parent card and the five cards inside it.
@@ -37,23 +37,13 @@ import { SignInPage } from "../sections/SignInPage";
  * ------------------------------------------------------------------ */
 
 /**
- * The gate — the door, or the app.
+ * The dashboard — the art-board, both shells, the player and the shelves.
  *
- * While nobody is signed in, this *is* the screen: the art-board, both
- * shells, the player and the shelves are not mounted at all, so there is
- * nothing behind the sign-in panel to peek at. The toast host stays
- * outside the gate (it lives in `App`), because the welcome toast fires
- * at the moment the door closes.
+ * Nothing here depends on who is looking: the app is open to read. The
+ * account door is a separate layer (`<AccountDoor />`) that opens on top
+ * of this only when an action actually needs an account.
  */
-export function Gate() {
-  const { signedIn } = useAuth();
-  const { t } = usePreferences();
-  const { notify } = useApp();
-
-  if (!signedIn) {
-    return <SignInPage onSignedIn={(name) => notify(t("auth.welcome", { name }), "mint")} />;
-  }
-
+export function Screen() {
   return (
     <Stage>
       <Shell />
@@ -154,7 +144,11 @@ export default function App() {
           <PlayerProvider>
             <CommentsProvider>
               <ContributionsProvider>
-                <Gate />
+                <Screen />
+                <AccountDoor />
+                {/* the door sits above the app rather than in place of it:
+                    it opens when an action asks for an account */}
+                <AccountDoor />
                 <ToastHost />
               </ContributionsProvider>
             </CommentsProvider>

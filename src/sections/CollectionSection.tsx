@@ -12,6 +12,7 @@ import { useApp } from "../app/AppContext";
 import { usePreferences, useT } from "../app/PreferencesContext";
 import { usePlayer } from "../app/PlayerContext";
 import { usePlaylists } from "../app/PlaylistsContext";
+import { useAuth } from "../app/AuthContext";
 import { leadTrackFor, trackById } from "../data/player";
 import { cn } from "../lib/cn";
 import { EASE, spring, staggerParent, popChild } from "../lib/motion";
@@ -128,6 +129,7 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
   const { t, dataLabel } = usePreferences();
   const { notify, openDetail } = useApp();
   const player = usePlayer();
+  const { requireAccount } = useAuth();
   const [following, setFollowing] = useState(artist.following);
 
   return (
@@ -164,13 +166,17 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
         <PillButton
           tone={following ? "primary" : "outline"}
           icon={following ? "check" : "plus"}
-          onClick={() => {
-            setFollowing((v) => !v);
-            notify(
-              t(following ? "toast.unfollowed" : "toast.following", { name: artist.name }),
-              following ? "primary" : "mint",
-            );
-          }}
+          onClick={() =>
+            /* following is kept in an account, so it is one of the actions
+               that asks for one — the tap itself waits behind the door */
+            requireAccount(following ? "gate.unfollow" : "gate.follow", () => {
+              setFollowing((v) => !v);
+              notify(
+                t(following ? "toast.unfollowed" : "toast.following", { name: artist.name }),
+                following ? "primary" : "mint",
+              );
+            })
+          }
           className="shrink-0"
         >
           {t(following ? "page.following" : "page.follow")}
@@ -443,6 +449,7 @@ function MineStrip({ onNew }: { onNew: () => void }) {
 export function CollectionSection({ params }: { params: { kind: LibraryKind } }) {
   const { kind } = params;
   const { t } = usePreferences();
+  const { requireAccount } = useAuth();
   const copy = COPY[kind];
   const [filter, setFilter] = useState(copy.filters[0].key);
   /* your own playlists: one sheet to make one — editing lives on the card */
@@ -486,7 +493,7 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
                  `inline-flex`, and the cascade emits `.hidden` first — a bare
                  `hidden` simply loses and the chip painted on phones too */
               className="ms-1 shrink-0 max-lg:hidden"
-              onClick={() => setCreating(true)}
+              onClick={() => requireAccount("gate.playlist", () => setCreating(true))}
             >
               {t("playlist.new")}
             </PillButton>
@@ -494,7 +501,9 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
         </div>
       </div>
 
-      {kind === "playlists" && <MineStrip onNew={() => setCreating(true)} />}
+      {kind === "playlists" && (
+        <MineStrip onNew={() => requireAccount("gate.playlist", () => setCreating(true))} />
+      )}
 
       {/* grid */}
       <AnimatePresence mode="wait" initial={false}>

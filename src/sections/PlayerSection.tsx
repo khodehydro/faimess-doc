@@ -9,6 +9,7 @@ import { trackSubject } from "../data/share";
 import { usePlayer } from "../app/PlayerContext";
 import { usePlaylists } from "../app/PlaylistsContext";
 import { useContributions } from "../app/ContributionsContext";
+import { useAuth } from "../app/AuthContext";
 import { useApp } from "../app/AppContext";
 import { usePreferences } from "../app/PreferencesContext";
 import { activeLineIndex, lyricsFor, mmss, QUEUE, trackById, type PlayerTrack } from "../data/player";
@@ -66,6 +67,9 @@ export function PlayerSection({
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [lyricsOpen, setLyricsOpen] = useState(false);
   const { approvedFor } = useContributions();
+  /* an account is asked for at the door of an action, never at the door of
+     the app: sending lyrics is one of those actions */
+  const { requireAccount } = useAuth();
   /* the editorial sheet wins; a fan sheet the mods approved fills the gap */
   const sheet = lyricsFor(track);
   const community = track && !sheet ? approvedFor(track.id) : null;
@@ -163,7 +167,9 @@ export function PlayerSection({
                 by={community?.by ?? null}
                 position={player.position}
                 playing={player.playing}
-                onSend={() => setLyricsOpen(true)}
+                onSend={() =>
+                  requireAccount("gate.lyrics", () => setLyricsOpen(true))
+                }
               />
               <CommentsBar trackId={track.id} onOpen={() => setCommentsOpen(true)} />
             </motion.div>
@@ -249,6 +255,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
   const { t, dir, dataLabel, num } = usePreferences();
   const player = usePlayer();
   const { navigate, notify, openDetail } = useApp();
+  const { requireAccount } = useAuth();
   const { mine } = usePlaylists();
   /* "new playlist" from the panel — the same sheet the Playlists page opens */
   const [creating, setCreating] = useState(false);
@@ -318,7 +325,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
             })}
 
             <button
-              onClick={() => setCreating(true)}
+              onClick={() => requireAccount("gate.playlist", () => setCreating(true))}
               className="flex items-center gap-3 rounded-[12px] px-2.5 py-2 text-start transition-colors hover:bg-primary-faint"
             >
               <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] border border-dashed border-primary/40 bg-primary-faint/60 text-primary-deep">
@@ -414,6 +421,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
 
 function EmptyState({ onPick }: { onPick: (track: PlayerTrack) => void }) {
   const { t } = usePreferences();
+  const { signedIn } = useAuth();
   return (
     <motion.div
       key="empty"
@@ -433,7 +441,10 @@ function EmptyState({ onPick }: { onPick: (track: PlayerTrack) => void }) {
 
       <div>
         <h3 className="font-display text-[16px] font-bold leading-snug text-ink">
-          {t("player.hey", { name: me.name })} {t("player.nothingPlaying")}
+          {/* a guest has no name to be greeted by — the account screen is
+              the only place a name comes from */}
+          {signedIn ? t("player.hey", { name: me.name }) : t("player.heyGuest")}{" "}
+          {t("player.nothingPlaying")}
         </h3>
         <p className="mt-1 text-[12.5px] leading-snug text-ink-muted">
           {t("player.pickOne")}
@@ -648,6 +659,7 @@ function TrackPanel({
 function AddToPlaylistButton() {
   const player = usePlayer();
   const { t } = usePreferences();
+  const { requireAccount } = useAuth();
   const [adding, setAdding] = useState(false);
   const [creating, setCreating] = useState(false);
 
@@ -656,7 +668,7 @@ function AddToPlaylistButton() {
       <IconAction
         icon="folderPlus"
         label={t("player.addTip")}
-        onClick={() => setAdding(true)}
+        onClick={() => requireAccount("gate.playlist", () => setAdding(true))}
       />
       <AddToPlaylistDialog
         open={adding}
@@ -787,6 +799,7 @@ function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void 
 function LikeButton({ player }: { player: PlayerApi }) {
   const { t } = usePreferences();
   const { notify } = useApp();
+  const { requireAccount } = useAuth();
   const id = player.track?.id;
   const on = !!id && player.liked.includes(id);
 
@@ -796,8 +809,12 @@ function LikeButton({ player }: { player: PlayerApi }) {
       transition={spring}
       onClick={() => {
         if (!id) return;
-        player.toggleLike(id);
-        notify(t(on ? "player.unlikedToast" : "player.likedToast"), on ? "teal" : "primary");
+        /* the heart is a personal list, so it asks for the account the same
+           way a comment does — and keeps the tap for after the sign-in */
+        requireAccount("gate.like", () => {
+          player.toggleLike(id);
+          notify(t(on ? "player.unlikedToast" : "player.likedToast"), on ? "teal" : "primary");
+        });
       }}
       aria-pressed={on}
       title={t(on ? "player.likeOn" : "player.likeOff")}
