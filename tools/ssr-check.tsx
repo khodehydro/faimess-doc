@@ -32,6 +32,7 @@ import {
   type TVars,
 } from "../src/data/i18n";
 import { PlayerSection } from "../src/sections/PlayerSection";
+import { ActiveUsers } from "../src/sections/feed/ActiveUsers";
 import { DownloadPage } from "../src/pages/DownloadPage";
 import { HomePage } from "../src/pages/HomePage";
 import { Shell } from "../src/app/App";
@@ -571,7 +572,9 @@ check(
      takes the first line, the chips scroll on the second */
   collectionSrc.includes("min-w-0 basis-full lg:basis-auto") &&
     collectionSrc.includes("flex-1 items-center gap-2 overflow-x-auto py-1 lg:ms-auto") &&
-    collectionSrc.includes('className="ms-1 hidden shrink-0 lg:flex"') &&
+    /* `max-lg:hidden`, not `hidden`: the pill sets its own `inline-flex` and
+       the cascade emits `.hidden` first, so a bare `hidden` never hides it */
+    collectionSrc.includes('className="ms-1 shrink-0 max-lg:hidden"') &&
     /* the chips must stay on the title's row (far end) on desktop */
     collectionSrc.includes("lg:flex-none lg:overflow-visible"),
   "basis-full under 1024px, ms-auto above it",
@@ -788,12 +791,25 @@ check(
       shelfSrc.includes("whileHover={{ y: -4 }}") &&
       usersSrc.includes("<Row>") &&
       usersSrc.includes("relative mt-5") &&
-      usersSrc.includes("leading-normal lg:start-2.5 lg:top-2.5") &&
-      usersSrc.includes('className={cn("lg:hidden"') &&
-      usersSrc.includes('className={cn("hidden lg:inline-flex"')
+      usersSrc.includes("leading-normal lg:start-2.5 lg:top-2.5")
     );
   })(),
   "the ribbon never sits against the scroll edge, and the avatar clears it",
+);
+check(
+  "one avatar per listener card",
+  (() => {
+    /* rendered, not read: the card used to render two avatars — one per
+       breakpoint — and `hidden` lost the display fight against Avatar's own
+       `inline-flex`, so both painted and the face came out doubled */
+    const usersSrc = readFileSync("src/sections/feed/ActiveUsers.tsx", "utf8");
+    const shelf = render(ActiveUsers, { lang: "fa" });
+    const avatars = (
+      shelf.match(/inline-flex shrink-0 items-center justify-center rounded-full bg-surface/g) ?? []
+    ).length;
+    return usersSrc.match(/<Avatar\b/g)?.length === 1 && avatars === activeUsers.length;
+  })(),
+  "the face is drawn once per card at every width",
 );
 check(
   "the feed strip is not shown on phones and tablets",
@@ -1533,6 +1549,40 @@ check(
     );
   })(),
   "the pack's `favorite-fill` next to `favorite`, swapped on `aria-pressed`",
+);
+check(
+  "nothing asks a component to hide with a class the cascade overrides",
+  (() => {
+    /* A component that sets its own `display` — Avatar and the pills are
+       `inline-flex`, the cards are `flex` — cannot be hidden with a bare
+       `hidden`: Tailwind emits `.hidden` before `.inline-flex`, so the base
+       class wins and the element stays on screen. `max-lg:hidden` (a media
+       query, emitted last) or a wrapper that is hidden instead. */
+    const OWN_DISPLAY = [
+      "Avatar",
+      "AvatarStack",
+      "Card",
+      "SurfaceCard",
+      "CircleButton",
+      "PillButton",
+      "ExpandPill",
+      "PlayDot",
+      "PlayFab",
+    ];
+    const fights: string[] = [];
+    for (const file of sources) {
+      const src = readFileSync(file, "utf8");
+      for (const comp of OWN_DISPLAY) {
+        for (const tag of src.match(new RegExp(`<${comp}\\b(?:(?:=>|[^>])*?)>`, "g")) ?? []) {
+          const value = tag.match(/className=(?:"([^"]*)"|\{[^}]*?"([^"]*)")/);
+          const cls = value?.[1] ?? value?.[2] ?? "";
+          if (cls.split(/\s+/).includes("hidden")) fights.push(`${file}: <${comp} className="${cls}">`);
+        }
+      }
+    }
+    return fights.length === 0;
+  })(),
+  "a bare `hidden` on a component with its own display is a no-op",
 );
 check(
   "the shop icon is an outline, like the rest of the menu",

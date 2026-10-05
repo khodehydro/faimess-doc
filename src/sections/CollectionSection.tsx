@@ -481,8 +481,11 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
               icon="plus"
               tone="primary"
               /* the compact layout has the same door in the "made by you"
-                 strip right underneath, so this one is desktop-only */
-              className="ms-1 hidden shrink-0 lg:flex"
+                 strip right underneath, so this one is desktop-only.
+                 `max-lg:hidden` and not `hidden`: PillButton's own base sets
+                 `inline-flex`, and the cascade emits `.hidden` first — a bare
+                 `hidden` simply loses and the chip painted on phones too */
+              className="ms-1 shrink-0 max-lg:hidden"
               onClick={() => setCreating(true)}
             >
               {t("playlist.new")}

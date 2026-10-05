@@ -98,12 +98,15 @@ export function ActiveUsers() {
                 <span className="absolute end-2.5 top-3 size-2 rounded-full bg-mint ring-2 ring-surface" title={t("shelf.onlineNow")} />
               )}
 
-              {/* circular profile — `mt-5` is what keeps the ribbon clear of
-                  the avatar's ring: at `mt-3` the two boxes overlapped, and
-                  the ribbon read as if it had been cut off by the card */}
+              {/* circular profile — ONE avatar. It cannot be sized per
+                  breakpoint by rendering it twice: `Avatar` sets its own
+                  `inline-flex`, and `.hidden` is emitted *before*
+                  `.inline-flex`, so a bare `hidden` loses the cascade and
+                  both copies paint. `mt-5` is what keeps the ribbon clear
+                  of the ring — at `mt-3` the boxes overlapped and the
+                  ribbon read as if the card had been cut. */}
               <span className="relative mt-5">
-                <Avatar src={user.photo} seed={user.seed} size={56} className={cn("lg:hidden", medal ? "ring-2 ring-primary ring-offset-2" : "")} />
-                <Avatar src={user.photo} seed={user.seed} size={64} className={cn("hidden lg:inline-flex", medal ? "ring-2 ring-primary ring-offset-2" : "")} />
+                <Avatar src={user.photo} seed={user.seed} size={56} className={medal ? "ring-2 ring-primary ring-offset-2" : ""} />
               </span>
 
               <span className="w-full">
