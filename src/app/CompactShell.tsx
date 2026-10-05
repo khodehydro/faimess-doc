@@ -5,6 +5,7 @@ import { usePreferences } from "./PreferencesContext";
 import { PAGES } from "./pages";
 import { BrandCard } from "../sections/BrandCard";
 import { AccountCard } from "../sections/AccountCard";
+import { ArtistStories } from "../sections/ArtistStories";
 import { BrowseDetailView } from "../sections/BrowseDetailView";
 import { MobileNav } from "../sections/MobileNav";
 import { MiniPlayer } from "../sections/MiniPlayer";
@@ -20,7 +21,8 @@ import { EASE } from "../lib/motion";
  *
  *    ┌───────────────────────────────┐
  *    │ 🔔       FAIMESS          👤  │   alert · centred brand · profile
- *    │ [ search ……………………………… ]      │   full-width card of its own
+ *    │ ( search …………………… )      │   full-width capsule of its own
+ *    │ (◕) (◕) (◕) (◕) (◕) (◕) →     │   followed artists, story-rail style
  *    │ ┌───────────────────────────┐ │
  *    │ │  page or detail, scrolling│ │   translucent white content card
  *    │ └───────────────────────────┘ │
@@ -32,7 +34,9 @@ import { EASE } from "../lib/motion";
  *  The mini player stays hidden until a track is selected, then rises from
  *  below the navigation (which paints above it) and opens the full card on tap.
  *  The feed's quick-jump strip is not rendered here at all — on a phone the
- *  shelves are meant to be scrolled, not jumped between.
+ *  shelves are meant to be scrolled, not jumped between. The artists you
+ *  follow are not a shelf here either: they live in the story rail above the
+ *  content card (`ArtistStories`), so the feed skips that shelf below 1024px.
  *
  *  Both fixed bars share one centred, width-capped column so a tablet does
  *  not get a bottom bar stretched across the whole screen.
@@ -59,8 +63,13 @@ export function CompactShell() {
         <AccountCard part="profile" className="relative z-20" />
       </div>
 
-      {/* search — its own full-width card, under the top row */}
+      {/* search — its own full-width capsule, under the top row */}
       <AccountCard part="search" className="mx-auto w-full max-w-[720px]" />
+
+      {/* the artists you follow — a story rail of their own, between the
+          search field and the banner. Home is where the banner is, so the
+          rail rides along with it and not with every other page. */}
+      {route === "home" && <ArtistStories />}
 
       {/* content — the page, or the detail card, in one scrolling card */}
       <SurfaceCard glass dir={dir} className="mx-auto w-full max-w-[720px] shrink-0">

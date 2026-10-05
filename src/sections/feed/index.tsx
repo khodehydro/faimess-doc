@@ -17,6 +17,7 @@ import { ActiveUsers } from "./ActiveUsers";
 import { SHELF_STICKY_VAR } from "./Shelf";
 import { cn } from "../../lib/cn";
 import { useT } from "../../app/PreferencesContext";
+import { useCompact } from "../../hooks/useCompact";
 import { spring } from "../../lib/motion";
 
 /* ------------------------------------------------------------------ *
@@ -29,6 +30,9 @@ import { spring } from "../../lib/motion";
  *
  *  Reordering or removing a shelf is a one-line change to FEED_SHELVES;
  *  adding one is: build the component in this folder, add it here, done.
+ *  A shelf can also be marked `compactHidden` when its content lives
+ *  somewhere better on a phone — the feed then skips it below 1024px
+ *  instead of showing the same roster twice.
  * ------------------------------------------------------------------ */
 
 type ShelfEntry = {
@@ -37,10 +41,22 @@ type ShelfEntry = {
   label: string;
   icon: IconName;
   Component: ComponentType;
+  /**
+   * Below 1024px this shelf is not part of the feed, because the compact
+   * shell shows the same content outside the card (the followed artists
+   * become the story rail under the search field — see ArtistStories).
+   */
+  compactHidden?: boolean;
 };
 
 export const FEED_SHELVES: ShelfEntry[] = [
-  { id: "feed-artists", label: "feed.followed", icon: "users", Component: FollowedArtists },
+  {
+    id: "feed-artists",
+    label: "feed.followed",
+    icon: "users",
+    Component: FollowedArtists,
+    compactHidden: true,
+  },
   { id: "feed-newest", label: "feed.newSongs", icon: "music", Component: NewestTracks },
   { id: "feed-trending", label: "feed.trending", icon: "flame", Component: TrendingTracks },
   { id: "feed-news", label: "feed.news", icon: "news", Component: NewsShelf },
@@ -58,10 +74,21 @@ export const CHIP_STRIP_HEIGHT = 48;
 
 export function FeedSection() {
   const t = useT();
+  const compact = useCompact();
   const rootRef = useRef<HTMLElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
-  const [active, setActive] = useState(FEED_SHELVES[0].id);
+  /**
+   * The shelves actually on screen: the whole table, minus whatever the
+   * compact shell re-homes outside the card. Chips, scroll-spy and the
+   * stack of shelves all read this one list, so a shelf can never leave a
+   * ghost chip behind (or the other way round).
+   */
+  const shelves = useMemo(
+    () => FEED_SHELVES.filter((shelf) => !shelf.compactHidden || !compact),
+    [compact],
+  );
+  const [active, setActive] = useState(shelves[0].id);
   const [stripHeight, setStripHeight] = useState(CHIP_STRIP_HEIGHT);
   /**
    * While a chip's smooth scroll is running the scroll listener keeps
@@ -93,8 +120,8 @@ export function FeedSection() {
       /* +1px of slack: a shelf that landed exactly on the line is *at* it,
          and floating-point rounding must not flip the highlight back */
       const line = root.getBoundingClientRect().top + stripHeight + 20 + 1;
-      let current = FEED_SHELVES[0].id;
-      for (const shelf of FEED_SHELVES) {
+      let current = shelves[0].id;
+      for (const shelf of shelves) {
         const node = sectionRefs.current[shelf.id];
         if (node && node.getBoundingClientRect().top <= line) current = shelf.id;
       }
@@ -108,7 +135,7 @@ export function FeedSection() {
       window.removeEventListener("scroll", onScroll, { capture: true });
       window.removeEventListener("resize", onScroll);
     };
-  }, [stripHeight]);
+  }, [stripHeight, shelves]);
 
   const jumpTo = (id: string) => {
     const node = sectionRefs.current[id];
@@ -117,8 +144,6 @@ export function FeedSection() {
     jumpLock.current = Date.now() + 900;
     node.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-
-  const chips = useMemo(() => FEED_SHELVES, []);
 
   return (
     <section
@@ -139,7 +164,7 @@ export function FeedSection() {
             centring its own label — the strip reads as one control instead of
             a row that stops halfway. Narrow screens fall back to scrolling. */}
         <div className="scroll-slim -my-1 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1">
-          {chips.map((shelf) => {
+          {shelves.map((shelf) => {
             const isActive = active === shelf.id;
             return (
               <button
@@ -173,7 +198,7 @@ export function FeedSection() {
 
       {/* the shelves — full height, no inner scroller */}
       <div className="px-4 pb-7 pt-1.5">
-        {chips.map((shelf, i) => (
+        {shelves.map((shelf, i) => (
           <div
             key={shelf.id}
             ref={(node) => {
@@ -181,7 +206,7 @@ export function FeedSection() {
             }}
           >
             <shelf.Component />
-            {i < chips.length - 1 && (
+            {i < shelves.length - 1 && (
               <span className="mt-1 mb-1.5 block h-px w-full bg-line/80" />
             )}
           </div>

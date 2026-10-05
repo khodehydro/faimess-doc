@@ -28,7 +28,7 @@ import { EASE, spring } from "../lib/motion";
 /**
  * The search field, the bell and the avatar — together in one pill on
  * desktop, and split apart on phones: the compact shell takes the search
- * out as a full-width card of its own and places the notification and
+ * out as a full-width capsule of its own and places the notification and
  * profile controls on opposite sides of the centred brand. `part` asks for
  * one section; the desktop call site passes nothing and gets the whole pill.
  */
@@ -157,8 +157,11 @@ export function AccountCard({
           ? "bg-white/80 shadow-card ring-1 ring-white/70 backdrop-blur-md dark:bg-surface/80 dark:ring-white/[0.06]"
           : "bg-surface shadow-card ring-1 ring-black/[0.03] dark:ring-white/[0.05]",
         isolatedControl && "h-[52px] w-[52px] justify-center rounded-full p-1",
+        /* the compact search is a capsule of its own: `rounded-full` on a
+           card with no fixed height leaves both ends true semicircles, the
+           same shape the desktop pill has */
         part === "search"
-          ? "rounded-card p-2"
+          ? "rounded-full p-2"
           : part === "controls"
             ? "h-[56px] rounded-full p-1.5"
             : part === "all"

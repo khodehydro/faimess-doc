@@ -14,6 +14,7 @@ import { ContributionsProvider } from "../src/app/ContributionsContext";
 import { PreferencesProvider } from "../src/app/PreferencesContext";
 import { PlaylistsProvider } from "../src/app/PlaylistsContext";
 import { ProfileMenuContent } from "../src/sections/AccountCard";
+import { ArtistStories } from "../src/sections/ArtistStories";
 import { NavCard } from "../src/sections/NavCard";
 import { Stage } from "../src/app/Stage";
 import { ToastHost } from "../src/app/ToastHost";
@@ -31,7 +32,7 @@ import { PlaylistsPage } from "../src/pages/PlaylistsPage";
 import { NewsPage } from "../src/pages/NewsPage";
 import { albums, artists, playlists } from "../src/data/library";
 import { banners } from "../src/data/banners";
-import { activeUsers, newestTracks, trendingTracks } from "../src/data/feed";
+import { activeUsers, followedArtists, newestTracks, trendingTracks } from "../src/data/feed";
 import { conversations } from "../src/data/messages";
 import { ME_ACTIVITY, me } from "../src/data/account";
 import { QUEUE, lyricsFor, trackById } from "../src/data/player";
@@ -515,6 +516,7 @@ check(
 /* ------------------- compact shell: phones + tablets ------------------ */
 
 const compactSrc = readFileSync("src/app/CompactShell.tsx", "utf8");
+const storiesSrc = readFileSync("src/sections/ArtistStories.tsx", "utf8");
 const mobileNavSrc = readFileSync("src/sections/MobileNav.tsx", "utf8");
 const miniSrc = readFileSync("src/sections/MiniPlayer.tsx", "utf8");
 const trendingTracksSrc = readFileSync("src/sections/feed/TrendingTracks.tsx", "utf8");
@@ -561,11 +563,69 @@ check(
   "notifications left, wordmark physically centred, profile right",
 );
 check(
-  "search is its own full-width card on the compact shell",
+  "search is its own full-width capsule on the compact shell",
   accountSrc.includes('"inset-x-0"') &&
-    accountSrc.includes('"rounded-card p-2"') &&
+    /* a capsule, not a card: `rounded-full` on a box with no fixed height
+       leaves both ends true semicircles, the shape the desktop pill has */
+    accountSrc.includes('"rounded-full p-2"') &&
+    !accountSrc.includes('"rounded-card p-2"') &&
     accountSrc.includes('part === "search" ? "100%"'),
   "the same search field, re-homed — not a second implementation",
+);
+check(
+  "the artists you follow sit between the search capsule and the banner",
+  compactSrc.includes('route === "home" && <ArtistStories />') &&
+    compactSrc.includes('from "../sections/ArtistStories"') &&
+    /* top-to-bottom order in the source is the order on screen: search,
+       rail, content card */
+    compactSrc.indexOf('part="search"') < compactSrc.indexOf("<ArtistStories />") &&
+    compactSrc.indexOf("<ArtistStories />") < compactSrc.indexOf("<SurfaceCard"),
+  "outside the content card, on the page that has the banner",
+);
+check(
+  "the rail is a face and a name — no heading, no badge, no button",
+  storiesSrc.includes("followedArtists.map") &&
+    storiesSrc.includes("artist.name") &&
+    storiesSrc.includes("<Cover") &&
+    !storiesSrc.includes("artist.kind") &&
+    /* aimed at what it renders, not at the prose in its own comment */
+    !storiesSrc.includes("artist.verified") &&
+    !storiesSrc.includes('name="verified"') &&
+    !storiesSrc.includes("PlayDot") &&
+    !storiesSrc.includes("PillButton") &&
+    !storiesSrc.includes("<h2") &&
+    !storiesSrc.includes("<h3") &&
+    !storiesSrc.includes('name="bolt"') &&
+    storiesSrc.includes("overflow-x-auto"),
+  "story-rail grammar: ring, photo, name, sideways scroll",
+);
+check(
+  "the rail still opens the artist, and the new release lives in the ring",
+  storiesSrc.includes('openDetail({ kind: "artist", id: artist.id })') &&
+    storiesSrc.includes("artist.newRelease") &&
+    storiesSrc.includes("bg-gradient-to-tr"),
+  "one tap target per face; the ring carries the only state",
+);
+check(
+  "below 1024px the feed skips the artists shelf, so the roster isn't shown twice",
+  feedSrc.includes("compactHidden: true") &&
+    feedSrc.includes("useCompact") &&
+    feedSrc.includes("!shelf.compactHidden || !compact") &&
+    /* chips, scroll-spy and the stack all read the one filtered list */
+    !feedSrc.includes("FEED_SHELVES.map") &&
+    feedSrc.includes("shelves.map"),
+  "one table of shelves, filtered by the same compact line",
+);
+const storiesHtml = render(ArtistStories);
+check(
+  "the rail renders every followed artist as a photo and a name, and says nothing else",
+  followedArtists.length > 0 &&
+    followedArtists.every((a) => storiesHtml.includes(a.photo) && storiesHtml.includes(a.name)) &&
+    /* the section names itself for a screen reader instead of printing a heading */
+    storiesHtml.includes(`aria-label="${STRINGS["shelf.followedArtists"].en}"`) &&
+    !plain(storiesHtml).includes(STRINGS["shelf.findArtists"].en) &&
+    !plain(storiesHtml).includes(followedArtists[0].kind),
+  `${followedArtists.length} faces`,
 );
 check(
   "the main menu moves to the bottom, purple tab + rule in a glass capsule",
