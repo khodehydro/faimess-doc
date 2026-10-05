@@ -243,22 +243,23 @@ export function NewsPage() {
                   className="group flex cursor-pointer flex-col justify-between rounded-card border border-line bg-surface p-4 shadow-card transition-all hover:border-primary/30 hover:shadow-float"
                 >
                   <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={cn("rounded-full px-2 py-0.5 text-[12px] font-bold", TAG_TONE[item.tag])}>
+                    <div className="relative mb-3 h-[110px] w-full overflow-hidden rounded-xl">
+                      <Photo src={item.photo} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <span className={cn("absolute start-2 top-2 rounded-full px-2 py-0.5 text-[12px] font-bold backdrop-blur-md", TAG_TONE[item.tag])}>
                         {dataLabel(item.tag)}
                       </span>
-                      <span className="flex items-center gap-1.5 rounded-full bg-teal-soft px-2.5 py-0.5 text-[12px] font-bold text-teal-deep">
+                      <span className="absolute end-2 top-2 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-0.5 text-[12px] font-bold text-white backdrop-blur-md">
                         <Icon name="message" size={12} strokeWidth={2.2} />
                         <span>{item.commentsCount.toLocaleString(locale)}</span>
                       </span>
                     </div>
 
-                    <h4 className="font-display mt-2.5 line-clamp-2 text-[14px] font-bold leading-snug text-ink group-hover:text-primary lg:text-[15px]">
+                    <h4 className="font-display line-clamp-2 text-[14px] font-bold leading-snug text-ink group-hover:text-primary lg:text-[15px]">
                       {text(`news.${item.id}.title`, item.title)}
                     </h4>
 
                     {item.comments[0] && (
-                      <div className="mt-3 rounded-lg bg-subtle p-2 text-[12px] text-ink-muted">
+                      <div className="mt-2.5 rounded-lg bg-subtle p-2 text-[12px] text-ink-muted">
                         <span className="font-bold text-ink">{item.comments[0].author}: </span>
                         <span className="line-clamp-2">“{item.comments[0].text}”</span>
                       </div>

@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { newsItems, type NewsItem, type NewsComment } from "../../data/feed";
 import { usePreferences } from "../../app/PreferencesContext";
 import { useApp } from "../../app/AppContext";
 import { useAuth } from "../../app/AuthContext";
 import { me } from "../../data/account";
-import { Photo } from "../../ui/Cover";
 import { Avatar } from "../../ui/Avatar";
 import { Icon } from "../../ui/Icon";
 import { PillButton } from "../../ui/primitives";
+import { Modal } from "../../ui/Modal";
+import { REPORT_REASONS } from "../../data/comments";
 import { backIcon } from "../../lib/rtl";
 import { cn } from "../../lib/cn";
 import { spring, popChild, staggerParent } from "../../lib/motion";
@@ -23,6 +24,51 @@ const TAG_TONE: Record<string, string> = {
   Awards: "bg-flame-soft text-flame-deep",
 };
 
+// Count total comments including all nested replies
+function countAllComments(list: NewsComment[]): number {
+  return list.reduce((acc, c) => acc + 1 + (c.replies ? countAllComments(c.replies) : 0), 0);
+}
+
+// Recursively update a comment in the tree
+function updateCommentInTree(
+  list: NewsComment[],
+  targetId: string,
+  updater: (c: NewsComment) => NewsComment,
+): NewsComment[] {
+  return list.map((c) => {
+    if (c.id === targetId) {
+      return updater(c);
+    }
+    if (c.replies && c.replies.length > 0) {
+      return { ...c, replies: updateCommentInTree(c.replies, targetId, updater) };
+    }
+    return c;
+  });
+}
+
+// Recursively add a reply to target comment in the tree
+function addReplyToTree(
+  list: NewsComment[],
+  targetId: string,
+  newReply: NewsComment,
+): NewsComment[] {
+  return list.map((c) => {
+    if (c.id === targetId) {
+      return {
+        ...c,
+        replies: [newReply, ...(c.replies ?? [])],
+      };
+    }
+    if (c.replies && c.replies.length > 0) {
+      return {
+        ...c,
+        replies: addReplyToTree(c.replies, targetId, newReply),
+      };
+    }
+    return c;
+  });
+}
+
 export function NewsDetailView({ newsId }: { newsId: string }) {
   const { t, dir, dataLabel, text, locale } = usePreferences();
   const { closeNews, notify } = useApp();
@@ -34,7 +80,16 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
   const [likesCount, setLikesCount] = useState(item.likes);
   const [comments, setComments] = useState<NewsComment[]>(() => item.comments);
   const [commentInput, setCommentInput] = useState("");
-  const [likedComments, setLikedComments] = useState<Record<string, boolean>>({});
+
+  // Reply state
+  const [replyTarget, setReplyTarget] = useState<{ id: string; handle: string; author: string } | null>(null);
+  const [replyInput, setReplyInput] = useState("");
+
+  // Report modal state
+  const [reportTarget, setReportTarget] = useState<NewsComment | null>(null);
+  const [selectedReason, setSelectedReason] = useState<string>("spam");
+
+  const totalComments = useMemo(() => countAllComments(comments), [comments]);
 
   const handleToggleLike = () => {
     if (liked) {
@@ -66,12 +121,13 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
     const newComment: NewsComment = {
       id: `nc-${Date.now()}`,
       author: me.name,
-      handle: `@${me.name.toLowerCase().replace(/\s+/g, "")}`,
+      handle: me.handle,
       avatar: me.photo,
       seed: 0,
       time: "Just now",
       text: trimmed,
       likes: 0,
+      replies: [],
     };
 
     setComments((prev) => [newComment, ...prev]);
@@ -79,15 +135,65 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
     notify(t("news.commentPosted"), "mint");
   };
 
+  const handleSendReply = (targetId: string, targetHandle: string) => {
+    const trimmed = replyInput.trim();
+    if (!trimmed) return;
+    if (!signedIn) {
+      openAccount("comment");
+      return;
+    }
+
+    const newReply: NewsComment = {
+      id: `nr-${Date.now()}`,
+      author: me.name,
+      handle: me.handle,
+      avatar: me.photo,
+      seed: 0,
+      time: "Just now",
+      text: trimmed,
+      likes: 0,
+      replies: [],
+    };
+
+    setComments((prev) => addReplyToTree(prev, targetId, newReply));
+    setReplyInput("");
+    setReplyTarget(null);
+    notify(t("comments.repliedToast", { handle: targetHandle }), "mint");
+  };
+
   const handleToggleCommentLike = (commentId: string) => {
-    setLikedComments((prev) => {
-      const isCurrentlyLiked = !!prev[commentId];
-      const next = { ...prev, [commentId]: !isCurrentlyLiked };
-      setComments((list) =>
-        list.map((c) => (c.id === commentId ? { ...c, likes: c.likes + (isCurrentlyLiked ? -1 : 1) } : c)),
-      );
-      return next;
-    });
+    setComments((prev) =>
+      updateCommentInTree(prev, commentId, (c) => ({
+        ...c,
+        liked: !c.liked,
+        likes: c.likes + (c.liked ? -1 : 1),
+      })),
+    );
+  };
+
+  const handleConfirmReport = () => {
+    if (!reportTarget) return;
+    const reasonLabel = t(`report.label.${selectedReason}`);
+    setComments((prev) =>
+      updateCommentInTree(prev, reportTarget.id, (c) => ({
+        ...c,
+        reported: true,
+        reportReason: reasonLabel,
+      })),
+    );
+    notify(t("comments.reportedToast"), "mint");
+    setReportTarget(null);
+  };
+
+  const handleUndoReport = (commentId: string) => {
+    setComments((prev) =>
+      updateCommentInTree(prev, commentId, (c) => ({
+        ...c,
+        reported: false,
+        reportReason: undefined,
+      })),
+    );
+    notify(t("comments.reportWithdrawn"), "primary");
   };
 
   return (
@@ -122,17 +228,28 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
         </div>
       </div>
 
-      {/* Featured hero image */}
-      <div className="relative h-[210px] w-full overflow-hidden rounded-[18px] bg-ink shadow-card ring-1 ring-line/50 lg:h-[320px]">
-        <Photo src={item.photo} className="h-full w-full object-cover" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/60 to-transparent" />
-        <span className="absolute bottom-3 start-3 text-[12px] font-medium text-white/80 backdrop-blur-sm lg:bottom-4 lg:start-4">
-          {dataLabel(item.source)} · {dataLabel(item.ago)}
-        </span>
+      {/* Featured hero image — prominent, responsive, with fallback */}
+      <div className="relative mb-6 w-full overflow-hidden rounded-[20px] bg-ink/5 shadow-float ring-1 ring-black/5 dark:ring-white/10">
+        <img
+          src={item.photo}
+          alt={text(`news.${item.id}.title`, item.title)}
+          className="h-[240px] w-full object-cover sm:h-[320px] lg:h-[400px]"
+        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
+        <div className="absolute bottom-3.5 start-4 z-10 flex flex-wrap items-center gap-2 text-white/90 lg:bottom-5 lg:start-5">
+          <span className={cn("rounded-full px-2.5 py-1 text-[12px] font-bold backdrop-blur-md", TAG_TONE[item.tag])}>
+            {dataLabel(item.tag)}
+          </span>
+          <span className="rounded-full bg-black/40 px-2.5 py-1 text-[12px] font-bold text-white backdrop-blur-md">
+            {dataLabel(item.source)}
+          </span>
+          <span className="text-[12px] text-white/80">·</span>
+          <span className="text-[12px] text-white/80">{dataLabel(item.ago)}</span>
+        </div>
       </div>
 
       {/* News Headline */}
-      <h1 className="font-display mt-5 text-[21px] font-bold leading-tight tracking-[-0.018em] text-ink lg:mt-6 lg:text-[28px]">
+      <h1 className="font-display text-[22px] font-bold leading-tight tracking-[-0.018em] text-ink lg:text-[28px]">
         {text(`news.${item.id}.title`, item.title)}
       </h1>
 
@@ -155,7 +272,7 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
             transition={spring}
             onClick={handleToggleLike}
             className={cn(
-              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-bold transition-colors",
+              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors",
               liked
                 ? "bg-flame-soft text-flame shadow-sm"
                 : "border border-line bg-surface text-ink-muted hover:border-flame/30 hover:text-flame",
@@ -166,21 +283,21 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
           </motion.button>
 
           {/* Views count */}
-          <span className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-muted">
+          <span className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-[12px] font-medium text-ink-muted">
             <Icon name="trend" size={14} strokeWidth={2} />
             <span>{item.views.toLocaleString(locale)}</span>
           </span>
 
           {/* Comments count */}
-          <span className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-muted">
+          <span className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-[12px] font-medium text-ink-muted">
             <Icon name="message" size={14} strokeWidth={2} />
-            <span>{comments.length.toLocaleString(locale)}</span>
+            <span>{totalComments.toLocaleString(locale)}</span>
           </span>
         </div>
       </div>
 
       {/* Lead excerpt */}
-      <p className="mt-5 text-[14px] font-semibold leading-relaxed text-ink-body lg:mt-6 lg:text-[16px]">
+      <p className="mt-5 text-[14.5px] font-semibold leading-relaxed text-ink-body lg:mt-6 lg:text-[16px]">
         {text(`news.${item.id}.excerpt`, item.excerpt)}
       </p>
 
@@ -203,7 +320,7 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
             </h2>
           </div>
           <span className="rounded-full bg-muted px-2.5 py-0.5 text-[12px] font-bold text-ink-muted">
-            {comments.length.toLocaleString(locale)}
+            {totalComments.toLocaleString(locale)}
           </span>
         </div>
 
@@ -247,55 +364,278 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
           </div>
         </div>
 
-        {/* Comments thread list */}
-        <div className="mt-4 space-y-2.5">
+        {/* Comments thread list with nested replies */}
+        <div className="mt-5 space-y-3.5">
           <AnimatePresence initial={false}>
-            {comments.map((c) => {
-              const isCommentLiked = !!likedComments[c.id];
-              return (
-                <motion.div
-                  key={c.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="rounded-xl border border-line/70 bg-surface/70 p-3 shadow-card"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Avatar src={c.avatar} seed={c.seed} size={28} />
-                      <div>
-                        <span className="text-[13px] font-bold text-ink">{c.author}</span>
-                        <span className="ms-1.5 text-[12px] text-ink-faint">{c.handle}</span>
-                      </div>
-                    </div>
-                    <span className="text-[12px] text-ink-faint">{dataLabel(c.time)}</span>
-                  </div>
-
-                  <p className="mt-2 text-[12.5px] leading-relaxed text-ink-body lg:text-[13px]">{c.text}</p>
-
-                  <div className="mt-2 flex items-center justify-end">
-                    <button
-                      onClick={() => handleToggleCommentLike(c.id)}
-                      className={cn(
-                        "flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-semibold transition-colors",
-                        isCommentLiked ? "text-flame" : "text-ink-faint hover:text-ink-muted",
-                      )}
-                    >
-                      <Icon
-                        name="heart"
-                        size={12}
-                        strokeWidth={2}
-                        className={isCommentLiked ? "fill-current" : ""}
-                      />
-                      <span>{c.likes.toLocaleString(locale)}</span>
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {comments.map((comment) => (
+              <CommentCard
+                key={comment.id}
+                comment={comment}
+                depth={0}
+                locale={locale}
+                replyTarget={replyTarget}
+                replyInput={replyInput}
+                onReplyInputChange={setReplyInput}
+                onStartReply={(c) => {
+                  setReplyTarget({ id: c.id, handle: c.handle, author: c.author });
+                  setReplyInput("");
+                }}
+                onCancelReply={() => {
+                  setReplyTarget(null);
+                  setReplyInput("");
+                }}
+                onSendReply={handleSendReply}
+                onLikeComment={handleToggleCommentLike}
+                onReportComment={(c) => setReportTarget(c)}
+                onUndoReport={handleUndoReport}
+              />
+            ))}
           </AnimatePresence>
         </div>
       </section>
+
+      {/* Report Modal */}
+      {reportTarget && (
+        <Modal open={true} onClose={() => setReportTarget(null)} width={420} bare>
+          <div className="flex flex-col p-4.5">
+            <div className="flex items-center justify-between pb-3 border-b border-line">
+              <h3 className="font-display text-[15.5px] font-bold text-ink">
+                {t("comments.reportTitle")}
+              </h3>
+              <button
+                onClick={() => setReportTarget(null)}
+                aria-label={t("comments.cancel")}
+                className="flex size-7 items-center justify-center rounded-full text-ink-faint hover:text-ink hover:bg-subtle"
+              >
+                <Icon name="close" size={14} />
+              </button>
+            </div>
+
+            <p className="mt-3 text-[12px] text-ink-muted leading-relaxed">
+              {t("report.note")}
+            </p>
+
+            <div className="mt-3.5 space-y-2">
+              {REPORT_REASONS.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => setSelectedReason(r.id)}
+                  className={cn(
+                    "flex w-full items-start gap-3 rounded-xl border p-2.5 text-start transition-colors",
+                    selectedReason === r.id
+                      ? "border-primary/40 bg-primary-faint"
+                      : "border-line hover:border-primary/25 hover:bg-subtle",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                      selectedReason === r.id ? "border-primary bg-primary text-white" : "border-line-strong text-transparent",
+                    )}
+                  >
+                    <Icon name="check" size={10} strokeWidth={3} />
+                  </span>
+                  <div>
+                    <span className="block text-[13px] font-bold text-ink">{t(`report.label.${r.id}`)}</span>
+                    <span className="mt-0.5 block text-[12px] text-ink-muted">{t(`report.hint.${r.id}`)}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-2 border-t border-line pt-3">
+              <button
+                onClick={() => setReportTarget(null)}
+                className="rounded-full px-3.5 py-1.5 text-[12px] font-bold text-ink-muted hover:text-ink"
+              >
+                {t("comments.cancel")}
+              </button>
+              <button
+                onClick={handleConfirmReport}
+                className="rounded-full bg-flame px-4 py-1.5 text-[12px] font-bold text-white shadow-sm hover:bg-flame-deep"
+              >
+                {t("comments.submitReport")}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </motion.article>
+  );
+}
+
+/**
+ * Threaded Comment Card component supporting nested replies, likes, replies, and reporting.
+ */
+function CommentCard({
+  comment,
+  depth = 0,
+  locale,
+  replyTarget,
+  replyInput,
+  onReplyInputChange,
+  onStartReply,
+  onCancelReply,
+  onSendReply,
+  onLikeComment,
+  onReportComment,
+  onUndoReport,
+}: {
+  comment: NewsComment;
+  depth: number;
+  locale: string;
+  replyTarget: { id: string; handle: string; author: string } | null;
+  replyInput: string;
+  onReplyInputChange: (v: string) => void;
+  onStartReply: (c: NewsComment) => void;
+  onCancelReply: () => void;
+  onSendReply: (targetId: string, targetHandle: string) => void;
+  onLikeComment: (id: string) => void;
+  onReportComment: (c: NewsComment) => void;
+  onUndoReport: (id: string) => void;
+}) {
+  const { t, dataLabel } = usePreferences();
+  const isReplyingThis = replyTarget?.id === comment.id;
+
+  if (comment.reported) {
+    return (
+      <div className="flex items-center justify-between rounded-xl border border-line bg-subtle/60 p-3 text-[12px] text-ink-muted">
+        <span>
+          {t("comments.hidden")}: <strong className="font-bold text-ink">{comment.reportReason}</strong>
+        </span>
+        <button
+          onClick={() => onUndoReport(comment.id)}
+          className="font-bold text-primary-deep hover:underline"
+        >
+          {t("comments.undo")}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      className="rounded-xl border border-line/80 bg-surface/85 p-3.5 shadow-card"
+    >
+      {/* Comment Header */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Avatar src={comment.avatar} seed={comment.seed} size={28} />
+          <div>
+            <span className="text-[13px] font-bold text-ink">{comment.author}</span>
+            <span className="ms-1.5 text-[12px] text-ink-faint">{comment.handle}</span>
+          </div>
+        </div>
+        <span className="text-[12px] text-ink-faint">{dataLabel(comment.time)}</span>
+      </div>
+
+      {/* Comment text */}
+      <p className="mt-2 text-[13px] leading-relaxed text-ink-body">{comment.text}</p>
+
+      {/* Action buttons (Like, Reply, Report) */}
+      <div className="mt-2.5 flex items-center gap-3 text-[12px] text-ink-faint">
+        <button
+          onClick={() => onLikeComment(comment.id)}
+          className={cn(
+            "flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold transition-colors",
+            comment.liked ? "text-flame font-bold" : "hover:text-ink",
+          )}
+        >
+          <Icon name="heart" size={12.5} strokeWidth={2} className={comment.liked ? "fill-current" : ""} />
+          <span>{comment.likes.toLocaleString(locale)}</span>
+        </button>
+
+        <button
+          onClick={() => onStartReply(comment)}
+          className="flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold hover:text-ink transition-colors"
+        >
+          <Icon name="message" size={12} strokeWidth={2} />
+          <span>{t("comments.reply")}</span>
+        </button>
+
+        <button
+          onClick={() => onReportComment(comment)}
+          className="ms-auto flex items-center gap-1 rounded-full px-2 py-0.5 hover:text-flame transition-colors"
+          title={t("comments.report")}
+        >
+          <Icon name="more" size={13} strokeWidth={2} />
+          <span className="hidden sm:inline">{t("comments.report")}</span>
+        </button>
+      </div>
+
+      {/* Inline Reply Composer */}
+      {isReplyingThis && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="mt-3 border-t border-line pt-2.5"
+        >
+          <div className="flex items-center gap-2">
+            <Avatar src={me.photo} seed={0} size={26} />
+            <div className="flex min-w-0 flex-1 items-center gap-1 rounded-full bg-subtle py-1 pe-1 ps-2.5 ring-1 ring-transparent focus-within:ring-primary/25">
+              <input
+                autoFocus
+                value={replyInput}
+                maxLength={LIMIT}
+                dir="auto"
+                onChange={(e) => onReplyInputChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    onSendReply(comment.id, comment.handle);
+                  }
+                  if (e.key === "Escape") onCancelReply();
+                }}
+                placeholder={t("comments.replyTo", { handle: comment.handle })}
+                className="min-w-0 flex-1 bg-transparent text-[12px] text-ink placeholder:text-ink-faint focus:outline-none"
+              />
+              <button
+                onClick={() => onSendReply(comment.id, comment.handle)}
+                disabled={!replyInput.trim()}
+                className={cn(
+                  "flex size-6 shrink-0 items-center justify-center rounded-full transition-colors",
+                  replyInput.trim() ? "bg-primary text-white" : "text-ink-faint",
+                )}
+              >
+                <Icon name="send" size={11} strokeWidth={2.2} />
+              </button>
+            </div>
+            <button
+              onClick={onCancelReply}
+              className="text-[12px] font-semibold text-ink-muted hover:text-ink"
+            >
+              {t("comments.cancel")}
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Nested Replies */}
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="mt-3.5 space-y-2.5 border-s-2 border-line-strong ps-3 lg:ps-4 ms-2 lg:ms-3">
+          {comment.replies.map((reply) => (
+            <CommentCard
+              key={reply.id}
+              comment={reply}
+              depth={depth + 1}
+              locale={locale}
+              replyTarget={replyTarget}
+              replyInput={replyInput}
+              onReplyInputChange={onReplyInputChange}
+              onStartReply={onStartReply}
+              onCancelReply={onCancelReply}
+              onSendReply={onSendReply}
+              onLikeComment={onLikeComment}
+              onReportComment={onReportComment}
+              onUndoReport={onUndoReport}
+            />
+          ))}
+        </div>
+      )}
+    </motion.div>
   );
 }

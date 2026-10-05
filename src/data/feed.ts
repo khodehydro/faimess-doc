@@ -98,6 +98,10 @@ export type NewsComment = {
   time: string;
   text: string;
   likes: number;
+  liked?: boolean;
+  reported?: boolean;
+  reportReason?: string;
+  replies?: NewsComment[];
 };
 
 export type NewsItem = {
@@ -136,7 +140,40 @@ export const newsItems: NewsItem[] = [
     commentsCount: 142,
     bodyKeys: ["news.nw1.p1", "news.nw1.p2", "news.nw1.p3"],
     comments: [
-      { id: "c1", author: "Minho", handle: "@minho_k", avatar: minhoPhoto, seed: 3, time: "1 hr ago", text: "Finally KSPO Dome! Getting tickets is going to be a warzone but I will be there.", likes: 38 },
+      {
+        id: "c1",
+        author: "Minho",
+        handle: "@minho_k",
+        avatar: minhoPhoto,
+        seed: 3,
+        time: "1 hr ago",
+        text: "Finally KSPO Dome! Getting tickets is going to be a warzone but I will be there.",
+        likes: 38,
+        replies: [
+          {
+            id: "c1-r1",
+            author: "Yuna",
+            handle: "@yuna_music",
+            avatar: yunaPhoto,
+            seed: 5,
+            time: "30 min ago",
+            text: "Same here! Pre-sale starts 8 PM, set all your alarms!",
+            likes: 12,
+            replies: [
+              {
+                id: "c1-r1-1",
+                author: "Minho",
+                handle: "@minho_k",
+                avatar: minhoPhoto,
+                seed: 3,
+                time: "15 min ago",
+                text: "Got my 5G ready. Good luck to both of us!",
+                likes: 7,
+              },
+            ],
+          },
+        ],
+      },
       { id: "c2", author: "Yuna", handle: "@yuna_music", avatar: yunaPhoto, seed: 5, time: "45 min ago", text: "Streaming the opener live in 4K on FAIMESS? Absolutely legendary.", likes: 24 },
       { id: "c3", author: "Seojin", handle: "@seojin99", avatar: seojinPhoto, seed: 4, time: "20 min ago", text: "Milan and Tokyo on the same run! This staging is going to be massive.", likes: 15 },
     ],
@@ -157,7 +194,28 @@ export const newsItems: NewsItem[] = [
     commentsCount: 189,
     bodyKeys: ["news.nw2.p1", "news.nw2.p2", "news.nw2.p3"],
     comments: [
-      { id: "c4", author: "Miso", handle: "@miso_vibes", avatar: misoPhoto, seed: 2, time: "3 hrs ago", text: "Midnight Seoul on repeat all day! The synth bass in the second chorus is unreal.", likes: 52 },
+      {
+        id: "c4",
+        author: "Miso",
+        handle: "@miso_vibes",
+        avatar: misoPhoto,
+        seed: 2,
+        time: "3 hrs ago",
+        text: "Midnight Seoul on repeat all day! The synth bass in the second chorus is unreal.",
+        likes: 52,
+        replies: [
+          {
+            id: "c4-r1",
+            author: "Ari",
+            handle: "@ari_sound",
+            avatar: ariPhoto,
+            seed: 6,
+            time: "2 hrs ago",
+            text: "That bridge transition gives me goosebumps every single listen.",
+            likes: 18,
+          },
+        ],
+      },
       { id: "c5", author: "Haru", handle: "@haru_beats", avatar: haruPhoto, seed: 7, time: "2 hrs ago", text: "#1 in nine markets is huge. AXION truly broke through globally this comeback.", likes: 41 },
     ],
   },
