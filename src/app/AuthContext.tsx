@@ -52,8 +52,10 @@ export function AuthProvider({
   children: ReactNode;
   initialUser?: string | null;
 }) {
-  const [user, setUser] = useState<string | null>(
-    () => initialUser ?? readStoredUser(),
+  /* `initialUser={null}` is the door on purpose, so only an *absent*
+     option falls back to the stored session — `??` would swallow the null */
+  const [user, setUser] = useState<string | null>(() =>
+    initialUser === undefined ? readStoredUser() : initialUser,
   );
 
   const signIn = useCallback((name: string, password: string): SignInResult => {
