@@ -74,7 +74,7 @@ const tracksForAlbum = (album: Album): PlayerTrack[] => {
 };
 
 export function BrowseDetailView() {
-  const { t, dir } = usePreferences();
+  const { t, dir, dataLabel, num } = usePreferences();
   const { detail, closeDetail, notify, openDetail } = useApp();
   const { mine } = usePlaylists();
   const player = usePlayer();
@@ -94,8 +94,11 @@ export function BrowseDetailView() {
         kind: "artist",
         id: artist.id,
         title: artist.name,
-        byline: artist.kind,
-        facts: `${artist.listeners} · ${countOf(tracks, t)} · ${t("detail.minutes", { n: minutesOf(tracks) })}`,
+        byline: dataLabel(artist.kind),
+        /* every part of this line is chrome: how big the artist is, how many
+           songs they have, how long they run — so all three follow the
+           interface language, listeners included */
+        facts: `${dataLabel(artist.listeners)} · ${countOf(tracks, t)} · ${t("detail.minutes", { n: minutesOf(tracks) })}`,
         cover: artist.photo,
         seed: artist.seed,
         round: true,
@@ -112,7 +115,7 @@ export function BrowseDetailView() {
         id: album.id,
         title: album.title,
         byline: album.artist,
-        facts: `${album.year} · ${countOf(tracks, t)} · ${t("detail.minutes", { n: minutesOf(tracks) })}`,
+        facts: `${num(album.year)} · ${countOf(tracks, t)} · ${t("detail.minutes", { n: minutesOf(tracks) })}`,
         cover: album.photo,
         seed: album.seed,
         tracks,
@@ -222,7 +225,7 @@ export function BrowseDetailView() {
                 type="button"
                 onClick={() => start(track, heading!.tracks.map((t) => t.id))}
                 className={cn(
-                  "group flex w-full items-center gap-3.5 rounded-[16px] border px-3 py-2.5 text-start transition-colors",
+                  "group flex w-full items-center gap-2.5 rounded-[14px] border px-2.5 py-2 text-start transition-colors lg:gap-3.5 lg:rounded-[16px] lg:px-3 lg:py-2.5",
                   playing
                     ? "border-primary/35 bg-primary-faint/60"
                     : "border-line/80 bg-surface hover:border-primary/25 hover:bg-primary-faint/50",
@@ -237,21 +240,22 @@ export function BrowseDetailView() {
                     i + 1
                   )}
                 </span>
-                <span className="size-[44px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
+                <span className="size-[40px] shrink-0 overflow-hidden rounded-[11px] shadow-xs lg:size-[44px] lg:rounded-[12px]">
                   <Cover src={track.photo} seed={i} className="h-full w-full" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-bold text-ink">
+                  <span className="block truncate text-[13px] font-bold text-ink lg:text-[14px]">
                     {track.title}
                   </span>
-                  <span className="mt-0.5 block truncate text-[12.5px] font-semibold text-ink-muted">
-                    {track.artist} · {track.album}
+                  <span className="mt-0.5 block truncate text-[12px] font-semibold text-ink-muted lg:text-[12.5px]">
+                    {track.artist} · {dataLabel(track.album)}
                   </span>
                 </span>
-                <span className="shrink-0 text-[12.5px] font-semibold tabular-nums text-ink-faint">
+                <span className="shrink-0 text-[12px] font-semibold tabular-nums text-ink-faint lg:text-[12.5px]">
                   {Math.floor(track.seconds / 60)}:{String(track.seconds % 60).padStart(2, "0")}
                 </span>
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-primary transition-opacity group-hover:opacity-100">
+                {/* a hover-only button has no way to appear on a touch screen */}
+                <span className="hidden size-8 shrink-0 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-primary transition-opacity group-hover:opacity-100 lg:flex">
                   <Icon name="play" size={14} strokeWidth={2} />
                 </span>
               </button>
@@ -271,15 +275,15 @@ export function BrowseDetailView() {
               type="button"
               onClick={() => openDetail({ kind: "album", id: album.id })}
               aria-label={t("detail.openAlbum", { name: album.title })}
-              className="group flex w-full items-center gap-3.5 rounded-[16px] border border-line/80 bg-surface px-3 py-2.5 text-start transition-colors hover:border-primary/25 hover:bg-primary-faint/50"
+              className="group flex w-full items-center gap-2.5 rounded-[14px] border border-line/80 bg-surface px-2.5 py-2 text-start transition-colors hover:border-primary/25 hover:bg-primary-faint/50 lg:gap-3.5 lg:rounded-[16px] lg:px-3 lg:py-2.5"
             >
-              <span className="size-[44px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
+              <span className="size-[40px] shrink-0 overflow-hidden rounded-[11px] shadow-xs lg:size-[44px] lg:rounded-[12px]">
                 <Cover src={album.photo} seed={album.seed} className="h-full w-full" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[14px] font-bold text-ink">{album.title}</span>
-                <span className="mt-0.5 block truncate text-[12.5px] font-semibold text-ink-muted">
-                  {album.year} · {t("playlist.trackCount", { count: album.tracks })}
+                <span className="block truncate text-[13px] font-bold text-ink lg:text-[14px]">{album.title}</span>
+                <span className="mt-0.5 block truncate text-[12px] font-semibold text-ink-muted lg:text-[12.5px]">
+                  {num(album.year)} · {t("playlist.trackCount", { count: album.tracks })}
                 </span>
               </span>
               <span
@@ -288,7 +292,7 @@ export function BrowseDetailView() {
                   event.stopPropagation();
                   if (list[0]) start(list[0], list.map((track) => track.id));
                 }}
-                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-primary transition-opacity group-hover:opacity-100"
+                className="hidden size-8 shrink-0 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-primary transition-opacity group-hover:opacity-100 lg:flex"
               >
                 <Icon name="play" size={14} strokeWidth={2} />
               </span>
@@ -300,14 +304,14 @@ export function BrowseDetailView() {
   );
 
   return (
-    <section className="flex flex-col gap-5 p-5 pb-8">
+    <section className="flex flex-col gap-4 p-4 pb-7 lg:gap-5 lg:p-5 lg:pb-8">
       {/* header — the name and its facts on the start side, the controls
           that act on them opposite, on the same line */}
       {/* three blocks on desktop, two rows on a phone: the cover and the
           facts share the first row, the controls take the second. In one row
           the pills ate the title's width (it collapsed to zero) and then ran
           off the card, clipped by `overflow-hidden`. */}
-      <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
+      <div className="flex flex-wrap items-start gap-x-3 gap-y-2.5 lg:gap-x-4 lg:gap-y-3">
         <CircleButton
           icon={backIcon(dir)}
           tone="white"
@@ -317,7 +321,7 @@ export function BrowseDetailView() {
         />
         <span
           className={cn(
-            "size-[64px] shrink-0 overflow-hidden shadow-card ring-1 ring-line/70 lg:size-[76px]",
+            "size-[56px] shrink-0 overflow-hidden shadow-card ring-1 ring-line/70 lg:size-[76px]",
             heading.round ? "rounded-full" : "rounded-[18px]",
           )}
         >
@@ -335,13 +339,13 @@ export function BrowseDetailView() {
 
         {/* the name, and the details straight under it */}
         <div className="min-w-0 flex-1">
-          <h2 className="font-display truncate text-[23px] font-bold leading-tight tracking-[-0.016em] text-ink">
+          <h2 className="font-display truncate text-[19px] font-bold leading-tight tracking-[-0.016em] text-ink lg:text-[23px]">
             {heading.title}
           </h2>
           {/* `truncate` is a desktop luxury: on a phone both lines are
               allowed to wrap rather than end in an ellipsis */}
-          <p className="mt-1 text-[13.5px] font-bold text-ink-muted lg:truncate">{heading.byline}</p>
-          <p className="mt-0.5 text-[12.5px] font-semibold tabular-nums text-ink-faint lg:truncate">
+          <p className="mt-0.5 text-[12.5px] font-bold text-ink-muted lg:mt-1 lg:text-[13.5px] lg:truncate">{heading.byline}</p>
+          <p className="mt-0.5 text-[12px] font-semibold tabular-nums text-ink-faint lg:text-[12.5px] lg:truncate">
             {heading.facts}
           </p>
         </div>
@@ -413,13 +417,14 @@ export function BrowseDetailView() {
 
 /** the small heading that opens a section of the detail card */
 function SectionLabel({ label, count }: { label: string; count: number }) {
+  const { num } = usePreferences();
   return (
     <div className="flex items-baseline gap-2 px-0.5">
       <span className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">
         {label}
       </span>
       <span className="rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold tabular-nums text-ink-muted">
-        {count}
+        {num(count)}
       </span>
     </div>
   );

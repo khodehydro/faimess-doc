@@ -23,7 +23,7 @@ const TAG_TONE: Record<string, string> = {
 };
 
 export function NewsShelf() {
-  const { t, dir } = usePreferences();
+  const { t, dir, dataLabel, text } = usePreferences();
   const { navigate, notify } = useApp();
 
   return (
@@ -38,7 +38,7 @@ export function NewsShelf() {
         </PillButton>
       }
     >
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-4">
         {newsItems.slice(0, 4).map((item, i) => (
           <motion.div
             key={item.id}
@@ -55,30 +55,33 @@ export function NewsShelf() {
             }}
             role="button"
             tabIndex={0}
-            aria-label={item.title}
-            className="group flex cursor-pointer items-center gap-3.5 overflow-hidden rounded-[16px] border border-line/80 bg-surface p-3 text-start transition-colors hover:border-primary/25"
+            aria-label={text(`news.${item.id}.title`, item.title)}
+            className="group flex cursor-pointer items-center gap-2.5 overflow-hidden rounded-[14px] border border-line/80 bg-surface p-2.5 text-start transition-colors hover:border-primary/25 lg:gap-3.5 lg:rounded-[16px] lg:p-3"
           >
-            <span className="relative h-[66px] w-[96px] shrink-0 overflow-hidden rounded-[13px]">
+            <span className="relative h-[56px] w-[82px] shrink-0 overflow-hidden rounded-[12px] lg:h-[66px] lg:w-[96px] lg:rounded-[13px]">
               <Thumb scene={item.scene} className="h-full w-full transition-transform duration-500 group-hover:scale-105" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2">
-                <span className={cn("shrink-0 whitespace-nowrap rounded-full px-2.5 py-[2px] text-[12px] font-bold uppercase tracking-wide", TAG_TONE[item.tag])}>
-                  {item.tag}
+                  <span className={cn("shrink-0 whitespace-nowrap rounded-full px-2 py-[2px] text-[12px] font-bold tracking-wide lg:px-2.5", TAG_TONE[item.tag])}>
+                  {dataLabel(item.tag)}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[12px] text-ink-faint">{item.ago}</span>
+              <span className="min-w-0 flex-1 truncate text-[12px] text-ink-faint">{dataLabel(item.ago)}</span>
               </span>
-              <span className="mt-1.5 block line-clamp-2 text-[14px] font-bold leading-snug text-ink">{item.title}</span>
-              <span className="mt-1.5 flex items-center gap-1.5 text-[12px] text-ink-muted">
+              <span className="mt-1 block line-clamp-2 text-[13px] font-bold leading-snug text-ink lg:mt-1.5 lg:text-[14px]">
+                {text(`news.${item.id}.title`, item.title)}
+              </span>
+                <span className="mt-1 flex items-center gap-1.5 text-[12px] text-ink-muted lg:mt-1.5">
                 <Icon name="news" size={12} />
-                {item.source}
+                {dataLabel(item.source)}
               </span>
             </span>
             <motion.span
               transition={spring}
               className="me-0.5 shrink-0 text-ink-faint transition-colors group-hover:text-primary"
             >
-              <Icon name={forwardIcon(dir)} size={16.5} strokeWidth={2} />
+              <Icon name={forwardIcon(dir)} size={15} strokeWidth={2} className="lg:hidden" />
+              <Icon name={forwardIcon(dir)} size={16.5} strokeWidth={2} className="hidden lg:block" />
             </motion.span>
           </motion.div>
         ))}

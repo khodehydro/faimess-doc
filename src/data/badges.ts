@@ -10,16 +10,29 @@ export type BadgeTone = "primary" | "mint" | "flame" | "teal";
 
 export type CommentBadge = {
   icon: IconName;
+  /** the English label — the source of truth, as in data/i18n.ts */
   label: string;
+  /** the same label, translated by the interface language */
+  labelKey: string;
   tone: BadgeTone;
 };
 
 export const BADGES = {
-  topListener: { icon: "crown", label: "Top listener · Season 12", tone: "flame" },
-  chart: { icon: "trend", label: "Weekly chart #1", tone: "primary" },
-  fanOfMonth: { icon: "star", label: "Fan of the month", tone: "mint" },
-  streak: { icon: "bolt", label: "30-day comeback streak", tone: "teal" },
-  artist: { icon: "verified", label: "Verified artist", tone: "primary" },
-  moderator: { icon: "medal", label: "Community moderator", tone: "teal" },
-  rookie: { icon: "sparkle", label: "Rookie of the week", tone: "mint" },
+  topListener: {
+    icon: "crown",
+    label: "Top listener · Season 12",
+    labelKey: "badge.topListener",
+    tone: "flame",
+  },
+  chart: { icon: "trend", label: "Weekly chart #1", labelKey: "badge.chart", tone: "primary" },
+  fanOfMonth: { icon: "star", label: "Fan of the month", labelKey: "badge.fanOfMonth", tone: "mint" },
+  streak: { icon: "bolt", label: "30-day comeback streak", labelKey: "badge.streak", tone: "teal" },
+  artist: { icon: "verified", label: "Verified artist", labelKey: "badge.artist", tone: "primary" },
+  moderator: {
+    icon: "medal",
+    label: "Community moderator",
+    labelKey: "badge.moderator",
+    tone: "teal",
+  },
+  rookie: { icon: "sparkle", label: "Rookie of the week", labelKey: "badge.rookie", tone: "mint" },
 } as const satisfies Record<string, CommentBadge>;

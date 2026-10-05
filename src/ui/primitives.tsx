@@ -137,13 +137,14 @@ export function ExpandPill({ icon, children, tone = "outline", label, onClick }:
       aria-label={label ?? children}
       title={label ?? children}
       className={cn(
-        "group flex shrink-0 items-center rounded-full border px-3 py-2 text-[13px] font-semibold transition-colors",
+        "group flex shrink-0 items-center rounded-full border px-2.5 py-1.5 text-[12.5px] font-semibold transition-colors lg:px-3 lg:py-2 lg:text-[13px]",
         tone === "primary"
           ? "border-transparent bg-primary text-white shadow-primary hover:bg-primary-deep"
           : "border-line bg-surface text-ink-body hover:border-primary/35 hover:bg-primary-faint hover:text-primary-deep",
       )}
     >
-      <Icon name={icon} size={15.5} strokeWidth={2.1} className="shrink-0" />
+      <Icon name={icon} size={14.5} strokeWidth={2.1} className="shrink-0 lg:hidden" />
+      <Icon name={icon} size={15.5} strokeWidth={2.1} className="hidden shrink-0 lg:block" />
       <span
         className={cn(
           "max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-[max-width,opacity,margin] duration-300 ease-out",
@@ -174,7 +175,9 @@ export function PillButton({
       whileTap={{ scale: 0.97 }}
       transition={spring}
       className={cn(
-        "inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[13.5px] font-semibold transition-colors",
+        /* a step smaller under 1024px: the pills sit next to a title in a
+           shelf header there, and the desktop size made the row overflow */
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-semibold transition-colors lg:gap-2 lg:px-3.5 lg:py-2 lg:text-[13.5px]",
         tone === "primary" && "bg-primary text-white shadow-primary",
         tone === "outline" &&
           (active
@@ -184,7 +187,12 @@ export function PillButton({
         className,
       )}
     >
-      {icon && <Icon name={icon} size={15} />}
+      {icon && (
+        <>
+          <Icon name={icon} size={13.5} className="lg:hidden" />
+          <Icon name={icon} size={15} className="hidden lg:block" />
+        </>
+      )}
       {children}
     </motion.button>
   );

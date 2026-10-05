@@ -49,7 +49,7 @@ export function CompactShell() {
   const Page = PAGES[route];
 
   return (
-    <div dir={dir} className="flex min-h-dvh w-full flex-col gap-4 px-4 pt-4 pb-[11rem]">
+    <div dir={dir} className="flex min-h-dvh w-full flex-col gap-3 px-4 pt-3.5 pb-[10rem] lg:gap-4 lg:pt-4 lg:pb-[11rem]">
       {/* physical left-to-right order: notifications / centered brand / profile */}
       <div
         dir="ltr"

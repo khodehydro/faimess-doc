@@ -11,7 +11,7 @@ import { trackById } from "../../data/player";
 import { compactNumber } from "../../lib/format";
 import { cn } from "../../lib/cn";
 import { spring } from "../../lib/motion";
-import { useT } from "../../app/PreferencesContext";
+import { usePreferences } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 3 — trending songs ranked by how many users hit the fire
@@ -21,7 +21,7 @@ import { useT } from "../../app/PreferencesContext";
 type Row = (typeof trendingTracks)[number] & { fired: boolean; fires: number };
 
 function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: number }) {
-  const t = useT();
+  const { t, dataLabel, num } = usePreferences();
   const { notify } = useApp();
   const player = usePlayer();
   /* the queue may hold this song under its newest-release id */
@@ -49,19 +49,19 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4, delay: index * 0.04 }}
-      className="group flex items-center gap-3 rounded-[16px] border border-line/80 bg-surface px-3 py-2.5 transition-colors hover:border-primary/25 hover:bg-primary-faint/50"
+      className="group flex items-center gap-2.5 rounded-[14px] border border-line/80 bg-surface px-2.5 py-2 transition-colors hover:border-primary/25 hover:bg-primary-faint/50 lg:gap-3 lg:rounded-[16px] lg:px-3 lg:py-2.5"
     >
       {/* rank */}
       <span
         className={cn(
-          "flex size-6 shrink-0 items-center justify-center rounded-full text-[13px] font-extrabold tabular-nums",
+          "flex size-5 shrink-0 items-center justify-center rounded-full text-[12px] font-extrabold tabular-nums lg:size-6 lg:text-[13px]",
           medal ? "bg-primary text-white shadow-primary" : "bg-subtle text-ink-muted",
         )}
       >
-        {rank}
+        {num(rank)}
       </span>
 
-      <span className="relative size-[40px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
+      <span className="relative size-[36px] shrink-0 overflow-hidden rounded-[11px] shadow-xs lg:size-[40px] lg:rounded-[12px]">
         <Cover src={row.photo} seed={row.seed} className="h-full w-full" />
         <span
           onClick={(e) => {
@@ -78,17 +78,20 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
             mine ? "opacity-100" : "opacity-0 group-hover:opacity-100",
           )}
         >
-          <Icon name={mine && player.playing ? "pause" : "play"} size={15.5} strokeWidth={2} />
+          <Icon name={mine && player.playing ? "pause" : "play"} size={15} strokeWidth={2} />
         </span>
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[14.5px] font-bold text-ink">{row.title}</span>
-        <span className="mt-1 flex items-center gap-1.5 text-[12.5px] text-ink-muted">
-          <span className="font-semibold text-ink-body">{row.artist}</span>
+        <span className="block truncate text-[13.5px] font-bold text-ink lg:text-[14.5px]">{row.title}</span>
+        <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-ink-muted lg:mt-1 lg:text-[12.5px]">
+          <span className="truncate font-semibold text-ink-body">{row.artist}</span>
           <span className="text-ink-faint">·</span>
-          <span className="flex items-center gap-1 text-teal-deep">
-            <Icon name="trend" size={12.5} strokeWidth={2} />+{row.delta}%
+          <span className="shrink-0">{dataLabel(row.ago)}</span>
+          <span className="flex shrink-0 items-center gap-1 text-teal-deep">
+            <Icon name="trend" size={12} strokeWidth={2} className="lg:hidden" />
+            <Icon name="trend" size={12.5} strokeWidth={2} className="hidden lg:block" />
+            {t("shelf.delta", { n: row.delta })}
           </span>
         </span>
       </span>
@@ -100,9 +103,9 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
         whileTap={{ scale: 0.95 }}
         transition={spring}
         aria-pressed={fired}
-        aria-label={`Fire ${row.title}`}
+        aria-label={t("shelf.fireAria", { title: row.title })}
         className={cn(
-          "flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 transition-colors",
+          "flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 transition-colors lg:gap-1.5 lg:px-2.5 lg:py-1.5",
           fired
             ? "border-transparent bg-flame-soft text-flame-deep"
             : "border-line bg-surface text-ink-muted hover:border-flame/40 hover:text-flame-deep",
@@ -124,9 +127,9 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
             transition={{ duration: 0.18 }}
-            className="text-[13.5px] font-extrabold tabular-nums"
+            className="text-[12.5px] font-extrabold tabular-nums lg:text-[13.5px]"
           >
-            {compactNumber(fires)}
+            {dataLabel(compactNumber(fires))}
           </motion.span>
         </AnimatePresence>
       </motion.button>
@@ -135,7 +138,7 @@ function TrendingRow({ row, rank, index }: { row: Row; rank: number; index: numb
 }
 
 export function TrendingTracks() {
-  const t = useT();
+  const { t } = usePreferences();
   const { notify } = useApp();
   const [range, setRange] = useState<"day" | "week">("day");
 
@@ -152,24 +155,24 @@ export function TrendingTracks() {
       hint={t("shelf.hintFires")}
       action={
         <div className="flex shrink-0 items-center gap-2">
-          <div className="flex shrink-0 items-center gap-1 rounded-full bg-subtle p-0.5">
+          <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-subtle p-0.5 lg:gap-1">
             {([
-              { id: "day", label: "24h" },
-              { id: "week", label: "Week" },
+              { id: "day", key: "shelf.range24h", min: "min-w-[40px] lg:min-w-[44px]" },
+              { id: "week", key: "shelf.rangeWeek", min: "min-w-[44px] lg:min-w-[52px]" },
             ] as const).map((r) => (
               <button
                 key={r.id}
                 onClick={() => setRange(r.id)}
                 className={cn(
-                  "relative shrink-0 whitespace-nowrap rounded-full px-2.5 py-1.5 text-[13px] font-semibold transition-colors",
-                  r.id === "day" ? "min-w-[44px]" : "min-w-[52px]",
+                  "relative shrink-0 whitespace-nowrap rounded-full px-1.5 py-1 text-[12px] font-semibold transition-colors lg:px-2.5 lg:py-1.5 lg:text-[13px]",
+                  r.min,
                   range === r.id ? "text-ink" : "text-ink-faint hover:text-ink-muted",
                 )}
               >
                 {range === r.id && (
                   <motion.span layoutId="trend-range" transition={spring} className="absolute inset-0 rounded-full bg-surface shadow-xs" />
                 )}
-                <span className="relative">{r.label}</span>
+                <span className="relative">{t(r.key)}</span>
               </button>
             ))}
           </div>
@@ -183,7 +186,7 @@ export function TrendingTracks() {
         </div>
       }
     >
-      <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 lg:gap-2.5">
         {rows.map((row, i) => (
           <TrendingRow key={row.id} row={row} rank={i + 1} index={i} />
         ))}

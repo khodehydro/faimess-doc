@@ -36,11 +36,11 @@ export function MobileNav() {
               transition={spring}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "relative flex flex-1 flex-col items-center gap-1 rounded-full px-1 pb-1.5 pt-2 text-[12px] font-semibold transition-colors",
+"relative flex flex-1 flex-col items-center gap-0.5 rounded-full px-0.5 pb-1.5 pt-1.5 text-[12px] font-semibold transition-colors lg:gap-1",
                 isActive ? "text-primary-deep" : "text-ink-muted",
               )}
             >
-              <Icon name={item.icon} size={19} strokeWidth={isActive ? 2 : 1.7} />
+              <Icon name={item.icon} size={18} strokeWidth={isActive ? 2 : 1.7} />
               <span className="max-w-full truncate">{t(`nav.${item.id}`)}</span>
               {isActive && (
                 <motion.span

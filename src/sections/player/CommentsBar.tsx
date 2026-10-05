@@ -14,7 +14,7 @@ import { forwardIcon } from "../../lib/rtl";
  * ------------------------------------------------------------------ */
 
 export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () => void }) {
-  const { t, dir } = usePreferences();
+  const { t, dir, dataLabel, num } = usePreferences();
   const comments = useTrackComments(trackId);
   const latest = comments.thread[0];
   const second = comments.thread.find((c) => c.replies.length > 0);
@@ -27,7 +27,7 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
         </span>
         <span className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">{t("comments.title")}</span>
         <span className="rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold tabular-nums text-ink-muted">
-          {comments.total}
+          {num(comments.total)}
         </span>
         <motion.button
           whileHover={{ y: -1 }}
@@ -54,7 +54,9 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
           <span className="min-w-0 flex-1">
             <span className="flex min-w-0 items-baseline gap-2">
               <span className="min-w-0 truncate text-[12.5px] font-bold text-ink-body">{latest.handle}</span>
-              <span className="shrink-0 text-[12px] font-semibold text-ink-faint">{latest.time}</span>
+              <span className="shrink-0 text-[12px] font-semibold text-ink-faint">
+                {dataLabel(latest.time)}
+              </span>
             </span>
             <span dir="auto" className="mt-1 block truncate text-[12.5px] text-ink-muted">
               {latest.text}

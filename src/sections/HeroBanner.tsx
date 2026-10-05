@@ -25,7 +25,7 @@ const AUTOPLAY_MS = 7000;
  * ------------------------------------------------------------------ */
 
 export function HeroBanner() {
-  const { t, dir: writing } = usePreferences();
+  const { t, dir: writing, text } = usePreferences();
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState(1);
   const [paused, setPaused] = useState(false);
@@ -133,7 +133,8 @@ export function HeroBanner() {
               bottom edge, which is what makes the two lines below legible */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/78 via-black/38 to-transparent" />
 
-          {/* title + subtitle — demo copy, so it lives in the data, not i18n */}
+          {/* title + subtitle — editorial copy, so it reads in the interface
+              language (the English source of truth lives in the data) */}
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -144,13 +145,13 @@ export function HeroBanner() {
                On phones the block sits higher than the centred indicator, so
                the two can never overlap on a narrow banner. */
             dir="auto"
-            className="pointer-events-none absolute bottom-[4.75rem] start-5 max-w-[80%] sm:bottom-7 sm:start-7 sm:max-w-[46%]"
+            className="pointer-events-none absolute bottom-[3.6rem] start-4 max-w-[84%] min-[480px]:bottom-14 sm:bottom-7 sm:start-7 sm:max-w-[46%]"
           >
-            <h2 className="font-display text-[27px] font-bold leading-[1.15] tracking-[-0.018em] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
-              {banner.title}
+            <h2 className="font-display text-[19px] font-bold leading-[1.2] tracking-[-0.018em] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] min-[480px]:text-[22px] sm:text-[24px] lg:text-[27px] lg:leading-[1.15]">
+              {text(`banner.${banner.id}.title`, banner.title)}
             </h2>
-            <p className="mt-2 text-[14px] font-medium leading-relaxed text-white/82 drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
-              {banner.subtitle}
+            <p className="mt-1.5 text-[12px] font-medium leading-relaxed text-white/82 drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)] min-[480px]:text-[13px] lg:mt-2 lg:text-[14px]">
+              {text(`banner.${banner.id}.subtitle`, banner.subtitle)}
             </p>
           </motion.div>
         </motion.div>
@@ -159,8 +160,8 @@ export function HeroBanner() {
       {/* the one piece of chrome left: an indicator, centred on the
           bottom edge. Physical centring on purpose — `inset-x-0` + flex
           mirrors cleanly in RTL, while a logical half-offset would not. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center">
-        <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-surface/92 px-3 py-2.5 shadow-sm">
+      <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center lg:bottom-5">
+        <div className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-surface/92 px-2.5 py-2 shadow-sm lg:gap-2 lg:px-3 lg:py-2.5">
           {banners.map((b, i) => (
             <button
               key={b.id}
@@ -169,7 +170,7 @@ export function HeroBanner() {
                 setDir(i > index ? 1 : -1);
                 setIndex(i);
               }}
-              aria-label={b.title}
+              aria-label={text(`banner.${b.id}.title`, b.title)}
               aria-current={i === index}
               className="group relative flex h-2 items-center"
             >

@@ -45,30 +45,34 @@ export function Shelf({
       style={{ scrollMarginTop: STICKY_TOP }}
     >
       <header
-        className="sticky z-20 -mx-4 flex flex-wrap items-center gap-x-3 gap-y-2 bg-surface/94 px-4 py-3 backdrop-blur-md"
+        /* Phones and tablets keep this on one row: the title (and its hint)
+           are the flexible part and truncate, the action is fixed on the
+           inline end. It used to let the action fall onto a line of its own
+           — “Play all” ended up under the title on every narrow screen. The
+           type is a step smaller under 1024px for the same reason. */
+        className="sticky z-20 -mx-4 flex flex-nowrap items-center gap-x-2 bg-surface/94 px-4 py-2.5 backdrop-blur-md min-[420px]:gap-x-2.5 lg:flex-wrap lg:gap-x-3 lg:py-3"
         style={{ top: STICKY_TOP }}
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-faint text-primary-deep">
-          <Icon name={icon} size={16} strokeWidth={1.9} />
+        <span className="hidden size-7 shrink-0 items-center justify-center rounded-full bg-primary-faint text-primary-deep min-[420px]:flex lg:size-8">
+          <Icon name={icon} size={15} strokeWidth={1.9} className="lg:hidden" />
+          <Icon name={icon} size={16} strokeWidth={1.9} className="hidden lg:block" />
         </span>
         <div className={cn("min-w-0 flex-1", hint && "sm:flex sm:items-center sm:gap-3")}>
-          <h3 className="min-w-0 truncate whitespace-nowrap font-display text-lg font-bold tracking-[-0.012em] text-ink">
+          <h3 className="min-w-0 truncate whitespace-nowrap font-display text-[15.5px] font-bold tracking-[-0.012em] text-ink lg:text-lg">
             {title}
           </h3>
           {hint && (
-            <span className="mt-0.5 block min-w-0 truncate whitespace-nowrap text-xs font-medium text-ink-muted sm:mt-0 sm:text-sm">
+            <span className="mt-0.5 hidden min-w-0 truncate whitespace-nowrap text-[12px] font-medium text-ink-muted min-[420px]:block sm:mt-0 sm:text-sm">
               {hint}
             </span>
           )}
         </div>
         {action && (
-          <span className="flex w-full shrink-0 justify-end sm:ms-auto sm:w-auto">
-            {action}
-          </span>
+          <span className="ms-auto flex shrink-0 items-center">{action}</span>
         )}
       </header>
 
-      <div className="pb-6">{children}</div>
+      <div className="pb-5 lg:pb-6">{children}</div>
     </section>
   );
 }
@@ -76,7 +80,7 @@ export function Shelf({
 /** horizontal, snapping row used by the artists / albums / fans shelves */
 export function Row({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("scroll-rail flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-2", className)}>
+    <div className={cn("scroll-rail flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 lg:gap-3.5", className)}>
       {children}
     </div>
   );

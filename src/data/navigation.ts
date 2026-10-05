@@ -16,8 +16,36 @@ export const navItems: NavItem[] = [
   { id: "shop", label: "Shop", icon: "shop" },
 ];
 
-export const notifications = [
-  { id: "n1", title: "Nova Ånn released “Afterglow”", at: "2 min ago", tone: "primary" as const },
-  { id: "n2", title: "Your mix of the week is ready", at: "1 hr ago", tone: "teal" as const },
-  { id: "n3", title: "3 tracks added to Late Night Drive", at: "Today", tone: "mint" as const },
+/**
+ * The notification tray. Each row stores *what kind* of news it is plus the
+ * words of the story (an artist, a title, a count), so the sentence is built
+ * by i18n and the timestamp by `tData` — never a finished English string.
+ */
+export type Notification = {
+  id: string;
+  /** i18n key of the sentence */
+  textKey: string;
+  /** the holes that sentence takes */
+  vars?: Record<string, string | number>;
+  /** English literal for the relative time — `tData` translates it */
+  at: string;
+  tone: "primary" | "teal" | "mint";
+};
+
+export const notifications: Notification[] = [
+  {
+    id: "n1",
+    textKey: "notif.release",
+    vars: { artist: "Nova Ånn", title: "Afterglow" },
+    at: "2 min ago",
+    tone: "primary",
+  },
+  { id: "n2", textKey: "notif.mixReady", at: "1 hr ago", tone: "teal" },
+  {
+    id: "n3",
+    textKey: "notif.tracksAdded",
+    vars: { n: 3, name: "Late Night Drive" },
+    at: "Today",
+    tone: "mint",
+  },
 ];

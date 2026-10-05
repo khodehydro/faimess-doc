@@ -40,7 +40,7 @@ export function AccountCard({
   className?: string;
 } = {}) {
   const { route, navigate, notify, openDetail } = useApp();
-  const { t, has, dir } = usePreferences();
+  const { t, has, dir, dataLabel } = usePreferences();
   /** nav labels are translated where we have them, otherwise the data label stands */
   const label = (key: string, fallback: string) =>
     has(key) ? t(key) : fallback;
@@ -143,7 +143,7 @@ export function AccountCard({
     if (r.route) {
       if (route !== r.route) navigate(r.route as typeof route);
     } else {
-      notify(`Opened ${r.label}`);
+      notify(t("toast.opened", { name: r.label }));
     }
   };
 
@@ -286,7 +286,7 @@ export function AccountCard({
                     transition={{ delay: 0.04 * i, duration: 0.3 }}
                     onClick={() => {
                       setBellOpen(false);
-                      notify(n.title, n.tone);
+                      notify(t(n.textKey, n.vars), n.tone);
                     }}
                     className="flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-start transition-colors hover:bg-subtle"
                   >
@@ -300,9 +300,9 @@ export function AccountCard({
                     />
                     <span className="min-w-0 flex-1">
                       <span className="block text-[13.5px] font-semibold leading-snug text-ink">
-                        {n.title}
+                        {t(n.textKey, n.vars)}
                       </span>
-                      <span className="mt-0.5 block text-[12px] text-ink-muted">{n.at}</span>
+                      <span className="mt-0.5 block text-[12px] text-ink-muted">{dataLabel(n.at)}</span>
                     </span>
                   </motion.button>
                 ))}
@@ -371,7 +371,7 @@ export function AccountCard({
           handle: me.handle,
           photo: me.photo,
           seed: 0,
-          meta: me.tier,
+          meta: dataLabel(me.tier),
           activity: myActivity,
           note: t("points.sessionNote"),
         }}
@@ -398,7 +398,7 @@ export function ProfileMenuContent({
   /** open the breakdown behind the balance */
   onPoints: () => void;
 }) {
-  const { t, lang, setLang, theme, setTheme, locale, dir } = usePreferences();
+  const { t, lang, setLang, theme, setTheme, locale, dir, dataLabel } = usePreferences();
   const { notify } = useApp();
   const { points, submissions } = useContributions();
   const pendingSheets = submissions.filter(
@@ -413,7 +413,7 @@ export function ProfileMenuContent({
           <span className="block truncate text-[14px] font-bold text-ink">
             {me.name}
           </span>
-          <span className="text-[12px] text-ink-muted">{me.tier}</span>
+          <span className="text-[12px] text-ink-muted">{dataLabel(me.tier)}</span>
         </span>
       </div>
 

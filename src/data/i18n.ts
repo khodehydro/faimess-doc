@@ -221,7 +221,7 @@ export const STRINGS: Record<string, Entry> = {
   "shelf.wasLive": { en: "was live", fa: "لایو بود", ko: "라이브 했어요" },
   "shelf.hintHourly": { en: "updated hourly", fa: "هر ساعت به‌روز", ko: "매시간 업데이트" },
   "shelf.hintFires": { en: "ranked by fan fires", fa: "به ترتیب فایر هواداران", ko: "팬 불 순" },
-  "shelf.hintDesk": { en: "K-pop desk", fa: "میز K-pop", ko: "K-pop 데스크" },
+  "shelf.hintDesk": { en: "K-pop desk", fa: "میز پاپ کره‌ای", ko: "K-pop 데스크" },
   "shelf.hintWeek": { en: "this week", fa: "این هفته", ko: "이번 주" },
   "shelf.hintLive": { en: "updated live", fa: "زنده به‌روز می‌شود", ko: "실시간 업데이트" },
   "shelf.wasLiveSuffix": { en: "was live", fa: "لایو بود", ko: "라이브 했어요" },
@@ -591,7 +591,7 @@ export const STRINGS: Record<string, Entry> = {
   "news.title": { en: "News", fa: "اخبار", ko: "뉴스" },
   "news.subtitle": {
     en: "Comebacks, tours, charts and everything the K-pop desk is tracking",
-    fa: "کمبک، تور، چارت و هر چیزی که میز K-pop دنبال می‌کند",
+    fa: "کمبک، تور، چارت و هر چیزی که میز پاپ کره‌ای دنبال می‌کند",
     ko: "컴백, 투어, 차트까지 — K-pop 데스크가 쫓는 모든 것",
   },
   "news.backHome": { en: "Back home", fa: "بازگشت به خانه", ko: "홈으로" },
@@ -755,10 +755,274 @@ export const STRINGS: Record<string, Entry> = {
   "sched.list": { en: "List", fa: "فهرست", ko: "목록" },
   "sched.private": { en: "Private", fa: "خصوصی", ko: "비공개" },
   "sched.openEvent": { en: "Open event", fa: "باز کردن رویداد", ko: "이벤트 열기" },
+
+  /* --------------------------- banner copy ----------------------------- *
+   *  The hero carousel is editorial copy FAIMESS writes itself (unlike a
+   *  track title or a fan's comment), so it is translated too: an English
+   *  headline on top of a Persian home page is exactly the mix this table
+   *  exists to avoid. The data keeps the English source of truth.        */
+  "banner.afterglow-tour.title": {
+    en: "NOVAE — Afterglow World Tour",
+    fa: "NOVAE — تور جهانی Afterglow",
+    ko: "NOVAE — Afterglow 월드 투어",
+  },
+  "banner.afterglow-tour.subtitle": {
+    en: "Three nights at KSPO Dome, then Tokyo and Milan.",
+    fa: "سه شب در KSPO Dome، بعد توکیو و میلان.",
+    ko: "KSPO 돔에서 3일, 그리고 도쿄와 밀라노.",
+  },
+  "banner.prism9-asia.title": {
+    en: "PRISM9 — Velvet Static Asia leg",
+    fa: "PRISM9 — بخش آسیایی Velvet Static",
+    ko: "PRISM9 — Velvet Static 아시아 투어",
+  },
+  "banner.prism9-asia.subtitle": {
+    en: "Velvet Static lands in Tokyo, Manila and Bangkok this December.",
+    fa: "Velvet Static این دسامبر به توکیو، مانیل و بانکوک می‌رسد.",
+    ko: "Velvet Static이 12월에 도쿄, 마닐라, 방콕에 찾아옵니다.",
+  },
+  "banner.midnight-seoul.title": {
+    en: "AXION — “Midnight Seoul”",
+    fa: "AXION — «Midnight Seoul»",
+    ko: "AXION — “Midnight Seoul”",
+  },
+  "banner.midnight-seoul.subtitle": {
+    en: "The new single is out everywhere — listening party tonight, 20:00 KST.",
+    fa: "سینگل تازه همه‌جا منتشر شد — امشب ساعت ۲۰:۰۰ به وقت کره مهمانی شنیدن داریم.",
+    ko: "신곡이 전 세계에 공개됐어요 — 오늘 밤 20:00 (KST) 리스닝 파티.",
+  },
+
+  /* --------------------------- news copy ------------------------------- *
+   *  Headlines and standfirsts from the K-pop desk: the same rule as the
+   *  banner — written by FAIMESS, so it reads in the reader's language.
+   *  The `en` column is the literal the data file carries.               */
+  "news.nw1.title": {
+    en: "NOVAE announce first world tour “Afterglow”",
+    fa: "NOVAE اولین تور جهانی «Afterglow» را اعلام کرد",
+    ko: "NOVAE, 첫 월드 투어 “Afterglow” 발표",
+  },
+  "news.nw1.excerpt": {
+    en: "Twelve cities across Asia, Europe and North America, with the Seoul opener streaming live.",
+    fa: "دوازده شهر در آسیا، اروپا و آمریکای شمالی، با پخش زندهٔ افتتاحیه در سئول.",
+    ko: "아시아·유럽·북미 12개 도시, 서울 개막 공연은 라이브 스트리밍.",
+  },
+  "news.nw2.title": {
+    en: "AXION’s “Midnight Seoul” tops the global chart",
+    fa: "«Midnight Seoul» از AXION صدرنشین چارت جهانی شد",
+    ko: "AXION의 “Midnight Seoul”, 글로벌 차트 1위",
+  },
+  "news.nw2.excerpt": {
+    en: "The lead single climbs to #1 in nine markets and breaks the group’s first-week record.",
+    fa: "این سینگل در ۹ بازار به شمارهٔ ۱ رسید و رکورد هفتهٔ اول گروه را شکست.",
+    ko: "9개 시장에서 1위에 오르며 그룹의 첫 주 기록을 갈아치웠어요.",
+  },
+  "news.nw3.title": {
+    en: "SEORA teases her mini-album with a 20-second clip",
+    fa: "SEORA با کلیپ ۲۰ ثانیه‌ای مینی‌آلبومش را تیزر زد",
+    ko: "SEORA, 20초 티저로 미니 앨범 예고",
+  },
+  "news.nw3.excerpt": {
+    en: "A midnight teaser confirms the six-track EP and a title song written with LUNEX’s producer.",
+    fa: "تیزر نیمه‌شب، EP شش‌تِرَکه و ترک تیتراژ را که با تهیه‌کنندهٔ LUNEX نوشته شده تأیید می‌کند.",
+    ko: "자정 티저가 6곡 EP와 LUNEX 프로듀서가 참여한 타이틀곡을 공개했어요.",
+  },
+  "news.nw4.title": {
+    en: "PRISM9 add three dates to the Asia leg",
+    fa: "PRISM9 سه تاریخ به بخش آسیایی اضافه کرد",
+    ko: "PRISM9, 아시아 투어 3회 추가",
+  },
+  "news.nw4.excerpt": {
+    en: "Manila, Bangkok and Jakarta join the run after two sold-out nights in Tokyo.",
+    fa: "بعد از دو شب فروش‌رفته در توکیو، مانیل، بانکوک و جاکارتا هم به تور اضافه شدند.",
+    ko: "도쿄에서 두 번 매진된 뒤 마닐라·방콕·자카르타가 일정에 합류했어요.",
+  },
+  "news.nw5.title": {
+    en: "FAIMESS Weekly: the 10 fastest-rising debuts",
+    fa: "هفته‌نامهٔ فیمس: ۱۰ دبیوی سریع‌ترین رشد",
+    ko: "FAIMESS 위클리: 가장 빠르게 뜬 데뷔 10팀",
+  },
+  "news.nw5.excerpt": {
+    en: "Our editors rank the rookies whose first week lit up the fire counter.",
+    fa: "تحریریه تازه‌واردهایی را رتبه‌بندی کرده که هفتهٔ اولشان شمارندهٔ فایر را روشن کرد.",
+    ko: "첫 주에 불 카운터를 밝힌 루키들을 에디터가 정리했어요.",
+  },
+  "news.nw6.title": {
+    en: "Fan-voted awards: voting opens tonight",
+    fa: "جوایز با رأی هواداران: رأی‌گیری امشب آغاز می‌شود",
+    ko: "팬 투표 어워즈: 오늘 밤 투표 시작",
+  },
+  "news.nw6.excerpt": {
+    en: "Six categories, seven days of voting, and a live stage for the winners.",
+    fa: "شش بخش، هفت روز رأی‌گیری و اجرای زندهٔ برندگان.",
+    ko: "6개 부문, 7일간의 투표, 그리고 수상자를 위한 라이브 무대.",
+  },
+
+  /* --------------------- labels that live in the data ------------------ *
+   *  The data files carry these words in English — an artist is a “Boy
+   *  group”, a playlist is “Mellow”, a track landed “2 hrs ago”. They are
+   *  chrome, not content: they describe a record, so they have to follow
+   *  the interface language like every other string in this table.
+   *  `tData()` below is the single door for them.                        */
+
+  "kind.boyGroup": { en: "Boy group", fa: "گروه پسرانه", ko: "보이그룹" },
+  "kind.girlGroup": { en: "Girl group", fa: "گروه دخترانه", ko: "걸그룹" },
+  "kind.soloist": { en: "Soloist", fa: "تک‌خوان", ko: "솔로" },
+  "kind.duo": { en: "Duo", fa: "دونفره", ko: "듀오" },
+
+  "genre.electroPop": { en: "Electro pop", fa: "الکترو پاپ", ko: "일렉트로 팝" },
+  "genre.altRnb": { en: "Alt R&B", fa: "آراندبی آلترنیتیو", ko: "앨트 R&B" },
+  "genre.hipHop": { en: "Hip-hop", fa: "هیپ‌هاپ", ko: "힙합" },
+  "genre.synthPop": { en: "Synth pop", fa: "سینث‌پاپ", ko: "신스 팝" },
+  "genre.dancePop": { en: "Dance pop", fa: "دنس‌پاپ", ko: "댄스 팝" },
+  "genre.cityPop": { en: "City pop", fa: "سیتی‌پاپ", ko: "시티팝" },
+  "genre.ballad": { en: "Ballad", fa: "بالاد", ko: "발라드" },
+
+  "mood.mellow": { en: "Mellow", fa: "ملایم", ko: "멜로우" },
+  "mood.hype": { en: "Hype", fa: "پرهیجان", ko: "하입" },
+  "mood.sunny": { en: "Sunny", fa: "آفتابی", ko: "햇살" },
+  "mood.soft": { en: "Soft", fa: "آرام", ko: "소프트" },
+  "mood.ambient": { en: "Ambient", fa: "محیطی", ko: "앰비언트" },
+  "mood.warm": { en: "Warm", fa: "گرم", ko: "따뜻함" },
+
+  /* how big an artist is — the number stays, the unit follows the language */
+  "artist.monthly": {
+    en: "{n} monthly listeners",
+    fa: "{n} شنوندهٔ ماهانه",
+    ko: "월간 리스너 {n}",
+  },
+  "artist.monthlyK": {
+    en: "{n}K monthly listeners",
+    fa: "{n} هزار شنوندهٔ ماهانه",
+    ko: "월간 리스너 {n}K",
+  },
+  "artist.monthlyM": {
+    en: "{n}M monthly listeners",
+    fa: "{n} میلیون شنوندهٔ ماهانه",
+    ko: "월간 리스너 {n}M",
+  },
+
+  /* how long ago something landed — a line per unit, one and many */
+  "ago.justNow": { en: "just now", fa: "همین حالا", ko: "방금" },
+  "ago.today": { en: "today", fa: "امروز", ko: "오늘" },
+  "ago.yesterday": { en: "yesterday", fa: "دیروز", ko: "어제" },
+  "ago.minutes": { en: "{n} min ago", fa: "{n} دقیقه پیش", ko: "{n}분 전" },
+  "ago.hour": { en: "1 hr ago", fa: "۱ ساعت پیش", ko: "1시간 전" },
+  "ago.hours": { en: "{n} hrs ago", fa: "{n} ساعت پیش", ko: "{n}시간 전" },
+  "ago.day": { en: "1 day ago", fa: "۱ روز پیش", ko: "1일 전" },
+  "ago.days": { en: "{n} days ago", fa: "{n} روز پیش", ko: "{n}일 전" },
+  "ago.week": { en: "1 week ago", fa: "۱ هفته پیش", ko: "1주 전" },
+  "ago.weeks": { en: "{n} weeks ago", fa: "{n} هفته پیش", ko: "{n}주 전" },
+  "ago.month": { en: "1 month ago", fa: "۱ ماه پیش", ko: "1개월 전" },
+  "ago.months": { en: "{n} months ago", fa: "{n} ماه پیش", ko: "{n}개월 전" },
+
+  /* 3h 12m — a playlist's length */
+  "time.hoursMinutes": { en: "{h}h {m}m", fa: "{h} ساعت و {m} دقیقه", ko: "{h}시간 {m}분" },
+
+  /* the fan cards: level and streak */
+  "fans.level": { en: "Lv {n}", fa: "سطح {n}", ko: "Lv {n}" },
+  "fans.streak": { en: "{n}d", fa: "{n} روز", ko: "{n}일" },
+  /* a track whose record field reads “Afterimage · single” — one-offs */
+  "release.singleFrom": { en: "{name} · single", fa: "{name} · تک‌آهنگ", ko: "{name} · 싱글" },
+
+  /* short counts: the digits are the number, this is its magnitude */
+  "num.thousand": { en: "K", fa: "هزار", ko: "K" },
+  "num.million": { en: "M", fa: "میلیون", ko: "M" },
+
+  /* a date as the demo's cards and chat stamps write it */
+  "date.dayMonth": { en: "{day} {month}", fa: "{day} {month}", ko: "{day} {month}" },
+  "msg.stamp": { en: "{day} {month} · {time}", fa: "{day} {month} · {time}", ko: "{day} {month} · {time}" },
+  "msg.online": { en: "Online", fa: "آنلاین", ko: "온라인" },
+
+  /* the week, short and long — chat stamps and the calendar both use it */
+  "weekday.monday": { en: "Monday", fa: "دوشنبه", ko: "월요일" },
+  "weekday.tuesday": { en: "Tuesday", fa: "سه‌شنبه", ko: "화요일" },
+  "weekday.wednesday": { en: "Wednesday", fa: "چهارشنبه", ko: "수요일" },
+  "weekday.thursday": { en: "Thursday", fa: "پنجشنبه", ko: "목요일" },
+  "weekday.friday": { en: "Friday", fa: "جمعه", ko: "금요일" },
+  "weekday.saturday": { en: "Saturday", fa: "شنبه", ko: "토요일" },
+  "weekday.sunday": { en: "Sunday", fa: "یکشنبه", ko: "일요일" },
+
+  /* the Gregorian months the demo dates name */
+  "month.jan": { en: "Jan", fa: "ژانویه", ko: "1월" },
+  "month.feb": { en: "Feb", fa: "فوریه", ko: "2월" },
+  "month.mar": { en: "Mar", fa: "مارس", ko: "3월" },
+  "month.apr": { en: "Apr", fa: "آپریل", ko: "4월" },
+  "month.may": { en: "May", fa: "مه", ko: "5월" },
+  "month.jun": { en: "Jun", fa: "ژوئن", ko: "6월" },
+  "month.jul": { en: "Jul", fa: "جولای", ko: "7월" },
+  "month.aug": { en: "Aug", fa: "اوت", ko: "8월" },
+  "month.sep": { en: "Sep", fa: "سپتامبر", ko: "9월" },
+  "month.oct": { en: "Oct", fa: "اکتبر", ko: "10월" },
+  "month.nov": { en: "Nov", fa: "نوامبر", ko: "11월" },
+  "month.dec": { en: "Dec", fa: "دسامبر", ko: "12월" },
+
+  /* the comments sheet, and the points a sheet pays out */
+  "comments.shown": {
+    en: "{shown} of {total} shown",
+    fa: "{shown} از {total} نمایش داده شده",
+    ko: "{total}개 중 {shown}개 표시",
+  },
+  "contrib.pts": { en: "+{n} pts", fa: "{n}+ امتیاز", ko: "+{n} 포인트" },
+  "lyrics.lang.mixed": { en: "Mixed", fa: "ترکیبی", ko: "혼합" },
+  "lyrics.lang.english": { en: "English", fa: "انگلیسی", ko: "영어" },
+  "lyrics.lang.korean": { en: "한국어", fa: "کره‌ای", ko: "한국어" },
+
+  /* the trend arrow on a trending row */
+  "shelf.delta": { en: "+{n}%", fa: "{n}٪ رشد", ko: "+{n}%" },
+  "shelf.range24h": { en: "24h", fa: "۲۴ ساعت", ko: "24시간" },
+  "shelf.rangeWeek": { en: "Week", fa: "هفته", ko: "주간" },
+  "shelf.addToLibrary": {
+    en: "Add {title} to your library",
+    fa: "افزودن «{title}» به کتابخانه",
+    ko: "“{title}”을(를) 라이브러리에 추가",
+  },
+  "shelf.fireAria": { en: "Fire {title}", fa: "فایر دادن به «{title}»", ko: "“{title}”에 불 누르기" },
+  "points.shortHours": { en: "{n}h", fa: "{n} ساعت", ko: "{n}시간" },
+  "points.shortDays": { en: "{n}d", fa: "{n} روز", ko: "{n}일" },
+  "page.follow": { en: "Follow", fa: "دنبال کن", ko: "팔로우" },
+  "page.following": { en: "Following", fa: "دنبال می‌کنی", ko: "팔로잉" },
+
+  /* the news desk's own names, and the labels of its sources */
+  "news.source.desk": { en: "FAIMESS Desk", fa: "میز فیمس", ko: "FAIMESS 데스크" },
+  "news.source.chartWatch": { en: "Chart Watch", fa: "رصد چارت", ko: "차트 워치" },
+  "news.source.liveWire": { en: "Live Wire", fa: "لایو وایر", ko: "라이브 와이어" },
+  "news.source.weekly": { en: "FAIMESS Weekly", fa: "هفته‌نامهٔ فیمس", ko: "FAIMESS 위클리" },
+
+  /* the account's own line, under the name in the profile menu */
+  "account.tier.premium": { en: "Listener · Premium", fa: "شنونده · پریمیوم", ko: "리스너 · 프리미엄" },
+
+  /* the crests a fan (or an artist) wears on their avatar */
+  "badge.topListener": { en: "Top listener · Season 12", fa: "بهترین شنونده · فصل ۱۲", ko: "톱 리스너 · 시즌 12" },
+  "badge.chart": { en: "Weekly chart #1", fa: "شمارهٔ ۱ چارت هفتگی", ko: "주간 차트 1위" },
+  "badge.fanOfMonth": { en: "Fan of the month", fa: "هوادار ماه", ko: "이달의 팬" },
+  "badge.streak": { en: "30-day comeback streak", fa: "۳۰ روز پیگیری کمبک", ko: "30일 컴백 스트릭" },
+  "badge.artist": { en: "Verified artist", fa: "هنرمند تأییدشده", ko: "인증 아티스트" },
+  "badge.moderator": { en: "Community moderator", fa: "مدیر انجمن", ko: "커뮤니티 모더레이터" },
+  "badge.rookie": { en: "Rookie of the week", fa: "تازه‌وارد هفته", ko: "이주의 루키" },
+
+  /* the notification tray — the demo data names the three kinds */
+  "notif.release": {
+    en: "{artist} released “{title}”",
+    fa: "{artist} «{title}» را منتشر کرد",
+    ko: "{artist}이(가) “{title}”을(를) 발표했어요",
+  },
+  "notif.mixReady": {
+    en: "Your mix of the week is ready",
+    fa: "میکس این هفته‌ات آماده است",
+    ko: "이번 주 믹스가 준비됐어요",
+  },
+  "notif.tracksAdded": {
+    en: "{n} tracks added to “{name}”",
+    fa: "{n} آهنگ به «{name}» اضافه شد",
+    ko: "“{name}”에 {n}곡을 추가했어요",
+  },
 };
 
 /** the shape `t()` takes — good enough for the handful of placeholders we use */
 export type TVars = Record<string, string | number>;
+
+/** the translator itself, as the providers and the helpers below hand it round */
+export type Translate = (key: string, vars?: TVars) => string;
 
 /** fill `{name}` holes; missing vars are left visible so they can't pass silently */
 export function fill(template: string, vars?: TVars): string {
@@ -766,4 +1030,204 @@ export function fill(template: string, vars?: TVars): string {
   return template.replace(/\{(\w+)\}/g, (whole, key: string) =>
     key in vars ? String(vars[key]) : whole,
   );
+}
+
+/* ------------------------------------------------------------------ *
+ *  Data labels — one table for the words the data files carry.
+ *
+ *  A data file says an artist is a “Boy group”, a playlist is “Mellow”
+ *  and a track landed “2 hrs ago”; those words are chrome around content,
+ *  so they are translated wherever they are shown instead of being left
+ *  in English in the middle of a Persian page. The literals stay English
+ *  in the data (they are the source of truth, like the `en` column here),
+ *  and `tData()` maps them over:
+ *
+ *    tData(t, "Boy group", "fa")      → “گروه پسرانه”
+ *    tData(t, "2 hrs ago", "fa")      → “۲ ساعت پیش”
+ *    tData(t, "4.8M monthly", "fa")   → “۴.۸ میلیون شنوندهٔ ماهانه”
+ *    tData(t, "3h 12m", "fa")         → “۳ ساعت و ۱۲ دقیقه”
+ *    tData(t, "PRISM9", "fa")         → “PRISM9” (content is left alone)
+ * ------------------------------------------------------------------ */
+
+/** the fixed words: artist kinds, genres, playlist moods, news tags/sources, tier */
+const LABEL_KEYS: Record<string, string> = {
+  "Boy group": "kind.boyGroup",
+  "Girl group": "kind.girlGroup",
+  Soloist: "kind.soloist",
+  Duo: "kind.duo",
+
+  "Electro pop": "genre.electroPop",
+  "Alt R&B": "genre.altRnb",
+  "Hip-hop": "genre.hipHop",
+  "Synth pop": "genre.synthPop",
+  "Dance pop": "genre.dancePop",
+  "City pop": "genre.cityPop",
+  Ballad: "genre.ballad",
+
+  Mellow: "mood.mellow",
+  Hype: "mood.hype",
+  Sunny: "mood.sunny",
+  Soft: "mood.soft",
+  Ambient: "mood.ambient",
+  Warm: "mood.warm",
+
+  Comeback: "news.tag.comeback",
+  Tour: "news.tag.tour",
+  Charts: "news.tag.charts",
+  Awards: "news.tag.awards",
+  Editorial: "news.tag.editorial",
+
+  "FAIMESS Desk": "news.source.desk",
+  "Chart Watch": "news.source.chartWatch",
+  "Live Wire": "news.source.liveWire",
+  "FAIMESS Weekly": "news.source.weekly",
+
+  "Listener · Premium": "account.tier.premium",
+
+  Online: "msg.online",
+  Mixed: "lyrics.lang.mixed",
+  English: "lyrics.lang.english",
+  "한국어": "lyrics.lang.korean",
+
+  Sunday: "weekday.sunday",
+  Sun: "weekday.sunday",
+  Monday: "weekday.monday",
+  Mon: "weekday.monday",
+  Tuesday: "weekday.tuesday",
+  Tue: "weekday.tuesday",
+  Wednesday: "weekday.wednesday",
+  Wed: "weekday.wednesday",
+  Thursday: "weekday.thursday",
+  Thu: "weekday.thursday",
+  Friday: "weekday.friday",
+  Fri: "weekday.friday",
+  Saturday: "weekday.saturday",
+  Sat: "weekday.saturday",
+};
+
+/** “4.8M monthly”, “1.4M monthly” … — the number and its magnitude */
+const LISTENERS = /^([\d.,]+)\s*([KM])?\s*monthly$/i;
+/** “12 min ago”, “2 hrs ago”, “1 day ago”, “3 weeks ago” … */
+const AGO = /^(\d+)\s*(min|mins|minute|minutes|hr|hrs|hour|hours|day|days|week|weeks|month|months)\s*ago$/i;
+/** “3h 12m” — a playlist's running time */
+const HOURS_MINUTES = /^(\d+)\s*h\s*(\d+)\s*m$/i;
+/** “18.4K” / “1.2M” — an already-shortened count (see lib/format) */
+const COMPACT = /^([\d.,]+)([KM])$/;
+/** “11 Nov · 20:00 hrs”, “14 Dec” — the dates the demo data carries */
+const STAMP = /^(\d{1,2})\s+([A-Za-z]{3,})\s*·\s*(\d{1,2}):(\d{2})(?:\s*(AM|PM))?(?:\s*hrs)?$/i;
+const DAY_MONTH = /^(\d{1,2})\s+([A-Za-z]{3,})$/;
+const MONTH_KEYS: Record<string, string> = {
+  jan: "month.jan",
+  feb: "month.feb",
+  mar: "month.mar",
+  apr: "month.apr",
+  may: "month.may",
+  jun: "month.jun",
+  jul: "month.jul",
+  aug: "month.aug",
+  sep: "month.sep",
+  oct: "month.oct",
+  nov: "month.nov",
+  dec: "month.dec",
+};
+/** “Afterimage · single” — the record field, with its release type */
+const SINGLE_FROM = /^(.*\S)\s*·\s*single$/i;
+
+/** unit → its plural key (the singular one is only used for a count of 1) */
+const AGO_UNITS: Record<string, { key: string; one: string }> = {
+  minute: { key: "ago.minutes", one: "ago.minutes" },
+  hour: { key: "ago.hours", one: "ago.hour" },
+  day: { key: "ago.days", one: "ago.day" },
+  week: { key: "ago.weeks", one: "ago.week" },
+  month: { key: "ago.months", one: "ago.month" },
+};
+
+/** “mins” → minute, “hrs” → hour … so the table above stays four lines */
+const agoUnit = (unit: string) => {
+  const bare = unit.toLowerCase().replace(/s$/, "");
+  if (bare === "min") return "minute";
+  if (bare === "hr") return "hour";
+  return bare;
+};
+
+/** western digits → the digits the language actually writes (Persian: ۰–۹) */
+export function localizeDigits(text: string, lang: Lang): string {
+  if (lang !== "fa") return text;
+  return text
+    .replace(/[0-9]/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)])
+    /* 4.8 in Persian is written ۴٫۸ — the decimal separator is a comma */
+    .replace(/\./g, "٫");
+}
+
+/**
+ * Translate one label that came out of a data file. Anything that is not a
+ * known label — a track title, an artist's name — is handed back untouched,
+ * which is what keeps demo content in the language it was written in.
+ */
+export function tData(t: Translate, value: string | undefined, lang: Lang): string {
+  const raw = (value ?? "").trim();
+  if (!raw) return value ?? "";
+
+  const known = LABEL_KEYS[raw];
+  if (known) return t(known);
+
+  /* “Afterimage · single” — the release type follows the language too */
+  const single = raw.match(SINGLE_FROM);
+  if (single) return t("release.singleFrom", { name: single[1] });
+
+  /* “11 Nov · 20:00 hrs” and “14 Dec” — a day, a month and maybe a time */
+  const stamp = raw.match(STAMP);
+  if (stamp) {
+    if (lang === "en") return raw;
+    const [, day, month, hour, minute, meridiem] = stamp;
+    const key = MONTH_KEYS[month.slice(0, 3).toLowerCase()];
+    const h = Number(hour) + (meridiem?.toUpperCase() === "PM" && Number(hour) < 12 ? 12 : 0);
+    const time = localizeDigits(`${String(h).padStart(2, "0")}:${minute}`, lang);
+    return key
+      ? t("msg.stamp", { day: Number(day), month: t(key), time })
+      : raw;
+  }
+  const dayMonth = raw.match(DAY_MONTH);
+  if (dayMonth) {
+    const key = MONTH_KEYS[dayMonth[2].slice(0, 3).toLowerCase()];
+    if (key) return t("date.dayMonth", { day: Number(dayMonth[1]), month: t(key) });
+  }
+
+  /* the two days that have a word of their own, and “just now” */
+  const day = raw.toLowerCase();
+  if (day === "just now") return t("ago.justNow");
+  if (day === "today") return t("ago.today");
+  if (day === "yesterday") return t("ago.yesterday");
+
+  const listeners = raw.match(LISTENERS);
+  if (listeners) {
+    const [, digits, unit = ""] = listeners;
+    const magnitude = unit.toUpperCase();
+    const key = magnitude === "M" ? "artist.monthlyM" : magnitude === "K" ? "artist.monthlyK" : "artist.monthly";
+    return t(key, { n: localizeDigits(digits, lang) });
+  }
+
+  const ago = raw.match(AGO);
+  if (ago) {
+    const [, count, unit] = ago;
+    const rule = AGO_UNITS[agoUnit(unit)];
+    if (rule) return t(Number(count) === 1 ? rule.one : rule.key, { n: Number(count) });
+  }
+
+  const runtime = raw.match(HOURS_MINUTES);
+  if (runtime) {
+    const [, hours, minutes] = runtime;
+    return t("time.hoursMinutes", { h: Number(hours), m: Number(minutes) });
+  }
+
+  /* a count that is already in short form: “18.4K”, “1.2M” — Persian
+     writes the magnitude out (“۱۸٫۴ هزار”), English and Korean keep K/M */
+  const compact = raw.match(COMPACT);
+  if (compact) {
+    const digits = localizeDigits(compact[1], lang);
+    const magnitude = t(compact[2].toUpperCase() === "M" ? "num.million" : "num.thousand");
+    return lang === "fa" ? `${digits} ${magnitude}` : `${digits}${magnitude}`;
+  }
+
+  return raw;
 }

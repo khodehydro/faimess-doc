@@ -20,7 +20,17 @@ import { Stage } from "../src/app/Stage";
 import { ToastHost } from "../src/app/ToastHost";
 import { Icon } from "../src/ui/Icon";
 import { backIcon, dirSign, forwardIcon, trackRatio } from "../src/lib/rtl";
-import { LANGS, STRINGS, THEMES, fill, type Lang, type Theme } from "../src/data/i18n";
+import {
+  LANGS,
+  STRINGS,
+  THEMES,
+  fill,
+  localizeDigits,
+  tData,
+  type Lang,
+  type Theme,
+  type TVars,
+} from "../src/data/i18n";
 import { PlayerSection } from "../src/sections/PlayerSection";
 import { DownloadPage } from "../src/pages/DownloadPage";
 import { HomePage } from "../src/pages/HomePage";
@@ -32,7 +42,13 @@ import { PlaylistsPage } from "../src/pages/PlaylistsPage";
 import { NewsPage } from "../src/pages/NewsPage";
 import { albums, artists, playlists } from "../src/data/library";
 import { banners } from "../src/data/banners";
-import { activeUsers, followedArtists, newestTracks, trendingTracks } from "../src/data/feed";
+import {
+  activeUsers,
+  followedArtists,
+  newsItems,
+  newestTracks,
+  trendingTracks,
+} from "../src/data/feed";
 import { conversations } from "../src/data/messages";
 import { ME_ACTIVITY, me } from "../src/data/account";
 import { QUEUE, lyricsFor, trackById } from "../src/data/player";
@@ -182,6 +198,7 @@ check(
 );
 
 const heroSrc = readFileSync("src/sections/HeroBanner.tsx", "utf8");
+const newsPageSrc = readFileSync("src/pages/NewsPage.tsx", "utf8");
 check(
   "hero banner shows its art and its two lines",
   home.includes(banners[0].photo) &&
@@ -192,7 +209,15 @@ check(
 check(
   "every slide carries a title and a subtitle",
   banners.every((b) => b.title.trim().length > 0 && b.subtitle.trim().length > 0),
-  "demo copy lives in the data, not in the string table",
+  "the English source of truth stays in the data file",
+);
+check(
+  "the hero and the K-pop desk read in the reader's language",
+  banners.every((b) => STRINGS[`banner.${b.id}.title`] && STRINGS[`banner.${b.id}.subtitle`]) &&
+    newsItems.every((n) => STRINGS[`news.${n.id}.title`] && STRINGS[`news.${n.id}.excerpt`]) &&
+    heroSrc.includes("text(`banner.${banner.id}.title`, banner.title)") &&
+    newsPageSrc.includes("text(`news.${item.id}.title`, item.title)"),
+  "editorial copy is translated; a track title or a fan's comment stays as written",
 );
 check(
   "a black gradient rises from the banner's bottom edge",
@@ -700,13 +725,14 @@ check(
   "a clean violet bar with no progress indicator",
 );
 check(
-  "trending shelf controls wrap cleanly on narrow screens",
-  shelfSrc.includes("flex flex-wrap items-center gap-x-3 gap-y-2") &&
-    shelfSrc.includes("flex w-full shrink-0 justify-end sm:ms-auto sm:w-auto") &&
+  "a shelf header keeps one row on a phone",
+  shelfSrc.includes("flex flex-nowrap items-center") &&
+    shelfSrc.includes("ms-auto flex shrink-0 items-center") &&
     shelfSrc.includes("truncate whitespace-nowrap") &&
+    shelfSrc.includes("text-[15.5px]") &&
     trendingTracksSrc.includes("shrink-0 whitespace-nowrap") &&
-    trendingTracksSrc.includes("min-w-[52px]"),
-  "title and subtitle stay together; filters and See all move to a clear second row",
+    trendingTracksSrc.includes("min-w-[44px]"),
+  "the action stays beside the title — “Play all” may not drop to a line of its own",
 );
 check(
   "comments and nested dialogs sit above the full player sheet",
@@ -1100,6 +1126,108 @@ check(
   `${Object.keys(STRINGS).length} keys`,
 );
 
+/* -------- the words the data files carry (v31) ------------------------- *
+ *  A Persian page used to read “4.8M monthly · ۱۲ آهنگ”: the label around
+ *  the numbers came straight out of the data in English. Every one of them
+ *  now goes through `tData`, and nothing prints a raw data label again.
+ * ---------------------------------------------------------------------- */
+const i18nSrc = readFileSync("src/data/i18n.ts", "utf8");
+const RAW_LABELS =
+  /\{(?:artist\.(?:kind|genre|listeners)|album\.released|playlist\.(?:mood|duration)|item\.(?:tag|source|ago)|(?:track|row|comment|reply)\.(?:ago|time)|n\.at|s\.sentAt|me\.tier)\}/;
+const rawLabels = sources.filter((file) => RAW_LABELS.test(readFileSync(file, "utf8")));
+check(
+  "no page prints a data label in English mid-Persian",
+  i18nSrc.includes("export function tData") &&
+    i18nSrc.includes("const LISTENERS") &&
+    i18nSrc.includes("const AGO") &&
+    i18nSrc.includes("const HOURS_MINUTES") &&
+    i18nSrc.includes("AGO_UNITS") &&
+    rawLabels.length === 0,
+  rawLabels.length ? rawLabels.join(", ") : "kinds, genres, moods, listeners, runtimes and “2 hrs ago”",
+);
+check(
+  "the same labels reach every surface that shows them",
+  readFileSync("src/sections/CollectionSection.tsx", "utf8").includes("dataLabel(artist.listeners)") &&
+    readFileSync("src/sections/BrowseDetailView.tsx", "utf8").includes("dataLabel(artist.listeners)") &&
+    readFileSync("src/sections/BrowseDetailView.tsx", "utf8").includes("dataLabel(artist.kind)") &&
+    readFileSync("src/sections/feed/NewsShelf.tsx", "utf8").includes("dataLabel(item.tag)") &&
+    readFileSync("src/sections/feed/NewAlbums.tsx", "utf8").includes("dataLabel(album.released)") &&
+    readFileSync("src/sections/player/CommentsSheet.tsx", "utf8").includes("dataLabel(comment.time)") &&
+    readFileSync("src/sections/player/CommentsBar.tsx", "utf8").includes("dataLabel(latest.time)") &&
+    readFileSync("src/sections/AccountCard.tsx", "utf8").includes("dataLabel(n.at)"),
+  "artist cards, the detail header, both news lists, comments and the bell",
+);
+check(
+  "a number handed to a translated line is written in that language's digits",
+  readFileSync("src/app/PreferencesContext.tsx", "utf8").includes("localizeDigits(String(v), lang)") &&
+    i18nSrc.includes('"۰۱۲۳۴۵۶۷۸۹"'),
+  "12 tracks reads ۱۲ آهنگ in Persian, 12 in English",
+);
+
+check(
+  "the hero and the K-pop desk read in the reader's language",
+  banners.every((b) => STRINGS[`banner.${b.id}.title`] && STRINGS[`banner.${b.id}.subtitle`]) &&
+    newsItems.every((n) => STRINGS[`news.${n.id}.title`] && STRINGS[`news.${n.id}.excerpt`]) &&
+    heroSrc.includes("text(`banner.${banner.id}.title`, banner.title)") &&
+    newsPageSrc.includes("text(`news.${item.id}.title`, item.title)") &&
+    readFileSync("src/sections/feed/NewsShelf.tsx", "utf8").includes(
+      "text(`news.${item.id}.title`, item.title)",
+    ),
+  "editorial copy is translated; a track title or a fan's comment is left as written",
+);
+/* the data-label layer, exercised on its own — the one place that decides
+   what a Persian page says for “4.8M monthly” or “2 hrs ago” */
+const faT = (key: string, vars?: TVars) => {
+  const entry = STRINGS[key];
+  if (!entry) return key;
+  const filled = vars
+    ? Object.fromEntries(
+        Object.entries(vars).map(([name, v]) => [
+          name,
+          typeof v === "number" ? localizeDigits(String(v), "fa") : v,
+        ]),
+      )
+    : undefined;
+  return fill(entry.fa, filled);
+};
+const labelCases: [string, string][] = [
+  ["4.8M monthly", "۴٫۸ میلیون شنوندهٔ ماهانه"],
+  ["2 hrs ago", "۲ ساعت پیش"],
+  ["18.4K", "۱۸٫۴ هزار"],
+  ["Afterimage · single", "Afterimage · تک‌آهنگ"],
+  ["11 Nov · 20:00 hrs", "۱۱ نوامبر · ۲۰:۰۰"],
+  ["14 Dec", "۱۴ دسامبر"],
+  ["Sunday", "یکشنبه"],
+  ["Online", "آنلاین"],
+  ["3h 12m", "۳ ساعت و ۱۲ دقیقه"],
+  ["Mixed", "ترکیبی"],
+  ["Boy group", "گروه پسرانه"],
+  ["PRISM9", "PRISM9"],
+];
+const wrongLabels = labelCases.filter(([input, expected]) => tData(faT, input, "fa") !== expected);
+check(
+  "every shape of data label comes out persian",
+  wrongLabels.length === 0,
+  wrongLabels.map(([input, expected]) => `${input} → ${tData(faT, input, "fa")} (want ${expected})`).join("; "),
+);
+
+check(
+  "release types, short counts and chat stamps follow the language too",
+  i18nSrc.includes("const SINGLE_FROM") &&
+    i18nSrc.includes("const STAMP") &&
+    i18nSrc.includes('"num.million"') &&
+    miniSrc.includes("dataLabel(track.album)") &&
+    playerSrc.includes("dataLabel(track.album)") &&
+    readFileSync("src/sections/BrowseDetailView.tsx", "utf8").includes("dataLabel(track.album)") &&
+    readFileSync("src/ui/PlaylistDialogs.tsx", "utf8").includes("dataLabel(track.album)") &&
+    readFileSync("src/sections/MessagesSection.tsx", "utf8").includes("dataLabel(convo.status)") &&
+    readFileSync("src/sections/MessagesSection.tsx", "utf8").includes("dataLabel(message.when)") &&
+    readFileSync("src/sections/player/CommentsSheet.tsx", "utf8").includes('t("comments.shown"') &&
+    readFileSync("src/sections/ContributionsModal.tsx", "utf8").includes('t("contrib.pts", { n: s.points })') &&
+    readFileSync("src/sections/ContributionsModal.tsx", "utf8").includes("dataLabel(s.language)"),
+  "“Afterimage · single”, “۱۸٫۴ هزار”, “Online” and “۱۱ نوامبر · ۲۰:۰۰”",
+);
+
 /* -------- shop + shuffle (v28) ---------------------------------------- */
 
 const shopSrc = readFileSync("src/pages/ShopPage.tsx", "utf8");
@@ -1207,7 +1335,7 @@ check(
 );
 check(
   "on a phone the same header stacks instead of squeezing the title away",
-  detailSrc.includes("flex flex-wrap items-start gap-x-4 gap-y-3") &&
+  detailSrc.includes("flex flex-wrap items-start gap-x-3 gap-y-2.5 lg:gap-x-4 lg:gap-y-3") &&
     detailSrc.includes("lg:size-[76px]") &&
     detailSrc.includes("lg:truncate") &&
     /* the pill row takes its own full-width line, and may use two of them

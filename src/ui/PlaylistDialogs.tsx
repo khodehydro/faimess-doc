@@ -59,7 +59,7 @@ function HitRow({
   picked: boolean;
   onToggle: () => void;
 }) {
-  const t = useT();
+  const { t, dataLabel } = usePreferences();
   return (
     <button
       type="button"
@@ -79,7 +79,7 @@ function HitRow({
           {track.title}
         </span>
         <span className="block truncate text-[12px] font-semibold text-ink-muted">
-          {track.artist} · {track.album}
+          {track.artist} · {dataLabel(track.album)}
         </span>
       </span>
       <span

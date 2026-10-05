@@ -17,6 +17,9 @@ const clock = (locale: string) =>
 /* ---------------------------- list column ---------------------------- */
 
 function ConversationRow({ convo, active, onSelect }: { convo: Conversation; active: boolean; onSelect: () => void }) {
+  /* “Online”, “5 minutes ago”, “Sunday” — the row's status is chrome */
+  const { dataLabel } = usePreferences();
+
   return (
     <button onClick={onSelect} className="relative flex w-full items-center gap-2.5 px-2.5 py-2.5 text-start">
       {active && (
@@ -33,7 +36,7 @@ function ConversationRow({ convo, active, onSelect }: { convo: Conversation; act
         </span>
         <span className="mt-0.5 flex items-center gap-1 text-[12.5px] text-ink-muted">
           {!convo.online && <Icon name="clock" size={12} />}
-          <span className={cn("truncate", convo.online && "text-mint")}>{convo.status}</span>
+          <span className={cn("truncate", convo.online && "text-mint")}>{dataLabel(convo.status)}</span>
         </span>
       </span>
       {!!convo.unread && (
@@ -59,7 +62,7 @@ function InviteCard({
   message: Extract<Message, { kind: "invite" }>;
   onRespond: (status: "accepted" | "declined") => void;
 }) {
-  const { t } = usePreferences();
+  const { t, dataLabel } = usePreferences();
   return (
     <motion.div
       layout
@@ -79,7 +82,7 @@ function InviteCard({
           <Thumb scene={message.scene} className="h-full w-full" />
         </div>
         <div className="min-w-0">
-          <p className="text-[12px] font-semibold leading-snug text-ink-body">{message.when}</p>
+          <p className="text-[12px] font-semibold leading-snug text-ink-body">{dataLabel(message.when)}</p>
           <p className="mt-0.5 text-[12px] text-ink-muted">{t("msg.friendsGoing", { n: 4 })}</p>
         </div>
       </div>
@@ -134,6 +137,7 @@ function Bubble({
   index: number;
   onRespond: (status: "accepted" | "declined") => void;
 }) {
+  const { dataLabel } = usePreferences();
   const enter = {
     initial: { opacity: 0, y: 10, scale: 0.98 },
     animate: { opacity: 1, y: 0, scale: 1 },
@@ -167,7 +171,7 @@ function Bubble({
       >
         {message.text}
       </div>
-      <span className="mt-1 px-1 text-[12px] text-ink-faint">{message.at}</span>
+      <span className="mt-1 px-1 text-[12px] text-ink-faint">{dataLabel(message.at)}</span>
     </motion.div>
   );
 }

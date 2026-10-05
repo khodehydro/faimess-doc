@@ -16,7 +16,7 @@ import { usePreferences } from "../../app/PreferencesContext";
  * ------------------------------------------------------------------ */
 
 export function NewAlbums() {
-  const { t, dir } = usePreferences();
+  const { t, dir, dataLabel, num } = usePreferences();
   const { navigate, notify, openDetail } = useApp();
   const player = usePlayer();
 
@@ -50,12 +50,12 @@ export function NewAlbums() {
             role="button"
             tabIndex={0}
             aria-label={album.title}
-            className="group w-[146px] shrink-0 cursor-pointer snap-start"
+            className="group w-[124px] shrink-0 cursor-pointer snap-start lg:w-[146px]"
           >
-            <span className="relative block aspect-square overflow-hidden rounded-[16px] shadow-card ring-1 ring-line/70">
+            <span className="relative block aspect-square overflow-hidden rounded-[14px] shadow-card ring-1 ring-line/70 lg:rounded-[16px]">
               <Cover src={album.photo} seed={album.seed} className="h-full w-full transition-transform duration-500 group-hover:scale-[1.06]" />
-              <span className="absolute start-2 top-2 rounded-full bg-surface/88 px-2 py-[2px] text-[12px] font-bold text-ink backdrop-blur">
-                {album.released}
+                <span className="absolute start-2 top-2 rounded-full bg-surface/88 px-2 py-[2px] text-[12px] font-bold text-ink backdrop-blur">
+                {dataLabel(album.released)}
               </span>
               <PlayDot
                 onClick={(e) => {
@@ -68,13 +68,13 @@ export function NewAlbums() {
                 className="absolute bottom-2 end-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
               />
             </span>
-            <span className="mt-2.5 block truncate text-[14px] font-bold text-ink">{album.title}</span>
-            <span className="mt-1 flex items-center gap-1.5 text-[12.5px] text-ink-muted">
+            <span className="mt-2 block truncate text-[13px] font-bold text-ink lg:mt-2.5 lg:text-[14px]">{album.title}</span>
+            <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-ink-muted lg:mt-1 lg:text-[12.5px]">
               <span className="truncate font-semibold text-ink-body">{album.artist}</span>
               <span className="text-ink-faint">·</span>
               <span className="flex shrink-0 items-center gap-1">
                 <Icon name="music" size={12} />
-                {album.tracks}
+                {num(album.tracks)}
               </span>
             </span>
           </motion.div>

@@ -1,6 +1,7 @@
 import type { BadgeTone, CommentBadge } from "../data/badges";
 import { Icon } from "./Icon";
 import { cn } from "../lib/cn";
+import { useT } from "../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Avatars — a real profile photo when the data carries `src`, and the
@@ -38,6 +39,9 @@ const BADGE_TONE: Record<BadgeTone, string> = {
 };
 
 export function Avatar({ src, seed = 0, size = 36, className, ring, badge }: AvatarProps) {
+  const t = useT();
+  /* the crest is named in the interface language, like everything else */
+  const badgeLabel = badge ? t(badge.labelKey) : undefined;
   const p = PALETTE[Math.abs(seed) % PALETTE.length];
   const variant = Math.abs(seed) % 3;
   const id = `av-${seed}`;
@@ -66,8 +70,8 @@ export function Avatar({ src, seed = 0, size = 36, className, ring, badge }: Ava
 
       {badge && (
         <span
-          title={badge.label}
-          aria-label={badge.label}
+          title={badgeLabel}
+          aria-label={badgeLabel}
           className={cn(
             "absolute -bottom-0.5 -end-0.5 flex items-center justify-center rounded-full ring-2 ring-surface",
             BADGE_TONE[badge.tone],

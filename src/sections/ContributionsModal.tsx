@@ -19,7 +19,7 @@ import { spring } from "../lib/motion";
 
 export function ContributionsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { notify } = useApp();
-  const { t, locale } = usePreferences();
+  const { t, locale, dataLabel } = usePreferences();
   const { submissions, points, approve, reject } = useContributions();
 
   const pending = submissions.filter((s) => s.status === "pending").length;
@@ -92,13 +92,15 @@ export function ContributionsModal({ open, onClose }: { open: boolean; onClose: 
                 {/* one line, always: the middle truncates before the payout
                     or the language chip can ever move */}
                 <div className="mt-2 flex items-center gap-2.5 text-[12px] font-semibold text-ink-muted">
-                  <span className="shrink-0 rounded-full bg-subtle px-2.5 py-1">{s.language}</span>
+                  <span className="shrink-0 rounded-full bg-subtle px-2.5 py-1">{dataLabel(s.language)}</span>
                   <span className="min-w-0 flex-1 truncate">
                     {t("contrib.lines", { n: s.lines })}
-                    <span className="text-ink-faint"> · {s.sentAt}</span>
+                    <span className="text-ink-faint"> · {dataLabel(s.sentAt)}</span>
                   </span>
                   {s.status === "approved" && (
-                    <span className="shrink-0 font-extrabold text-teal-deep">+{s.points} pts</span>
+                    <span className="shrink-0 font-extrabold text-teal-deep">
+                      {t("contrib.pts", { n: s.points })}
+                    </span>
                   )}
                 </div>
 

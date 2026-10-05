@@ -125,7 +125,7 @@ function CardShell({
 /* ------------------------------- cards -------------------------------- */
 
 function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
-  const t = useT();
+  const { t, dataLabel } = usePreferences();
   const { notify, openDetail } = useApp();
   const player = usePlayer();
   const [following, setFollowing] = useState(artist.following);
@@ -146,18 +146,21 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
           }}
           className="bottom-3 end-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         />
-        <span className="absolute start-3 top-3 rounded-full bg-surface/85 px-2.5 py-1 text-[12px] font-bold text-ink backdrop-blur">
-          {artist.genre}
+          <span className="absolute start-2 top-2 rounded-full bg-surface/85 px-2 py-0.5 text-[12px] font-bold text-ink backdrop-blur lg:start-3 lg:top-3 lg:px-2.5 lg:py-1">
+          {dataLabel(artist.genre)}
         </span>
       </div>
-      <div className="flex items-center gap-2.5 p-3.5">
+      {/* on a phone the follow pill sits under the name instead of beside it:
+          half a card is not wide enough for both, and the name was the part
+          that lost the fight */}
+      <div className="flex flex-col gap-1.5 p-2.5 lg:flex-row lg:items-center lg:gap-2.5 lg:p-3.5">
         <span className="min-w-0 flex-1">
-          <span className="font-display block truncate text-[15.5px] font-bold text-ink">{artist.name}</span>
-          <Meta icon="headphones" iconSize={11} className="text-[12.5px]">
-            {artist.listeners}
+          <span className="font-display block truncate text-[13.5px] font-bold text-ink lg:text-[15.5px]">{artist.name}</span>
+          <Meta icon="headphones" iconSize={11} className="text-[12px] lg:text-[12.5px]">
+            {dataLabel(artist.listeners)}
           </Meta>
         </span>
-        <span onClick={(e) => e.stopPropagation()} className="shrink-0">
+        <span onClick={(e) => e.stopPropagation()} className="shrink-0 self-start">
         <PillButton
           tone={following ? "primary" : "outline"}
           icon={following ? "check" : "plus"}
@@ -168,9 +171,9 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
               following ? "primary" : "mint",
             );
           }}
-          className="shrink-0 px-2.5 py-1.5"
+          className="shrink-0"
         >
-          {following ? "Following" : "Follow"}
+          {t(following ? "page.following" : "page.follow")}
         </PillButton>
         </span>
       </div>
@@ -179,7 +182,7 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
 }
 
 function AlbumCard({ album }: { album: (typeof albums)[number] }) {
-  const t = useT();
+  const { t, num } = usePreferences();
   const { notify, openDetail } = useApp();
   const player = usePlayer();
   return (
@@ -198,15 +201,15 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
           }}
           className="bottom-3 end-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         />
-        <span className="absolute start-3 top-3 rounded-full bg-surface/85 px-2.5 py-1 text-[12px] font-bold text-ink backdrop-blur">
-          {album.year}
+          <span className="absolute start-2 top-2 rounded-full bg-surface/85 px-2 py-0.5 text-[12px] font-bold tabular-nums text-ink backdrop-blur lg:start-3 lg:top-3 lg:px-2.5 lg:py-1">
+          {num(album.year)}
         </span>
       </div>
-      <div className="flex items-center gap-2 p-3">
+      <div className="flex items-center gap-2 p-2.5 lg:p-3">
         <span className="min-w-0 flex-1">
-          <span className="font-display block truncate text-[15.5px] font-bold text-ink">{album.title}</span>
-          <Meta icon="mic" iconSize={11} className="text-[12.5px]">
-            {album.artist} · {album.tracks} tracks
+          <span className="font-display block truncate text-[13.5px] font-bold text-ink lg:text-[15.5px]">{album.title}</span>
+          <Meta icon="mic" iconSize={11} className="text-[12px] lg:text-[12.5px]">
+            {album.artist} · {t("playlist.trackCount", { count: album.tracks })}
           </Meta>
         </span>
         <span onClick={(e) => e.stopPropagation()} className="shrink-0">
@@ -218,7 +221,7 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
 }
 
 function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
-  const t = useT();
+  const { t, dataLabel } = usePreferences();
   const { openDetail } = useApp();
   return (
     <motion.button
@@ -226,24 +229,26 @@ function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
       onClick={() => openDetail({ kind: "playlist", id: playlist.id })}
       whileHover={{ y: -3 }}
       transition={spring}
-      className="group flex min-h-0 items-center gap-3.5 overflow-hidden rounded-card bg-surface p-3 text-start shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float"
+      className="group flex min-h-0 items-center gap-2.5 overflow-hidden rounded-card bg-surface p-2.5 text-start shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float lg:gap-3.5 lg:p-3"
     >
-      <span className="relative size-[72px] shrink-0 overflow-hidden rounded-[16px]">
+      <span className="relative size-[58px] shrink-0 overflow-hidden rounded-[14px] lg:size-[72px] lg:rounded-[16px]">
         <Cover src={playlist.photo} seed={playlist.seed} className="h-full w-full" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="font-display block truncate text-[15.5px] font-bold text-ink">{playlist.name}</span>
-        <Meta icon="users" iconSize={11} className="text-[12.5px]">
+        <span className="font-display block truncate text-[13.5px] font-bold text-ink lg:text-[15.5px]">{playlist.name}</span>
+        <Meta icon="users" iconSize={11} className="text-[12px] lg:text-[12.5px]">
           {playlist.curator}
         </Meta>
-        <span className="mt-2 flex items-center gap-2">
-          <span className="rounded-full bg-primary-faint px-2.5 py-1 text-[12px] font-bold text-primary-deep">{playlist.mood}</span>
-          <Meta icon="music" iconSize={10} className="text-[12px]">
-            {playlist.tracks} tracks · {playlist.duration}
+        <span className="mt-1.5 flex items-center gap-2 lg:mt-2">
+            <span className="rounded-full bg-primary-faint px-2 py-0.5 text-[12px] font-bold text-primary-deep lg:px-2.5 lg:py-1">
+            {dataLabel(playlist.mood)}
+          </span>
+            <Meta icon="music" iconSize={10} className="text-[12px]">
+            {t("playlist.trackCount", { count: playlist.tracks })} · {dataLabel(playlist.duration)}
           </Meta>
         </span>
       </span>
-      <span className="me-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+      <span className="me-1 hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100 lg:block">
         <span className="flex size-9 items-center justify-center rounded-full bg-primary text-white shadow-primary">
           <Icon name="play" size={15.5} strokeWidth={2} />
         </span>
@@ -254,13 +259,13 @@ function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
 
 /* --------------------------- your own lists ---------------------------- */
 
-/** "4 tracks" / "—" — derived from the ids a user playlist stores */
+/** "4 tracks" / "22 min" / "—" — derived from the ids a user playlist stores */
 function listMeta(list: UserPlaylist, t: (key: string, vars?: Record<string, string | number>) => string) {
   const tracks = list.trackIds.map((id) => trackById(id)).filter((track) => !!track);
   const seconds = tracks.reduce((sum, track) => sum + (track?.seconds ?? 0), 0);
   return {
     count: t("playlist.trackCount", { count: tracks.length }),
-    minutes: seconds ? `${Math.max(1, Math.round(seconds / 60))} min` : "—",
+    minutes: seconds ? t("detail.minutes", { n: Math.max(1, Math.round(seconds / 60)) }) : "—",
   };
 }
 
@@ -318,13 +323,13 @@ function MineStrip({ onNew }: { onNew: () => void }) {
           onClick={onNew}
           whileHover={{ y: -2 }}
           transition={spring}
-          className="group flex w-[168px] shrink-0 flex-col rounded-[20px] border border-dashed border-line p-2.5 text-start transition-colors hover:border-primary/40 hover:bg-primary-faint/40"
+          className="group flex w-[148px] shrink-0 flex-col rounded-[18px] border border-dashed border-line p-2.5 text-start transition-colors hover:border-primary/40 hover:bg-primary-faint/40 lg:w-[168px] lg:rounded-[20px]"
         >
-          <span className="flex h-[96px] w-full items-center justify-center rounded-[14px] bg-subtle text-ink-muted transition-colors group-hover:bg-primary-soft group-hover:text-primary-deep">
-            <Icon name="plus" size={20} strokeWidth={2.4} />
+          <span className="flex h-[84px] w-full items-center justify-center rounded-[14px] bg-subtle text-ink-muted transition-colors group-hover:bg-primary-soft group-hover:text-primary-deep lg:h-[96px]">
+            <Icon name="plus" size={19} strokeWidth={2.4} />
           </span>
-          <span className="mt-2 block truncate text-[13.5px] font-bold text-ink">{t("playlist.new")}</span>
-          <span className="block truncate text-[12px] font-semibold text-ink-faint">{t("playlist.newTip")}</span>
+          <span className="mt-2 block truncate text-[12.5px] font-bold text-ink lg:text-[13.5px]">{t("playlist.new")}</span>
+        <span className="block truncate text-[12px] font-semibold text-ink-faint">{t("playlist.newTip")}</span>
         </motion.button>
 
         {mine.map((list) => {
@@ -335,11 +340,11 @@ function MineStrip({ onNew }: { onNew: () => void }) {
             <motion.article
               key={list.id}
               variants={popChild}
-              className="group flex w-[168px] shrink-0 flex-col rounded-[20px] bg-surface p-2.5 shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float"
+              className="group flex w-[148px] shrink-0 flex-col rounded-[18px] bg-surface p-2.5 shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float lg:w-[168px] lg:rounded-[20px]"
             >
               {/* the cover opens the list; the play button starts it right
                   here — the standard pair, and neither one hides the other */}
-              <span className="relative block h-[96px] w-full overflow-hidden rounded-[14px]">
+              <span className="relative block h-[84px] w-full overflow-hidden rounded-[14px] lg:h-[96px]">
                 <Photo
                   src={coverPhoto(list.cover)}
                   alt=""
@@ -357,11 +362,11 @@ function MineStrip({ onNew }: { onNew: () => void }) {
                   onClick={() => (running ? player.toggle() : playList(list))}
                   aria-label={t(running ? "player.pause" : "playlist.playTip")}
                   title={t(running ? "player.pause" : "playlist.playTip")}
-                  className="absolute bottom-2 end-2 z-10 flex size-9 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-primary transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                  className="absolute bottom-2 end-2 z-10 flex size-8 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-primary transition-opacity group-hover:opacity-100 focus-visible:opacity-100 lg:size-9"
                 >
                   <Icon name={running ? "pause" : "play"} size={15} strokeWidth={2.2} />
                 </button>
-                <span className="absolute start-2 top-2 rounded-full bg-surface/92 px-2 py-0.5 text-[12px] font-bold tabular-nums text-ink">
+                  <span className="absolute start-2 top-2 rounded-full bg-surface/92 px-2 py-0.5 text-[12px] font-bold tabular-nums text-ink">
                   {meta.count}
                 </span>
               </span>
@@ -370,11 +375,11 @@ function MineStrip({ onNew }: { onNew: () => void }) {
                 type="button"
                 onClick={() => openDetail({ kind: "playlist", id: list.id })}
                 aria-label={t("playlist.openMine", { name: list.name })}
-                className="mt-2 block w-full truncate text-start text-[13.5px] font-bold text-ink"
+                className="mt-2 block w-full truncate text-start text-[12.5px] font-bold text-ink lg:text-[13.5px]"
               >
                 {list.name}
               </button>
-              <span className="mt-0.5 flex items-center gap-1.5 text-[12px] font-semibold text-ink-faint">
+                <span className="mt-0.5 flex items-center gap-1.5 text-[12px] font-semibold text-ink-faint">
                 <Icon name="clock" size={11.5} strokeWidth={2.2} />
                 {meta.minutes}
                 {lead && <span className="truncate">· {lead.artist}</span>}
@@ -451,12 +456,12 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
           filters move to a second, horizontally scrolling line; in one row
           they simply ran over the title (there is no width where a 26px
           heading and five pills fit side by side on a handset) */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5 pb-5">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pb-4 lg:gap-y-2.5 lg:pb-5">
         <div className="min-w-0 basis-full lg:basis-auto">
-          <h2 className="font-display text-[22px] font-bold leading-tight tracking-[-0.018em] text-ink lg:text-[26px]">
+          <h2 className="font-display text-[19px] font-bold leading-tight tracking-[-0.018em] text-ink lg:text-[26px]">
             {t(copy.titleKey)}
           </h2>
-          <p className="mt-1.5 truncate text-[13.5px] text-ink-muted">{t(copy.subtitleKey)}</p>
+          <p className="mt-1 truncate text-[12.5px] text-ink-muted lg:mt-1.5 lg:text-[13.5px]">{t(copy.subtitleKey)}</p>
         </div>
         {/* the chips scroll sideways on a phone; `min-w-0` is what lets a
             flex child actually shrink enough to scroll */}
@@ -497,7 +502,7 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
           animate="animate"
           exit={{ opacity: 0, y: -8, transition: { duration: 0.18, ease: EASE } }}
           className={cn(
-            "grid min-h-0 flex-1 gap-4",
+            "grid min-h-0 flex-1 gap-2.5 lg:gap-4",
             kind === "playlists" ? "grid-cols-1 content-start sm:grid-cols-2 lg:grid-cols-2 lg:grid-rows-3" : "grid-cols-2 lg:grid-cols-4 lg:grid-rows-2",
           )}
         >

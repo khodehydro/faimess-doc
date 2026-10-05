@@ -12,7 +12,7 @@ import {
 } from "../data/points";
 import { useMyActivity } from "../app/ContributionsContext";
 import { usePreferences } from "../app/PreferencesContext";
-import { withThousands } from "../lib/format";
+import type { Translate } from "../data/i18n";
 import { cn } from "../lib/cn";
 import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
@@ -42,12 +42,21 @@ const WIDTH: Record<PointRuleId, string> = {
 
 const COLUMNS = POINT_RULES.map((rule) => ({ rule, width: WIDTH[rule.id] }));
 
-/** a raw count in the unit its rule is counted in */
-function cellFor(rule: PointRule, activity: FanActivity): string {
+/**
+ * A raw count in the unit its rule is counted in, in the reader's language:
+ * the hours/days unit is a translated line, and the plain counts keep their
+ * grouping but take the language's own digits.
+ */
+function cellFor(
+  rule: PointRule,
+  activity: FanActivity,
+  t: Translate,
+  num: (value: number) => string,
+): string {
   const count = countFor(rule, activity);
-  if (rule.short === "hours") return `${listenedHours(count)}h`;
-  if (rule.short === "days") return `${count}d`;
-  return withThousands(count);
+  if (rule.short === "hours") return t("points.shortHours", { n: listenedHours(count) });
+  if (rule.short === "days") return t("points.shortDays", { n: count });
+  return num(count);
 }
 
 type Row = {
@@ -62,7 +71,7 @@ type Row = {
 };
 
 export function LeaderboardDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t, locale } = usePreferences();
+  const { t, locale, num } = usePreferences();
   const myActivity = useMyActivity();
 
   /* active listeners plus this account, best balance first — a tie keeps
@@ -167,7 +176,7 @@ export function LeaderboardDialog({ open, onClose }: { open: boolean; onClose: (
                         "shrink-0 text-end text-[12.5px] font-semibold tabular-nums text-ink-body",
                       )}
                     >
-                      {cellFor(column.rule, row.activity)}
+                      {cellFor(column.rule, row.activity, t, num)}
                     </span>
                   ))}
 

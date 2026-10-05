@@ -8,14 +8,14 @@ import { useApp } from "../../app/AppContext";
 import { usePlayer } from "../../app/PlayerContext";
 import { leadTrackFor } from "../../data/player";
 import { spring } from "../../lib/motion";
-import { useT } from "../../app/PreferencesContext";
+import { usePreferences } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 1 — artists you follow: circular artwork, name underneath.
  * ------------------------------------------------------------------ */
 
 export function FollowedArtists() {
-  const t = useT();
+  const { t, num, dataLabel } = usePreferences();
   const { notify, openDetail } = useApp();
   const player = usePlayer();
 
@@ -24,7 +24,7 @@ export function FollowedArtists() {
       id="feed-artists"
       icon="users"
       title={t("shelf.followedArtists")}
-      hint={`${followedArtists.length}`}
+      hint={num(followedArtists.length)}
       action={
         <PillButton
           tone="soft"
@@ -50,7 +50,7 @@ export function FollowedArtists() {
               transition={spring}
               onClick={() => openDetail({ kind: "artist", id: artist.id })}
               className="relative"
-              aria-label={`Open ${artist.name}`}
+              aria-label={t("page.openArtist", { name: artist.name })}
             >
               {/* circular cover */}
               <span className="relative block size-[72px] overflow-hidden rounded-full ring-[2.5px] ring-surface shadow-card">
@@ -86,7 +86,7 @@ export function FollowedArtists() {
                 </span>
               )}
             </span>
-            <span className="text-[12px] font-medium text-ink-faint">{artist.kind}</span>
+            <span className="text-[12px] font-medium text-ink-faint">{dataLabel(artist.kind)}</span>
           </motion.div>
         ))}
       </Row>

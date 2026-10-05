@@ -34,7 +34,7 @@ export function CommentsSheet({
   open: boolean;
   onClose: () => void;
 }) {
-  const { t, dir } = usePreferences();
+  const { t, dir, dataLabel } = usePreferences();
   const comments = useTrackComments(trackId);
   const [sort, setSort] = useState<Sort>("newest");
   const [reportTarget, setReportTarget] = useState<Target | null>(null);
@@ -84,7 +84,10 @@ export function CommentsSheet({
                 ? `${reportTarget.handle} · “${reportTarget.text.slice(0, 46)}${
                     reportTarget.text.length > 46 ? "…" : ""
                   }”`
-                : `${comments.total} ${comments.total === 1 ? "comment" : "comments"} on “${trackTitle}”`}
+                : t(comments.total === 1 ? "comments.countOne" : "comments.count", {
+                    n: comments.total,
+                    title: trackTitle,
+                  })}
             </p>
           </div>
 
@@ -137,7 +140,7 @@ export function CommentsSheet({
                   </button>
                 ))}
                 <span className="ms-auto text-[12px] font-semibold text-ink-faint">
-                  {comments.total > 0 && `${list.length} shown`}
+                  {comments.total > 0 && t("comments.shown", { shown: list.length, total: comments.total })}
                 </span>
               </div>
 
@@ -207,7 +210,7 @@ function CommentRow({
   comment: Comment;
   onReport: (target: Target) => void;
 }) {
-  const { t } = usePreferences();
+  const { t, dataLabel } = usePreferences();
   const { notify } = useApp();
   const comments = useTrackComments(trackId);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -268,7 +271,7 @@ function CommentRow({
               </span>
             )}
             <span className="ms-auto shrink-0 text-[12px] font-semibold text-ink-faint">
-              {comment.time}
+              {dataLabel(comment.time)}
             </span>
           </p>
 
@@ -278,7 +281,7 @@ function CommentRow({
             </span>
             {comment.badge && (
               <span className="max-w-[150px] shrink-0 truncate rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold text-ink-muted">
-                {comment.badge.label}
+                {t(comment.badge.labelKey)}
               </span>
             )}
           </p>
@@ -434,7 +437,7 @@ function ReplyRow({
   reply: Comment;
   onReport: (target: Target) => void;
 }) {
-  const { t } = usePreferences();
+  const { t, dataLabel } = usePreferences();
   const { notify } = useApp();
   const comments = useTrackComments(trackId);
   const reported = comments.reportOf(reply.id, reply.id);
@@ -462,7 +465,7 @@ function ReplyRow({
             </span>
           )}
           <span className="ms-auto shrink-0 text-[12px] font-semibold text-ink-faint">
-            {reply.time}
+            {dataLabel(reply.time)}
           </span>
         </p>
         <p className="mt-0.5 min-w-0 truncate text-[12px] font-semibold text-ink-faint">
@@ -534,7 +537,7 @@ function ReportBody({
   onSubmit: () => void;
   onCancel: () => void;
 }) {
-  const { t, dir } = usePreferences();
+  const { t, dir, dataLabel } = usePreferences();
   return (
     <motion.div
       key="report"

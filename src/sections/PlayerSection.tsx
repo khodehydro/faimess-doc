@@ -22,7 +22,7 @@ import { me } from "../data/account";
 import { cn } from "../lib/cn";
 import { backIcon, dirSign, forwardIcon, trackRatio } from "../lib/rtl";
 import { EASE, spring } from "../lib/motion";
-import { compactNumber, withThousands } from "../lib/format";
+import { compactNumber } from "../lib/format";
 
 /* ------------------------------------------------------------------ *
  *  Card 5 (right) — the player.
@@ -56,7 +56,7 @@ export function PlayerSection({
 }: {
   params: { expanded: boolean; onToggleExpand: () => void };
 }) {
-  const { t, dir } = usePreferences();
+  const { t, dir, dataLabel, num } = usePreferences();
   const player = usePlayer();
   const { track } = player;
   const [panel, setPanel] = useState<PanelId | null>(null);
@@ -93,10 +93,10 @@ export function PlayerSection({
           {track && (
             <span
               className="flex items-center gap-1.5 rounded-full bg-primary-faint px-2.5 py-1.5 text-[12.5px] font-bold tabular-nums text-primary-deep"
-              title={withThousands(track.plays)}
+              title={num(track.plays)}
             >
               <Icon name="play" size={12} strokeWidth={2.4} />
-              {t("player.plays", { n: compactNumber(track.plays) })}
+              {t("player.plays", { n: dataLabel(compactNumber(track.plays)) })}
             </span>
           )}
           <span className="ms-auto flex items-center gap-1.5">
@@ -105,7 +105,7 @@ export function PlayerSection({
                  and hitting its sixth song reads "6/9", not "6/12" */
               <span className="flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1.5 text-[12px] font-bold tabular-nums text-ink-muted">
                 <Icon name="list" size={12} />
-                {(player.queueIndex >= 0 ? player.queueIndex : 0) + 1}/{player.queue.length}
+                {num((player.queueIndex >= 0 ? player.queueIndex : 0) + 1)}/{num(player.queue.length)}
               </span>
             )}
             <motion.button
@@ -246,7 +246,7 @@ function PlayerRail({
 /* ------------------------------- drawers ------------------------------- */
 
 function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void }) {
-  const { t, dir } = usePreferences();
+  const { t, dir, dataLabel, num } = usePreferences();
   const player = usePlayer();
   const { navigate, notify, openDetail } = useApp();
   const { mine } = usePlaylists();
@@ -278,7 +278,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
       <header className="flex shrink-0 items-center gap-2.5 border-b border-line px-4 py-3">
         <span className="text-[13.5px] font-bold text-ink">{t(PANEL_TITLE[panel])}</span>
         <span className="rounded-full bg-subtle px-2 py-[1px] text-[12px] font-bold text-ink-muted">
-          {panel === "playlists" ? playlists.length + mine.length : rows.length}
+          {num(panel === "playlists" ? playlists.length + mine.length : rows.length)}
         </span>
         <button
           onClick={onClose}
@@ -343,7 +343,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-bold text-ink">{list.name}</span>
                   <span className="block truncate text-[12px] font-semibold text-ink-muted">
-                    {list.tracks} tracks · {list.duration}
+                    {t("playlist.trackCount", { count: list.tracks })} · {dataLabel(list.duration)}
                   </span>
                 </span>
                 <span className="text-ink-faint opacity-0 transition-opacity group-hover:opacity-100">
@@ -484,7 +484,7 @@ function TrackPanel({
   expanded: boolean;
   onDownload: () => void;
 }) {
-  const { t, dir } = usePreferences();
+  const { t, dir, dataLabel } = usePreferences();
   const { track, playing, position, duration, progress, toggle, next, prev, seek } = player;
   const barRef = useRef<HTMLDivElement>(null);
   const [scrubbing, setScrubbing] = useState(false);
@@ -535,7 +535,7 @@ function TrackPanel({
         <p className="mt-1 truncate text-[12.5px] font-semibold text-ink-muted">
           {track.artist}
           <span className="px-2 text-ink-faint">·</span>
-          {track.album}
+          {dataLabel(track.album)}
         </p>
       </div>
 
@@ -608,7 +608,7 @@ function TrackPanel({
             whileTap={{ scale: 0.92 }}
             transition={spring}
             onClick={toggle}
-            aria-label={playing ? "Pause" : "Play"}
+            aria-label={t(playing ? "player.pause" : "player.play")}
             className="flex size-[44px] items-center justify-center rounded-full bg-primary text-white shadow-primary"
           >
             <Icon name={playing ? "pause" : "play"} size={19} strokeWidth={2.2} />

@@ -22,7 +22,7 @@ import { EASE, spring } from "../lib/motion";
  * ------------------------------------------------------------------ */
 
 export function MiniPlayer({ onOpen }: { onOpen: () => void }) {
-  const { t, dir } = usePreferences();
+  const { t, dir, dataLabel } = usePreferences();
   const { track, playing, toggle, next } = usePlayer();
 
   return (
@@ -43,17 +43,17 @@ export function MiniPlayer({ onOpen }: { onOpen: () => void }) {
             className="absolute inset-0 z-0"
           />
 
-          <div className="pointer-events-none relative z-10 flex items-center gap-3 p-2 pe-1.5">
-            <span className="size-[46px] shrink-0 overflow-hidden rounded-[14px] shadow-xs">
+          <div className="pointer-events-none relative z-10 flex items-center gap-2.5 p-1.5 pe-1 lg:gap-3 lg:p-2 lg:pe-1.5">
+            <span className="size-[42px] shrink-0 overflow-hidden rounded-[13px] shadow-xs lg:size-[46px] lg:rounded-[14px]">
               <Photo src={track.photo} alt="" />
             </span>
 
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13.5px] font-bold text-white">
+              <span className="block truncate text-[13px] font-bold text-white lg:text-[13.5px]">
                 {track.title}
               </span>
-              <span className="mt-0.5 block truncate text-[12px] font-semibold text-white/75">
-                {track.artist} · {track.album}
+                <span className="mt-0.5 block truncate text-[12px] font-semibold text-white/75">
+                {track.artist} · {dataLabel(track.album)}
               </span>
             </span>
 
@@ -65,7 +65,7 @@ export function MiniPlayer({ onOpen }: { onOpen: () => void }) {
                 onClick={toggle}
                 aria-label={t(playing ? "player.pause" : "player.play")}
                 title={t(playing ? "player.pause" : "player.play")}
-                className="flex size-10 items-center justify-center rounded-full bg-white text-primary-deep shadow-sm transition-colors"
+                className="flex size-9 items-center justify-center rounded-full bg-white text-primary-deep shadow-sm transition-colors lg:size-10"
               >
                 <Icon name={playing ? "pause" : "play"} size={17} strokeWidth={2.1} />
               </motion.button>
@@ -77,7 +77,7 @@ export function MiniPlayer({ onOpen }: { onOpen: () => void }) {
                 onClick={() => next()}
                 aria-label={t("player.nextTrack")}
                 title={t("player.nextTrack")}
-                className="flex size-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+                className="flex size-8 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white lg:size-9"
               >
                 <Icon name={forwardIcon(dir)} size={17} strokeWidth={2.2} />
               </motion.button>

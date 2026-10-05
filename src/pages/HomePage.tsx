@@ -12,8 +12,10 @@ import { SectionSlot } from "../sections/registry";
 export function HomePage() {
   return (
     <>
-      <div className="shrink-0 p-5 pb-3">
-        <div className="h-[300px] sm:h-[330px] lg:h-[340px]">
+      <div className="shrink-0 p-4 pb-2.5 lg:p-5 lg:pb-3">
+        {/* phones get a shorter banner: 300px of photo pushed the feed — the
+            reason anyone opens this page — below the fold */}
+        <div className="h-[210px] min-[480px]:h-[250px] sm:h-[290px] lg:h-[340px]">
           <SectionSlot id="hero" params={undefined} />
         </div>
       </div>

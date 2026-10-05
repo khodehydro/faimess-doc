@@ -197,7 +197,7 @@ export function FeedSection() {
       </div>
 
       {/* the shelves — full height, no inner scroller */}
-      <div className="px-4 pb-7 pt-1.5">
+      <div className="px-4 pb-5 pt-1 lg:pb-7 lg:pt-1.5">
         {shelves.map((shelf, i) => (
           <div
             key={shelf.id}

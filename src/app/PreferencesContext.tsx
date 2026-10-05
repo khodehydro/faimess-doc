@@ -7,7 +7,16 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { LANGS, STRINGS, fill, type Lang, type Theme, type TVars } from "../data/i18n";
+import {
+  LANGS,
+  STRINGS,
+  fill,
+  localizeDigits,
+  tData,
+  type Lang,
+  type Theme,
+  type TVars,
+} from "../data/i18n";
 
 /* ------------------------------------------------------------------ *
  *  Preferences — language and appearance.
@@ -31,6 +40,21 @@ type PreferencesValue = {
   t: (key: string, vars?: TVars) => string;
   /** is this key in the table? — lets callers fall back to data labels */
   has: (key: string) => boolean;
+  /**
+   * Translate a label that comes out of a data file — an artist kind, a
+   * playlist mood, “2 hrs ago”, “4.8M monthly”. Unknown words (track
+   * titles, artist names, comment text) are returned untouched, so demo
+   * content never gets mangled. See `tData` in data/i18n.ts.
+   */
+  dataLabel: (value?: string) => string;
+  /** a plain number in this language's digits and grouping */
+  num: (value: number) => string;
+  /**
+   * Translate a key, or hand back the data file's own English when the key
+   * is not in the table yet — the door for copy that ships in a data file
+   * (banner slides, news headlines) and is translated alongside it.
+   */
+  text: (key: string, fallback: string) => string;
 };
 
 const PreferencesContext = createContext<PreferencesValue | null>(null);
@@ -108,16 +132,39 @@ export function PreferencesProvider({
     (key: string, vars?: TVars) => {
       const entry = STRINGS[key];
       if (!entry) return key;
-      return fill(entry[lang] || entry.en, vars);
+      /* a number handed to a placeholder is written in the language's own
+         digits — “{n} آهنگ” with n = 12 reads ۱۲, not 12 */
+      const filled = vars
+        ? Object.fromEntries(
+            Object.entries(vars).map(([name, v]) => [
+              name,
+              typeof v === "number" ? localizeDigits(String(v), lang) : v,
+            ]),
+          )
+        : undefined;
+      return fill(entry[lang] || entry.en, filled);
     },
     [lang],
   );
 
   const has = useCallback((key: string) => !!STRINGS[key], []);
 
+  const dataLabel = useCallback((value?: string) => tData(t, value, lang), [t, lang]);
+
+
+  const text = useCallback(
+    (key: string, fallback: string) => (STRINGS[key] ? t(key) : fallback),
+    [t],
+  );
+
+  const num = useCallback(
+    (value: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(value),
+    [locale],
+  );
+
   const value = useMemo<PreferencesValue>(
-    () => ({ lang, dir, locale, setLang, theme, setTheme, toggleTheme, t, has }),
-    [lang, dir, locale, setLang, theme, setTheme, toggleTheme, t, has],
+    () => ({ lang, dir, locale, setLang, theme, setTheme, toggleTheme, t, has, dataLabel, num, text }),
+    [lang, dir, locale, setLang, theme, setTheme, toggleTheme, t, has, dataLabel, num, text],
   );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
