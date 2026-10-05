@@ -12,7 +12,7 @@ import { ContributionsModal } from "./ContributionsModal";
 import { useAuth } from "../app/AuthContext";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { PointsDialog } from "../ui/PointsDialog";
-import { navItems, notifications } from "../data/navigation";
+import { navItems, notifications, type Notification } from "../data/navigation";
 import { allRoutes } from "../app/router";
 import { artists, albums, playlists } from "../data/library";
 import { me } from "../data/account";
@@ -20,6 +20,8 @@ import { cn } from "../lib/cn";
 import { forwardIcon } from "../lib/rtl";
 import { EASE, spring } from "../lib/motion";
 import { usePwaInstall } from "../lib/pwa";
+import { usePlayer } from "../app/PlayerContext";
+import { trackById } from "../data/player";
 
 /* ------------------------------------------------------------------ *
  *  Card 3 — search + alerts + profile.
@@ -43,6 +45,7 @@ export function AccountCard({
   className?: string;
 } = {}) {
   const { route, navigate, notify, openDetail, openNews } = useApp();
+  const { play } = usePlayer();
   const { t, has, dir, dataLabel } = usePreferences();
   const { signOut, signedIn } = useAuth();
   /** the menu is inside a popover that closes on click, so the dialog the
@@ -58,6 +61,44 @@ export function AccountCard({
   const [contribOpen, setContribOpen] = useState(false);
   const [pointsOpen, setPointsOpen] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [notifList, setNotifList] = useState<Notification[]>(notifications);
+  const unreadCount = notifList.filter((n) => n.unread).length;
+
+  const markAllRead = () => {
+    setNotifList((list) => list.map((n) => ({ ...n, unread: false })));
+  };
+
+  const handleNotificationClick = (n: Notification) => {
+    setBellOpen(false);
+    setNotifList((list) =>
+      list.map((item) => (item.id === n.id ? { ...item, unread: false } : item)),
+    );
+
+    if (n.newsId) {
+      openNews(n.newsId);
+      return;
+    }
+    if (n.trackId) {
+      const tr = trackById(n.trackId);
+      if (tr) play(tr);
+      notify(t(n.textKey, n.vars), n.tone === "flame" ? "primary" : n.tone);
+      return;
+    }
+    if (n.albumId) {
+      openDetail({ kind: "album", id: n.albumId });
+      return;
+    }
+    if (n.playlistId) {
+      openDetail({ kind: "playlist", id: n.playlistId });
+      return;
+    }
+    if (n.points) {
+      setPointsOpen(true);
+      return;
+    }
+
+    notify(t(n.textKey, n.vars), n.tone === "flame" ? "primary" : n.tone);
+  };
   const showSearch = part === "all" || part === "search";
   const showNotifications = part === "all" || part === "controls" || part === "notification";
   const showProfile = part === "all" || part === "controls" || part === "profile";
@@ -269,7 +310,12 @@ export function AccountCard({
             iconClassName="anim-bell"
             onClick={() => setBellOpen((v) => !v)}
           />
-          <span className="pointer-events-none absolute end-2 top-2 size-2 rounded-full bg-primary ring-2 ring-surface" />
+          {unreadCount > 0 && (
+            <span className="pointer-events-none absolute end-1.5 top-1.5 flex size-2.5 items-center justify-center">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex size-2 rounded-full bg-primary ring-2 ring-surface" />
+            </span>
+          )}
           <AnimatePresence>
             {bellOpen && (
               <motion.div
@@ -278,45 +324,78 @@ export function AccountCard({
                 exit={{ opacity: 0, y: -8, scale: 0.98 }}
                 transition={{ duration: 0.22, ease: EASE }}
                 className={cn(
-                  "absolute top-[calc(100%+12px)] z-40 w-[292px] rounded-panel border border-line bg-surface p-2.5 shadow-float",
+                  "absolute top-[calc(100%+12px)] z-40 w-[310px] sm:w-[340px] rounded-panel border border-line bg-surface p-2.5 shadow-float",
                   part === "notification" ? "left-0" : "end-0",
                 )}
               >
-                <p className="px-2.5 py-1.5 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
-                  {t("account.notifications")}
-                </p>
-                {notifications.map((n, i) => (
-                  <motion.button
-                    key={n.id}
-                    initial={{ opacity: 0, x: 8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.04 * i, duration: 0.3 }}
-                    onClick={() => {
-                      setBellOpen(false);
-                      if (n.newsId) {
-                        openNews(n.newsId);
-                      } else {
-                        notify(t(n.textKey, n.vars), n.tone);
-                      }
-                    }}
-                    className="flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-start transition-colors hover:bg-subtle"
-                  >
-                    <span
-                      className={cn(
-                        "mt-1 size-2 shrink-0 rounded-full",
-                        n.tone === "primary" && "bg-primary",
-                        n.tone === "teal" && "bg-teal",
-                        n.tone === "mint" && "bg-mint",
-                      )}
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[13.5px] font-semibold leading-snug text-ink">
-                        {t(n.textKey, n.vars)}
+                <div className="flex items-center justify-between border-b border-line px-2 pb-2 pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">
+                      {t("account.notifications")}
+                    </p>
+                    {unreadCount > 0 && (
+                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[12px] font-bold text-primary-deep">
+                        {unreadCount}
                       </span>
-                      <span className="mt-0.5 block text-[12px] text-ink-muted">{dataLabel(n.at)}</span>
-                    </span>
-                  </motion.button>
-                ))}
+                    )}
+                  </div>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={markAllRead}
+                      className="text-[12px] font-semibold text-primary transition-colors hover:text-primary-deep"
+                    >
+                      {t("notif.markAllRead")}
+                    </button>
+                  )}
+                </div>
+
+                <div className="mt-1.5 max-h-[380px] overflow-y-auto scroll-slim space-y-1">
+                  {notifList.length === 0 ? (
+                    <div className="py-8 text-center text-[13px] text-ink-muted">
+                      {t("notif.empty")}
+                    </div>
+                  ) : (
+                    notifList.map((n, i) => (
+                      <motion.button
+                        key={n.id}
+                        initial={{ opacity: 0, x: 8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.03 * i, duration: 0.25 }}
+                        onClick={() => handleNotificationClick(n)}
+                        className={cn(
+                          "group flex w-full items-start gap-2.5 rounded-xl p-2.5 text-start transition-colors",
+                          n.unread
+                            ? "bg-primary-soft/30 hover:bg-primary-soft/50"
+                            : "hover:bg-subtle",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-white shadow-xs",
+                            n.tone === "primary" && "bg-primary",
+                            n.tone === "teal" && "bg-teal",
+                            n.tone === "mint" && "bg-mint",
+                            n.tone === "flame" && "bg-flame",
+                          )}
+                        >
+                          <Icon name={n.icon ?? "bell"} size={13} strokeWidth={2.2} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[13px] font-semibold leading-snug text-ink transition-colors group-hover:text-primary">
+                            {t(n.textKey, n.vars)}
+                          </span>
+                          <span className="mt-1 flex items-center justify-between text-[12px] text-ink-muted">
+                            <span>{dataLabel(n.at)}</span>
+                            {n.unread && (
+                              <span className="size-1.5 rounded-full bg-primary" />
+                            )}
+                          </span>
+                        </span>
+                      </motion.button>
+                    ))
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

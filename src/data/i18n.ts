@@ -1339,6 +1339,46 @@ export const STRINGS: Record<string, Entry> = {
     fa: "خبر داغ: {title}",
     ko: "인기 뉴스: {title}",
   },
+  "notif.newSong": {
+    en: "New Track: {artist} released “{title}”",
+    fa: "آهنگ جدید: {artist} قطعهٔ «{title}» را منتشر کرد",
+    ko: "새 곡: {artist}의 신곡 “{title}” 발매",
+  },
+  "notif.newAlbum": {
+    en: "New Album: {artist} dropped “{title}”",
+    fa: "آلبوم جدید: {artist} آلبوم «{title}» را منتشر کرد",
+    ko: "새 앨범: {artist}의 새 앨범 “{title}” 발매",
+  },
+  "notif.newPlaylist": {
+    en: "New Playlist: “{name}” is now available",
+    fa: "پلی‌لیست جدید: «{name}» اکنون در دسترس است",
+    ko: "새 플레이리스트: “{name}” 공개",
+  },
+  "notif.commentReply": {
+    en: "{user} replied to your comment on “{title}”",
+    fa: "{user} به دیدگاه شما در «{title}» پاسخ داد",
+    ko: "{user}님이 “{title}”의 내 댓글에 답글을 남겼어요",
+  },
+  "notif.lyricsApproved": {
+    en: "Your lyrics for “{title}” were approved (+50 pts)!",
+    fa: "لیریک ارسالی شما برای «{title}» تأیید شد (+۵۰ امتیاز)!",
+    ko: "“{title}” 가사 등록이 승인되었어요 (+50점)!",
+  },
+  "notif.pointsEarned": {
+    en: "You earned +{points} fan points: {reason}",
+    fa: "شما +{points} امتیاز دریافت کردید: {reason}",
+    ko: "+{points} 팬 포인트를 획득했어요: {reason}",
+  },
+  "notif.markAllRead": {
+    en: "Mark all as read",
+    fa: "خواندن همه",
+    ko: "모두 읽음",
+  },
+  "notif.empty": {
+    en: "No new notifications",
+    fa: "اعلان جدیدی وجود ندارد",
+    ko: "새 알림이 없습니다",
+  },
   "notif.release": {
     en: "{artist} released “{title}”",
     fa: "{artist} «{title}» را منتشر کرد",
