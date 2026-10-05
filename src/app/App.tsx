@@ -148,9 +148,6 @@ export default function App() {
                 <Splash />
                 <Screen />
                 <AccountDoor />
-                {/* the door sits above the app rather than in place of it:
-                    it opens when an action asks for an account */}
-                <AccountDoor />
                 <ToastHost />
               </ContributionsProvider>
             </CommentsProvider>
