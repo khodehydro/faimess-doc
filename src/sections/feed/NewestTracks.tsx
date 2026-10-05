@@ -12,14 +12,18 @@ import { spring } from "../../lib/motion";
 import { usePreferences } from "../../app/PreferencesContext";
 
 /* ------------------------------------------------------------------ *
- *  Shelf 2 — the newest songs, as a two-column list so the shelf stays
- *  short while showing six tracks.
+ *  Shelf 2 — the newest songs: six of them, in two shapes.
  *
- *  A row is a target in its own right: tapping it plays the song (there is
- *  no hover on a phone, so a play button that only appears on hover would
- *  simply not exist there). Everything is a step smaller under 1024px —
- *  the row, the cover, the type — and the “add” button, which needs a
- *  pointer to be reachable at all, is desktop-only.
+ *  Desktop keeps the list — two columns of wide rows, where a row can hold
+ *  the title, the artist, when it landed and how long it runs. A handset
+ *  cannot hold that: a one-column list of six rows is a long scroll of
+ *  half-empty bars, so under 1024px the same tracks become a **three-column
+ *  grid of square covers** — the shape a listener already reads a shelf in,
+ *  four times more of it on one screen.
+ *
+ *  A card (and a row) is a target in its own right: tapping it plays the
+ *  song, because there is no hover on a phone for a play button to appear
+ *  from. The “add” button, which needs a pointer at all, is desktop-only.
  * ------------------------------------------------------------------ */
 
 function TrackRow({
@@ -60,13 +64,22 @@ function TrackRow({
       transition={{ duration: 0.4, delay: index * 0.04 }}
       onClick={start}
       className={cn(
-        "group flex cursor-pointer items-center gap-2.5 rounded-[14px] border bg-surface px-2.5 py-2 transition-colors lg:gap-3 lg:rounded-[16px] lg:px-3 lg:py-2.5",
+        /* phone/tablet: a card — square cover on top, two lines under it.
+           desktop: the same element as a wide row (see `lg:`) */
+        "group flex cursor-pointer flex-col overflow-hidden rounded-[14px] border bg-surface text-start transition-colors lg:flex-row lg:items-center lg:gap-3 lg:rounded-[16px] lg:px-3 lg:py-2.5",
         mine ? "border-primary/35 bg-primary-faint/60" : "border-line/80 hover:border-primary/25 hover:bg-primary-faint/60",
       )}
     >
-      <span className="relative size-[40px] shrink-0 overflow-hidden rounded-[12px] shadow-xs lg:size-[44px] lg:rounded-[13px]">
+      <span className="relative aspect-square w-full shrink-0 overflow-hidden lg:aspect-auto lg:size-[44px] lg:rounded-[13px] lg:shadow-xs">
         <Cover src={track.photo} seed={track.seed} className="h-full w-full" />
-        {/* the same door as tapping the row, spelled out on the cover */}
+        {/* the “new” flag rides on the cover on a phone — there is no room
+            for it beside a two-word title in a 110px card */}
+        {track.isNew && (
+          <span className="absolute start-1.5 top-1.5 rounded-full bg-primary px-1.5 py-[1px] text-[12px] font-bold leading-normal text-white lg:hidden">
+            {t("shelf.new")}
+          </span>
+        )}
+        {/* the same door as tapping the card, spelled out on the cover */}
         <span
           onClick={(e) => {
             e.stopPropagation();
@@ -81,23 +94,24 @@ function TrackRow({
         </span>
       </span>
 
-      <span className="min-w-0 flex-1">
+      <span className="min-w-0 w-full flex-1 px-2 pb-1.5 pt-1.5 lg:px-0 lg:pb-0 lg:pt-0">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-[13.5px] font-bold text-ink lg:text-[14.5px]">{track.title}</span>
+          <span className="truncate text-[12.5px] font-bold text-ink lg:text-[14.5px]">{track.title}</span>
           {track.isNew && (
-              <span className="shrink-0 rounded-full bg-primary px-1.5 py-[1px] text-[12px] font-bold uppercase tracking-wide text-white lg:px-2">
+            <span className="hidden shrink-0 rounded-full bg-primary px-1.5 py-[1px] text-[12px] font-bold uppercase tracking-wide text-white lg:inline-flex lg:px-2">
               {t("shelf.new")}
             </span>
           )}
         </span>
         <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-ink-muted lg:mt-1 lg:text-[12.5px]">
           <span className="truncate font-semibold text-ink-body">{track.artist}</span>
-          <span className="text-ink-faint">·</span>
-          <span className="shrink-0">{dataLabel(track.ago)}</span>
+          {/* when it landed and how long it runs are row luxuries */}
+          <span className="hidden text-ink-faint lg:inline">·</span>
+          <span className="hidden shrink-0 lg:inline">{dataLabel(track.ago)}</span>
         </span>
       </span>
 
-      <span className="shrink-0 text-[12px] font-medium tabular-nums text-ink-faint lg:text-[13px]">
+      <span className="hidden shrink-0 text-[12px] font-medium tabular-nums text-ink-faint lg:inline lg:text-[13px]">
         {track.duration}
       </span>
 
@@ -135,7 +149,8 @@ export function NewestTracks() {
         </PillButton>
       }
     >
-      <div className={cn("grid grid-cols-1 gap-2 lg:grid-cols-2 lg:gap-2.5")}>
+      {/* three square cards in a row on a phone, two wide rows on desktop */}
+      <div className="grid grid-cols-3 gap-2 min-[480px]:gap-2.5 lg:grid-cols-2">
         {newestTracks.map((t, i) => (
           <TrackRow key={t.id} track={t} index={i} />
         ))}

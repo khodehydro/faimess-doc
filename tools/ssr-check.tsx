@@ -582,10 +582,23 @@ check(
     compactSrc.includes('part="profile"') &&
     compactSrc.includes('dir="ltr"') &&
     compactSrc.includes('part="search"') &&
-    compactSrc.includes("absolute left-1/2 top-1/2 z-10 -translate-x-1/2") &&
+    /* three columns — `1fr auto 1fr` — are what centre the brand on the
+       row: an absolutely-positioned pill was centred on the box, and the
+       two controls are not the same width, so the wordmark and the two
+       controls drifted off the middle by half their difference */
+    compactSrc.includes("grid-cols-[1fr_auto_1fr]") &&
+    compactSrc.includes("justify-self-start") &&
+    compactSrc.includes("justify-self-end") &&
     brandSrc.includes("compact ? \"h-[56px] gap-2 px-3\"") &&
     brandSrc.includes("max-[374px]:hidden"),
-  "notifications left, wordmark physically centred, profile right",
+  "notifications on the start edge, wordmark on the true centre, profile on the end edge",
+);
+check(
+  "the bell swings on its own axis, not on the corner of its viewBox",
+  cssSrc.includes(".anim-bell {") &&
+    /\.anim-bell\s*\{[^}]*transform-box:\s*fill-box[^}]*transform-origin:\s*top center/.test(cssSrc) &&
+    cssSrc.includes("@keyframes fi-bell-shake"),
+  "without `fill-box` the rotate() pivot is the svg's top-left corner",
 );
 check(
   "search is its own full-width capsule on the compact shell",
@@ -745,6 +758,42 @@ check(
   compactSrc.includes("<SurfaceCard glass") &&
     readFileSync("src/ui/primitives.tsx", "utf8").includes("bg-white/80 ring-1"),
   "light glass surface, with a dark-theme surface counterpart",
+);
+check(
+  "the newest-tracks shelf is a three-column card grid on a phone",
+  (() => {
+    const newestSrc = readFileSync("src/sections/feed/NewestTracks.tsx", "utf8");
+    return (
+      newestSrc.includes("grid grid-cols-3 gap-2") &&
+      newestSrc.includes("lg:grid-cols-2") &&
+      newestSrc.includes("aspect-square w-full shrink-0 overflow-hidden lg:aspect-auto lg:size-[44px]") &&
+      newestSrc.includes("group flex cursor-pointer flex-col overflow-hidden rounded-[14px] border bg-surface text-start transition-colors lg:flex-row lg:items-center") &&
+      /* a card has room for the title and the artist only — the “new” flag
+         rides on the cover, the runtime and the timestamp are desktop-only */
+      newestSrc.includes("absolute start-1.5 top-1.5 rounded-full bg-primary px-1.5 py-[1px] text-[12px] font-bold leading-normal text-white lg:hidden") &&
+      newestSrc.includes("hidden shrink-0 lg:inline")
+    );
+  })(),
+  "three square covers per row on a handset, the wide list rows on desktop",
+);
+check(
+  "a user card has clear air above its rank ribbon",
+  (() => {
+    const usersSrc = readFileSync("src/sections/feed/ActiveUsers.tsx", "utf8");
+    return (
+      /* the rail reserves the top of the card: a tap on a touch screen fires
+         whileHover too, and a 4px lift inside an exact-height rail sliced the
+         ribbon off the top */
+      shelfSrc.includes("overflow-x-auto pb-2 pt-2 lg:gap-3.5") &&
+      shelfSrc.includes("whileHover={{ y: -4 }}") &&
+      usersSrc.includes("<Row>") &&
+      usersSrc.includes("relative mt-5") &&
+      usersSrc.includes("leading-normal lg:start-2.5 lg:top-2.5") &&
+      usersSrc.includes('className={cn("lg:hidden"') &&
+      usersSrc.includes('className={cn("hidden lg:inline-flex"')
+    );
+  })(),
+  "the ribbon never sits against the scroll edge, and the avatar clears it",
 );
 check(
   "the feed strip is not shown on phones and tablets",

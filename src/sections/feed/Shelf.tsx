@@ -77,10 +77,19 @@ export function Shelf({
   );
 }
 
-/** horizontal, snapping row used by the artists / albums / fans shelves */
+/**
+ * Horizontal, snapping row used by the artists / albums / listeners shelves.
+ *
+ * `pt-2` is not decoration: these cards lift on hover (`whileHover={{ y: -4 }}`)
+ * and a tap fires that state on a touch screen too. The rail is exactly as
+ * tall as its tallest card, so without headroom the lift — and any ring that
+ * sits outside a card — is clipped by the rail's own top edge. The padding of
+ * a scroll container is inside its scrollable area, so this is visible space,
+ * not a nudge of the whole shelf.
+ */
 export function Row({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("scroll-rail flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 lg:gap-3.5", className)}>
+    <div className={cn("scroll-rail flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pt-2 lg:gap-3.5", className)}>
       {children}
     </div>
   );

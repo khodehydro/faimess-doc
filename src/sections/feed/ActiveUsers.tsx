@@ -48,6 +48,8 @@ export function ActiveUsers() {
         </PillButton>
       }
     >
+      {/* the rail reserves headroom (see `Row`): the card's top edge is the
+          rank ribbon, and a lift or a ring must not be sliced off it */}
       <Row>
         {activeUsers.map((user, i) => {
           const medal = i < 3;
@@ -70,14 +72,21 @@ export function ActiveUsers() {
               title={t("points.open")}
               aria-label={`${user.name} ${user.handle} — ${t("points.open")}`}
               className={cn(
+                /* the card is written physically (`dir="ltr"`): a logical
+                   `top-2` inset on the ribbon landed on the *other* physical
+                   edge from `start-2`, which poked it out of the card's
+                   rounded corner and had it clipped by the rail's top edge */
                 "group relative flex w-[150px] shrink-0 cursor-pointer snap-start flex-col items-center gap-2 rounded-[16px] border p-3 text-center transition-colors lg:w-[176px] lg:gap-2.5 lg:rounded-[18px] lg:p-3.5",
                 medal ? "border-primary/25 bg-primary-faint/70" : "border-line/80 bg-surface hover:border-primary/20",
               )}
             >
-              {/* rank ribbon */}
+              {/* rank ribbon — no taller than a chip: the crown used to give
+                  the line box a taller content box than its neighbours, which
+                  pushed the whole row down and had the ribbon look clipped
+                  against the card's rounded top corner */}
               <span
                 className={cn(
-"absolute start-2 top-2 flex items-center gap-1.5 rounded-full px-1.5 py-[1px] text-[12px] font-extrabold lg:start-2.5 lg:top-2.5 lg:px-2 lg:py-[2px]",
+                  "absolute start-2 top-2 flex items-center gap-1.5 rounded-full px-1.5 py-[1px] text-[12px] font-extrabold leading-normal lg:start-2.5 lg:top-2.5 lg:px-2 lg:py-[2px]",
                   medal ? "bg-primary text-white" : "bg-subtle text-ink-muted",
                 )}
               >
@@ -89,9 +98,12 @@ export function ActiveUsers() {
                 <span className="absolute end-2.5 top-3 size-2 rounded-full bg-mint ring-2 ring-surface" title={t("shelf.onlineNow")} />
               )}
 
-              {/* circular profile */}
-              <span className="relative mt-3 lg:mt-3.5">
-                <Avatar src={user.photo} seed={user.seed} size={56} className={medal ? "ring-2 ring-primary ring-offset-2" : ""} />
+              {/* circular profile — `mt-5` is what keeps the ribbon clear of
+                  the avatar's ring: at `mt-3` the two boxes overlapped, and
+                  the ribbon read as if it had been cut off by the card */}
+              <span className="relative mt-5">
+                <Avatar src={user.photo} seed={user.seed} size={56} className={cn("lg:hidden", medal ? "ring-2 ring-primary ring-offset-2" : "")} />
+                <Avatar src={user.photo} seed={user.seed} size={64} className={cn("hidden lg:inline-flex", medal ? "ring-2 ring-primary ring-offset-2" : "")} />
               </span>
 
               <span className="w-full">

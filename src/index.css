@@ -700,6 +700,15 @@
   transform-box: fill-box;
   transform-origin: bottom center;
 }
+/* the bell swings from its own top edge — every other animated icon here
+   pins its origin, and without this one `rotate()` turns the svg around the
+   corner of its viewBox instead of the bell itself, which threw the icon
+   out of its circle (worst on the compact header, where it is the only
+   thing on that side of the bar) */
+.anim-bell {
+  transform-box: fill-box;
+  transform-origin: top center;
+}
 .group:hover .anim-bell {
   animation: fi-bell-shake 0.7s ease-in-out;
 }
