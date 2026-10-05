@@ -3,11 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- the browser's own chrome (Android Chrome's address bar, the task
-         switcher) wears the brand purple, not the grey canvas. The same hex
-         is `--color-primary` in src/index.css; PreferencesContext re-reads
-         that token when the appearance flips, so dark mode gets the dark
-         theme's purple instead of this one. -->
+    <!-- The browser's own chrome wears the brand purple: Android Chrome's
+         address bar, iOS Safari's status bar, the task switcher, and an
+         installed app's header. Three metas on purpose — the media-qualified
+         pair is the form browsers that ignore an unqualified tag in dark mode
+         read (Safari on iOS), the plain one is the fallback. All three carry
+         `--color-primary` from src/index.css, and PreferencesContext rewrites
+         every one of them from that token when the appearance flips, so the
+         app's own theme always decides. -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#8267f0" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#8b73f5" />
     <meta name="theme-color" content="#8267f0" />
     <meta name="description" content="FAIMESS — a warm, soft-minimal studio dashboard." />
 

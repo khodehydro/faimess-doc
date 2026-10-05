@@ -659,21 +659,35 @@ check(
 check(
   "the browser's own chrome wears the brand colour",
   (() => {
-    /* one source for the hex: what `index.html` declares must be the same
-       purple as the `--color-primary` token, and the provider must re-read
-       that token when the appearance changes */
-    const brand = (cssSrc.match(/--color-primary:\s*(#[0-9a-fA-F]{6})/) ?? [])[1];
-    const declared = (indexHtml.match(/<meta name="theme-color" content="(#[0-9a-fA-F]{6})"/) ?? [])[1];
+    /* One source for the hexes: `--color-primary` in the light and dark
+       theme blocks of src/index.css. `index.html` carries three metas — a
+       media-qualified pair (the form Safari on iOS reads in dark mode) and
+       a plain fallback — and the provider rewrites *all* of them from the
+       token when the appearance flips. */
+    const token = (block: string) =>
+      (block.match(/--color-primary:\s*(#[0-9a-fA-F]{6})/) ?? [])[1]?.toLowerCase();
+    const light = token(cssSrc);
+    /* the dark block is the `[data-theme="dark"] { … }` rule itself — search
+       from its brace so the light token above it can't be picked up */
+    const darkBlock = cssSrc.slice(cssSrc.indexOf('[data-theme="dark"] {'));
+    const dark = token(darkBlock.slice(0, darkBlock.indexOf("}")));
+    const metas = [...indexHtml.matchAll(/<meta name="theme-color"([^>]*)>/g)].map((m) => m[1]);
+    const contentOf = (attrs: string) =>
+      (attrs.match(/content="(#[0-9a-fA-F]{6})"/) ?? [])[1]?.toLowerCase();
     const prefs = readFileSync("src/app/PreferencesContext.tsx", "utf8");
     return (
-      !!brand &&
-      declared?.toLowerCase() === brand.toLowerCase() &&
-      prefs.includes('meta[name="theme-color"]') &&
-      prefs.includes('"--color-primary"') &&
-      prefs.includes('meta.setAttribute("content", brand)')
+      !!light &&
+      !!dark &&
+      metas.length === 3 &&
+      metas.some((a) => a.includes('media="(prefers-color-scheme: light)"') && contentOf(a) === light) &&
+      metas.some((a) => a.includes('media="(prefers-color-scheme: dark)"') && contentOf(a) === dark) &&
+      metas.some((a) => !a.includes("media=") && contentOf(a) === light) &&
+      prefs.includes('querySelectorAll(\'meta[name="theme-color"]\')') &&
+      prefs.includes('metas.forEach((meta) => meta.setAttribute("content", brand))') &&
+      prefs.includes('"--color-primary"')
     );
   })(),
-  "Android Chrome's address bar takes `--color-primary`, light and dark",
+  "the address bar follows `--color-primary`, light and dark, however it is declared",
 );
 check(
   "search is its own full-width capsule on the compact shell",

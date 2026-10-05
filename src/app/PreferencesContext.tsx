@@ -105,18 +105,20 @@ export function PreferencesProvider({
     root.dir = dir;
   }, [theme, lang, dir]);
 
-  /* the browser's own chrome follows the brand: `index.html` declares the
-     light theme's purple, and this re-reads the token after `data-theme`
-     lands — so the address bar turns purple with the dark theme's purple in
-     dark mode. Read, not duplicated: `--color-primary` stays the one place
-     the brand colour is written. */
+  /* the browser's own chrome follows the brand: `index.html` ships the
+     light theme's purple (and the dark theme's in a media-qualified twin),
+     and this re-reads the token after `data-theme` lands — every
+     `theme-color` meta is rewritten, so whichever one the browser picked
+     matches the theme the listener chose. Read, not duplicated:
+     `--color-primary` stays the one place the brand colour is written. */
   useEffect(() => {
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (!meta) return;
+    const metas = document.querySelectorAll('meta[name="theme-color"]');
+    if (!metas.length) return;
     const brand = getComputedStyle(document.documentElement)
       .getPropertyValue("--color-primary")
       .trim();
-    if (brand) meta.setAttribute("content", brand);
+    if (!brand) return;
+    metas.forEach((meta) => meta.setAttribute("content", brand));
   }, [theme]);
 
   const setLang = useCallback((next: Lang) => {
