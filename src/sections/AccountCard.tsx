@@ -42,7 +42,7 @@ export function AccountCard({
   part?: "all" | "search" | "controls" | "notification" | "profile";
   className?: string;
 } = {}) {
-  const { route, navigate, notify, openDetail } = useApp();
+  const { route, navigate, notify, openDetail, openNews } = useApp();
   const { t, has, dir, dataLabel } = usePreferences();
   const { signOut, signedIn } = useAuth();
   /** the menu is inside a popover that closes on click, so the dialog the
@@ -293,7 +293,11 @@ export function AccountCard({
                     transition={{ delay: 0.04 * i, duration: 0.3 }}
                     onClick={() => {
                       setBellOpen(false);
-                      notify(t(n.textKey, n.vars), n.tone);
+                      if (n.newsId) {
+                        openNews(n.newsId);
+                      } else {
+                        notify(t(n.textKey, n.vars), n.tone);
+                      }
                     }}
                     className="flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-start transition-colors hover:bg-subtle"
                   >

@@ -603,6 +603,44 @@ export const STRINGS: Record<string, Entry> = {
   "news.tag.awards": { en: "Awards", fa: "جوایز", ko: "어워즈" },
   "news.tag.editorial": { en: "Editorial", fa: "تحریریه", ko: "에디토리얼" },
 
+  "news.shelf.trending": { en: "Trending News", fa: "اخبار ترند (بر اساس لایک)", ko: "인기 뉴스 (좋아요 순)" },
+  "news.shelf.trendingDesc": {
+    en: "Most liked stories by the community this week",
+    fa: "محبوب‌ترین و پرلایک‌ترین اخبار این هفته از نگاه کاربران",
+    ko: "이번 주 팬들에게 가장 많은 좋아요를 받은 뉴스",
+  },
+  "news.shelf.latest": { en: "Latest News", fa: "جدیدترین اخبار", ko: "최신 뉴스" },
+  "news.shelf.latestDesc": {
+    en: "Fresh updates from comebacks, tours and charts",
+    fa: "تازه‌ترین رویدادها، تاریخ تورها و صدرنشینان چارت",
+    ko: "컴백, 투어, 차트의 따끈따끈한 소식",
+  },
+  "news.shelf.mostDiscussed": { en: "Most Discussed", fa: "پر بحث‌ترین اخبار (بر اساس کامنت‌ها)", ko: "화제의 뉴스 (댓글 많은 순)" },
+  "news.shelf.mostDiscussedDesc": {
+    en: "Articles generating the hottest fan conversations",
+    fa: "اخباری که بیشترین گفتگو و نظرات طرفداران را برانگیخته‌اند",
+    ko: "팬들의 열띤 토론이 이어지는 화제의 기사",
+  },
+  "news.backToNews": { en: "Back to news", fa: "بازگشت به اخبار", ko: "뉴스로 돌아가기" },
+  "news.viewsCount": { en: "{n} views", fa: "{n} بازدید", ko: "조회수 {n}회" },
+  "news.likesCount": { en: "{n} likes", fa: "{n} لایک", ko: "좋아요 {n}개" },
+  "news.commentsCount": { en: "{n} comments", fa: "{n} دیدگاه", ko: "댓글 {n}개" },
+  "news.readTime": { en: "3 min read", fa: "۳ دقیقه مطالعه", ko: "3분 읽기" },
+  "news.authorBy": { en: "By {author}", fa: "به قلم {author}", ko: "{author} 작성" },
+  "news.commentsTitle": { en: "Discussion & Comments", fa: "دیدگاه‌ها و گفتگو", ko: "댓글 및 토론" },
+  "news.commentPlaceholder": {
+    en: "Share your thoughts on this story…",
+    fa: "نظر خود را دربارهٔ این خبر بنویسید…",
+    ko: "이 뉴스에 대한 생각을 남겨보세요…",
+  },
+  "news.commentSend": { en: "Post comment", fa: "ارسال نظر", ko: "댓글 등록" },
+  "news.shareTitle": { en: "Share story", fa: "اشتراک‌گذاری خبر", ko: "뉴스 공유" },
+  "news.likedToast": { en: "Added to your liked stories", fa: "به اخبار پسندیده‌شده افزوده شد", ko: "좋아요한 뉴스에 추가되었습니다" },
+  "news.unlikedToast": { en: "Removed from liked stories", fa: "از اخبار پسندیده‌شده حذف شد", ko: "좋아요를 취소했습니다" },
+  "news.commentPosted": { en: "Your comment was published", fa: "دیدگاه شما با موفقیت ثبت شد", ko: "댓글이 등록되었습니다" },
+  "news.seeAll": { en: "See all news", fa: "مشاهدهٔ همه اخبار", ko: "모든 뉴스 보기" },
+  "news.featuredBadge": { en: "Featured Story", fa: "خبر ویژه", ko: "주요 뉴스" },
+
   "download.title": { en: "Get the FAIMESS app", fa: "اپ فیمس را بگیر", ko: "FAIMESS 앱 받기" },
   "download.subtitle": {
     en: "Downloading tracks is an Android feature — the browser streams.",
@@ -837,6 +875,21 @@ export const STRINGS: Record<string, Entry> = {
     fa: "دوازده شهر در آسیا، اروپا و آمریکای شمالی، با پخش زندهٔ افتتاحیه در سئول.",
     ko: "아시아·유럽·북미 12개 도시, 서울 개막 공연은 라이브 스트리밍.",
   },
+  "news.nw1.p1": {
+    en: "NOVAE have officially announced their first-ever world tour titled 'Afterglow'. The tour kicks off with three massive headline nights at the KSPO Dome in Seoul.",
+    fa: "گروه NOVAE رسماً اولین تور جهانی خود را با عنوان «Afterglow» معرفی کرد. این تور با سه شب کنسرت پرشکوه در KSPO Dome سئول آغاز خواهد شد.",
+    ko: "NOVAE가 첫 월드 투어 'Afterglow'의 공식 일정을 발표했습니다. 이번 투어는 서울 KSPO 돔에서 3일간의 대규모 공연으로 화려한 막을 올립니다.",
+  },
+  "news.nw1.p2": {
+    en: "The twelve-city itinerary spans major musical capitals across Asia, Europe, and North America, including Tokyo, Milan, London, New York, and Los Angeles. International ticket sales begin next Monday.",
+    fa: "برنامهٔ دوازده شهر این تور شامل پایتخت‌های موسیقی در آسیا، اروپا و آمریکای شمالی از جمله توکیو، میلان، لندن، نیویورک و لس‌آنجلس خواهد بود. فروش بلیت‌ها از دوشنبهٔ آینده آغاز می‌شود.",
+    ko: "도쿄, 밀라노, 런던, 뉴욕, 로스앤젤레스 등 아시아·유럽·북미 12개 주요 도시를 순회하며 글로벌 팬들과 만날 예정입니다. 해외 티켓 예매는 다음 주 월요일부터 시작됩니다.",
+  },
+  "news.nw1.p3": {
+    en: "For global fans unable to attend in person, the agency confirmed that the Seoul opening night will be streamed live exclusively on FAIMESS with multi-angle 4K feeds and synced bilingual lyrics.",
+    fa: "برای هواداران در سراسر جهان که امکان حضور فیزیکی ندارند، استودیو تأیید کرده است که کنسرت افتتاحیه سئول به‌صورت پخش زنده و اختصاصی از داشبورد FAIMESS با کیفیت 4K و لیریک دوزبانه پخش خواهد شد.",
+    ko: "현장에 함께하지 못하는 글로벌 팬들을 위해 서울 개막 공연은 FAIMESS 대시보드를 통해 4K 멀티뷰 및 실시간 이중 언어 가사로 독점 라이브 스트리밍됩니다.",
+  },
   "news.nw2.title": {
     en: "AXION’s “Midnight Seoul” tops the global chart",
     fa: "«Midnight Seoul» از AXION صدرنشین چارت جهانی شد",
@@ -846,6 +899,21 @@ export const STRINGS: Record<string, Entry> = {
     en: "The lead single climbs to #1 in nine markets and breaks the group’s first-week record.",
     fa: "این سینگل در ۹ بازار به شمارهٔ ۱ رسید و رکورد هفتهٔ اول گروه را شکست.",
     ko: "9개 시장에서 1위에 오르며 그룹의 첫 주 기록을 갈아치웠어요.",
+  },
+  "news.nw2.p1": {
+    en: "AXION have scored their biggest international milestone yet as their latest single 'Midnight Seoul' rocketed to the #1 spot on the global streaming chart within hours of its drop.",
+    fa: "گروه AXION بزرگ‌ترین دستاورد بین‌المللی خود را ثبت کرد؛ سینگل تازهٔ آن‌ها «Midnight Seoul» تنها چند ساعت پس از انتشار، به رتبهٔ اول چارت استریم جهانی صعود کرد.",
+    ko: "AXION이 최신 싱글 'Midnight Seoul' 발매 چند 시간 만에 글로벌 스트리밍 차트 1위에 오르며 자체 최고 기록을 경신했습니다.",
+  },
+  "news.nw2.p2": {
+    en: "The synth-heavy track has captured nine major markets simultaneously, driving unprecedented streaming traffic and smashing the group's previous first-week record by over forty percent.",
+    fa: "این قطعه با بیس جذاب سینث‌پاپ خود همزمان در ۹ بازار بزرگ رکورد زد و رکورد قبلی هفتهٔ اول گروه را بیش از چهل درصد بهبود بخشید.",
+    ko: "감각적인 신스 사운드가 돋보이는 이번 곡은 9개 주요 음악 시장을 동시에 석권하며 이전 첫 주 기록을 40% 이상 뛰어넘었습니다.",
+  },
+  "news.nw2.p3": {
+    en: "Music critics have praised the song's production, calling it a masterclass in modern Korean pop production, while fans celebrate the achievement across social communities worldwide.",
+    fa: "منتقدان موسیقی تهیه‌کنندگی این اثر را ستوده‌اند و آن را کلاسی پیشرفته در پاپ مدرن کره‌ای نامیده‌اند؛ هواداران در تمام شبکه‌ها این موفقیت تاریخی را جشن گرفته‌اند.",
+    ko: "음악 평론가들은 현대 K-pop 프로덕션의 정수라고 호평했으며, 전 세계 팬 커뮤니티는 뜨거운 축하를 이어가고 있습니다.",
   },
   "news.nw3.title": {
     en: "SEORA teases her mini-album with a 20-second clip",
@@ -857,6 +925,21 @@ export const STRINGS: Record<string, Entry> = {
     fa: "تیزر نیمه‌شب، EP شش‌تِرَکه و ترک تیتراژ را که با تهیه‌کنندهٔ LUNEX نوشته شده تأیید می‌کند.",
     ko: "자정 티저가 6곡 EP와 LUNEX 프로듀서가 참여한 타이틀곡을 공개했어요.",
   },
+  "news.nw3.p1": {
+    en: "Solo sensation SEORA stunned fans at midnight with a cinematic 20-second visual teaser, officially confirming her highly anticipated upcoming mini-album.",
+    fa: "سولوییست محبوب SEORA در نیمه‌شب با انتشار یک ویدیوی سینمایی ۲۰ ثانیه‌ای، مینی‌آلبوم مورد انتظار خود را رسماً معرفی کرد.",
+    ko: "솔로 아티스트 SEORA가 자정에 감각적인 20초 비주얼 티저를 깜짝 공개하며 많은 기대를 모아온 새 미니 앨범 소식을 알렸습니다.",
+  },
+  "news.nw3.p2": {
+    en: "The upcoming EP will feature six brand-new tracks, including a much-anticipated title song crafted in collaboration with the producer behind LUNEX's signature hits.",
+    fa: "این EP شامل شش قطعهٔ کاملاً جدید خواهد بود؛ از جمله ترک اصلی که با همکاری تهیه‌کنندهٔ مشهور هیت‌های گروه LUNEX ساخته شده است.",
+    ko: "이번 EP는 총 6곡의 신곡으로 채워지며, LUNEX의 대표 히트곡을 탄생시킨 프로듀서와 협업한 타이틀곡이 수록됩니다.",
+  },
+  "news.nw3.p3": {
+    en: "Pre-saves for the digital album and collector photocard packages will open this Friday across all supported streaming platforms.",
+    fa: "پیش‌ذخیرهٔ دیجیتال آلبوم و بسته‌های ویژهٔ فتوکارت کالکتور از روز جمعه روی تمامی پلتفرم‌های استریم در دسترس قرار می‌گیرد.",
+    ko: "디지털 앨범 프리세이브와 한정판 포토카드 패키지 예약 판매는 이번 주 금요일부터 시작됩니다.",
+  },
   "news.nw4.title": {
     en: "PRISM9 add three dates to the Asia leg",
     fa: "PRISM9 سه تاریخ به بخش آسیایی اضافه کرد",
@@ -866,6 +949,21 @@ export const STRINGS: Record<string, Entry> = {
     en: "Manila, Bangkok and Jakarta join the run after two sold-out nights in Tokyo.",
     fa: "بعد از دو شب فروش‌رفته در توکیو، مانیل، بانکوک و جاکارتا هم به تور اضافه شدند.",
     ko: "도쿄에서 두 번 매진된 뒤 마닐라·방콕·자카르타가 일정에 합류했어요.",
+  },
+  "news.nw4.p1": {
+    en: "Following instantaneous sell-outs for both Tokyo stadium dates, PRISM9's management confirmed three additional arena shows across Southeast Asia.",
+    fa: "در پی فروش رفتن تمام بلیت‌های هر دو شب استادیوم توکیو در چند دقیقه، مدیریت PRISM9 سه اجرای جدید در سالن‌های بزرگ جنوب شرق آسیا اعلام کرد.",
+    ko: "도쿄 스타디움 공연 2회가 초고속 매진을 기록함에 따라, PRISM9 측은 동남아시아 아레나 투어 3회 추가 일정을 확정했습니다.",
+  },
+  "news.nw4.p2": {
+    en: "New stops in Manila, Bangkok, and Jakarta have been officially slated for December, meeting overwhelming demand from international fandoms.",
+    fa: "توقف‌های جدید در مانیل، بانکوک و جاکارتا برای ماه دسامبر برنامه‌ریزی شده‌اند تا پاسخگوی اشتیاق بالای فندوم‌های بین‌المللی باشند.",
+    ko: "마닐라, 방콕, 자카르타 공연이 오는 12월로 정식 편성되어 글로벌 팬들의 열렬한 성원에 화답할 예정입니다.",
+  },
+  "news.nw4.p3": {
+    en: "Ticketing details and special fanclub pre-sale windows are scheduled to be revealed on the tour portal later this week.",
+    fa: "جزئیات بلیت‌فروشی و مهلت پیش‌خرید ویژهٔ فندوم رسمی در اواخر همین هفته در پورتال تور منتشر خواهد شد.",
+    ko: "티켓 예매 안내 및 공식 팬클럽 선예매 일정은 이번 주 후반 투어 전용 포털을 통해 공지됩니다.",
   },
   "news.nw5.title": {
     en: "FAIMESS Weekly: the 10 fastest-rising debuts",
@@ -877,6 +975,21 @@ export const STRINGS: Record<string, Entry> = {
     fa: "تحریریه تازه‌واردهایی را رتبه‌بندی کرده که هفتهٔ اولشان شمارندهٔ فایر را روشن کرد.",
     ko: "첫 주에 불 카운터를 밝힌 루키들을 에디터가 정리했어요.",
   },
+  "news.nw5.p1": {
+    en: "Our editorial desk combed through streaming velocity, community discussions, and fire engagement counters to curate this season's top ten rookie debuts.",
+    fa: "میز تحریریهٔ ما با بررسی شتاب استریم، گفتگوهای فعال هواداران و شمارندهٔ فایر، ده دبیوی برتر و پرشتاب این فصل را رتبه‌بندی کرده است.",
+    ko: "에디토리얼 데스크가 스트리밍 속도, 커뮤니티 토론, 파이어 반응을 종합 분석하여 이번 시즌 가장 눈부신 신인 데뷔 10팀을 엄선했습니다.",
+  },
+  "news.nw5.p2": {
+    en: "From genre-bending choreography to bold, self-produced soundscapes, these emerging artists represent the vanguard of the next K-pop era.",
+    fa: "از طراحی رقص‌های نوآورانه تا صداگذاری‌های جسورانهٔ خودساخته، این آرتیست‌های نوظهور طلایه‌داران عصر آیندهٔ کی‌پاپ هستند.",
+    ko: "장르를 넘나드는 퍼포먼스부터 당찬 자체 프로듀싱까지, 차세대 K-pop을 이끌어갈 신예들의 매력을 깊이 있게 조명합니다.",
+  },
+  "news.nw5.p3": {
+    en: "Explore the complete curated playlist and hear editorial commentary tracks inside the FAIMESS Discover hub today.",
+    fa: "پلی‌لیست کامل این برگزیدگان را به همراه یادداشت‌های تحریریه همین امروز در بخش کشف FAIMESS بشنوید.",
+    ko: "에디터 코멘터리가 담긴 엄선 플레이리스트를 지금 바로 FAIMESS 발견 탭에서 만나보세요.",
+  },
   "news.nw6.title": {
     en: "Fan-voted awards: voting opens tonight",
     fa: "جوایز با رأی هواداران: رأی‌گیری امشب آغاز می‌شود",
@@ -886,6 +999,21 @@ export const STRINGS: Record<string, Entry> = {
     en: "Six categories, seven days of voting, and a live stage for the winners.",
     fa: "شش بخش، هفت روز رأی‌گیری و اجرای زندهٔ برندگان.",
     ko: "6개 부문, 7일간의 투표, 그리고 수상자를 위한 라이브 무대.",
+  },
+  "news.nw6.p1": {
+    en: "The annual FAIMESS Fan-Voted Music Awards officially open voting booths tonight, welcoming ballots from listeners across over one hundred territories.",
+    fa: "جوایز سالانهٔ موسیقی FAIMESS با رأی مستقیم طرفداران امشب رسماً درهای رأی‌گیری را به روی شنوندگان از بیش از صد کشور می‌گشاید.",
+    ko: "FAIMESS 연례 팬 투표 뮤직 어워즈가 오늘 밤 전 세계 100여 개 지역 리스너들의 참여 속에 본격적인 투표를 시작합니다.",
+  },
+  "news.nw6.p2": {
+    en: "With six fiercely contested categories including Artist of the Year, Best Collab, and Viral Stage, votes will remain open for exactly seven days.",
+    fa: "با شش دسته‌بندی رقابتی داغ از جمله بهترین آرتیست سال، بهترین همکاری و استیج وایرال، رقابت به مدت هفت روز ادامه خواهد داشت.",
+    ko: "올해의 아티스트, 베스트 콜라보, 바이럴 스테이지 등 치열한 6개 부문에 걸쳐 앞으로 7일 동안 투표가 진행됩니다.",
+  },
+  "news.nw6.p3": {
+    en: "Winners will be crowned during a spectacular gala showcase featuring special collaborative stages, broadcast in real time across the globe.",
+    fa: "برندگان نهایی در یک مراسم ویژه با اجراهای مشترک شگفت‌انگیز تجلیل خواهند شد که به صورت زنده در سراسر جهان پخش می‌شود.",
+    ko: "수상자들은 전 세계에 생중계되는 스페셜 컬래버레이션 갈라 쇼 무대에서 영예의 트로피를 안게 됩니다.",
   },
 
   /* ------------------------------ sign in ------------------------------ *
@@ -1201,6 +1329,16 @@ export const STRINGS: Record<string, Entry> = {
   "badge.rookie": { en: "Rookie of the week", fa: "تازه‌وارد هفته", ko: "이주의 루키" },
 
   /* the notification tray — the demo data names the three kinds */
+  "notif.newsPublished": {
+    en: "New Story: {title}",
+    fa: "خبر جدید: {title}",
+    ko: "새 뉴스: {title}",
+  },
+  "notif.newsTrending": {
+    en: "Trending: {title}",
+    fa: "خبر داغ: {title}",
+    ko: "인기 뉴스: {title}",
+  },
   "notif.release": {
     en: "{artist} released “{title}”",
     fa: "{artist} «{title}» را منتشر کرد",

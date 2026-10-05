@@ -30,9 +30,27 @@ export type Notification = {
   /** English literal for the relative time — `tData` translates it */
   at: string;
   tone: "primary" | "teal" | "mint";
+  /** optional target news id to navigate to directly when clicked */
+  newsId?: string;
 };
 
 export const notifications: Notification[] = [
+  {
+    id: "n-news-1",
+    textKey: "notif.newsPublished",
+    vars: { title: "NOVAE announce first world tour “Afterglow”" },
+    at: "2 hrs ago",
+    tone: "primary",
+    newsId: "nw1",
+  },
+  {
+    id: "n-news-2",
+    textKey: "notif.newsTrending",
+    vars: { title: "AXION’s “Midnight Seoul” tops global chart" },
+    at: "5 hrs ago",
+    tone: "teal",
+    newsId: "nw2",
+  },
   {
     id: "n1",
     textKey: "notif.release",

@@ -28,6 +28,9 @@ type AppValue = {
   detail: Detail | null;
   openDetail: (detail: Detail) => void;
   closeDetail: () => void;
+  selectedNewsId: string | null;
+  openNews: (id: string) => void;
+  closeNews: () => void;
   notify: (text: string, tone?: Tone) => void;
   toasts: Toast[];
   dismiss: (id: number) => void;
@@ -46,6 +49,7 @@ export function AppProvider({
   const { route, navigate: goToRoute } = useRoute();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [detail, setDetail] = useState<Detail | null>(initialDetail);
+  const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
 
   const openDetail = useCallback((next: Detail) => {
     setDetail(next);
@@ -58,10 +62,29 @@ export function AppProvider({
 
   const closeDetail = useCallback(() => setDetail(null), []);
 
+  const openNews = useCallback(
+    (id: string) => {
+      setDetail(null);
+      setSelectedNewsId(id);
+      goToRoute("news");
+      if (typeof document !== "undefined") {
+        document.querySelector("[data-content-scroll]")?.scrollTo({ top: 0 });
+      }
+    },
+    [goToRoute],
+  );
+
+  const closeNews = useCallback(() => {
+    setSelectedNewsId(null);
+  }, []);
+
   /** the top menu always means "that page", so it drops any open detail */
   const navigate = useCallback(
     (id: RouteId) => {
       setDetail(null);
+      if (id !== "news") {
+        setSelectedNewsId(null);
+      }
       goToRoute(id);
     },
     [goToRoute],
@@ -81,8 +104,32 @@ export function AppProvider({
   );
 
   const value = useMemo(
-    () => ({ route, navigate, detail, openDetail, closeDetail, notify, toasts, dismiss }),
-    [route, navigate, detail, openDetail, closeDetail, notify, toasts, dismiss],
+    () => ({
+      route,
+      navigate,
+      detail,
+      openDetail,
+      closeDetail,
+      selectedNewsId,
+      openNews,
+      closeNews,
+      notify,
+      toasts,
+      dismiss,
+    }),
+    [
+      route,
+      navigate,
+      detail,
+      openDetail,
+      closeDetail,
+      selectedNewsId,
+      openNews,
+      closeNews,
+      notify,
+      toasts,
+      dismiss,
+    ],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
