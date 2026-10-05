@@ -857,6 +857,61 @@ export const STRINGS: Record<string, Entry> = {
     ko: "6개 부문, 7일간의 투표, 그리고 수상자를 위한 라이브 무대.",
   },
 
+  /* ------------------------------ sign in ------------------------------ *
+   *  The door, and the one account this demo knows.                     */
+  "auth.title": { en: "Sign in", fa: "ورود", ko: "로그인" },
+  "auth.subtitle": {
+    en: "Sign in to reach your feed, your playlists and the player.",
+    fa: "وارد شو تا به فید، پلی‌لیست‌ها و پلیر خودت برسی.",
+    ko: "로그인하면 내 피드와 플레이리스트, 플레이어로 들어가요.",
+  },
+  "auth.user": { en: "Username", fa: "نام کاربری", ko: "사용자 이름" },
+  "auth.password": { en: "Password", fa: "گذرواژه", ko: "비밀번호" },
+  "auth.userPlaceholder": { en: "admin", fa: "admin", ko: "admin" },
+  "auth.passwordPlaceholder": { en: "••••••", fa: "••••••", ko: "••••••" },
+  "auth.show": { en: "Show", fa: "نمایش", ko: "보기" },
+  "auth.hide": { en: "Hide", fa: "پنهان", ko: "숨기기" },
+  "auth.showPassword": { en: "Show the password", fa: "نمایش گذرواژه", ko: "비밀번호 보기" },
+  "auth.hidePassword": { en: "Hide the password", fa: "پنهان کردن گذرواژه", ko: "비밀번호 숨기기" },
+  "auth.submit": { en: "Sign in", fa: "ورود", ko: "로그인" },
+  "auth.working": { en: "Signing in…", fa: "در حال ورود…", ko: "로그인 중…" },
+  "auth.welcome": { en: "Welcome back, {name}", fa: "خوش برگشتی {name}", ko: "다시 오셨네요, {name}" },
+  "auth.badUser": {
+    en: "No account by that name.",
+    fa: "حسابی با این نام کاربری نیست.",
+    ko: "그런 사용자 이름의 계정이 없어요.",
+  },
+  "auth.badPassword": {
+    en: "That password is not right.",
+    fa: "گذرواژه درست نیست.",
+    ko: "비밀번호가 맞지 않아요.",
+  },
+  "auth.errorTitle": { en: "Check the details", fa: "مشخصات را بررسی کن", ko: "입력값을 확인해 주세요" },
+  "auth.demoTitle": { en: "Demo account", fa: "حساب دمو", ko: "데모 계정" },
+  "auth.demoBody": {
+    en: "A demo build has no backend. The door is one username and one password:",
+    fa: "بیلد دمو بک‌اند ندارد. در ورودی یک نام کاربری و یک گذرواژه است:",
+    ko: "데모 빌드에는 백엔드가 없어요. 계정은 하나입니다:",
+  },
+  "auth.fill": { en: "Use the demo account", fa: "پر کردن با حساب دمو", ko: "데모 계정으로 채우기" },
+  "auth.footnote": {
+    en: "Nothing leaves this browser — the session is kept in local storage.",
+    fa: "هیچ‌چیز از مرورگر بیرون نمی‌رود — نشست در حافظهٔ محلی ذخیره می‌شود.",
+    ko: "모든 정보는 이 브라우저에만 있어요 — 세션은 로컬 스토리지에 저장됩니다.",
+  },
+  "auth.role": { en: "Administrator · Demo build", fa: "مدیر · بیلد دمو", ko: "관리자 · 데모 빌드" },
+
+  /* signing out asks first — it is the one destructive thing in the menu */
+  "account.signOutTitle": { en: "Sign out of FAIMESS?", fa: "از فیمس خارج شوی؟", ko: "FAIMESS에서 로그아웃할까요?" },
+  "account.signOutBody": {
+    en: "Your playlists and points stay on this device; the door locks behind you.",
+    fa: "پلی‌لیست‌ها و امتیازهایت روی همین دستگاه می‌مانند؛ فقط در بسته می‌شود.",
+    ko: "플레이리스트와 포인트는 기기에 남아 있어요. 문만 잠깁니다.",
+  },
+  "account.signOutConfirm": { en: "Sign out", fa: "خروج", ko: "로그아웃" },
+  "account.signOutCancel": { en: "Stay signed in", fa: "بمان در حساب", ko: "로그인 유지" },
+  "account.signedOut": { en: "Signed out", fa: "خارج شدی", ko: "로그아웃했어요" },
+
   /* --------------------- labels that live in the data ------------------ *
    *  The data files carry these words in English — an artist is a “Boy
    *  group”, a playlist is “Mellow”, a track landed “2 hrs ago”. They are
@@ -1083,6 +1138,7 @@ const LABEL_KEYS: Record<string, string> = {
   "FAIMESS Weekly": "news.source.weekly",
 
   "Listener · Premium": "account.tier.premium",
+  "Administrator · Demo build": "auth.role",
 
   Online: "msg.online",
   Mixed: "lyrics.lang.mixed",

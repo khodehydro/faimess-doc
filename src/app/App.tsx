@@ -16,6 +16,8 @@ import { EASE } from "../lib/motion";
 import { PAGES } from "./pages";
 import { CompactShell } from "./CompactShell";
 import { useCompact } from "../hooks/useCompact";
+import { AuthProvider, useAuth } from "./AuthContext";
+import { SignInPage } from "../sections/SignInPage";
 
 /* ------------------------------------------------------------------ *
  *  Shell — the parent card and the five cards inside it.
@@ -33,6 +35,31 @@ import { useCompact } from "../hooks/useCompact";
  *  The three top cards are pills (semicircular ends); the two content
  *  cards keep the normal card radius.
  * ------------------------------------------------------------------ */
+
+/**
+ * The gate — the door, or the app.
+ *
+ * While nobody is signed in, this *is* the screen: the art-board, both
+ * shells, the player and the shelves are not mounted at all, so there is
+ * nothing behind the sign-in panel to peek at. The toast host stays
+ * outside the gate (it lives in `App`), because the welcome toast fires
+ * at the moment the door closes.
+ */
+export function Gate() {
+  const { signedIn } = useAuth();
+  const { t } = usePreferences();
+  const { notify } = useApp();
+
+  if (!signedIn) {
+    return <SignInPage onSignedIn={(name) => notify(t("auth.welcome", { name }), "mint")} />;
+  }
+
+  return (
+    <Stage>
+      <Shell />
+    </Stage>
+  );
+}
 
 export function Shell() {
   const { route, detail } = useApp();
@@ -122,18 +149,18 @@ export default function App() {
   return (
     <AppProvider>
       <PreferencesProvider>
-        <PlaylistsProvider>
-        <PlayerProvider>
-          <CommentsProvider>
-            <ContributionsProvider>
-              <Stage>
-                <Shell />
-              </Stage>
-              <ToastHost />
-            </ContributionsProvider>
-          </CommentsProvider>
-        </PlayerProvider>
-        </PlaylistsProvider>
+        <AuthProvider>
+          <PlaylistsProvider>
+          <PlayerProvider>
+            <CommentsProvider>
+              <ContributionsProvider>
+                <Gate />
+                <ToastHost />
+              </ContributionsProvider>
+            </CommentsProvider>
+          </PlayerProvider>
+          </PlaylistsProvider>
+        </AuthProvider>
       </PreferencesProvider>
     </AppProvider>
   );

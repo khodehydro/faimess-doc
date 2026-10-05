@@ -9,6 +9,8 @@ import { useContributions, useMyActivity } from "../app/ContributionsContext";
 import { usePreferences } from "../app/PreferencesContext";
 import { LANGS, THEMES } from "../data/i18n";
 import { ContributionsModal } from "./ContributionsModal";
+import { useAuth } from "../app/AuthContext";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { PointsDialog } from "../ui/PointsDialog";
 import { navItems, notifications } from "../data/navigation";
 import { allRoutes } from "../app/router";
@@ -41,6 +43,10 @@ export function AccountCard({
 } = {}) {
   const { route, navigate, notify, openDetail } = useApp();
   const { t, has, dir, dataLabel } = usePreferences();
+  const { signOut } = useAuth();
+  /** the menu is inside a popover that closes on click, so the dialog the
+      `Sign out` row asks for has to live here, one level up from the menu */
+  const [signOutOpen, setSignOutOpen] = useState(false);
   /** nav labels are translated where we have them, otherwise the data label stands */
   const label = (key: string, fallback: string) =>
     has(key) ? t(key) : fallback;
@@ -347,6 +353,7 @@ export function AccountCard({
                 <ProfileMenuContent
                   onClose={() => setProfileOpen(false)}
                   onContributions={() => setContribOpen(true)}
+                  onSignOut={() => setSignOutOpen(true)}
                   onPoints={() => {
                     setProfileOpen(false);
                     setPointsOpen(true);
@@ -361,6 +368,23 @@ export function AccountCard({
       <ContributionsModal
         open={contribOpen}
         onClose={() => setContribOpen(false)}
+      />
+
+      {/* the one destructive row in the account menu — it asks first, and
+          the safe answer is the button nearest the thumb (subtle, full width,
+          under the tinted confirm) */}
+      <ConfirmDialog
+        open={signOutOpen}
+        onClose={() => setSignOutOpen(false)}
+        onConfirm={() => {
+          signOut();
+          notify(t("account.signedOut"), "primary");
+        }}
+        title={t("account.signOutTitle")}
+        body={t("account.signOutBody")}
+        confirmKey="account.signOutConfirm"
+        cancelKey="account.signOutCancel"
+        icon="lock"
       />
 
       <PointsDialog
@@ -392,11 +416,14 @@ export function ProfileMenuContent({
   onClose,
   onContributions,
   onPoints,
+  onSignOut,
 }: {
   onClose: () => void;
   onContributions: () => void;
   /** open the breakdown behind the balance */
   onPoints: () => void;
+  /** signing out asks first, so the row only raises the question */
+  onSignOut: () => void;
 }) {
   const { t, lang, setLang, theme, setTheme, locale, dir, dataLabel } = usePreferences();
   const { notify } = useApp();
@@ -508,13 +535,18 @@ export function ProfileMenuContent({
         },
         { labelKey: "account.yourLibrary", icon: "folder" as const },
         { labelKey: "account.likedTracks", icon: "heart" as const },
-        { labelKey: "account.signOut", icon: "arrowUpRight" as const },
+        {
+          labelKey: "account.signOut",
+          icon: "arrowUpRight" as const,
+          signOut: true,
+        },
       ].map((r) => (
         <button
           key={r.labelKey}
           onClick={() => {
             onClose();
             if (r.contributions) onContributions();
+            else if (r.signOut) onSignOut();
             else notify(t(r.labelKey));
           }}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-[14px] font-semibold text-ink-body transition-colors hover:bg-subtle hover:text-ink"

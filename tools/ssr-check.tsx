@@ -12,6 +12,7 @@ import { PlayerProvider } from "../src/app/PlayerContext";
 import { CommentsProvider } from "../src/app/CommentsContext";
 import { ContributionsProvider } from "../src/app/ContributionsContext";
 import { PreferencesProvider } from "../src/app/PreferencesContext";
+import { AuthProvider } from "../src/app/AuthContext";
 import { PlaylistsProvider } from "../src/app/PlaylistsContext";
 import { ProfileMenuContent } from "../src/sections/AccountCard";
 import { ArtistStories } from "../src/sections/ArtistStories";
@@ -35,7 +36,7 @@ import { PlayerSection } from "../src/sections/PlayerSection";
 import { ActiveUsers } from "../src/sections/feed/ActiveUsers";
 import { DownloadPage } from "../src/pages/DownloadPage";
 import { HomePage } from "../src/pages/HomePage";
-import { Shell } from "../src/app/App";
+import { Gate, Shell } from "../src/app/App";
 import type { Detail } from "../src/app/AppContext";
 import { ArtistsPage } from "../src/pages/ArtistsPage";
 import { AlbumsPage } from "../src/pages/AlbumsPage";
@@ -43,6 +44,7 @@ import { PlaylistsPage } from "../src/pages/PlaylistsPage";
 import { NewsPage } from "../src/pages/NewsPage";
 import { albums, artists, playlists } from "../src/data/library";
 import { banners } from "../src/data/banners";
+import { DEMO_ACCOUNT, checkCredential } from "../src/data/auth";
 import {
   activeUsers,
   followedArtists,
@@ -117,6 +119,8 @@ const plain = (html: string) => html.replace(/<!--[\s\S]*?-->/g, "");
 type RenderOpts = {
   /** force the interface language instead of reading localStorage */
   lang?: Lang;
+  /** `null` renders the door; a name renders the signed-in app */
+  user?: string | null;
   /** force the appearance */
   theme?: Theme;
   /** load the player with this track — omit for the empty state */
@@ -134,9 +138,13 @@ const render = (Page: () => ReactElement, opts: RenderOpts = {}) =>
         <CommentsProvider>
           <ContributionsProvider>
             <PreferencesProvider initialLang={opts.lang} initialTheme={opts.theme}>
-              <PlaylistsProvider initial={opts.playlists}>
-                <Page />
-              </PlaylistsProvider>
+              {/* `user: null` is a real value — the door — so only an
+                  *absent* option falls back to a session */}
+              <AuthProvider initialUser={opts.user === undefined ? "admin" : opts.user}>
+                <PlaylistsProvider initial={opts.playlists}>
+                  <Page />
+                </PlaylistsProvider>
+              </AuthProvider>
             </PreferencesProvider>
           </ContributionsProvider>
         </CommentsProvider>
@@ -147,7 +155,12 @@ const render = (Page: () => ReactElement, opts: RenderOpts = {}) =>
 /** the right-hand card, rendered on its own */
 const PlayerCard = () => <PlayerSection params={{ expanded: false, onToggleExpand: () => {} }} />;
 const ProfileMenu = () => (
-  <ProfileMenuContent onClose={() => {}} onContributions={() => {}} onPoints={() => {}} />
+  <ProfileMenuContent
+    onClose={() => {}}
+    onContributions={() => {}}
+    onPoints={() => {}}
+    onSignOut={() => {}}
+  />
 );
 
 /* ------------------------------- pages ------------------------------- */
@@ -580,6 +593,118 @@ check(
     /* the chips must stay on the title's row (far end) on desktop */
     collectionSrc.includes("lg:flex-none lg:overflow-visible"),
   "basis-full under 1024px, ms-auto above it",
+);
+/* ------------------------ the door (login / logout) -------------------- *
+ *  The demo credential is admin/admin, and the dashboard is only mounted
+ *  once there is a session — the gate is the difference between the two
+ *  renders below, not a hidden div.                                    */
+
+const door = render(Gate, { user: null });
+const inside = render(Gate, { user: "admin" });
+check(
+  "with no session the app renders the door, not the dashboard",
+  plain(door).includes("Sign in") &&
+    plain(door).includes("Demo account") &&
+    /* the dashboard's own chrome must not be behind it */
+    !door.includes("feed-newest") &&
+    !door.includes("data-content-scroll") &&
+    /* and the door shows the menu in the room the room speaks */
+    plain(door).includes("Username") &&
+    plain(door).includes("Password"),
+  "the dashboard is not mounted behind the sign-in screen",
+);
+check(
+  "the door reads in the reader's language",
+  (() => {
+    const doorFa = render(Gate, { user: null, lang: "fa" });
+    const doorKo = render(Gate, { user: null, lang: "ko" });
+    return (
+      plain(doorFa).includes("ورود") &&
+      plain(doorFa).includes("نام کاربری") &&
+      plain(doorFa).includes("گذرواژه") &&
+      plain(doorFa).includes("حساب دمو") &&
+      doorFa.includes('dir="rtl"') &&
+      plain(doorKo).includes("로그인") &&
+      plain(doorKo).includes("데모 계정")
+    );
+  })(),
+  "username, password, the demo hint and the footnote, in fa and ko",
+);
+check(
+  "the demo credential on the screen is the one the check reads",
+  (() => {
+    /* printing a password the code no longer accepts is worse than printing
+       none — the hint and the rule read the same record */
+    const authSrc = readFileSync("src/data/auth.ts", "utf8");
+    return (
+      authSrc.includes('user: "admin"') &&
+      authSrc.includes('password: "admin"') &&
+      door.includes(DEMO_ACCOUNT.user) &&
+      door.includes(DEMO_ACCOUNT.password) &&
+      readFileSync("src/sections/SignInPage.tsx", "utf8").includes("{demo.user} / {demo.password}") &&
+      readFileSync("src/sections/SignInPage.tsx", "utf8").includes("const demo = useMemo(() => DEMO_ACCOUNT, [])")
+    );
+  })(),
+  "one source for the demo account: data/auth.ts",
+);
+check(
+  "the credential rule is the one the door enforces",
+  checkCredential("admin", "admin") === "ok" &&
+    /* nobody types the name twice the same way */
+    checkCredential("Admin", "admin") === "ok" &&
+    checkCredential("  ADMIN  ", "admin") === "ok" &&
+    /* the password is exact, and both refusals are distinct */
+    checkCredential("admin", "admin ") === "bad-password" &&
+    checkCredential("admin", "ADMIN") === "bad-password" &&
+    checkCredential("sori", "admin") === "unknown-user" &&
+    checkCredential("", "") === "unknown-user",
+  "admin/admin signs in; a wrong name and a wrong password are not the same answer",
+);
+check(
+  "a session outlives a reload",
+  readFileSync("src/app/AuthContext.tsx", "utf8").includes('const USER_KEY = "faimess.user"') &&
+    readFileSync("src/app/AuthContext.tsx", "utf8").includes("window.localStorage.getItem(USER_KEY)") &&
+    readFileSync("src/app/AuthContext.tsx", "utf8").includes("window.localStorage.setItem(USER_KEY, signedIn)") &&
+    readFileSync("src/app/AuthContext.tsx", "utf8").includes("window.localStorage.removeItem(USER_KEY)"),
+  "kept in localStorage, cleared on the way out, no backend involved",
+);
+check(
+  "the gate mounts the dashboard only when somebody is in",
+  (() => {
+    const appSrc = readFileSync("src/app/App.tsx", "utf8");
+    /* whitespace-insensitive: the shape of the branch matters, not its layout */
+    const flat = appSrc.replace(/\s+/g, " ");
+    return (
+      appSrc.includes("const { signedIn } = useAuth()") &&
+      flat.includes("if (!signedIn) { return <SignInPage ") &&
+      appSrc.includes("<AuthProvider>") &&
+      /* the toast host stays outside the gate: the welcome toast fires as
+         the door closes, and a toast must survive the swap */
+      appSrc.includes("<Gate />") &&
+      appSrc.includes("<ToastHost />")
+    );
+  })(),
+  "no dashboard, no player, no shelves while nobody is signed in",
+);
+check(
+  "signing out asks first, and answers in the language of the menu",
+  (() => {
+    const src = readFileSync("src/sections/AccountCard.tsx", "utf8");
+    const confirm = readFileSync("src/ui/ConfirmDialog.tsx", "utf8");
+    return (
+      src.includes('body={t("account.signOutBody")}') &&
+      src.includes('confirmKey="account.signOutConfirm"') &&
+      src.includes('cancelKey="account.signOutCancel"') &&
+      src.includes("onSignOut={() => setSignOutOpen(true)}") &&
+      src.includes("signOut();") &&
+      src.includes('notify(t("account.signedOut")') &&
+      /* the dialog is the shared one, so Escape / backdrop / the layer above
+         the player sheet all come for free */
+      confirm.includes("<Modal open={open} onClose={onClose}") &&
+      confirm.includes("onConfirm();")
+    );
+  })(),
+  "the safe answer is the plain one, the destructive one is tinted",
 );
 check(
   "the compact header is notification · centred brand · profile",
