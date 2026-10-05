@@ -92,7 +92,7 @@ export function LeaderboardDialog({ open, onClose }: { open: boolean; onClose: (
       </h2>
       <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">{t("leader.subtitle")}</p>
 
-      <div className="scroll-slim mt-3.5 overflow-x-auto">
+      <div className="scroll-rail mt-3.5 overflow-x-auto">
         <div className="min-w-[540px]">
           {/* the heads */}
           <div className="flex items-center gap-2.5 px-2.5 pb-2">

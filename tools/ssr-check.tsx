@@ -627,6 +627,45 @@ check(
     !plain(storiesHtml).includes(followedArtists[0].kind),
   `${followedArtists.length} faces`,
 );
+
+/* ---------------- horizontal rails: no scrollbar on a phone ------------- */
+
+/** the `scroll-rail` utility only, sliced out of index.css */
+const railCss = (() => {
+  const start = cssSrc.indexOf("@utility scroll-rail");
+  if (start < 0) return "";
+  const next = cssSrc.indexOf("@utility", start + 1);
+  return cssSrc.slice(start, next < 0 ? undefined : next);
+})();
+check(
+  "a horizontal rail keeps its slim bar on desktop and loses it on a phone",
+  railCss.includes("height: 6px") &&
+    /* touch, or the compact shell's own line — the same 1023px */
+    railCss.includes("@media (pointer: coarse), (max-width: 1023px)") &&
+    railCss.includes("scrollbar-width: none") &&
+    railCss.includes("display: none"),
+  "flick, don't drag: Android paints its bar over the artwork otherwise",
+);
+const badRails: string[] = [];
+for (const file of sweep("src")) {
+  for (const m of readFileSync(file, "utf8").matchAll(/"([^"]*overflow-x-auto[^"]*)"/g)) {
+    /* every sideways row wears the rail utility — and not the vertical one,
+       whose bar is exactly what a thumb does not need */
+    if (!m[1].includes("scroll-rail") || m[1].includes("scroll-slim")) badRails.push(`${file}: ${m[1]}`);
+  }
+}
+check(
+  "every sideways row in the app is a scroll-rail, never a scroll-slim",
+  badRails.length === 0,
+  badRails.join(" · "),
+);
+check(
+  "vertical scrollers still keep their bar",
+  cssSrc.includes("@utility scroll-slim") &&
+    !railCss.includes("@utility scroll-slim") &&
+    readFileSync("src/app/App.tsx", "utf8").includes("scroll-slim flex min-h-0 flex-1 flex-col lg:overflow-y-auto"),
+  "the bar that says \"there is more underneath\" is not a rail's job",
+);
 check(
   "the main menu moves to the bottom, purple tab + rule in a glass capsule",
   mobileNavSrc.includes('layoutId="mobile-nav-rule"') &&

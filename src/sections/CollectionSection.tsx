@@ -312,7 +312,7 @@ function MineStrip({ onNew }: { onNew: () => void }) {
         )}
       </div>
 
-      <div className="scroll-slim flex gap-3.5 overflow-x-auto pb-1.5">
+      <div className="scroll-rail flex gap-3.5 overflow-x-auto pb-1.5">
         <motion.button
           variants={popChild}
           onClick={onNew}
@@ -460,7 +460,7 @@ export function CollectionSection({ params }: { params: { kind: LibraryKind } })
         </div>
         {/* the chips scroll sideways on a phone; `min-w-0` is what lets a
             flex child actually shrink enough to scroll */}
-        <div className="scroll-slim flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1 lg:ms-auto lg:flex-none lg:overflow-visible">
+        <div className="scroll-rail flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1 lg:ms-auto lg:flex-none lg:overflow-visible">
           {copy.filters.map((f) => (
             <PillButton
               key={f.key}

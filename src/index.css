@@ -400,6 +400,52 @@
   }
 }
 
+/* ------------------------------------------------------------------ *
+ *  Horizontal rails — every row the hand flicks sideways: the artist
+ *  story rail, the feed shelves, the chip strips, a wide table.
+ *
+ *  A thumb does not need a bar to know the row scrolls; it flicks and the
+ *  row moves. Android then paints its own bar over the artwork, so on a
+ *  touch device — and anywhere under the compact line, the same 1023px the
+ *  shell switches on — a rail carries **no scrollbar at all**. A desktop
+ *  mouse keeps the slim one: there the bar is the only hint that the row is
+ *  wider than its card, and the only way to drag it.
+ *
+ *  Vertical scrollers stay on `scroll-slim`; hiding their bar would hide
+ *  the affordance that says "there is more underneath".
+ * ------------------------------------------------------------------ */
+@utility scroll-rail {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+
+  /* a rail only ever scrolls sideways, so no vertical bar is reserved */
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink-faint);
+  }
+
+  /* phones and tablets: flick, don't drag */
+  @media (pointer: coarse), (max-width: 1023px) {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      height: 0;
+      display: none;
+    }
+  }
+}
+
 /* fades the bottom edge of a scroll area, so a cut-off lyric line reads as
    "there is more underneath" instead of as a hard stop */
 @utility mask-fade-b {

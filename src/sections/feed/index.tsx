@@ -163,7 +163,7 @@ export function FeedSection() {
         {/* the chips share the full width of the card between them, each
             centring its own label — the strip reads as one control instead of
             a row that stops halfway. Narrow screens fall back to scrolling. */}
-        <div className="scroll-slim -my-1 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1">
+        <div className="scroll-rail -my-1 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1">
           {shelves.map((shelf) => {
             const isActive = active === shelf.id;
             return (

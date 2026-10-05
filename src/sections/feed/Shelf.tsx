@@ -76,7 +76,7 @@ export function Shelf({
 /** horizontal, snapping row used by the artists / albums / fans shelves */
 export function Row({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("scroll-slim flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-2", className)}>
+    <div className={cn("scroll-rail flex snap-x snap-mandatory gap-3.5 overflow-x-auto pb-2", className)}>
       {children}
     </div>
   );

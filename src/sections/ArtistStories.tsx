@@ -37,7 +37,7 @@ export function ArtistStories() {
       aria-label={t("shelf.followedArtists")}
       className="mx-auto w-full max-w-[720px] shrink-0 rounded-card bg-white/80 px-3 py-2.5 shadow-card ring-1 ring-white/70 backdrop-blur-md dark:bg-surface/80 dark:ring-white/[0.06]"
     >
-      <div className="scroll-slim flex snap-x snap-mandatory gap-3 overflow-x-auto">
+      <div className="scroll-rail flex snap-x snap-mandatory gap-3 overflow-x-auto">
         {followedArtists.map((artist, i) => (
           <motion.button
             key={artist.id}
