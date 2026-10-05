@@ -618,6 +618,45 @@ check(
   "a z-index cannot escape its own stacking context — the capsule's has to win",
 );
 check(
+  "the app ships its own icon and manifest",
+  (() => {
+    /* without these the browser has nothing to paint a tab, a home-screen
+       shortcut or an installed app's header with — the purple theme-color
+       only colours the address bar of a page that already has a favicon */
+    const manifest = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8")) as {
+      name: string;
+      start_url: string;
+      display: string;
+      theme_color: string;
+      background_color: string;
+      icons: { src: string; sizes: string; type: string; purpose?: string }[];
+    };
+    const brand = (cssSrc.match(/--color-primary:\s*(#[0-9a-fA-F]{6})/) ?? [])[1]?.toLowerCase();
+    const filesExist = manifest.icons.every((icon) =>
+      existsSync(join("public", icon.src.replace(/^\.\//, ""))),
+    );
+    const purposes = manifest.icons.map((icon) => icon.purpose ?? "any");
+    const sizes = manifest.icons.map((icon) => icon.sizes);
+    return (
+      manifest.display === "standalone" &&
+      manifest.theme_color.toLowerCase() === brand &&
+      manifest.background_color === "#eaeaec" &&
+      filesExist &&
+      purposes.includes("maskable") &&
+      sizes.includes("192x192") &&
+      sizes.includes("512x512") &&
+      /* every icon the head promises is really on disk */
+      ["favicon-32.png", "apple-touch-icon.png", "icon.svg"].every((file) =>
+        existsSync(join("public", file)),
+      ) &&
+      indexHtml.includes('href="/manifest.webmanifest"') &&
+      indexHtml.includes('rel="apple-touch-icon"') &&
+      indexHtml.includes('sizes="32x32"')
+    );
+  })(),
+  "a tab, a home-screen icon and a launcher entry, all in brand purple",
+);
+check(
   "the browser's own chrome wears the brand colour",
   (() => {
     /* one source for the hex: what `index.html` declares must be the same

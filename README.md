@@ -51,6 +51,14 @@ npm run preview    # سرو بیلد
   `#8267f0` (یعنی `--color-primary` روشن) است و `PreferencesContext` موقع تغییر تم همان
   توکن CSS را می‌خواند و متا را به‌روز می‌کند؛ پس نوار آدرس اندروید کروم در حالت شب هم
   بنفشِ تم تاریک (`#8b73f5`) می‌شود. هگز یک‌جا نوشته شده و توکن تنها منبع است.
+- **آیکن و مانیفست اپ:** `public/icon.svg` (وکتور)، `favicon-32.png`،
+  `apple-touch-icon.png` (۱۸۰px)، `icon-192/512.png` و `icon-maskable-512.png` نسخهٔ
+  maskable اندروید (پس‌زمینهٔ تمام‌رنگ با نشان داخل safe zone). همه از یک اسکریپت
+  بدون‌وابستگی ساخته می‌شوند: `python3 tools/appicons.py`. این‌ها همان نشانِ
+  `src/ui/Logo.tsx` هستند، پس تب مرورگر و آیکن هوم‌اسکرین با برند یکی است.
+- **`public/manifest.webmanifest`:** `display: standalone` با `theme_color` و
+  `background_color` و `id`/`start_url` نسبی — با «افزودن به صفحهٔ اصلی» سایت مثل اپ
+  باز می‌شود و نوار وضعیت/هدر همان بنفش برند را می‌گیرد.
 - **هدر کامپکت یک گرید `1fr auto 1fr` است** — لوگو روی محور وسط می‌نشیند و اعلان و
   پروفایل به دو لبه می‌چسبند و عمودی وسط‌چین‌اند. پیل مطلقِ قبلی نسبت به *جعبهٔ* والد
   وسط‌چین می‌شد، و چون دو کنترل هم‌اندازه نیستند، واژه‌نشان به‌اندازهٔ نصف اختلافشان از
@@ -383,5 +391,6 @@ src/
 - [`docs/photos.md`](docs/photos.md) — خط لولهٔ عکس‌ها: ابعاد، دستور ImageMagick، منابع و هشدار لایسنس
 - [`docs/audio.md`](docs/audio.md) — مستر دموی ۲:۴۰: چرا سنتز شد، دستور ساخت، و جای اتصال صدای لایسنس‌دار
 - [`docs/design-home-scan.md`](docs/design-home-scan.md) — اسکن طراحی صفحهٔ مرجع
+- [`tools/appicons.py`](tools/appicons.py) — سازندهٔ آیکن‌های تب/هوم‌اسکرین از نشان برند (`python3 tools/appicons.py`)
 - [`docs/architecture.md`](docs/architecture.md) — راهنمای معماری و توسعهٔ ماژولار
 - [`docs/design-tokens.json`](docs/design-tokens.json) — توکن‌های ماشین‌خوان
