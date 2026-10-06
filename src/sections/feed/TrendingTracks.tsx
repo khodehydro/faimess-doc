@@ -152,7 +152,6 @@ export function TrendingTracks() {
       id="feed-trending"
       icon="flame"
       title={t("shelf.trendingNow")}
-      hint={t("shelf.hintFires")}
       action={
         <div className="flex shrink-0 items-center gap-2">
           <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-subtle p-0.5 lg:gap-1">

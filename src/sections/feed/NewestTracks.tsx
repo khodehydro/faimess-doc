@@ -142,7 +142,6 @@ export function NewestTracks() {
       id="feed-newest"
       icon="music"
       title={t("shelf.newestSongs")}
-      hint={t("shelf.hintHourly")}
       action={
         <PillButton tone="soft" icon="play" onClick={() => notify(t("toast.mix"))}>
           {t("shelf.playAll")}

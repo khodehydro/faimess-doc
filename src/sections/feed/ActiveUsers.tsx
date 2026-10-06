@@ -43,7 +43,6 @@ export function ActiveUsers() {
       id="feed-users"
       icon="activity"
       title={t("shelf.activeListeners")}
-      hint={t("shelf.hintLive")}
       action={
         <PillButton tone="soft" icon="crown" onClick={() => setBoardOpen(true)}>
           {t("shelf.leaderboard")}

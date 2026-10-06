@@ -25,7 +25,6 @@ export function NewAlbums() {
       id="feed-albums"
       icon="disc"
       title={t("shelf.freshAlbums")}
-      hint={t("shelf.hintWeek")}
       action={
         <PillButton tone="soft" icon={forwardIcon(dir)} onClick={() => navigate("albums")}>
           {t("shelf.allAlbums")}

@@ -31,7 +31,6 @@ export function NewsShelf() {
       id="feed-news"
       icon="news"
       title={t("shelf.latestNews")}
-      hint={t("shelf.hintDesk")}
       action={
         <PillButton tone="soft" icon="arrowUpRight" onClick={() => navigate("news")}>
           {t("shelf.goToNews")}

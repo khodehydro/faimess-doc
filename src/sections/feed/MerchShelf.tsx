@@ -54,7 +54,6 @@ export function MerchShelf() {
       id="feed-merch"
       icon="shop"
       title={t("shelf.spotlightMerch")}
-      hint={t("shelf.hintMerch")}
       action={
         <div className="flex items-center gap-1.5">
           <button

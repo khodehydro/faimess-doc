@@ -24,7 +24,6 @@ export function FollowedArtists() {
       id="feed-artists"
       icon="users"
       title={t("shelf.followedArtists")}
-      hint={num(followedArtists.length)}
       action={
         <PillButton
           tone="soft"
