@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import { useRoute, type RouteId } from "./router";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { allRoutes, parseHash, useRoute, type RouteId } from "./router";
 
 /* ------------------------------------------------------------------ *
  *  App-wide context: navigation + notifications.
@@ -28,6 +28,12 @@ type AppValue = {
   detail: Detail | null;
   openDetail: (detail: Detail) => void;
   closeDetail: () => void;
+  selectedNewsId: string | null;
+  openNews: (id: string) => void;
+  closeNews: () => void;
+  viewedProfileUsername: string | null;
+  openProfile: (username?: string) => void;
+  deepLinkTrackId?: string | null;
   notify: (text: string, tone?: Tone) => void;
   toasts: Toast[];
   dismiss: (id: number) => void;
@@ -43,25 +49,165 @@ export function AppProvider({
   children: ReactNode;
   initialDetail?: Detail | null;
 }) {
-  const { route, navigate: goToRoute } = useRoute();
+  const { route, navigate: goToRoute, setRoute } = useRoute();
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [detail, setDetail] = useState<Detail | null>(initialDetail);
+
+  const [detail, setDetail] = useState<Detail | null>(() => {
+    if (initialDetail) return initialDetail;
+    if (typeof window === "undefined") return null;
+    const parsed = parseHash(window.location.hash || window.location.pathname);
+    if (parsed.entityKind === "artist" || parsed.entityKind === "album" || parsed.entityKind === "playlist") {
+      return { kind: parsed.entityKind as DetailKind, id: parsed.entityId! };
+    }
+    return null;
+  });
+
+  const [selectedNewsId, setSelectedNewsId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    const parsed = parseHash(window.location.hash || window.location.pathname);
+    return parsed.entityKind === "news" ? (parsed.entityId ?? null) : null;
+  });
+
+  const [deepLinkTrackId, setDeepLinkTrackId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    const parsed = parseHash(window.location.hash || window.location.pathname);
+    return parsed.entityKind === "track" ? (parsed.entityId ?? null) : null;
+  });
+
+  const [viewedProfileUsername, setViewedProfileUsername] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    const parsed = parseHash(window.location.hash || window.location.pathname);
+    return parsed.route === "profile" && parsed.entityKind === "profile" ? (parsed.entityId ?? null) : null;
+  });
+
+  // Sync with browser back/forward buttons (hashchange)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleHashChange = () => {
+      const parsed = parseHash(window.location.hash);
+      setRoute(parsed.route);
+
+      if (parsed.entityKind === "artist" || parsed.entityKind === "album" || parsed.entityKind === "playlist") {
+        setDetail((prev) => {
+          if (prev?.kind === parsed.entityKind && prev?.id === parsed.entityId) return prev;
+          return { kind: parsed.entityKind as DetailKind, id: parsed.entityId! };
+        });
+        setSelectedNewsId(null);
+        setViewedProfileUsername(null);
+      } else if (parsed.entityKind === "news") {
+        setSelectedNewsId(parsed.entityId ?? null);
+        setDetail(null);
+        setViewedProfileUsername(null);
+      } else if (parsed.entityKind === "track") {
+        setDeepLinkTrackId(parsed.entityId ?? null);
+        setDetail(null);
+        setSelectedNewsId(null);
+        setViewedProfileUsername(null);
+      } else if (parsed.route === "profile") {
+        setViewedProfileUsername(parsed.entityId ?? null);
+        setDetail(null);
+        setSelectedNewsId(null);
+      } else {
+        setDetail(null);
+        setSelectedNewsId(null);
+        setViewedProfileUsername(null);
+      }
+
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+      if (typeof document !== "undefined") {
+        document.querySelector("[data-content-scroll]")?.scrollTo({ top: 0, behavior: "instant" });
+      }
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [setRoute]);
 
   const openDetail = useCallback((next: Detail) => {
     setDetail(next);
-    /* a detail is always opened at the top of the card, not halfway down
-       whichever page happened to be scrolled behind it */
-    if (typeof document !== "undefined") {
-      document.querySelector("[data-content-scroll]")?.scrollTo({ top: 0 });
+    setSelectedNewsId(null);
+    if (typeof window !== "undefined") {
+      const targetHash = `#/${next.kind}/${next.id}`;
+      if (window.location.hash !== targetHash) {
+        window.location.hash = targetHash;
+      }
+      if (typeof document !== "undefined" && typeof document.querySelector === "function") {
+        document.querySelector("[data-content-scroll]")?.scrollTo({ top: 0, behavior: "instant" });
+      }
     }
   }, []);
 
-  const closeDetail = useCallback(() => setDetail(null), []);
+  const closeDetail = useCallback(() => {
+    setDetail(null);
+    if (typeof window !== "undefined") {
+      const baseRoute = allRoutes.find((r) => r.id === route)?.path ?? "#/";
+      if (window.location.hash !== baseRoute) {
+        window.location.hash = baseRoute;
+      }
+    }
+  }, [route]);
+
+  const openNews = useCallback(
+    (id: string) => {
+      setDetail(null);
+      setSelectedNewsId(id);
+      goToRoute("news");
+      if (typeof window !== "undefined") {
+        const targetHash = `#/news/${id}`;
+        if (window.location.hash !== targetHash) {
+          window.location.hash = targetHash;
+        }
+        if (typeof document !== "undefined" && typeof document.querySelector === "function") {
+          document.querySelector("[data-content-scroll]")?.scrollTo({ top: 0, behavior: "instant" });
+        }
+      }
+    },
+    [goToRoute],
+  );
+
+  const closeNews = useCallback(() => {
+    setSelectedNewsId(null);
+    if (typeof window !== "undefined") {
+      if (window.location.hash !== "#/news") {
+        window.location.hash = "#/news";
+      }
+    }
+  }, []);
+
+  const openProfile = useCallback(
+    (username?: string) => {
+      setDetail(null);
+      setSelectedNewsId(null);
+      const cleanUser = username?.trim().replace(/^@/, "");
+      setViewedProfileUsername(cleanUser || null);
+      setRoute("profile");
+      if (typeof window !== "undefined") {
+        const targetHash = cleanUser ? `#/profile/${encodeURIComponent(cleanUser)}` : `#/profile`;
+        if (window.location.hash !== targetHash) {
+          window.location.hash = targetHash;
+        }
+        window.scrollTo({ top: 0, behavior: "instant" });
+        if (typeof document !== "undefined" && typeof document.querySelector === "function") {
+          document.querySelector("[data-content-scroll]")?.scrollTo({ top: 0, behavior: "instant" });
+        }
+      }
+    },
+    [setRoute],
+  );
 
   /** the top menu always means "that page", so it drops any open detail */
   const navigate = useCallback(
     (id: RouteId) => {
       setDetail(null);
+      if (id !== "news") {
+        setSelectedNewsId(null);
+      }
+      if (id !== "profile") {
+        setViewedProfileUsername(null);
+      }
       goToRoute(id);
     },
     [goToRoute],
@@ -81,8 +227,38 @@ export function AppProvider({
   );
 
   const value = useMemo(
-    () => ({ route, navigate, detail, openDetail, closeDetail, notify, toasts, dismiss }),
-    [route, navigate, detail, openDetail, closeDetail, notify, toasts, dismiss],
+    () => ({
+      route,
+      navigate,
+      detail,
+      openDetail,
+      closeDetail,
+      selectedNewsId,
+      openNews,
+      closeNews,
+      viewedProfileUsername,
+      openProfile,
+      deepLinkTrackId,
+      notify,
+      toasts,
+      dismiss,
+    }),
+    [
+      route,
+      navigate,
+      detail,
+      openDetail,
+      closeDetail,
+      selectedNewsId,
+      openNews,
+      closeNews,
+      viewedProfileUsername,
+      openProfile,
+      deepLinkTrackId,
+      notify,
+      toasts,
+      dismiss,
+    ],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

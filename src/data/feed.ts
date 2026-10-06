@@ -27,6 +27,9 @@ import haruPhoto from "../assets/photos/users/haru.webp";
 import jxnniePhoto from "../assets/photos/users/jxnnie.webp";
 import minhoPhoto from "../assets/photos/users/minho.webp";
 import ariPhoto from "../assets/photos/users/ari.webp";
+import soraPhoto from "../assets/photos/users/sora.webp";
+import jinahPhoto from "../assets/photos/users/jinah.webp";
+import yunaPhoto from "../assets/photos/users/yuna.webp";
 
 /* ------------------------- followed artists ------------------------- */
 
@@ -79,6 +82,28 @@ export const trendingTracks: TrendingTrack[] = [
 
 /* ------------------------------- news ------------------------------- */
 
+export type NewsAuthor = {
+  name: string;
+  role: string;
+  avatar: string;
+  seed: number;
+};
+
+export type NewsComment = {
+  id: string;
+  author: string;
+  handle: string;
+  avatar: string;
+  seed: number;
+  time: string;
+  text: string;
+  likes: number;
+  liked?: boolean;
+  reported?: boolean;
+  reportReason?: string;
+  replies?: NewsComment[];
+};
+
 export type NewsItem = {
   id: string;
   title: string;
@@ -88,6 +113,13 @@ export type NewsItem = {
   scene: SceneKey;
   seed: number;
   excerpt: string;
+  photo: string;
+  author: NewsAuthor;
+  likes: number;
+  views: number;
+  commentsCount: number;
+  bodyKeys: string[];
+  comments: NewsComment[];
 };
 
 /** Editorial cards stay illustrated on purpose — a drawn desk, not a photo feed. */
@@ -101,6 +133,50 @@ export const newsItems: NewsItem[] = [
     scene: "sunset",
     seed: 0,
     excerpt: "Twelve cities across Asia, Europe and North America, with the Seoul opener streaming live.",
+    photo: afterglowPhoto,
+    author: { name: "Mina Park", role: "Tour Reporter", avatar: soraPhoto, seed: 1 },
+    likes: 3420,
+    views: 28400,
+    commentsCount: 142,
+    bodyKeys: ["news.nw1.p1", "news.nw1.p2", "news.nw1.p3"],
+    comments: [
+      {
+        id: "c1",
+        author: "Minho",
+        handle: "@minho_k",
+        avatar: minhoPhoto,
+        seed: 3,
+        time: "1 hr ago",
+        text: "Finally KSPO Dome! Getting tickets is going to be a warzone but I will be there.",
+        likes: 38,
+        replies: [
+          {
+            id: "c1-r1",
+            author: "Yuna",
+            handle: "@yuna_music",
+            avatar: yunaPhoto,
+            seed: 5,
+            time: "30 min ago",
+            text: "Same here! Pre-sale starts 8 PM, set all your alarms!",
+            likes: 12,
+            replies: [
+              {
+                id: "c1-r1-1",
+                author: "Minho",
+                handle: "@minho_k",
+                avatar: minhoPhoto,
+                seed: 3,
+                time: "15 min ago",
+                text: "Got my 5G ready. Good luck to both of us!",
+                likes: 7,
+              },
+            ],
+          },
+        ],
+      },
+      { id: "c2", author: "Yuna", handle: "@yuna_music", avatar: yunaPhoto, seed: 5, time: "45 min ago", text: "Streaming the opener live in 4K on FAIMESS? Absolutely legendary.", likes: 24 },
+      { id: "c3", author: "Seojin", handle: "@seojin99", avatar: seojinPhoto, seed: 4, time: "20 min ago", text: "Milan and Tokyo on the same run! This staging is going to be massive.", likes: 15 },
+    ],
   },
   {
     id: "nw2",
@@ -111,6 +187,37 @@ export const newsItems: NewsItem[] = [
     scene: "camping",
     seed: 4,
     excerpt: "The lead single climbs to #1 in nine markets and breaks the group’s first-week record.",
+    photo: midnightSeoulPhoto,
+    author: { name: "Daniel Kim", role: "Charts Analyst", avatar: seojinPhoto, seed: 4 },
+    likes: 4180,
+    views: 34100,
+    commentsCount: 189,
+    bodyKeys: ["news.nw2.p1", "news.nw2.p2", "news.nw2.p3"],
+    comments: [
+      {
+        id: "c4",
+        author: "Miso",
+        handle: "@miso_vibes",
+        avatar: misoPhoto,
+        seed: 2,
+        time: "3 hrs ago",
+        text: "Midnight Seoul on repeat all day! The synth bass in the second chorus is unreal.",
+        likes: 52,
+        replies: [
+          {
+            id: "c4-r1",
+            author: "Ari",
+            handle: "@ari_sound",
+            avatar: ariPhoto,
+            seed: 6,
+            time: "2 hrs ago",
+            text: "That bridge transition gives me goosebumps every single listen.",
+            likes: 18,
+          },
+        ],
+      },
+      { id: "c5", author: "Haru", handle: "@haru_beats", avatar: haruPhoto, seed: 7, time: "2 hrs ago", text: "#1 in nine markets is huge. AXION truly broke through globally this comeback.", likes: 41 },
+    ],
   },
   {
     id: "nw3",
@@ -121,6 +228,16 @@ export const newsItems: NewsItem[] = [
     scene: "coast",
     seed: 2,
     excerpt: "A midnight teaser confirms the six-track EP and a title song written with LUNEX’s producer.",
+    photo: paperHeartPhoto,
+    author: { name: "Ha-neul Lee", role: "Comeback Desk", avatar: yunhaPhoto, seed: 2 },
+    likes: 2890,
+    views: 22600,
+    commentsCount: 97,
+    bodyKeys: ["news.nw3.p1", "news.nw3.p2", "news.nw3.p3"],
+    comments: [
+      { id: "c6", author: "Ari", handle: "@ari_sound", avatar: ariPhoto, seed: 6, time: "5 hrs ago", text: "SEORA's vocals with LUNEX's producer? This is going to be the EP of the year.", likes: 33 },
+      { id: "c7", author: "Jinah", handle: "@jinah_p", avatar: jinahPhoto, seed: 1, time: "4 hrs ago", text: "That 20 second clip had better production than most full music videos. Pre-saving right away!", likes: 19 },
+    ],
   },
   {
     id: "nw4",
@@ -131,6 +248,16 @@ export const newsItems: NewsItem[] = [
     scene: "forest",
     seed: 3,
     excerpt: "Manila, Bangkok and Jakarta join the run after two sold-out nights in Tokyo.",
+    photo: tokyoWindowPhoto,
+    author: { name: "Kenji Sato", role: "Tour Correspondent", avatar: minhoPhoto, seed: 3 },
+    likes: 2150,
+    views: 18900,
+    commentsCount: 68,
+    bodyKeys: ["news.nw4.p1", "news.nw4.p2", "news.nw4.p3"],
+    comments: [
+      { id: "c8", author: "Taehyun", handle: "@taehyun_t", avatar: taehyunPhoto, seed: 0, time: "18 hrs ago", text: "Manila fans have been waiting for two years! The hype is through the roof.", likes: 27 },
+      { id: "c9", author: "Jxnnie", handle: "@jxnnie", avatar: jxnniePhoto, seed: 5, time: "12 hrs ago", text: "Need the Bangkok tickets so badly. Saitama Arena was already peak energy.", likes: 14 },
+    ],
   },
   {
     id: "nw5",
@@ -141,6 +268,15 @@ export const newsItems: NewsItem[] = [
     scene: "sunset",
     seed: 6,
     excerpt: "Our editors rank the rookies whose first week lit up the fire counter.",
+    photo: neonBloomPhoto,
+    author: { name: "Soo-jin Cho", role: "Editorial Writer", avatar: misoPhoto, seed: 6 },
+    likes: 1720,
+    views: 14300,
+    commentsCount: 52,
+    bodyKeys: ["news.nw5.p1", "news.nw5.p2", "news.nw5.p3"],
+    comments: [
+      { id: "c10", author: "Haru", handle: "@haru_beats", avatar: haruPhoto, seed: 7, time: "20 hrs ago", text: "The rookie roster this year is so versatile. Fresh sounds everywhere.", likes: 18 },
+    ],
   },
   {
     id: "nw6",
@@ -151,6 +287,16 @@ export const newsItems: NewsItem[] = [
     scene: "camping",
     seed: 1,
     excerpt: "Six categories, seven days of voting, and a live stage for the winners.",
+    photo: velvetStaticPhoto,
+    author: { name: "Yuna Song", role: "Awards Desk", avatar: taehyunPhoto, seed: 5 },
+    likes: 3890,
+    views: 31200,
+    commentsCount: 215,
+    bodyKeys: ["news.nw6.p1", "news.nw6.p2", "news.nw6.p3"],
+    comments: [
+      { id: "c11", author: "Minho", handle: "@minho_k", avatar: minhoPhoto, seed: 3, time: "1 day ago", text: "Cast my votes for Artist of the Year and Viral Stage! Make sure everyone votes daily.", likes: 64 },
+      { id: "c12", author: "Miso", handle: "@miso_vibes", avatar: misoPhoto, seed: 2, time: "1 day ago", text: "The collaborative stage announcement has me so excited. Let's get our faves that trophy!", likes: 45 },
+    ],
   },
 ];
 

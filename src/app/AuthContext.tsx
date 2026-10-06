@@ -41,6 +41,7 @@ type AuthValue = {
   /** the user name, while signed in; `null` at the door */
   user: string | null;
   signedIn: boolean;
+  isAdmin: boolean;
   /** check a credential pair; the caller decides how to say no */
   signIn: (user: string, password: string) => SignInResult;
   /** create an account in this browser and sign in as it */
@@ -210,10 +211,13 @@ export function AuthProvider({
     [user],
   );
 
+  const isAdmin = user?.toLowerCase() === "admin" || user?.toLowerCase() === "moderator";
+
   const value = useMemo<AuthValue>(
     () => ({
       user,
       signedIn: !!user,
+      isAdmin,
       signIn,
       signUp,
       signOut,
@@ -226,6 +230,7 @@ export function AuthProvider({
     }),
     [
       user,
+      isAdmin,
       signIn,
       signUp,
       signOut,

@@ -82,6 +82,27 @@ export function BrowseDetailView() {
   const player = usePlayer();
   const [editing, setEditing] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const currentArtist = detail?.kind === "artist" ? artists.find((a) => a.id === detail.id) : null;
+  const [following, setFollowing] = useState(() => currentArtist?.following ?? false);
+
+  useEffect(() => {
+    if (currentArtist) {
+      setFollowing(currentArtist.following);
+    }
+  }, [currentArtist?.id, currentArtist?.following]);
+
+  const toggleFollow = () => {
+    if (!currentArtist) return;
+    requireAccount(following ? "gate.unfollow" : "gate.follow", () => {
+      const next = !following;
+      currentArtist.following = next;
+      setFollowing(next);
+      notify(
+        t(next ? "toast.following" : "toast.unfollowed", { name: currentArtist.name }),
+        next ? "mint" : "primary",
+      );
+    });
+  };
 
   /* ------------------------------- resolve ------------------------------ */
   let heading: Heading | null = null;
@@ -100,7 +121,7 @@ export function BrowseDetailView() {
         /* every part of this line is chrome: how big the artist is, how many
            songs they have, how long they run — so all three follow the
            interface language, listeners included */
-        facts: `${dataLabel(artist.listeners)} · ${countOf(tracks, t)} · ${t("detail.minutes", { n: minutesOf(tracks) })}`,
+        facts: `${dataLabel(artist.followers)} · ${dataLabel(artist.listeners)} · ${countOf(tracks, t)} · ${t("detail.minutes", { n: minutesOf(tracks) })}`,
         cover: artist.photo,
         seed: artist.seed,
         round: true,
@@ -360,10 +381,19 @@ export function BrowseDetailView() {
             on hover, so the row stays a row of glyphs until asked */}
         {/* four controls (a playlist of your own has an edit pencil too) must be
             allowed to become two short rows rather than run off the card */}
-        <div className="flex w-full shrink-0 flex-wrap items-center gap-2 lg:ms-auto lg:w-auto lg:flex-nowrap">
+        <div className="flex w-full shrink-0 flex-wrap items-center gap-2 pt-1 sm:ms-auto sm:w-auto sm:pt-0 lg:ms-auto lg:w-auto lg:flex-nowrap">
           <ExpandPill tone="primary" icon="play" onClick={playAll}>
             {t("detail.playAll")}
           </ExpandPill>
+          {heading.kind === "artist" && (
+            <ExpandPill
+              tone={following ? "soft" : "outline"}
+              icon={following ? "check" : "plus"}
+              onClick={toggleFollow}
+            >
+              {t(following ? "page.following" : "page.follow")}
+            </ExpandPill>
+          )}
           <ExpandPill icon="shuffle" onClick={shuffleAll}>
             {t("detail.shuffle")}
           </ExpandPill>

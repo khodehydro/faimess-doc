@@ -51,6 +51,7 @@ export const STRINGS: Record<string, Entry> = {
   "nav.shop": { en: "Shop", fa: "فروشگاه", ko: "상점" },
   "nav.news": { en: "News", fa: "اخبار", ko: "뉴스" },
   "nav.download": { en: "Download", fa: "دانلود", ko: "다운로드" },
+  "nav.admin": { en: "Admin Console", fa: "پنل مدیریت کل", ko: "관리자 콘솔" },
   "brand.home": { en: "FAIMESS home", fa: "خانهٔ فیمس", ko: "FAIMESS 홈" },
 
   /* ------------------------------ account ----------------------------- */
@@ -72,8 +73,10 @@ export const STRINGS: Record<string, Entry> = {
   "account.kind.page": { en: "Page", fa: "صفحه", ko: "페이지" },
   "account.kind.artist": { en: "Artist", fa: "هنرمند", ko: "아티스트" },
   "account.kind.album": { en: "Album", fa: "آلبوم", ko: "앨범" },
+  "account.kind.user": { en: "User", fa: "کاربر", ko: "사용자" },
   "account.kindPlaylist": { en: "Playlist", fa: "پلی‌لیست", ko: "플레이리스트" },
   "account.yourLibrary": { en: "Your library", fa: "کتابخانهٔ تو", ko: "내 라이브러리" },
+  "account.profile": { en: "User Profile", fa: "پروفایل کاربری", ko: "사용자 프로필" },
   "account.likedTracks": { en: "Liked tracks", fa: "آهنگ‌های لایک‌شده", ko: "좋아요한 곡" },
   "account.contributions": { en: "Your contributions", fa: "مشارکت‌های تو", ko: "내 기여" },
   "account.signOut": { en: "Sign out", fa: "خروج از حساب", ko: "로그아웃" },
@@ -215,6 +218,7 @@ export const STRINGS: Record<string, Entry> = {
   "shelf.goToNews": { en: "Go to news", fa: "رفتن به اخبار", ko: "뉴스로 가기" },
   "shelf.allAlbums": { en: "All albums", fa: "همهٔ آلبوم‌ها", ko: "모든 앨범" },
   "shelf.leaderboard": { en: "Leaderboard", fa: "جدول امتیازها", ko: "리더보드" },
+  "shelf.viewProfile": { en: "Profile", fa: "پروفایل", ko: "프로필" },
   "shelf.onlineNow": { en: "Online now", fa: "آنلاین", ko: "지금 접속 중" },
   "shelf.verifiedArtist": { en: "Verified artist", fa: "هنرمند تأییدشده", ko: "인증된 아티스트" },
   "shelf.new": { en: "New", fa: "جدید", ko: "NEW" },
@@ -428,6 +432,26 @@ export const STRINGS: Record<string, Entry> = {
   "comments.close": { en: "Close comments", fa: "بستن کامنت‌ها", ko: "댓글 닫기" },
   "comments.copied": { en: "Link copied", fa: "لینک کپی شد", ko: "링크를 복사했어요" },
   "comments.deletedToast": { en: "Comment deleted", fa: "کامنت حذف شد", ko: "댓글을 삭제했어요" },
+  "comments.deletedWithRepliesToast": {
+    en: "Comment and all replies deleted",
+    fa: "کامنت و تمامی پاسخ‌های آن حذف شدند",
+    ko: "댓글과 모든 답글이 삭제되었습니다",
+  },
+  "comments.deleteConfirmTitle": {
+    en: "Delete comment and all replies?",
+    fa: "حذف کامنت و تمامی پاسخ‌ها؟",
+    ko: "댓글과 모든 답글을 삭제하시겠어요?",
+  },
+  "comments.deleteConfirmDesc": {
+    en: "This comment has {n} replies. Deleting it will permanently remove the entire thread.",
+    fa: "این کامنت {n} پاسخ دارد. با حذف آن، تمامی پاسخ‌های این گفتگو نیز به‌طور کامل حذف خواهند شد.",
+    ko: "이 댓글에 {n}개의 답글이 있습니다. 삭제 시 모든 답글도 함께 영구 삭제됩니다.",
+  },
+  "comments.deleteAsAdmin": {
+    en: "Delete as Admin",
+    fa: "حذف توسط مدیر",
+    ko: "관리자 권한으로 삭제",
+  },
   "comments.reportWithdrawn": { en: "Report withdrawn", fa: "گزارش پس گرفته شد", ko: "신고를 취소했어요" },
   "comments.reportedToast": { en: "Reported to the mods", fa: "برای مدیران گزارش شد", ko: "관리자에게 신고했어요" },
   "comments.postedToast": {
@@ -603,6 +627,44 @@ export const STRINGS: Record<string, Entry> = {
   "news.tag.awards": { en: "Awards", fa: "جوایز", ko: "어워즈" },
   "news.tag.editorial": { en: "Editorial", fa: "تحریریه", ko: "에디토리얼" },
 
+  "news.shelf.trending": { en: "Trending News", fa: "اخبار ترند (بر اساس لایک)", ko: "인기 뉴스 (좋아요 순)" },
+  "news.shelf.trendingDesc": {
+    en: "Most liked stories by the community this week",
+    fa: "محبوب‌ترین و پرلایک‌ترین اخبار این هفته از نگاه کاربران",
+    ko: "이번 주 팬들에게 가장 많은 좋아요를 받은 뉴스",
+  },
+  "news.shelf.latest": { en: "Latest News", fa: "جدیدترین اخبار", ko: "최신 뉴스" },
+  "news.shelf.latestDesc": {
+    en: "Fresh updates from comebacks, tours and charts",
+    fa: "تازه‌ترین رویدادها، تاریخ تورها و صدرنشینان چارت",
+    ko: "컴백, 투어, 차트의 따끈따끈한 소식",
+  },
+  "news.shelf.mostDiscussed": { en: "Most Discussed", fa: "پر بحث‌ترین اخبار (بر اساس کامنت‌ها)", ko: "화제의 뉴스 (댓글 많은 순)" },
+  "news.shelf.mostDiscussedDesc": {
+    en: "Articles generating the hottest fan conversations",
+    fa: "اخباری که بیشترین گفتگو و نظرات طرفداران را برانگیخته‌اند",
+    ko: "팬들의 열띤 토론이 이어지는 화제의 기사",
+  },
+  "news.backToNews": { en: "Back to news", fa: "بازگشت به اخبار", ko: "뉴스로 돌아가기" },
+  "news.viewsCount": { en: "{n} views", fa: "{n} بازدید", ko: "조회수 {n}회" },
+  "news.likesCount": { en: "{n} likes", fa: "{n} لایک", ko: "좋아요 {n}개" },
+  "news.commentsCount": { en: "{n} comments", fa: "{n} دیدگاه", ko: "댓글 {n}개" },
+  "news.readTime": { en: "3 min read", fa: "۳ دقیقه مطالعه", ko: "3분 읽기" },
+  "news.authorBy": { en: "By {author}", fa: "به قلم {author}", ko: "{author} 작성" },
+  "news.commentsTitle": { en: "Discussion & Comments", fa: "دیدگاه‌ها و گفتگو", ko: "댓글 및 토론" },
+  "news.commentPlaceholder": {
+    en: "Share your thoughts on this story…",
+    fa: "نظر خود را دربارهٔ این خبر بنویسید…",
+    ko: "이 뉴스에 대한 생각을 남겨보세요…",
+  },
+  "news.commentSend": { en: "Post comment", fa: "ارسال نظر", ko: "댓글 등록" },
+  "news.shareTitle": { en: "Share story", fa: "اشتراک‌گذاری خبر", ko: "뉴스 공유" },
+  "news.likedToast": { en: "Added to your liked stories", fa: "به اخبار پسندیده‌شده افزوده شد", ko: "좋아요한 뉴스에 추가되었습니다" },
+  "news.unlikedToast": { en: "Removed from liked stories", fa: "از اخبار پسندیده‌شده حذف شد", ko: "좋아요를 취소했습니다" },
+  "news.commentPosted": { en: "Your comment was published", fa: "دیدگاه شما با موفقیت ثبت شد", ko: "댓글이 등록되었습니다" },
+  "news.seeAll": { en: "See all news", fa: "مشاهدهٔ همه اخبار", ko: "모든 뉴스 보기" },
+  "news.featuredBadge": { en: "Featured Story", fa: "خبر ویژه", ko: "주요 뉴스" },
+
   "download.title": { en: "Get the FAIMESS app", fa: "اپ فیمس را بگیر", ko: "FAIMESS 앱 받기" },
   "download.subtitle": {
     en: "Downloading tracks is an Android feature — the browser streams.",
@@ -654,6 +716,36 @@ export const STRINGS: Record<string, Entry> = {
     fa: "همان لیریک دوزبانهٔ پلیر وب، همزمان و قابل دانلود برای هر ترک.",
     ko: "웹 플레이어의 이중 언어 가사를 곡마다 동기화해 내려받을 수 있어요.",
   },
+
+  /* ------------------------------ PWA -------------------------------- */
+  "pwa.installButton": { en: "Install Web App (PWA)", fa: "نصب وب‌اپلیکیشن (PWA)", ko: "웹 앱 설치 (PWA)" },
+  "pwa.installed": { en: "App installed", fa: "اپلیکیشن نصب شده است", ko: "앱 설치됨" },
+  "pwa.installPrompt": {
+    en: "Install FAIMESS on your phone or desktop for an app-like streaming experience.",
+    fa: "FAIMESS را برای تجربهٔ روان و بدون نیاز به استور روی گوشی یا رایانه نصب کنید.",
+    ko: "스토어 없이 기기에 FAIMESS를 설치하여 매끄러운 스트리밍을 경험하세요.",
+  },
+  "pwa.iosGuide": {
+    en: "In Safari, tap Share and select 'Add to Home Screen'.",
+    fa: "در سافاری، دکمه Share (اشتراک) را بزنید و گزینه «Add to Home Screen» را انتخاب کنید.",
+    ko: "Safari에서 공유 버튼을 누르고 '홈 화면에 추가'를 선택하세요.",
+  },
+  "pwa.installedToast": {
+    en: "FAIMESS installed successfully!",
+    fa: "وب‌اپلیکیشن FAIMESS با موفقیت نصب شد!",
+    ko: "FAIMESS 웹 앱이 성공적으로 설치되었습니다!",
+  },
+  "pwa.androidGuide": {
+    en: "Tap the browser menu (⋮) and select 'Install app' or 'Add to Home screen'.",
+    fa: "منوی سه‌نقطه (⋮) بالای مرورگر را بزنید و «نصب برنامه» یا «افزودن به صفحه اصلی» را انتخاب کنید.",
+    ko: "브라우저 메뉴(⋮)를 누르고 '앱 설치' 또는 '홈 화면에 추가'를 선택하세요.",
+  },
+  "pwa.insecureNotice": {
+    en: "PWA on mobile requires HTTPS or localhost port forwarding via USB.",
+    fa: "نصب وب‌اپلیکیشن در موبایل نیازمند HTTPS یا فوروارد پورت localhost است.",
+    ko: "모바일에서 웹 앱을 설치하려면 HTTPS 또는 localhost 포트 포워딩이 필요합니다.",
+  },
+  "pwa.badge": { en: "PWA Web App", fa: "وب‌اپلیکیشن PWA", ko: "PWA 웹 앱" },
 
   /* ------------------------------ toasts ------------------------------ */
   "toast.opened": { en: "Opened {name}", fa: "{name} باز شد", ko: "{name} 열었어요" },
@@ -792,6 +884,66 @@ export const STRINGS: Record<string, Entry> = {
     fa: "سینگل تازه همه‌جا منتشر شد — امشب ساعت ۲۰:۰۰ به وقت کره مهمانی شنیدن داریم.",
     ko: "신곡이 전 세계에 공개됐어요 — 오늘 밤 20:00 (KST) 리스닝 파티.",
   },
+  "banner.banner-shop-hoodie.title": {
+    en: "On Stage Tour Hoodie",
+    fa: "هودی تور On Stage",
+    ko: "온 스테이지 투어 후디",
+  },
+  "banner.banner-shop-hoodie.subtitle": {
+    en: "Heavyweight oversized fleece with tour embroidery — limited stock.",
+    fa: "هودی اورسایز گرم با گلدوزی اختصاصی تور — موجودی محدود.",
+    ko: "투어 자수가 들어간 헤비웨이트 오버핏 플리스 — 한정 수량.",
+  },
+  "banner.banner-playlist-drive.title": {
+    en: "Late Night Drive",
+    fa: "پلی‌لیست رانندگی شبانه",
+    ko: "레이트 나이트 드라이브",
+  },
+  "banner.banner-playlist-drive.subtitle": {
+    en: "Neon-lit city beats, smooth synth-wave and midnight vocals.",
+    fa: "بیت‌های نئونی شهری، سینث‌ویو نرم و وکال‌های نیمه‌شب.",
+    ko: "네온사인 도시의 비트, 감각적인 신스웨이브와 미드나잇 보컬.",
+  },
+  "banner.banner-artist-prism9.title": {
+    en: "PRISM9 — Velvet Static",
+    fa: "PRISM9 — Velvet Static",
+    ko: "PRISM9 — Velvet Static",
+  },
+  "banner.banner-artist-prism9.subtitle": {
+    en: "Explore the full discography, singles, and member stories.",
+    fa: "کشف دیسکوگرافی کامل، تک‌آهنگ‌ها و داستان اعضا.",
+    ko: "전체 디스코그래피, 싱글, 멤버 스토리 만나보기.",
+  },
+  "banner.afterglow-tour.eyebrow": {
+    en: "World tour",
+    fa: "تور جهانی",
+    ko: "월드 투어",
+  },
+  "banner.prism9-asia.eyebrow": {
+    en: "New dates",
+    fa: "تاریخ‌های جدید",
+    ko: "새 일정",
+  },
+  "banner.midnight-seoul.eyebrow": {
+    en: "Out now",
+    fa: "منتشر شد",
+    ko: "신규 발매",
+  },
+  "banner.banner-shop-hoodie.eyebrow": {
+    en: "Official Merch",
+    fa: "مرچ رسمی",
+    ko: "공식 굿즈",
+  },
+  "banner.banner-playlist-drive.eyebrow": {
+    en: "Curated Playlist",
+    fa: "پلی‌لیست منتخب",
+    ko: "추천 플레이리스트",
+  },
+  "banner.banner-artist-prism9.eyebrow": {
+    en: "Featured Artist",
+    fa: "هنرمند منتخب",
+    ko: "추천 아티스트",
+  },
 
   /* --------------------------- news copy ------------------------------- *
    *  Headlines and standfirsts from the K-pop desk: the same rule as the
@@ -807,6 +959,21 @@ export const STRINGS: Record<string, Entry> = {
     fa: "دوازده شهر در آسیا، اروپا و آمریکای شمالی، با پخش زندهٔ افتتاحیه در سئول.",
     ko: "아시아·유럽·북미 12개 도시, 서울 개막 공연은 라이브 스트리밍.",
   },
+  "news.nw1.p1": {
+    en: "NOVAE have officially announced their first-ever world tour titled 'Afterglow'. The tour kicks off with three massive headline nights at the KSPO Dome in Seoul.",
+    fa: "گروه NOVAE رسماً اولین تور جهانی خود را با عنوان «Afterglow» معرفی کرد. این تور با سه شب کنسرت پرشکوه در KSPO Dome سئول آغاز خواهد شد.",
+    ko: "NOVAE가 첫 월드 투어 'Afterglow'의 공식 일정을 발표했습니다. 이번 투어는 서울 KSPO 돔에서 3일간의 대규모 공연으로 화려한 막을 올립니다.",
+  },
+  "news.nw1.p2": {
+    en: "The twelve-city itinerary spans major musical capitals across Asia, Europe, and North America, including Tokyo, Milan, London, New York, and Los Angeles. International ticket sales begin next Monday.",
+    fa: "برنامهٔ دوازده شهر این تور شامل پایتخت‌های موسیقی در آسیا، اروپا و آمریکای شمالی از جمله توکیو، میلان، لندن، نیویورک و لس‌آنجلس خواهد بود. فروش بلیت‌ها از دوشنبهٔ آینده آغاز می‌شود.",
+    ko: "도쿄, 밀라노, 런던, 뉴욕, 로스앤젤레스 등 아시아·유럽·북미 12개 주요 도시를 순회하며 글로벌 팬들과 만날 예정입니다. 해외 티켓 예매는 다음 주 월요일부터 시작됩니다.",
+  },
+  "news.nw1.p3": {
+    en: "For global fans unable to attend in person, the agency confirmed that the Seoul opening night will be streamed live exclusively on FAIMESS with multi-angle 4K feeds and synced bilingual lyrics.",
+    fa: "برای هواداران در سراسر جهان که امکان حضور فیزیکی ندارند، استودیو تأیید کرده است که کنسرت افتتاحیه سئول به‌صورت پخش زنده و اختصاصی از داشبورد FAIMESS با کیفیت 4K و لیریک دوزبانه پخش خواهد شد.",
+    ko: "현장에 함께하지 못하는 글로벌 팬들을 위해 서울 개막 공연은 FAIMESS 대시보드를 통해 4K 멀티뷰 및 실시간 이중 언어 가사로 독점 라이브 스트리밍됩니다.",
+  },
   "news.nw2.title": {
     en: "AXION’s “Midnight Seoul” tops the global chart",
     fa: "«Midnight Seoul» از AXION صدرنشین چارت جهانی شد",
@@ -816,6 +983,21 @@ export const STRINGS: Record<string, Entry> = {
     en: "The lead single climbs to #1 in nine markets and breaks the group’s first-week record.",
     fa: "این سینگل در ۹ بازار به شمارهٔ ۱ رسید و رکورد هفتهٔ اول گروه را شکست.",
     ko: "9개 시장에서 1위에 오르며 그룹의 첫 주 기록을 갈아치웠어요.",
+  },
+  "news.nw2.p1": {
+    en: "AXION have scored their biggest international milestone yet as their latest single 'Midnight Seoul' rocketed to the #1 spot on the global streaming chart within hours of its drop.",
+    fa: "گروه AXION بزرگ‌ترین دستاورد بین‌المللی خود را ثبت کرد؛ سینگل تازهٔ آن‌ها «Midnight Seoul» تنها چند ساعت پس از انتشار، به رتبهٔ اول چارت استریم جهانی صعود کرد.",
+    ko: "AXION이 최신 싱글 'Midnight Seoul' 발매 چند 시간 만에 글로벌 스트리밍 차트 1위에 오르며 자체 최고 기록을 경신했습니다.",
+  },
+  "news.nw2.p2": {
+    en: "The synth-heavy track has captured nine major markets simultaneously, driving unprecedented streaming traffic and smashing the group's previous first-week record by over forty percent.",
+    fa: "این قطعه با بیس جذاب سینث‌پاپ خود همزمان در ۹ بازار بزرگ رکورد زد و رکورد قبلی هفتهٔ اول گروه را بیش از چهل درصد بهبود بخشید.",
+    ko: "감각적인 신스 사운드가 돋보이는 이번 곡은 9개 주요 음악 시장을 동시에 석권하며 이전 첫 주 기록을 40% 이상 뛰어넘었습니다.",
+  },
+  "news.nw2.p3": {
+    en: "Music critics have praised the song's production, calling it a masterclass in modern Korean pop production, while fans celebrate the achievement across social communities worldwide.",
+    fa: "منتقدان موسیقی تهیه‌کنندگی این اثر را ستوده‌اند و آن را کلاسی پیشرفته در پاپ مدرن کره‌ای نامیده‌اند؛ هواداران در تمام شبکه‌ها این موفقیت تاریخی را جشن گرفته‌اند.",
+    ko: "음악 평론가들은 현대 K-pop 프로덕션의 정수라고 호평했으며, 전 세계 팬 커뮤니티는 뜨거운 축하를 이어가고 있습니다.",
   },
   "news.nw3.title": {
     en: "SEORA teases her mini-album with a 20-second clip",
@@ -827,6 +1009,21 @@ export const STRINGS: Record<string, Entry> = {
     fa: "تیزر نیمه‌شب، EP شش‌تِرَکه و ترک تیتراژ را که با تهیه‌کنندهٔ LUNEX نوشته شده تأیید می‌کند.",
     ko: "자정 티저가 6곡 EP와 LUNEX 프로듀서가 참여한 타이틀곡을 공개했어요.",
   },
+  "news.nw3.p1": {
+    en: "Solo sensation SEORA stunned fans at midnight with a cinematic 20-second visual teaser, officially confirming her highly anticipated upcoming mini-album.",
+    fa: "سولوییست محبوب SEORA در نیمه‌شب با انتشار یک ویدیوی سینمایی ۲۰ ثانیه‌ای، مینی‌آلبوم مورد انتظار خود را رسماً معرفی کرد.",
+    ko: "솔로 아티스트 SEORA가 자정에 감각적인 20초 비주얼 티저를 깜짝 공개하며 많은 기대를 모아온 새 미니 앨범 소식을 알렸습니다.",
+  },
+  "news.nw3.p2": {
+    en: "The upcoming EP will feature six brand-new tracks, including a much-anticipated title song crafted in collaboration with the producer behind LUNEX's signature hits.",
+    fa: "این EP شامل شش قطعهٔ کاملاً جدید خواهد بود؛ از جمله ترک اصلی که با همکاری تهیه‌کنندهٔ مشهور هیت‌های گروه LUNEX ساخته شده است.",
+    ko: "이번 EP는 총 6곡의 신곡으로 채워지며, LUNEX의 대표 히트곡을 탄생시킨 프로듀서와 협업한 타이틀곡이 수록됩니다.",
+  },
+  "news.nw3.p3": {
+    en: "Pre-saves for the digital album and collector photocard packages will open this Friday across all supported streaming platforms.",
+    fa: "پیش‌ذخیرهٔ دیجیتال آلبوم و بسته‌های ویژهٔ فتوکارت کالکتور از روز جمعه روی تمامی پلتفرم‌های استریم در دسترس قرار می‌گیرد.",
+    ko: "디지털 앨범 프리세이브와 한정판 포토카드 패키지 예약 판매는 이번 주 금요일부터 시작됩니다.",
+  },
   "news.nw4.title": {
     en: "PRISM9 add three dates to the Asia leg",
     fa: "PRISM9 سه تاریخ به بخش آسیایی اضافه کرد",
@@ -836,6 +1033,21 @@ export const STRINGS: Record<string, Entry> = {
     en: "Manila, Bangkok and Jakarta join the run after two sold-out nights in Tokyo.",
     fa: "بعد از دو شب فروش‌رفته در توکیو، مانیل، بانکوک و جاکارتا هم به تور اضافه شدند.",
     ko: "도쿄에서 두 번 매진된 뒤 마닐라·방콕·자카르타가 일정에 합류했어요.",
+  },
+  "news.nw4.p1": {
+    en: "Following instantaneous sell-outs for both Tokyo stadium dates, PRISM9's management confirmed three additional arena shows across Southeast Asia.",
+    fa: "در پی فروش رفتن تمام بلیت‌های هر دو شب استادیوم توکیو در چند دقیقه، مدیریت PRISM9 سه اجرای جدید در سالن‌های بزرگ جنوب شرق آسیا اعلام کرد.",
+    ko: "도쿄 스타디움 공연 2회가 초고속 매진을 기록함에 따라, PRISM9 측은 동남아시아 아레나 투어 3회 추가 일정을 확정했습니다.",
+  },
+  "news.nw4.p2": {
+    en: "New stops in Manila, Bangkok, and Jakarta have been officially slated for December, meeting overwhelming demand from international fandoms.",
+    fa: "توقف‌های جدید در مانیل، بانکوک و جاکارتا برای ماه دسامبر برنامه‌ریزی شده‌اند تا پاسخگوی اشتیاق بالای فندوم‌های بین‌المللی باشند.",
+    ko: "마닐라, 방콕, 자카르타 공연이 오는 12월로 정식 편성되어 글로벌 팬들의 열렬한 성원에 화답할 예정입니다.",
+  },
+  "news.nw4.p3": {
+    en: "Ticketing details and special fanclub pre-sale windows are scheduled to be revealed on the tour portal later this week.",
+    fa: "جزئیات بلیت‌فروشی و مهلت پیش‌خرید ویژهٔ فندوم رسمی در اواخر همین هفته در پورتال تور منتشر خواهد شد.",
+    ko: "티켓 예매 안내 및 공식 팬클럽 선예매 일정은 이번 주 후반 투어 전용 포털을 통해 공지됩니다.",
   },
   "news.nw5.title": {
     en: "FAIMESS Weekly: the 10 fastest-rising debuts",
@@ -847,6 +1059,21 @@ export const STRINGS: Record<string, Entry> = {
     fa: "تحریریه تازه‌واردهایی را رتبه‌بندی کرده که هفتهٔ اولشان شمارندهٔ فایر را روشن کرد.",
     ko: "첫 주에 불 카운터를 밝힌 루키들을 에디터가 정리했어요.",
   },
+  "news.nw5.p1": {
+    en: "Our editorial desk combed through streaming velocity, community discussions, and fire engagement counters to curate this season's top ten rookie debuts.",
+    fa: "میز تحریریهٔ ما با بررسی شتاب استریم، گفتگوهای فعال هواداران و شمارندهٔ فایر، ده دبیوی برتر و پرشتاب این فصل را رتبه‌بندی کرده است.",
+    ko: "에디토리얼 데스크가 스트리밍 속도, 커뮤니티 토론, 파이어 반응을 종합 분석하여 이번 시즌 가장 눈부신 신인 데뷔 10팀을 엄선했습니다.",
+  },
+  "news.nw5.p2": {
+    en: "From genre-bending choreography to bold, self-produced soundscapes, these emerging artists represent the vanguard of the next K-pop era.",
+    fa: "از طراحی رقص‌های نوآورانه تا صداگذاری‌های جسورانهٔ خودساخته، این آرتیست‌های نوظهور طلایه‌داران عصر آیندهٔ کی‌پاپ هستند.",
+    ko: "장르를 넘나드는 퍼포먼스부터 당찬 자체 프로듀싱까지, 차세대 K-pop을 이끌어갈 신예들의 매력을 깊이 있게 조명합니다.",
+  },
+  "news.nw5.p3": {
+    en: "Explore the complete curated playlist and hear editorial commentary tracks inside the FAIMESS Discover hub today.",
+    fa: "پلی‌لیست کامل این برگزیدگان را به همراه یادداشت‌های تحریریه همین امروز در بخش کشف FAIMESS بشنوید.",
+    ko: "에디터 코멘터리가 담긴 엄선 플레이리스트를 지금 바로 FAIMESS 발견 탭에서 만나보세요.",
+  },
   "news.nw6.title": {
     en: "Fan-voted awards: voting opens tonight",
     fa: "جوایز با رأی هواداران: رأی‌گیری امشب آغاز می‌شود",
@@ -856,6 +1083,21 @@ export const STRINGS: Record<string, Entry> = {
     en: "Six categories, seven days of voting, and a live stage for the winners.",
     fa: "شش بخش، هفت روز رأی‌گیری و اجرای زندهٔ برندگان.",
     ko: "6개 부문, 7일간의 투표, 그리고 수상자를 위한 라이브 무대.",
+  },
+  "news.nw6.p1": {
+    en: "The annual FAIMESS Fan-Voted Music Awards officially open voting booths tonight, welcoming ballots from listeners across over one hundred territories.",
+    fa: "جوایز سالانهٔ موسیقی FAIMESS با رأی مستقیم طرفداران امشب رسماً درهای رأی‌گیری را به روی شنوندگان از بیش از صد کشور می‌گشاید.",
+    ko: "FAIMESS 연례 팬 투표 뮤직 어워즈가 오늘 밤 전 세계 100여 개 지역 리스너들의 참여 속에 본격적인 투표를 시작합니다.",
+  },
+  "news.nw6.p2": {
+    en: "With six fiercely contested categories including Artist of the Year, Best Collab, and Viral Stage, votes will remain open for exactly seven days.",
+    fa: "با شش دسته‌بندی رقابتی داغ از جمله بهترین آرتیست سال، بهترین همکاری و استیج وایرال، رقابت به مدت هفت روز ادامه خواهد داشت.",
+    ko: "올해의 아티스트, 베스트 콜라보, 바이럴 스테이지 등 치열한 6개 부문에 걸쳐 앞으로 7일 동안 투표가 진행됩니다.",
+  },
+  "news.nw6.p3": {
+    en: "Winners will be crowned during a spectacular gala showcase featuring special collaborative stages, broadcast in real time across the globe.",
+    fa: "برندگان نهایی در یک مراسم ویژه با اجراهای مشترک شگفت‌انگیز تجلیل خواهند شد که به صورت زنده در سراسر جهان پخش می‌شود.",
+    ko: "수상자들은 전 세계에 생중계되는 스페셜 컬래버레이션 갈라 쇼 무대에서 영예의 트로피를 안게 됩니다.",
   },
 
   /* ------------------------------ sign in ------------------------------ *
@@ -1055,6 +1297,21 @@ export const STRINGS: Record<string, Entry> = {
     fa: "{n} میلیون شنوندهٔ ماهانه",
     ko: "월간 리스너 {n}M",
   },
+  "artist.followers": {
+    en: "{n} followers",
+    fa: "{n} دنبال‌کننده",
+    ko: "팔로워 {n}",
+  },
+  "artist.followersK": {
+    en: "{n}K followers",
+    fa: "{n} هزار دنبال‌کننده",
+    ko: "팔로워 {n}K",
+  },
+  "artist.followersM": {
+    en: "{n}M followers",
+    fa: "{n} میلیون دنبال‌کننده",
+    ko: "팔로워 {n}M",
+  },
 
   /* how long ago something landed — a line per unit, one and many */
   "ago.justNow": { en: "just now", fa: "همین حالا", ko: "방금" },
@@ -1156,6 +1413,56 @@ export const STRINGS: Record<string, Entry> = {
   "badge.rookie": { en: "Rookie of the week", fa: "تازه‌وارد هفته", ko: "이주의 루키" },
 
   /* the notification tray — the demo data names the three kinds */
+  "notif.newsPublished": {
+    en: "New Story: {title}",
+    fa: "خبر جدید: {title}",
+    ko: "새 뉴스: {title}",
+  },
+  "notif.newsTrending": {
+    en: "Trending: {title}",
+    fa: "خبر داغ: {title}",
+    ko: "인기 뉴스: {title}",
+  },
+  "notif.newSong": {
+    en: "New Track: {artist} released “{title}”",
+    fa: "آهنگ جدید: {artist} قطعهٔ «{title}» را منتشر کرد",
+    ko: "새 곡: {artist}의 신곡 “{title}” 발매",
+  },
+  "notif.newAlbum": {
+    en: "New Album: {artist} dropped “{title}”",
+    fa: "آلبوم جدید: {artist} آلبوم «{title}» را منتشر کرد",
+    ko: "새 앨범: {artist}의 새 앨범 “{title}” 발매",
+  },
+  "notif.newPlaylist": {
+    en: "New Playlist: “{name}” is now available",
+    fa: "پلی‌لیست جدید: «{name}» اکنون در دسترس است",
+    ko: "새 플레이리스트: “{name}” 공개",
+  },
+  "notif.commentReply": {
+    en: "{user} replied to your comment on “{title}”",
+    fa: "{user} به دیدگاه شما در «{title}» پاسخ داد",
+    ko: "{user}님이 “{title}”의 내 댓글에 답글을 남겼어요",
+  },
+  "notif.lyricsApproved": {
+    en: "Your lyrics for “{title}” were approved (+50 pts)!",
+    fa: "لیریک ارسالی شما برای «{title}» تأیید شد (+۵۰ امتیاز)!",
+    ko: "“{title}” 가사 등록이 승인되었어요 (+50점)!",
+  },
+  "notif.pointsEarned": {
+    en: "You earned +{points} fan points: {reason}",
+    fa: "شما +{points} امتیاز دریافت کردید: {reason}",
+    ko: "+{points} 팬 포인트를 획득했어요: {reason}",
+  },
+  "notif.markAllRead": {
+    en: "Mark all as read",
+    fa: "خواندن همه",
+    ko: "모두 읽음",
+  },
+  "notif.empty": {
+    en: "No new notifications",
+    fa: "اعلان جدیدی وجود ندارد",
+    ko: "새 알림이 없습니다",
+  },
   "notif.release": {
     en: "{artist} released “{title}”",
     fa: "{artist} «{title}» را منتشر کرد",
@@ -1171,6 +1478,87 @@ export const STRINGS: Record<string, Entry> = {
     fa: "{n} آهنگ به «{name}» اضافه شد",
     ko: "“{name}”에 {n}곡을 추가했어요",
   },
+
+  /* --------------------------- admin portal --------------------------- */
+  "admin.console": { en: "Admin Console", fa: "پنل مدیریت کل", ko: "관리자 콘솔" },
+  "admin.fastApi": { en: "Fast API & 9k Concurrency", fa: "معماری فوق سریع API و لود ۹k", ko: "초고속 API 및 9k 동시성 엔진" },
+  "admin.title": { en: "FAIMESS Studio Admin", fa: "پنل مدیریت کل فیمس", ko: "FAIMESS 스튜디오 관리자" },
+  "admin.subtitle": {
+    en: "Centralized control panel for catalog, editorial desk, moderation & users",
+    fa: "مرکز فرماندهی، مدیریت کاتالوگ موسیقی، تحریریه خبر، نظارت و کاربران",
+    ko: "음악 카탈로그, 뉴스 에디토리얼, 커뮤니티 관리 및 사용자 통합 제어 센터",
+  },
+  "admin.tab.overview": { en: "Overview", fa: "داشبورد و آمار", ko: "개요 및 통계" },
+  "admin.tab.tracks": { en: "Tracks & Songs", fa: "آهنگ‌ها و قطعات", ko: "트랙 및 곡 관리" },
+  "admin.tab.artists": { en: "Artists", fa: "هنرمندان و گروه‌ها", ko: "آتیست‌ها و گروه‌ها" },
+  "admin.tab.albums": { en: "Albums", fa: "آلبوم‌ها", ko: "앨범 관리" },
+  "admin.tab.news": { en: "News & Stories", fa: "اخبار و تحریریه", ko: "뉴스 및 기사" },
+  "admin.tab.moderation": { en: "Community & Lyrics", fa: "دیدگاه‌ها و لیریک", ko: "커뮤니티 및 가사 검수" },
+  "admin.tab.shop": { en: "Shop & Merch", fa: "فروشگاه و موجودی", ko: "상점 및 굿즈" },
+  "admin.tab.users": { en: "Users & RBAC", fa: "کاربران و دسترسی‌ها", ko: "사용자 및 권한" },
+  "admin.quickActions": { en: "Quick Actions", fa: "اقدامات سریع", ko: "빠른 작업" },
+  "admin.action.addTrack": { en: "Add Song", fa: "افزودن آهنگ جدید", ko: "새 곡 추가" },
+  "admin.action.addArtist": { en: "Add Artist", fa: "افزودن هنرمند", ko: "아티스트 등록" },
+  "admin.action.addNews": { en: "Write Article", fa: "نگارش خبر جدید", ko: "새 기사 작성" },
+  "admin.action.addProduct": { en: "Add Merch Item", fa: "افزودن محصول جدید", ko: "새 굿즈 등록" },
+  "admin.searchPlaceholder": {
+    en: "Search records by title, name or ID...",
+    fa: "جستجو در رکوردها بر اساس نام، عنوان یا شناسه...",
+    ko: "제목, 이름 또는 ID로 검색...",
+  },
+  "admin.stat.streams": { en: "Total Streams", fa: "مجموع استریم‌ها", ko: "총 스트리밍 수" },
+  "admin.stat.listeners": { en: "Active Today", fa: "شنوندگان فعال امروز", ko: "오늘의 활성 청취자" },
+  "admin.stat.reported": { en: "Reported Comments", fa: "دیدگاه‌های گزارش‌شده", ko: "신고된 댓글" },
+  "admin.stat.pendingLyrics": { en: "Pending Lyrics Sheets", fa: "لیریک‌های در انتظار تایید", ko: "검토 대기 가사" },
+  "admin.stat.revenue": { en: "Merch Sales Est.", fa: "تخمین فروش مرچ (تومان)", ko: "예상 굿즈 매출" },
+  "admin.stat.users": { en: "Total Accounts", fa: "کل کاربران ثبت‌نامی", ko: "총 등록 사용자" },
+  "admin.loginPrompt": { en: "Super Admin Authentication", fa: "احراز هویت مدیریت کل", ko: "최고 관리자 인증" },
+  "admin.loginDesc": {
+    en: "Access to the FAIMESS core administrative console is restricted to authorized staff.",
+    fa: "ورود به مرکز کنترل و مدیریت فیمس ویژه مدیران ارشد و کادر مدیریت است.",
+    ko: "FAIMESS 관리 콘솔 접근은 승인된 관리자에게만 제한됩니다.",
+  },
+  "admin.fastLogin": {
+    en: "Instant Demo Admin Access",
+    fa: "ورود سریع با اکانت پیش‌فرض ادمین (admin / admin)",
+    ko: "기본 관리자 계정으로 빠른 로그인 (admin / admin)",
+  },
+  "admin.loginButton": { en: "Enter Admin Console", fa: "ورود به پنل مدیریت", ko: "관리 콘솔 입장" },
+  "admin.exitConsole": { en: "Back to App", fa: "بازگشت به سایت", ko: "앱으로 돌아가기" },
+  "admin.save": { en: "Save changes", fa: "ذخیره تغییرات", ko: "변경사항 저장" },
+  "admin.cancel": { en: "Cancel", fa: "انصراف", ko: "취소" },
+  "admin.delete": { en: "Delete", fa: "حذف", ko: "삭제" },
+  "admin.edit": { en: "Edit", fa: "ویرایش", ko: "수정" },
+  "admin.approve": { en: "Approve", fa: "تایید و انتشار", ko: "승인 및 게시" },
+  "admin.dismiss": { en: "Dismiss report", fa: "رد گزارش", ko: "신고 기각" },
+  "admin.savedToast": { en: "Changes saved successfully", fa: "تغییرات با موفقیت ذخیره شد", ko: "변경사항이 성공적으로 저장되었습니다" },
+  "admin.deletedToast": { en: "Item deleted successfully", fa: "مورد با موفقیت حذف شد", ko: "항목이 성공적으로 삭제되었습니다" },
+  "admin.auditLog": { en: "Real-time System Audit Log", fa: "لاگ زنده و تاریخچه عملیات سیستم", ko: "실시간 시스템 감사 로그" },
+  "admin.role.superAdmin": { en: "Super Admin", fa: "مدیر ارشد کل", ko: "최고 관리자" },
+  "admin.role.moderator": { en: "Moderator", fa: "ناظر محتوا", ko: "운영자" },
+  "admin.role.editor": { en: "Editor", fa: "تحریریه", ko: "에디터" },
+  "admin.role.user": { en: "Fan User", fa: "کاربر عادی", ko: "일반 사용자" },
+  "admin.status.active": { en: "Active", fa: "فعال", ko: "활성" },
+  "admin.status.suspended": { en: "Suspended", fa: "مسدود", ko: "정지" },
+  "admin.resetDb": { en: "Reset to seed data", fa: "بازنشانی دیتابیس به داده‌های اولیه", ko: "초기 데이터로 재설정" },
+  "admin.restricted": { en: "Super Admin Restricted", fa: "دسترسی مدیریت ارشد محدود است", ko: "최고 관리자 전용" },
+  "admin.restrictedDesc": { en: "You must be signed in with a Super Admin or Staff account to view the studio control panel.", fa: "برای دسترسی به پنل مدیریت کل استودیو باید با حساب مدیر وارد شوید.", ko: "스튜디오 제어판을 보려면 최고 관리자 계정으로 로그인해야 합니다." },
+  "admin.statsTracks": { en: "Total Songs", fa: "کل آهنگ‌ها", ko: "총 트랙 수" },
+  "admin.statsArtists": { en: "Artists", fa: "هنرمندان", ko: "아티스트" },
+  "admin.statsAlbums": { en: "Albums", fa: "آلبوم‌ها", ko: "앨범" },
+  "admin.statsStreams": { en: "Lifetime Streams", fa: "مجموع استریم‌ها", ko: "총 스트리밍" },
+  "admin.statsRevenue": { en: "Estimated Revenue", fa: "ارزش برآورد شده", ko: "예상 매출" },
+  "admin.statsModeration": { en: "Pending Review", fa: "در صف بررسی", ko: "검تو 대기" },
+  "admin.recentActivity": { en: "Recent System Activity", fa: "فعالیت‌های اخیر سیستم", ko: "최근 시스템 활동" },
+  "admin.addTrack": { en: "+ Add Song", fa: "+ افزودن آهنگ جدید", ko: "+ 새 곡 추가" },
+  "admin.addArtist": { en: "+ Add Artist", fa: "+ افزودن هنرمند", ko: "+ 아티스트 등록" },
+  "admin.publishNews": { en: "+ Publish Story", fa: "+ انتشار خبر", ko: "+ 기사 발행" },
+  "admin.colTitle": { en: "Title", fa: "عنوان", ko: "제목" },
+  "admin.colArtist": { en: "Artist", fa: "هنرمند", ko: "아티스트" },
+  "admin.colAlbum": { en: "Album", fa: "آلبوم", ko: "앨범" },
+  "admin.colDuration": { en: "Duration", fa: "مدت", ko: "재생 시간" },
+  "admin.colPlays": { en: "Streams", fa: "پخش‌ها", ko: "스트림" },
+  "admin.colActions": { en: "Actions", fa: "عملیات", ko: "작업" },
 };
 
 /** the shape `t()` takes — good enough for the handful of placeholders we use */
@@ -1263,6 +1651,8 @@ const LABEL_KEYS: Record<string, string> = {
 
 /** “4.8M monthly”, “1.4M monthly” … — the number and its magnitude */
 const LISTENERS = /^([\d.,]+)\s*([KM])?\s*monthly$/i;
+/** “2.4M followers”, “890K followers” … */
+const FOLLOWERS = /^([\d.,]+)\s*([KM])?\s*followers?$/i;
 /** “12 min ago”, “2 hrs ago”, “1 day ago”, “3 weeks ago” … */
 const AGO = /^(\d+)\s*(min|mins|minute|minutes|hr|hrs|hour|hours|day|days|week|weeks|month|months)\s*ago$/i;
 /** “3h 12m” — a playlist's running time */
@@ -1360,6 +1750,14 @@ export function tData(t: Translate, value: string | undefined, lang: Lang): stri
     const [, digits, unit = ""] = listeners;
     const magnitude = unit.toUpperCase();
     const key = magnitude === "M" ? "artist.monthlyM" : magnitude === "K" ? "artist.monthlyK" : "artist.monthly";
+    return t(key, { n: localizeDigits(digits, lang) });
+  }
+
+  const followers = raw.match(FOLLOWERS);
+  if (followers) {
+    const [, digits, unit = ""] = followers;
+    const magnitude = unit.toUpperCase();
+    const key = magnitude === "M" ? "artist.followersM" : magnitude === "K" ? "artist.followersK" : "artist.followers";
     return t(key, { n: localizeDigits(digits, lang) });
   }
 

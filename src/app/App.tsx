@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AppProvider, useApp } from "./AppContext";
 import { PlayerProvider } from "./PlayerContext";
@@ -19,6 +19,8 @@ import { useCompact } from "../hooks/useCompact";
 import { AuthProvider } from "./AuthContext";
 import { AccountDoor } from "../sections/AccountDoor";
 import { Splash } from "../ui/Splash";
+import { SeoHead } from "../sections/SeoHead";
+import { AdminTopNav } from "../sections/admin/AdminTopNav";
 
 /* ------------------------------------------------------------------ *
  *  Shell — the parent card and the five cards inside it.
@@ -53,7 +55,7 @@ export function Screen() {
 }
 
 export function Shell() {
-  const { route, detail } = useApp();
+  const { route, detail, viewedProfileUsername } = useApp();
   const { dir } = usePreferences();
   /** the player card's expand button — its width is shared by every route */
   const [wide, setWide] = useState(false);
@@ -61,6 +63,15 @@ export function Shell() {
   /* under 1024px the art-board is gone and the same app is arranged for a
      hand: bottom menu, mini player, search in its own card (CompactShell) */
   const compact = useCompact();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+    if (typeof document !== "undefined") {
+      document.querySelector("[data-content-scroll]")?.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, [route, detail, viewedProfileUsername]);
 
   if (compact) return <CompactShell />;
 
@@ -72,7 +83,11 @@ export function Shell() {
       {/* top row — three separate pills */}
       <div className="flex flex-wrap items-center gap-4 lg:flex-nowrap">
         <SectionSlot id="brand" params={undefined} />
-        <SectionSlot id="nav" params={undefined} />
+        {route === "admin" ? (
+          <AdminTopNav />
+        ) : (
+          <SectionSlot id="nav" params={undefined} />
+        )}
         <div className="ms-auto flex items-center">
           <SectionSlot id="account" params={undefined} />
         </div>
@@ -85,54 +100,82 @@ export function Shell() {
           direction, so in Persian the content card takes the right-hand
           column and the player the left one. Each card re-declares `dir` for
           its own text, so nothing inside depends on where it landed. */}
-      <div
-        dir={dir}
-        className={cn(
-          "flex min-h-0 flex-1 flex-col gap-4 lg:flex-row",
-          wide && "home-split-wide",
-        )}
-      >
-        <SurfaceCard dir={dir} className="home-split-left lg:min-h-0">
+      {route === "admin" ? (
+        <SurfaceCard dir={dir} className="w-full flex-1 min-h-0">
           <div
             data-content-scroll
             className="scroll-slim flex min-h-0 flex-1 flex-col lg:overflow-y-auto"
           >
-            <AnimatePresence mode="wait" initial={false}>
-              {detail ? (
-                <motion.div
-                  key={`detail:${detail.kind}:${detail.id}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.28, ease: EASE }}
-                  className="flex min-h-0 flex-col"
-                >
-                  <BrowseDetailView />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key={route}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.34, ease: EASE }}
-                  className="flex min-h-0 flex-1 flex-col"
-                >
-                  <Page />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <Page />
           </div>
         </SurfaceCard>
+      ) : (
+        <div
+          dir={dir}
+          className={cn(
+            "flex min-h-0 flex-1 flex-col gap-4 lg:flex-row",
+            wide && "home-split-wide",
+          )}
+        >
+          <SurfaceCard dir={dir} className="home-split-left lg:min-h-0">
+            <div
+              data-content-scroll
+              className="scroll-slim flex min-h-0 flex-1 flex-col lg:overflow-y-auto"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {detail ? (
+                  <motion.div
+                    key={`detail:${detail.kind}:${detail.id}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.28, ease: EASE }}
+                    className="flex min-h-0 flex-col"
+                  >
+                    <BrowseDetailView />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key={route === "profile" ? `profile:${viewedProfileUsername ?? "me"}` : route}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.34, ease: EASE }}
+                    className="flex min-h-0 flex-1 flex-col"
+                  >
+                    <Page />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </SurfaceCard>
 
-        <SurfaceCard dir={dir} className="home-split-right lg:min-h-0">
-          <SectionSlot
-            id="player"
-            params={{ expanded: wide, onToggleExpand: () => setWide((w) => !w) }}
-          />
-        </SurfaceCard>
-      </div>
+          <SurfaceCard dir={dir} className="home-split-right lg:min-h-0">
+            <SectionSlot
+              id="player"
+              params={{ expanded: wide, onToggleExpand: () => setWide((w) => !w) }}
+            />
+          </SurfaceCard>
+        </div>
+      )}
     </div>
+  );
+}
+
+function InnerApp() {
+  const { deepLinkTrackId } = useApp();
+  return (
+    <PlayerProvider initialTrackId={deepLinkTrackId ?? undefined}>
+      <SeoHead />
+      <CommentsProvider>
+        <ContributionsProvider>
+          <Splash />
+          <Screen />
+          <AccountDoor />
+          <ToastHost />
+        </ContributionsProvider>
+      </CommentsProvider>
+    </PlayerProvider>
   );
 }
 
@@ -142,19 +185,7 @@ export default function App() {
       <PreferencesProvider>
         <AuthProvider>
           <PlaylistsProvider>
-          <PlayerProvider>
-            <CommentsProvider>
-              <ContributionsProvider>
-                <Splash />
-                <Screen />
-                <AccountDoor />
-                {/* the door sits above the app rather than in place of it:
-                    it opens when an action asks for an account */}
-                <AccountDoor />
-                <ToastHost />
-              </ContributionsProvider>
-            </CommentsProvider>
-          </PlayerProvider>
+            <InnerApp />
           </PlaylistsProvider>
         </AuthProvider>
       </PreferencesProvider>

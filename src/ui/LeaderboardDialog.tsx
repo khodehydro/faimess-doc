@@ -12,6 +12,7 @@ import {
 } from "../data/points";
 import { useMyActivity } from "../app/ContributionsContext";
 import { usePreferences } from "../app/PreferencesContext";
+import { useApp } from "../app/AppContext";
 import type { Translate } from "../data/i18n";
 import { cn } from "../lib/cn";
 import { Avatar } from "./Avatar";
@@ -72,6 +73,7 @@ type Row = {
 
 export function LeaderboardDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, locale, num } = usePreferences();
+  const { openProfile } = useApp();
   const myActivity = useMyActivity();
 
   /* active listeners plus this account, best balance first — a tie keeps
@@ -127,8 +129,21 @@ export function LeaderboardDialog({ open, onClose }: { open: boolean; onClose: (
               return (
                 <li
                   key={row.id}
+                  onClick={() => {
+                    onClose();
+                    openProfile(row.handle.replace(/^@/, ""));
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onClose();
+                      openProfile(row.handle.replace(/^@/, ""));
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   className={cn(
-                    "flex items-center gap-2.5 rounded-[14px] px-2.5 py-2",
+                    "flex cursor-pointer items-center gap-2.5 rounded-[14px] px-2.5 py-2 transition-colors",
                     row.you ? "bg-primary-faint/80 ring-1 ring-primary/20" : "hover:bg-subtle/70",
                   )}
                 >
