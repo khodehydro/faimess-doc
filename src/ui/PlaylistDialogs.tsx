@@ -16,6 +16,8 @@ import { spring } from "../lib/motion";
 import { Photo } from "./Cover";
 import { Icon } from "./Icon";
 import { Modal } from "./Modal";
+import { socialApi } from "../api/socialApi";
+import { type DuoPartnerInfo } from "../data/playlists";
 
 /* ------------------------------------------------------------------ *
  *  Making a playlist, and putting a song in one.
@@ -407,6 +409,181 @@ export function AddToPlaylistDialog({
         >
           {t("ui.close")}
         </button>
+      </div>
+    </Modal>
+  );
+}
+
+/* -------------------------- Duo Playlist Dialog -------------------------- */
+
+export function CreateDuoPlaylistDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { lang, dir } = usePreferences();
+  const { createDuo } = usePlaylists();
+  const { notify } = useApp();
+
+  const [name, setName] = useState("");
+  const myProfile = useMemo(() => socialApi.getProfile(), []);
+  const availablePartners = useMemo(() => socialApi.getFollowingList(), []);
+  const [selectedPartner, setSelectedPartner] = useState<DuoPartnerInfo | null>(() => {
+    const first = availablePartners[0];
+    return first
+      ? {
+          username: first.username,
+          displayName: first.displayName,
+          avatar: first.avatar,
+        }
+      : null;
+  });
+
+  if (!open) return null;
+
+  const handleCreate = () => {
+    if (!selectedPartner) {
+      notify(lang === "fa" ? "لطفاً دوست یا پارتنر خود را انتخاب کنید." : "Please select a partner.", "primary");
+      return;
+    }
+    const finalName = name.trim() || (lang === "fa" ? `پلی‌لیست مشترک با ${selectedPartner.displayName}` : `Duo with ${selectedPartner.displayName}`);
+    const created = createDuo(
+      finalName,
+      selectedPartner,
+      "weekend-reset",
+      ["nt1", "tr1"],
+    );
+    notify(
+      lang === "fa"
+        ? `پلی‌لیست دونفره «${created.name}» ساخته شد!`
+        : `Duo blend "${created.name}" created!`,
+      "mint",
+    );
+    onClose();
+  };
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <div dir={dir} className="w-full">
+        <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary-deep shadow-2xs">
+          <Icon name="users" size={20} strokeWidth={2.1} />
+        </span>
+
+        <h2 className="font-display mt-3 text-[17.5px] font-bold leading-snug text-ink">
+          {lang === "fa" ? "ساخت پلی‌لیست مشترک دو نفره (Duo Blend)" : "Create Duo Blend Playlist"}
+        </h2>
+        <p className="mt-1 text-[12.5px] leading-relaxed text-ink-muted">
+          {lang === "fa"
+            ? "با دوستت یک پلی‌لیست مشترک بسازید؛ هر دو می‌توانید قطعات جدید اضافه کنید و کاور ترکیبی از دو آواتار خواهد داشت."
+            : "Build a shared playlist together; both of you can contribute songs with a dual blend cover."}
+        </p>
+
+        {/* Dual Avatar Blend Preview */}
+        <div className="mt-4 flex items-center justify-center gap-3 rounded-2xl border border-line bg-subtle/50 p-4">
+          <div className="flex items-center -space-x-3 rtl:space-x-reverse">
+            <span className="relative flex size-14 shrink-0 overflow-hidden rounded-full ring-3 ring-surface shadow-md">
+              <Photo src={myProfile.avatar} alt={myProfile.name} />
+            </span>
+            <span className="relative flex size-14 shrink-0 overflow-hidden rounded-full ring-3 ring-surface shadow-md">
+              {selectedPartner ? (
+                <Photo src={selectedPartner.avatar} alt={selectedPartner.displayName} />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-primary-soft text-primary-deep font-black text-[13px]">
+                  ?
+                </div>
+              )}
+            </span>
+          </div>
+
+          <div className="min-w-0 text-start">
+            <span className="block text-[13.5px] font-black text-ink">
+              {myProfile.name} + {selectedPartner?.displayName || "..."}
+            </span>
+            <span className="block text-[12px] font-semibold text-primary-deep">
+              {lang === "fa" ? "ترکیب سلیقه دو نفره (Duo Blend)" : "Dual Taste Blend"}
+            </span>
+          </div>
+        </div>
+
+        {/* Name Input */}
+        <div className="mt-4">
+          <label className="block text-[12px] font-bold text-ink-muted mb-1.5">
+            {lang === "fa" ? "عنوان پلی‌لیست مشترک" : "Duo Playlist Title"}
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={
+              selectedPartner
+                ? (lang === "fa" ? `میکستِیپ مشترک با ${selectedPartner.displayName}` : `Blend with ${selectedPartner.displayName}`)
+                : (lang === "fa" ? "نام پلی‌لیست مشترک..." : "Duo playlist name...")
+            }
+            className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-[13px] font-medium text-ink focus:border-primary-deep focus:outline-none"
+          />
+        </div>
+
+        {/* Partner Selection */}
+        <div className="mt-4">
+          <label className="block text-[12px] font-bold text-ink-muted mb-1.5">
+            {lang === "fa" ? "انتخاب پارتنر / دوست مشترک" : "Select Duo Partner"}
+          </label>
+          <div className="max-h-[140px] space-y-1.5 overflow-y-auto scroll-slim pe-1">
+            {availablePartners.map((u) => {
+              const isSel = selectedPartner?.username === u.username;
+              return (
+                <button
+                  key={u.username}
+                  type="button"
+                  onClick={() =>
+                    setSelectedPartner({
+                      username: u.username,
+                      displayName: u.displayName,
+                      avatar: u.avatar,
+                    })
+                  }
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-xl p-2 text-start transition border",
+                    isSel
+                      ? "border-primary bg-primary-soft/50 text-primary-deep"
+                      : "border-line/60 bg-subtle/30 hover:bg-subtle",
+                  )}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="flex size-7 shrink-0 overflow-hidden rounded-full ring-1 ring-line">
+                      <Photo src={u.avatar} alt={u.displayName} />
+                    </span>
+                    <span className="truncate text-[12.5px] font-bold text-ink">
+                      {u.displayName}
+                    </span>
+                  </div>
+                  {isSel && <Icon name="check" size={14} className="text-primary-deep" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-5 flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
+          >
+            <Icon name="plus" size={14} strokeWidth={2.4} />
+            <span>{lang === "fa" ? "ایجاد پلی‌لیست مشترک" : "Create Duo Playlist"}</span>
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl px-3.5 py-2.5 text-[13px] font-bold text-ink-muted transition hover:bg-subtle hover:text-ink"
+          >
+            {lang === "fa" ? "انصراف" : "Cancel"}
+          </button>
+        </div>
       </div>
     </Modal>
   );

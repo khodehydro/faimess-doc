@@ -7,14 +7,16 @@ import { useAuth } from "../app/AuthContext";
 import { usePlayer } from "../app/PlayerContext";
 import { usePlaylists } from "../app/PlaylistsContext";
 import { Photo } from "../ui/Cover";
-import { albums, playlists } from "../data/library";
+import { albums, playlists, artists } from "../data/library";
 import {
   socialApi,
   calculateTierProgress,
   AVAILABLE_AVATARS,
+  ARTIST_FANDOMS,
   type UserProfile,
   type BadgeStatusItem,
   type UserReferralSummary,
+  type FandomInfo,
 } from "../api/socialApi";
 import {
   BADGE_CATEGORIES,
@@ -23,8 +25,8 @@ import {
   getBadgeDesc,
 } from "../data/allBadges";
 import { coverPhoto } from "../data/playlists";
-import { trackById, type PlayerTrack, mmss } from "../data/player";
-import { CreatePlaylistDialog } from "../ui/PlaylistDialogs";
+import { trackById, QUEUE, type PlayerTrack, mmss } from "../data/player";
+import { CreatePlaylistDialog, CreateDuoPlaylistDialog } from "../ui/PlaylistDialogs";
 import { FollowListModal } from "../ui/FollowListModal";
 import { ContentRequestModal } from "../ui/ContentRequestModal";
 import { ClayBadgeIcon } from "../ui/ClayBadgeIcon";
@@ -426,6 +428,11 @@ export function ProfilePage() {
   const [editGenre, setEditGenre] = useState(profile.favoriteGenre);
   const [editAvatar, setEditAvatar] = useState(profile.avatar);
   const [editBanner, setEditBanner] = useState(profile.banner || "");
+  const [editAnthem, setEditAnthem] = useState(profile.anthemTrackId || "");
+  const [editBias, setEditBias] = useState(profile.biasArtistId || "");
+
+  // Duo Playlist Modal
+  const [createDuoOpen, setCreateDuoOpen] = useState(false);
 
   // Report Modal (Only for other users)
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -434,7 +441,7 @@ export function ProfilePage() {
 
   // Prevent background scrolling while profile edit or report modal is open
   useEffect(() => {
-    if ((!isEditing && !reportModalOpen) || typeof document === "undefined") return;
+    if ((!isEditing && !reportModalOpen && !createDuoOpen) || typeof document === "undefined") return;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const contentScroll = document.querySelector("[data-content-scroll]") as HTMLElement | null;
@@ -448,7 +455,7 @@ export function ProfilePage() {
         contentScroll.style.overflow = origContentOverflow;
       }
     };
-  }, [isEditing, reportModalOpen]);
+  }, [isEditing, reportModalOpen, createDuoOpen]);
 
   // Dialogs
   const [createPlaylistOpen, setCreatePlaylistOpen] = useState(false);
@@ -460,6 +467,23 @@ export function ProfilePage() {
     () => calculateTierProgress(profile.points),
     [profile.points],
   );
+
+  // Anthem & Bias Fandom helpers
+  const anthemTrack = profile.anthemTrackId ? trackById(profile.anthemTrackId) : null;
+  const isAnthemPlaying = player.playing && player.track?.id === anthemTrack?.id;
+
+  const handlePlayAnthem = () => {
+    if (!anthemTrack) return;
+    if (isAnthemPlaying) {
+      player.toggle();
+    } else {
+      player.play(anthemTrack);
+    }
+  };
+
+  const biasArtist = profile.biasArtistId ? artists.find((a) => a.id === profile.biasArtistId) : null;
+  const fandom = profile.biasArtistId ? socialApi.getBiasFandom(profile.biasArtistId) : null;
+  const loyaltyPoints = socialApi.getLoyaltyPoints(profile.username, profile.biasArtistId);
 
   const handleToggleFollow = () => {
     requireAccount("gate.userFollow", () => {
@@ -509,6 +533,8 @@ export function ProfilePage() {
       favoriteGenre: editGenre.trim(),
       avatar: editAvatar,
       banner: editBanner.trim() || undefined,
+      anthemTrackId: editAnthem || null,
+      biasArtistId: editBias || null,
     });
 
     setProfile(updated);
@@ -632,6 +658,8 @@ export function ProfilePage() {
           name: pl.name,
           cover: lead?.photo ?? coverPhoto(pl.cover),
           trackIds: pl.trackIds,
+          isDuo: !!pl.isDuo,
+          duoPartner: pl.duoPartner,
         };
       });
     }
@@ -641,6 +669,8 @@ export function ProfilePage() {
       return {
         ...pl,
         cover: lead?.photo ?? pl.cover,
+        isDuo: false,
+        duoPartner: undefined,
       };
     });
   }, [isSelf, myPlaylists, profile.username]);
@@ -784,7 +814,12 @@ export function ProfilePage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             {/* Avatar on the Seam with High-Z Ring and Level Crown */}
             <div className="relative -mt-10 shrink-0 sm:-mt-12 md:-mt-14">
-              <div className="size-20 overflow-hidden rounded-full ring-4 ring-surface bg-surface shadow-xl sm:size-24 md:size-28">
+              <div
+                className="size-20 overflow-hidden rounded-full ring-4 ring-surface bg-surface shadow-xl transition-all duration-300 sm:size-24 md:size-28"
+                style={{
+                  boxShadow: fandom ? `0 0 28px ${fandom.glowColor}` : undefined,
+                }}
+              >
                 <Photo src={profile.avatar} alt={profile.name} />
               </div>
               {/* Level Crown Tag */}
@@ -815,6 +850,8 @@ export function ProfilePage() {
                       setEditGenre(profile.favoriteGenre);
                       setEditAvatar(profile.avatar);
                       setEditBanner(profile.banner || "");
+                      setEditAnthem(profile.anthemTrackId || "");
+                      setEditBias(profile.biasArtistId || "");
                       setIsEditing(true);
                     }}
                     className="flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] sm:text-[12.5px] font-bold text-ink shadow-2xs transition hover:border-primary/40 hover:bg-subtle"
@@ -885,6 +922,26 @@ export function ProfilePage() {
                 <span>{roleLabel}</span>
               </span>
             )}
+
+            {/* Ultimate Bias & Fandom Badge */}
+            {biasArtist && fandom && (
+              <span
+                title={fandom.mottoFa}
+                className="flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-black shadow-2xs border"
+                style={{
+                  backgroundColor: `${fandom.accentHex}15`,
+                  color: fandom.accentHex,
+                  borderColor: `${fandom.accentHex}35`,
+                }}
+              >
+                <Icon name="star" size={12} />
+                <span>
+                  {lang === "fa"
+                    ? `بایس: ${biasArtist.name} • ${fandom.fandomNameFa}`
+                    : `Bias: ${biasArtist.name}`}
+                </span>
+              </span>
+            )}
           </div>
 
           {/* Handle */}
@@ -901,6 +958,68 @@ export function ProfilePage() {
                   ? "음악과 K-pop을 사랑합니다."
                   : "Music & K-Pop enthusiast.")}
           </p>
+
+          {/* Minimalist Profile Anthem (Vibe Track) */}
+          {anthemTrack ? (
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-line/80 bg-subtle/50 px-3.5 py-2 transition hover:border-primary/40">
+              <button
+                type="button"
+                onClick={handlePlayAnthem}
+                className="flex items-center gap-2.5 min-w-0 flex-1 text-start group"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-primary transition group-hover:scale-105">
+                  <Icon name={isAnthemPlaying ? "pause" : "play"} size={14} strokeWidth={2.4} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-[13px] font-black text-ink group-hover:text-primary-deep transition-colors">
+                      {anthemTrack.title}
+                    </span>
+                    <span className="text-[12px] font-bold text-ink-muted shrink-0">
+                      • {anthemTrack.artist}
+                    </span>
+                  </div>
+                  <span className="flex items-center gap-1 text-[12px] font-semibold text-primary-deep">
+                    <Icon name="music" size={12} />
+                    <span>{lang === "fa" ? "موزیک پروفایل (Profile Anthem)" : "Profile Anthem"}</span>
+                  </span>
+                </div>
+              </button>
+
+              {isSelf && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    socialApi.setProfileAnthem(null);
+                    notify(lang === "fa" ? "موزیک پروفایل حذف شد." : "Anthem removed.", "teal");
+                  }}
+                  title={lang === "fa" ? "حذف آهنگ از پروفایل" : "Remove anthem"}
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full text-ink-faint hover:bg-subtle hover:text-ink"
+                >
+                  <Icon name="close" size={13} />
+                </button>
+              )}
+            </div>
+          ) : isSelf ? (
+            <button
+              type="button"
+              onClick={() => {
+                setEditName(profile.name);
+                setEditHandle(profile.handle);
+                setEditBio(profile.bio);
+                setEditGenre(profile.favoriteGenre);
+                setEditAvatar(profile.avatar);
+                setEditBanner(profile.banner || "");
+                setEditAnthem(profile.anthemTrackId || "");
+                setEditBias(profile.biasArtistId || "");
+                setIsEditing(true);
+              }}
+              className="mt-3 flex items-center gap-2 rounded-2xl border border-dashed border-line px-3.5 py-2 text-[12px] font-bold text-ink-muted transition hover:border-primary/50 hover:bg-subtle/50"
+            >
+              <Icon name="plus" size={13} />
+              <span>{lang === "fa" ? "افزودن آهنگ به پروفایل (Profile Anthem)" : "Add Profile Anthem"}</span>
+            </button>
+          ) : null}
 
           {/* Social Stats Strip (4-Column) */}
           <div className="mt-4 grid grid-cols-4 gap-1.5 sm:gap-2 rounded-2xl border border-line/80 bg-subtle/50 p-2 sm:p-2.5 text-center">
@@ -1725,14 +1844,25 @@ export function ProfilePage() {
             </div>
 
             {isSelf && (
-              <button
-                type="button"
-                onClick={() => requireAccount("gate.playlist", () => setCreatePlaylistOpen(true))}
-                className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-[12px] sm:text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
-              >
-                <Icon name="plus" size={13} strokeWidth={2.4} />
-                <span>{lang === "fa" ? "+ پلی‌لیست جدید" : lang === "ko" ? "+ 새 플레이리스트" : "+ New Playlist"}</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => requireAccount("gate.playlist", () => setCreateDuoOpen(true))}
+                  className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary-soft/40 px-3 py-2 text-[12px] sm:text-[12.5px] font-bold text-primary-deep transition hover:bg-primary-soft"
+                >
+                  <Icon name="users" size={13} strokeWidth={2.4} />
+                  <span>{lang === "fa" ? "پلی‌لیست دونفره (Duo Blend)" : lang === "ko" ? "듀오 블렌드" : "Duo Blend"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => requireAccount("gate.playlist", () => setCreatePlaylistOpen(true))}
+                  className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-[12px] sm:text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
+                >
+                  <Icon name="plus" size={13} strokeWidth={2.4} />
+                  <span>{lang === "fa" ? "+ پلی‌لیست جدید" : lang === "ko" ? "+ 새 플레이리스트" : "+ New Playlist"}</span>
+                </button>
+              </div>
             )}
           </div>
 
@@ -1754,6 +1884,12 @@ export function ProfilePage() {
                 >
                   <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
                     <Photo src={pl.cover} alt={pl.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                    {pl.isDuo && (
+                      <span className="absolute top-2 start-2 flex items-center gap-1 rounded-full bg-black/75 px-2 py-0.5 text-[12px] font-black text-white shadow-sm backdrop-blur-md ring-1 ring-white/20">
+                        <Icon name="users" size={11} strokeWidth={2.4} />
+                        <span>Duo</span>
+                      </span>
+                    )}
                     <span className="absolute bottom-2 end-2 flex size-8 items-center justify-center rounded-full bg-primary text-white shadow-md opacity-0 group-hover:opacity-100 transition">
                       <Icon name="play" size={14} strokeWidth={2.4} />
                     </span>
@@ -2663,6 +2799,79 @@ export function ProfilePage() {
                 />
               </div>
 
+              {/* Ultimate Bias Selection */}
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                  {lang === "fa" ? "بایس اصلی (فندوم من)" : lang === "ko" ? "최애 (얼티밋 바이어스)" : "Ultimate Bias"}
+                </label>
+                <select
+                  value={editBias}
+                  onChange={(e) => setEditBias(e.target.value)}
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                >
+                  <option value="">{lang === "fa" ? "— بدون انتخاب —" : lang === "ko" ? "— 미선택 —" : "— Not set —"}</option>
+                  {Object.entries(ARTIST_FANDOMS).map(([artistId, info]) => (
+                    <option key={artistId} value={artistId}>
+                      {info.artistName} ({lang === "fa" ? info.fandomNameFa : info.fandomNameEn})
+                    </option>
+                  ))}
+                </select>
+                {editBias && ARTIST_FANDOMS[editBias] && (
+                  <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-subtle/80 px-2.5 py-1 text-[12px]">
+                    <span className="size-2.5 rounded-full" style={{ backgroundColor: ARTIST_FANDOMS[editBias].accentHex }} />
+                    <span className="font-bold text-ink">
+                      {lang === "fa" ? `فندوم: ${ARTIST_FANDOMS[editBias].fandomNameFa}` : `Fandom: ${ARTIST_FANDOMS[editBias].fandomNameEn}`}
+                    </span>
+                    <span className="text-ink-muted">· {ARTIST_FANDOMS[editBias].mottoFa}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Profile Anthem Track */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "موزیک پروفایل (Vibe Track)" : lang === "ko" ? "프로필 배경음악" : "Profile Anthem"}
+                  </label>
+                  {editAnthem && (
+                    <button
+                      type="button"
+                      onClick={() => setEditAnthem("")}
+                      className="text-[12px] font-bold text-rose-500 hover:underline"
+                    >
+                      {lang === "fa" ? "حذف آهنگ" : lang === "ko" ? "삭제" : "Remove"}
+                    </button>
+                  )}
+                </div>
+
+                {editAnthem && trackById(editAnthem) ? (
+                  <div className="flex items-center gap-2.5 rounded-xl border border-primary/30 bg-primary-soft/30 p-2">
+                    <Photo
+                      src={trackById(editAnthem)?.photo || ""}
+                      alt="Anthem"
+                      className="size-10 rounded-lg object-cover shadow-xs shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[12.5px] font-black text-ink">
+                        {trackById(editAnthem)?.title}
+                      </p>
+                      <p className="truncate text-[12px] text-ink-muted">
+                        {trackById(editAnthem)?.artist}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-primary/20 px-2 py-0.5 text-[12px] font-bold text-primary-deep">
+                      {lang === "fa" ? "آهنگ فعال" : "Active"}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-[12px] text-ink-muted">
+                    {lang === "fa"
+                      ? "هنوز آهنگی انتخاب نشده است. همچنین می‌توانید هنگام پخش هر آهنگ، آن را با دکمه سنجاق به پروفایل متصل کنید."
+                      : "No anthem set. You can also pin an anthem directly from the music player."}
+                  </p>
+                )}
+              </div>
+
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-line">
                 <button
                   type="button"
@@ -2688,6 +2897,11 @@ export function ProfilePage() {
       <CreatePlaylistDialog
         open={createPlaylistOpen}
         onClose={() => setCreatePlaylistOpen(false)}
+      />
+
+      <CreateDuoPlaylistDialog
+        open={createDuoOpen}
+        onClose={() => setCreateDuoOpen(false)}
       />
 
       <FollowListModal

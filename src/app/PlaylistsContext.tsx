@@ -15,6 +15,7 @@ import {
   makePlaylistId,
   type PlaylistCoverId,
   type UserPlaylist,
+  type DuoPartnerInfo,
 } from "../data/playlists";
 
 /* ------------------------------------------------------------------ *
@@ -31,6 +32,12 @@ type PlaylistsValue = {
   /** newest first */
   mine: UserPlaylist[];
   create: (name: string, cover: PlaylistCoverId, trackIds?: string[]) => UserPlaylist;
+  createDuo: (
+    name: string,
+    partner: DuoPartnerInfo,
+    cover?: PlaylistCoverId,
+    trackIds?: string[],
+  ) => UserPlaylist;
   update: (id: string, patch: { name?: string; cover?: PlaylistCoverId; trackIds?: string[] }) => void;
   remove: (id: string) => void;
   /** true when the track went in, false when it was already there */
@@ -86,6 +93,29 @@ export function PlaylistsProvider({
     return list;
   }, []);
 
+  const createDuo = useCallback(
+    (
+      name: string,
+      partner: DuoPartnerInfo,
+      cover: PlaylistCoverId = "weekend-reset",
+      trackIds: string[] = [],
+    ) => {
+      const list: UserPlaylist = {
+        id: makePlaylistId(),
+        name: cleanName(name),
+        cover,
+        trackIds: [...new Set(trackIds)],
+        createdAt: Date.now(),
+        isDuo: true,
+        duoPartner: partner,
+        inviteCode: `DUO-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      };
+      setMine((lists) => [list, ...lists]);
+      return list;
+    },
+    [],
+  );
+
   const update = useCallback(
     (id: string, patch: { name?: string; cover?: PlaylistCoverId; trackIds?: string[] }) => {
       setMine((lists) =>
@@ -133,6 +163,7 @@ export function PlaylistsProvider({
     () => ({
       mine,
       create,
+      createDuo,
       update,
       remove,
       addTrack,
@@ -140,7 +171,7 @@ export function PlaylistsProvider({
       contains: (id, trackId) => !!mine.find((list) => list.id === id)?.trackIds.includes(trackId),
       find: (id) => mine.find((list) => list.id === id) ?? null,
     }),
-    [mine, create, update, remove, addTrack, removeTrack],
+    [mine, create, createDuo, update, remove, addTrack, removeTrack],
   );
 
   return <PlaylistsContext.Provider value={value}>{children}</PlaylistsContext.Provider>;

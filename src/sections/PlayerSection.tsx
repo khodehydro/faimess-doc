@@ -18,6 +18,8 @@ import { coverPhoto } from "../data/playlists";
 import { CommentsBar } from "./player/CommentsBar";
 import { CommentsSheet } from "./player/CommentsSheet";
 import { SubmitLyrics } from "./player/SubmitLyrics";
+import { LyricStoryModal } from "../ui/LyricStoryModal";
+import { socialApi } from "../api/socialApi";
 import { LYRIC_REWARD } from "../data/lyrics";
 import { me } from "../data/account";
 import { cn } from "../lib/cn";
@@ -66,6 +68,13 @@ export function PlayerSection({
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [lyricsOpen, setLyricsOpen] = useState(false);
+  const [storyOpen, setStoryOpen] = useState(false);
+  const [storyIndex, setStoryIndex] = useState(0);
+
+  const handleOpenStory = (index = 0) => {
+    setStoryIndex(index);
+    setStoryOpen(true);
+  };
   const { approvedFor } = useContributions();
   /* an account is asked for at the door of an action, never at the door of
      the app: sending lyrics is one of those actions */
@@ -160,6 +169,7 @@ export function PlayerSection({
                 player={player}
                 expanded={expanded}
                 onDownload={() => setDownloadOpen(true)}
+                onOpenStory={() => handleOpenStory(0)}
               />
               <LyricsPanel
                 track={track}
@@ -167,6 +177,7 @@ export function PlayerSection({
                 by={community?.by ?? null}
                 position={player.position}
                 playing={player.playing}
+                onLineClick={handleOpenStory}
                 onSend={() =>
                   requireAccount("gate.lyrics", () => setLyricsOpen(true))
                 }
@@ -191,6 +202,16 @@ export function PlayerSection({
           trackTitle={track.title}
           open={commentsOpen}
           onClose={() => setCommentsOpen(false)}
+        />
+      )}
+
+      {track && (
+        <LyricStoryModal
+          open={storyOpen}
+          onClose={() => setStoryOpen(false)}
+          track={track}
+          lines={lines}
+          initialLineIndex={storyIndex}
         />
       )}
     </div>
@@ -490,10 +511,12 @@ function TrackPanel({
   player,
   expanded,
   onDownload,
+  onOpenStory,
 }: {
   player: PlayerApi;
   expanded: boolean;
   onDownload: () => void;
+  onOpenStory: () => void;
 }) {
   const { t, dir, dataLabel } = usePreferences();
   const { track, playing, position, duration, progress, toggle, next, prev, seek } = player;
@@ -600,6 +623,7 @@ function TrackPanel({
         <div className="flex min-w-0 flex-1 items-center gap-0.5">
           <LikeButton player={player} />
           <AddToPlaylistButton />
+          <SetAnthemButton />
           <RepeatButton player={player} />
         </div>
 
@@ -639,7 +663,8 @@ function TrackPanel({
         </div>
 
         {/* … send it on */}
-        <div className="flex min-w-0 flex-1 items-center justify-end">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5">
+          <LyricStoryButton onOpen={onOpenStory} />
           <ShareSongButton />
           <DownloadButton onOpen={onDownload} />
         </div>
@@ -703,6 +728,94 @@ function ShareSongButton() {
         subject={player.track ? trackSubject(player.track) : null}
       />
     </>
+  );
+}
+
+function SetAnthemButton() {
+  const player = usePlayer();
+  const { lang } = usePreferences();
+  const { notify } = useApp();
+  const { requireAccount } = useAuth();
+  const [profile, setProfile] = useState(() => socialApi.getProfile());
+
+  useEffect(() => {
+    return socialApi.subscribe(() => {
+      setProfile(socialApi.getProfile());
+    });
+  }, []);
+
+  if (!player.track) return null;
+  const isAnthem = profile.anthemTrackId === player.track.id;
+
+  const handleToggle = () => {
+    requireAccount("gate.like", () => {
+      if (!player.track) return;
+      if (isAnthem) {
+        socialApi.setProfileAnthem(null);
+        notify(
+          lang === "fa"
+            ? "آهنگ از پروفایل شما برداشته شد."
+            : lang === "ko"
+              ? "프로필 곡이 삭제되었습니다."
+              : "Removed anthem from your profile.",
+          "teal",
+        );
+      } else {
+        socialApi.setProfileAnthem(player.track.id);
+        notify(
+          lang === "fa"
+            ? `قطعه «${player.track.title}» به عنوان آهنگ پروفایل شما ثبت شد.`
+            : lang === "ko"
+              ? `«${player.track.title}» 곡이 프로필에 등록되었습니다.`
+              : `"${player.track.title}" is now your profile anthem!`,
+          "mint",
+        );
+      }
+    });
+  };
+
+  return (
+    <motion.button
+      whileHover={{ y: -1.5 }}
+      whileTap={{ scale: 0.9 }}
+      transition={spring}
+      onClick={handleToggle}
+      title={
+        isAnthem
+          ? (lang === "fa" ? "حذف از موزیک پروفایل" : "Remove from profile anthem")
+          : (lang === "fa" ? "افزودن به موزیک پروفایل (Pin to profile)" : "Set as profile anthem")
+      }
+      aria-label={
+        isAnthem
+          ? (lang === "fa" ? "حذف از موزیک پروفایل" : "Remove from profile anthem")
+          : (lang === "fa" ? "افزودن به موزیک پروفایل" : "Set as profile anthem")
+      }
+      className={cn(
+        "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
+        isAnthem
+          ? "bg-primary text-white shadow-primary"
+          : "text-ink-muted hover:bg-subtle hover:text-ink",
+      )}
+    >
+      <Icon name="pin" size={16} strokeWidth={2.1} />
+    </motion.button>
+  );
+}
+
+function LyricStoryButton({ onOpen }: { onOpen: () => void }) {
+  const { lang } = usePreferences();
+  return (
+    <motion.button
+      whileHover={{ y: -1.5 }}
+      whileTap={{ scale: 0.9 }}
+      transition={spring}
+      onClick={onOpen}
+      title={lang === "fa" ? "ساخت کارت استوری لیریک" : "Create lyric story card"}
+      aria-label={lang === "fa" ? "ساخت کارت استوری لیریک" : "Create lyric story card"}
+      className="flex size-9 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
+    >
+      <Icon name="sparkle" size={16} strokeWidth={2.1} />
+    </motion.button>
   );
 }
 
@@ -902,6 +1015,7 @@ function LyricsPanel({
   position,
   playing,
   onSend,
+  onLineClick,
 }: {
   track: PlayerTrack;
   lines: ReturnType<typeof lyricsFor>;
@@ -910,6 +1024,7 @@ function LyricsPanel({
   position: number;
   playing: boolean;
   onSend: () => void;
+  onLineClick?: (index: number) => void;
 }) {
   const { t } = usePreferences();
   const { pendingFor } = useContributions();
@@ -1006,11 +1121,13 @@ function LyricsPanel({
                 <div
                   key={`${line.at}-${i}`}
                   ref={isActive ? activeRef : undefined}
-                  /* centred like a lyric sheet: the original line and its
-                     translation both hang off the middle of the panel */
+                  onClick={() => onLineClick && onLineClick(i)}
+                  title={t("player.storyTip") || "ساخت کارت استوری از این لیریک"}
+                  role="button"
+                  tabIndex={0}
                   className={cn(
-                    "rounded-[12px] px-3 py-2.5 text-center transition-colors duration-300 select-none",
-                    isActive ? "bg-primary-faint" : "bg-transparent",
+                    "cursor-pointer rounded-[14px] px-3 py-2.5 text-center transition-all duration-200 select-none hover:bg-primary-soft/40 hover:scale-[1.01]",
+                    isActive ? "bg-primary-faint ring-1 ring-primary-deep/20" : "bg-transparent",
                   )}
                 >
                   <p

@@ -402,6 +402,17 @@ export const STRINGS: Record<string, Entry> = {
   "contrib.approvedToast": { en: "Sheet approved — +{n} points", fa: "شیت تأیید شد — {n}+ امتیاز", ko: "시트 승인 — 포인트 +{n}" },
   "contrib.returnedToast": { en: "Sheet sent back for a fix", fa: "شیت برای اصلاح برگشت", ko: "시트를 반려했어요" },
 
+  /* ----------------- profile anthem & story & duo ----------------- */
+  "anthem.title": { en: "Profile Anthem", fa: "موزیک پروفایل", ko: "프로필 배경음악" },
+  "anthem.set": { en: "Pin to Profile", fa: "سنجاق به پروفایل", ko: "프로필에 고정" },
+  "anthem.pinned": { en: "Set as Profile Anthem", fa: "به‌عنوان موزیک پروفایل تنظیم شد", ko: "프로필 배경음악으로 설정됨" },
+  "anthem.unpin": { en: "Remove Anthem", fa: "حذف از پروفایل", ko: "배경음악 해제" },
+  "story.create": { en: "Make Lyric Story", fa: "استوری‌ساز لیریک", ko: "가사 스토리 만들기" },
+  "story.download": { en: "Save Story (PNG)", fa: "ذخیره کارت استوری (PNG)", ko: "스토리 저장 (PNG)" },
+  "duo.title": { en: "Duo Blend Playlist", fa: "پلی‌لیست مشترک دونفره", ko: "듀오 블렌드 플레이리스트" },
+  "duo.create": { en: "Create Duo Blend", fa: "ساخت پلی‌لیست دونفره", ko: "듀오 블렌드 만들기" },
+  "bias.title": { en: "Ultimate Bias", fa: "بایس اصلی من", ko: "최애 (얼티밋 바이어스)" },
+
   /* ------------------------------ comments ---------------------------- */
   "comments.title": { en: "Comments", fa: "کامنت‌ها", ko: "댓글" },
   "comments.openThread": { en: "Open the comment thread", fa: "باز کردن گفت‌وگوی کامنت‌ها", ko: "댓글 스레드 열기" },
@@ -630,6 +641,8 @@ export const STRINGS: Record<string, Entry> = {
   "playlist.emptyNote": { en: "“{name}” has no songs yet", fa: "«{name}» هنوز آهنگی ندارد", ko: "“{name}”에는 아직 곡이 없어요" },
   "player.shareTip": { en: "Share this song", fa: "اشتراک این آهنگ", ko: "이 곡 공유" },
   "player.addTip": { en: "Add to one of your playlists", fa: "افزودن به یکی از پلی‌لیست‌هایت", ko: "내 플레이리스트에 추가" },
+  "player.storyTip": { en: "Make lyric story card", fa: "ساخت کارت استوری از لیریک", ko: "가사 스토리 카드 만들기" },
+  "player.anthemTip": { en: "Pin as profile anthem", fa: "سنجاق به عنوان موزیک پروفایل", ko: "프로필 배경음악으로 고정" },
 
   "news.title": { en: "News", fa: "اخبار", ko: "뉴스" },
   "news.subtitle": {

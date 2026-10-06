@@ -77,6 +77,91 @@ export type BadgeStatusItem = PlatformBadge & {
   progressPercent: number;
 };
 
+export type FandomInfo = {
+  artistId: string;
+  artistName: string;
+  fandomNameFa: string;
+  fandomNameEn: string;
+  glowColor: string;
+  accentHex: string;
+  mottoFa: string;
+};
+
+export const ARTIST_FANDOMS: Record<string, FandomInfo> = {
+  "ar-kairos": {
+    artistId: "ar-kairos",
+    artistName: "KAIROS",
+    fandomNameFa: "اوربیت (ORBIT)",
+    fandomNameEn: "ORBIT",
+    glowColor: "rgba(130, 103, 240, 0.45)",
+    accentHex: "#8267f0",
+    mottoFa: "مدار بی‌پایان ستارگان",
+  },
+  "ar-prism9": {
+    artistId: "ar-prism9",
+    artistName: "PRISM9",
+    fandomNameFa: "اسپکتروم (SPECTRUM)",
+    fandomNameEn: "SPECTRUM",
+    glowColor: "rgba(236, 72, 153, 0.45)",
+    accentHex: "#ec4899",
+    mottoFa: "درخشش ۹ رنگ منشور",
+  },
+  "ar-novae": {
+    artistId: "ar-novae",
+    artistName: "NOVAE",
+    fandomNameFa: "سوپرنوا (SUPERNOVA)",
+    fandomNameEn: "SUPERNOVA",
+    glowColor: "rgba(59, 130, 246, 0.45)",
+    accentHex: "#3b82f6",
+    mottoFa: "انفجار نور و انرژی کیهانی",
+  },
+  "ar-seora": {
+    artistId: "ar-seora",
+    artistName: "SEORA",
+    fandomNameFa: "سرافیم (SERAPHIM)",
+    fandomNameEn: "SERAPHIM",
+    glowColor: "rgba(168, 85, 247, 0.45)",
+    accentHex: "#a855f7",
+    mottoFa: "نوای فرشتگان شب‌های سئول",
+  },
+  "ar-axion": {
+    artistId: "ar-axion",
+    artistName: "AXION",
+    fandomNameFa: "پالس (PULSE)",
+    fandomNameEn: "PULSE",
+    glowColor: "rgba(249, 115, 22, 0.45)",
+    accentHex: "#f97316",
+    mottoFa: "ضربان ریتم و خیابان",
+  },
+  "ar-lunex": {
+    artistId: "ar-lunex",
+    artistName: "LUNEX",
+    fandomNameFa: "لونار (LUNAR)",
+    fandomNameEn: "LUNAR",
+    glowColor: "rgba(6, 182, 212, 0.45)",
+    accentHex: "#06b6d4",
+    mottoFa: "مهتاب پاپ کره‌ای",
+  },
+  "ar-velvet-moon": {
+    artistId: "ar-velvet-moon",
+    artistName: "VELVET MOON",
+    fandomNameFa: "ولوت (VELVET)",
+    fandomNameEn: "VELVET",
+    glowColor: "rgba(225, 29, 72, 0.45)",
+    accentHex: "#e11d48",
+    mottoFa: "آرامش مخملین موسیقی شب",
+  },
+  "ar-haneul": {
+    artistId: "ar-haneul",
+    artistName: "HANEUL",
+    fandomNameFa: "کلودز (CLOUDS)",
+    fandomNameEn: "CLOUDS",
+    glowColor: "rgba(16, 185, 129, 0.45)",
+    accentHex: "#10b981",
+    mottoFa: "آسمان آبی احساس",
+  },
+};
+
 export type UserProfileData = {
   username: string;
   displayName: string;
@@ -87,6 +172,8 @@ export type UserProfileData = {
   joinedAt: string;
   points: number;
   role: string;
+  anthemTrackId?: string;
+  biasArtistId?: string;
 };
 
 export type UserProfile = {
@@ -103,6 +190,8 @@ export type UserProfile = {
   tier: string;
   isSelf: boolean;
   isFollowing: boolean;
+  anthemTrackId?: string;
+  biasArtistId?: string;
 };
 
 export type SocialUserSummary = {
@@ -236,6 +325,8 @@ const DEFAULT_PROFILE: UserProfileData = {
   joinedAt: "2025-01-15",
   points: 1840,
   role: "Listener · Premium",
+  anthemTrackId: "nt1",
+  biasArtistId: "ar-kairos",
 };
 
 export const COMMUNITY_USERS_SEED: Record<
@@ -576,6 +667,8 @@ export const socialApi = {
         joinedAt: u.joinedAt,
         points: u.points,
         role: u.role,
+        anthemTrackId: "nt1",
+        biasArtistId: "ar-kairos",
       };
     }
 
@@ -598,6 +691,8 @@ export const socialApi = {
         joinedAt: aliasUser.joinedAt,
         points: aliasUser.points,
         role: aliasUser.role,
+        anthemTrackId: "tr1",
+        biasArtistId: "ar-prism9",
       };
     }
 
@@ -606,12 +701,14 @@ export const socialApi = {
       return {
         username: adminUser.username,
         displayName: adminUser.displayName,
-        bio: adminUser.bio || "عضو انجمن استودیو فیمس و شنونده فعال دنیای موسیقی.",
+        bio: adminUser.bio || "عضو انجمن پلتفرم فیمس و شنونده فعال دنیای موسیقی کی‌پاپ.",
         avatar: adminUser.avatar,
         favoriteGenre: "Electro pop",
         joinedAt: adminUser.joinedAt,
         points: adminUser.points,
         role: adminUser.role.replace("_", " "),
+        anthemTrackId: "nt2",
+        biasArtistId: "ar-novae",
       };
     }
 
@@ -630,12 +727,14 @@ export const socialApi = {
       return {
         username: feedUser.handle.replace(/^@/, ""),
         displayName: feedUser.name,
-        bio: `${feedUser.name} شنونده فعال استودیو فیمس با سطح ${feedUser.level} و زنجیره گوش دادن ${feedUser.streak} روزه.`,
+        bio: `${feedUser.name} شنونده فعال پلتفرم استریم کی‌پاپ فیمس با سطح ${feedUser.level} و زنجیره گوش دادن ${feedUser.streak} روزه.`,
         avatar: feedUser.photo,
         favoriteGenre: "K-Pop / Dance",
         joinedAt: "2024-10-01",
         points: Math.round(fanPoints(feedUser.activity)),
         role: "Active Member",
+        anthemTrackId: "nt3",
+        biasArtistId: "ar-seora",
       };
     }
 
@@ -648,12 +747,14 @@ export const socialApi = {
     return {
       username: cleanUser,
       displayName: cleanUser.charAt(0).toUpperCase() + cleanUser.slice(1),
-      bio: "علاقه‌مند به دنیای کی‌پاپ و استودیو موسیقی فیمس. شنونده فعال و همراه همیشگی.",
+      bio: "علاقه‌مند به دنیای کی‌پاپ و پلتفرم استریم فیمس. شنونده فعال و همراه همیشگی.",
       avatar: pickedAvatar,
       favoriteGenre: "K-Pop / Dance",
       joinedAt: "2025-01-20",
       points: generatedPoints,
       role: "Listener",
+      anthemTrackId: "tr2",
+      biasArtistId: "ar-kairos",
     };
   },
 
@@ -677,6 +778,8 @@ export const socialApi = {
       tier: tierInfo.tierNameFa,
       isSelf,
       isFollowing: following,
+      anthemTrackId: raw.anthemTrackId,
+      biasArtistId: raw.biasArtistId,
     };
   },
 
@@ -687,6 +790,8 @@ export const socialApi = {
     favoriteGenre?: string;
     avatar?: string;
     banner?: string;
+    anthemTrackId?: string | null;
+    biasArtistId?: string | null;
   }): UserProfile {
     if (updates.name) socialState.profile.displayName = updates.name;
     if (updates.handle) socialState.profile.username = updates.handle.replace(/^@/, "");
@@ -694,6 +799,8 @@ export const socialApi = {
     if (updates.favoriteGenre !== undefined) socialState.profile.favoriteGenre = updates.favoriteGenre;
     if (updates.avatar !== undefined) socialState.profile.avatar = updates.avatar;
     if (updates.banner !== undefined) socialState.profile.banner = updates.banner;
+    if (updates.anthemTrackId !== undefined) socialState.profile.anthemTrackId = updates.anthemTrackId || undefined;
+    if (updates.biasArtistId !== undefined) socialState.profile.biasArtistId = updates.biasArtistId || undefined;
 
     // Also synchronize with adminApi user list if existing
     const existing = adminApi.getUser(socialState.profile.username);
@@ -707,6 +814,29 @@ export const socialApi = {
 
     notifySocialChanges();
     return this.getProfile();
+  },
+
+  setProfileAnthem(trackId: string | null) {
+    socialState.profile.anthemTrackId = trackId || undefined;
+    notifySocialChanges();
+  },
+
+  setProfileBias(artistId: string | null) {
+    socialState.profile.biasArtistId = artistId || undefined;
+    notifySocialChanges();
+  },
+
+  getBiasFandom(artistId?: string): FandomInfo | null {
+    if (!artistId) return null;
+    return ARTIST_FANDOMS[artistId] || null;
+  },
+
+  getLoyaltyPoints(username?: string, artistId?: string): number {
+    const raw = this.getProfileData(username);
+    const targetArtist = artistId || raw.biasArtistId;
+    if (!targetArtist) return 0;
+    const seed = targetArtist.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return Math.max(120, Math.round(raw.points * 0.45) + (seed % 350));
   },
 
   reportUser(report: {

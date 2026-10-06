@@ -58,6 +58,12 @@ export function coverPhoto(id: string): string {
   return coverById(id).photo;
 }
 
+export type DuoPartnerInfo = {
+  username: string;
+  displayName: string;
+  avatar: string;
+};
+
 /** a list the listener built — ids only, so it survives JSON round-trips */
 export type UserPlaylist = {
   id: string;
@@ -66,6 +72,10 @@ export type UserPlaylist = {
   trackIds: string[];
   /** epoch ms, newest first in every surface that lists them */
   createdAt: number;
+  /** whether this is a collaborative Duo / Blend playlist */
+  isDuo?: boolean;
+  duoPartner?: DuoPartnerInfo;
+  inviteCode?: string;
 };
 
 export const STORE_KEY = "faimess.playlists";
