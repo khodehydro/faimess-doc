@@ -44,6 +44,21 @@ import {
   type PublishItemPayload,
   type ItemPublishType,
 } from "../api/channelPublisher";
+import {
+  loadAcademyAd,
+  saveAcademyAd,
+  loadAllLyricEducation,
+  saveLyricEducationItem,
+  type AcademyAd,
+  type LyricEducation,
+} from "../data/lyricLearning";
+import {
+  loadAllStoryBackgrounds,
+  saveStoryBackground,
+  deleteStoryBackground,
+  type StoryBackground,
+} from "../data/storyBackgrounds";
+import { ARTIST_FANDOMS } from "../api/socialApi";
 
 export function AdminPage() {
   const { t, locale, dir, lang, dataLabel } = usePreferences();
@@ -55,11 +70,37 @@ export function AdminPage() {
   const [siteSettings, setSiteSettings] = useState<SiteFeatureSettings>(() => adminApi.getSiteSettings());
   const [settingsDraft, setSettingsDraft] = useState<SiteFeatureSettings>(() => adminApi.getSiteSettings());
   const [settingsSubTab, setSettingsSubTab] = useState<
-    "branding" | "colors" | "seo" | "texts" | "modules" | "integrations" | "social_automation" | "database"
+    "branding" | "colors" | "seo" | "texts" | "modules" | "integrations" | "social_automation" | "ads" | "story_backgrounds" | "database"
   >("branding");
   const [importJsonInput, setImportJsonInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statsPeriod, setStatsPeriod] = useState<"today" | "week" | "all">("today");
+
+  // Language Academy Ad State
+  const [academyAd, setAcademyAd] = useState<AcademyAd>(() => loadAcademyAd());
+
+  // Story Backgrounds State
+  const [adminBackgrounds, setAdminBackgrounds] = useState<StoryBackground[]>(() => loadAllStoryBackgrounds());
+  const [newBgTitleFa, setNewBgTitleFa] = useState("");
+  const [newBgTitleEn, setNewBgTitleEn] = useState("");
+  const [newBgArtistId, setNewBgArtistId] = useState("bts");
+  const [newBgPoints, setNewBgPoints] = useState(100);
+  const [newBgGradFrom, setNewBgGradFrom] = useState("#9333ea");
+  const [newBgGradTo, setNewBgGradTo] = useState("#20063b");
+  const [newBgPattern, setNewBgPattern] = useState<StoryBackground["pattern"]>("cosmic_stars");
+
+  // Track Lyric Educational Notes State
+  const [eduTrackId, setEduTrackId] = useState<string>("nt1");
+  const [eduLineIndex, setEduLineIndex] = useState<number>(0);
+  const [eduKoreanLine, setEduKoreanLine] = useState("빛나는 밤하늘 아래서");
+  const [eduRomanization, setEduRomanization] = useState("Binnaneun bamhaneul araeseo");
+  const [eduTranslationFa, setEduTranslationFa] = useState("زیر آسمان درخشان شب");
+  const [eduWordKorean, setEduWordKorean] = useState("빛나다");
+  const [eduWordPronounce, setEduWordPronounce] = useState("بین‌نادا");
+  const [eduWordMeaning, setEduWordMeaning] = useState("درخشیدن، تابیدن");
+  const [eduGrammarRule, setEduGrammarRule] = useState("پسوند صفت‌ساز فاعلی ~는");
+  const [eduGrammarExpl, setEduGrammarExpl] = useState("به ریشه فعل حال اضافه شده و اسم بعدی را توصیف می‌کند.");
+  const [eduNotes, setEduNotes] = useState("استعاره از روشنایی امید در اشعار کی‌پاپ.");
 
   // Integrations & Social Automation State
   const [showSmsKey, setShowSmsKey] = useState(false);
@@ -1959,6 +2000,226 @@ export function AdminPage() {
               ))}
             </div>
           </div>
+
+          {/* Educational Notes Editor for Track Lyrics */}
+          <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <div>
+                <h3 className="font-extrabold text-[15px] text-ink flex items-center gap-2">
+                  <Icon name="sparkle" size={16} className="text-primary-deep" />
+                  <span>{lang === "fa" ? "تدوین محتوای آموزشی زبان کره‌ای برای خطوط لیریک" : "Korean Language Learning Editor"}</span>
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "برای هر سطر از ترانه‌ها می‌توانید واژگان، گرامر، تلفظ و نکات فرهنگی تعریف کنید تا با کلیک کاربر روی خط لیریک نمایش داده شود (اختیاری است و به مرور تکمیل می‌شود)."
+                    : "Add vocabulary, grammar rules & pronunciation notes for any lyric line. Displayed when users click that line."}
+                </p>
+              </div>
+            </div>
+
+            {/* Selector Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                  {lang === "fa" ? "انتخاب آهنگ" : "Select Song"}
+                </label>
+                <select
+                  value={eduTrackId}
+                  onChange={(e) => setEduTrackId(e.target.value)}
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                >
+                  {adminApi.getTracks().map((tr) => (
+                    <option key={tr.id} value={tr.id}>
+                      {tr.title} ({tr.artist})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                  {lang === "fa" ? "شماره خط لیریک (از ۰)" : "Line Index (0-based)"}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={eduLineIndex}
+                  onChange={(e) => setEduLineIndex(Number(e.target.value))}
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                  {lang === "fa" ? "تلفظ و رومی‌سازی (Romanization)" : "Romanization"}
+                </label>
+                <input
+                  type="text"
+                  value={eduRomanization}
+                  onChange={(e) => setEduRomanization(e.target.value)}
+                  placeholder="e.g. Binnaneun bamhaneul"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep font-mono"
+                />
+              </div>
+
+              <div className="sm:col-span-2 md:col-span-3">
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                  {lang === "fa" ? "متن کره‌ای سطر (Korean Line)" : "Korean Line Text"}
+                </label>
+                <input
+                  type="text"
+                  value={eduKoreanLine}
+                  onChange={(e) => setEduKoreanLine(e.target.value)}
+                  placeholder="e.g. 빛나는 밤하늘 아래서"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep font-bold"
+                />
+              </div>
+
+              <div className="sm:col-span-2 md:col-span-3">
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                  {lang === "fa" ? "ترجمه فارسی سطر" : "Persian Translation"}
+                </label>
+                <input
+                  type="text"
+                  value={eduTranslationFa}
+                  onChange={(e) => setEduTranslationFa(e.target.value)}
+                  placeholder="e.g. زیر آسمان درخشان شب"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                />
+              </div>
+            </div>
+
+            {/* Word & Grammar Inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-xl border border-line/70 bg-subtle/40 p-3">
+              <div className="sm:col-span-3">
+                <span className="text-[12px] font-extrabold text-primary-deep block">
+                  {lang === "fa" ? "واژهٔ کلیدی این خط:" : "Key Word in Line:"}
+                </span>
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">کلمه کره‌ای</label>
+                <input
+                  type="text"
+                  value={eduWordKorean}
+                  onChange={(e) => setEduWordKorean(e.target.value)}
+                  placeholder="빛나다"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] text-ink"
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">تلفظ فارسی</label>
+                <input
+                  type="text"
+                  value={eduWordPronounce}
+                  onChange={(e) => setEduWordPronounce(e.target.value)}
+                  placeholder="بین‌نادا"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] text-ink"
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">معنی فارسی</label>
+                <input
+                  type="text"
+                  value={eduWordMeaning}
+                  onChange={(e) => setEduWordMeaning(e.target.value)}
+                  placeholder="درخشیدن، تابیدن"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] text-ink"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl border border-line/70 bg-subtle/40 p-3">
+              <div className="sm:col-span-2">
+                <span className="text-[12px] font-extrabold text-primary-deep block">
+                  {lang === "fa" ? "نکته گرامری این خط:" : "Grammar Point:"}
+                </span>
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">نام یا عنوان قاعده گرامری</label>
+                <input
+                  type="text"
+                  value={eduGrammarRule}
+                  onChange={(e) => setEduGrammarRule(e.target.value)}
+                  placeholder="پسوند صفت‌ساز فاعلی ~는"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] text-ink"
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">توضیح قاعده گرامری</label>
+                <input
+                  type="text"
+                  value={eduGrammarExpl}
+                  onChange={(e) => setEduGrammarExpl(e.target.value)}
+                  placeholder="به ریشه فعل حال اضافه شده و اسم بعدی را توصیف می‌کند."
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] text-ink"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                {lang === "fa" ? "نکته فرهنگی یا اصطلاح ویژه ترانه (اختیاری)" : "Cultural & Nuance Note"}
+              </label>
+              <textarea
+                rows={2}
+                value={eduNotes}
+                onChange={(e) => setEduNotes(e.target.value)}
+                placeholder="توضیحات مفهومی درباره استعاره‌ها و اصطلاحات روزمره کره‌ای..."
+                className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep resize-none"
+              />
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-line">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!eduKoreanLine.trim()) {
+                    notify(lang === "fa" ? "لطفاً متن کره‌ای سطر را وارد کنید" : "Enter Korean line", "primary");
+                    return;
+                  }
+                  const noteItem: LyricEducation = {
+                    id: `${eduTrackId}_${eduLineIndex}`,
+                    trackId: eduTrackId,
+                    lineIndex: eduLineIndex,
+                    koreanLine: eduKoreanLine.trim(),
+                    romanization: eduRomanization.trim() || undefined,
+                    translationFa: eduTranslationFa.trim(),
+                    words: eduWordKorean.trim()
+                      ? [
+                          {
+                            korean: eduWordKorean.trim(),
+                            pronunciation: eduWordPronounce.trim(),
+                            meaning: eduWordMeaning.trim(),
+                            partOfSpeech: "واژه",
+                          },
+                        ]
+                      : [],
+                    grammar: eduGrammarRule.trim()
+                      ? [
+                          {
+                            rule: eduGrammarRule.trim(),
+                            explanation: eduGrammarExpl.trim(),
+                          },
+                        ]
+                      : [],
+                    culturalNotes: eduNotes.trim() || undefined,
+                  };
+
+                  saveLyricEducationItem(noteItem);
+                  notify(
+                    lang === "fa"
+                      ? `محتوای آموزشی خط ${eduLineIndex + 1} با موفقیت ذخیره شد.`
+                      : "Saved educational note.",
+                    "mint",
+                  );
+                }}
+                className="flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-[12px] font-bold text-white shadow-primary hover:bg-primary-deep"
+              >
+                <Icon name="check" size={14} strokeWidth={2.4} />
+                <span>{lang === "fa" ? "ذخیره محتوای آموزشی این سطر" : "Save Lesson Note"}</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -2068,6 +2329,8 @@ export function AdminPage() {
               { id: "modules", labelFa: "بخش‌ها و ماژول‌ها", labelEn: "Modules", icon: "grid" },
               { id: "integrations", labelFa: "کلیدها و توکن‌های API", labelEn: "API Keys & Integrations", icon: "lock" },
               { id: "social_automation", labelFa: "اتوماسیون انتشار در کانال‌ها", labelEn: "Channel Publishing", icon: "sparkle" },
+              { id: "ads", labelFa: "تبلیغات آموزشگاه‌ها", labelEn: "Academy Ads", icon: "crown" },
+              { id: "story_backgrounds", labelFa: "پس‌زمینه‌های استوری", labelEn: "Story Backgrounds", icon: "gallery" },
               { id: "database", labelFa: "پشتیبان‌گیری و دیتابیس", labelEn: "Database & Backup", icon: "folder" },
             ].map((sub) => {
               const isSubActive = settingsSubTab === sub.id;
@@ -3343,6 +3606,417 @@ export function AdminPage() {
                     </table>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* 8. KOREAN LANGUAGE ACADEMY ADVERTISEMENT SETTINGS */}
+          {settingsSubTab === "ads" && (
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-line pb-3">
+                <div>
+                  <h3 className="font-extrabold text-[16px] text-ink">
+                    {lang === "fa" ? "تنظیمات بنر تبلیغاتی آموزشگاه‌های زبان کره‌ای" : "Korean Language Academy Ad Settings"}
+                  </h3>
+                  <p className="mt-0.5 text-[12px] text-ink-muted">
+                    {lang === "fa"
+                      ? "مدیریت نمایش تبلیغ و کدهای تخفیف در زیر پنجرهٔ آموزش زبان کره‌ای لیریک ترانه‌ها"
+                      : "Configure promotional card & discount code displayed under the lyric learning modal"}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={academyAd.enabled}
+                      onChange={(e) => setAcademyAd({ ...academyAd, enabled: e.target.checked })}
+                      className="size-4 rounded accent-primary-deep cursor-pointer"
+                    />
+                    <span className="text-[12.5px] font-bold text-ink">
+                      {academyAd.enabled ? (lang === "fa" ? "تبلیغات فعال است" : "Ad Enabled") : (lang === "fa" ? "تبلیغات غیرفعال" : "Ad Disabled")}
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "نام آموزشگاه / موسسه همکار" : "Academy Name"}
+                  </label>
+                  <input
+                    type="text"
+                    value={academyAd.academyName}
+                    onChange={(e) => setAcademyAd({ ...academyAd, academyName: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "متن برچسب بالای کارت" : "Badge Text"}
+                  </label>
+                  <input
+                    type="text"
+                    value={academyAd.badgeText}
+                    onChange={(e) => setAcademyAd({ ...academyAd, badgeText: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "عنوان اصلی تبلیغ دوره" : "Ad Headline"}
+                  </label>
+                  <input
+                    type="text"
+                    value={academyAd.title}
+                    onChange={(e) => setAcademyAd({ ...academyAd, title: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "توضیحات تکمیلی دوره" : "Description"}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={academyAd.description}
+                    onChange={(e) => setAcademyAd({ ...academyAd, description: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "کد تخفیف اختصاصی فیمس" : "Promo / Discount Code"}
+                  </label>
+                  <input
+                    type="text"
+                    value={academyAd.discountCode}
+                    onChange={(e) => setAcademyAd({ ...academyAd, discountCode: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] font-mono text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "متن درصد تخفیف" : "Discount Badge"}
+                  </label>
+                  <input
+                    type="text"
+                    value={academyAd.discountText}
+                    onChange={(e) => setAcademyAd({ ...academyAd, discountText: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "متن دکمه ثبت‌نام / اقدام" : "CTA Button Label"}
+                  </label>
+                  <input
+                    type="text"
+                    value={academyAd.ctaText}
+                    onChange={(e) => setAcademyAd({ ...academyAd, ctaText: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "لینک ثبت‌نام یا تلگرام" : "CTA Link URL"}
+                  </label>
+                  <input
+                    type="text"
+                    value={academyAd.ctaUrl}
+                    onChange={(e) => setAcademyAd({ ...academyAd, ctaUrl: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] font-mono text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+              </div>
+
+              {/* Live Preview Card */}
+              <div className="rounded-2xl border border-line/80 bg-subtle/50 p-4">
+                <span className="text-[12px] font-extrabold text-ink-muted block mb-2">
+                  {lang === "fa" ? "پیش‌نمایش زنده بنر تبلیغاتی در پنجره آموزش لیریک:" : "Live Preview:"}
+                </span>
+
+                <div className="rounded-[20px] border-2 border-primary/40 bg-gradient-to-br from-primary-faint/80 via-surface to-surface p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-2 border-b border-line/70 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-white shadow-primary">
+                        <Icon name="crown" size={14} strokeWidth={2.4} />
+                      </span>
+                      <div>
+                        <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[12px] font-black text-primary-deep">
+                          {academyAd.badgeText}
+                        </span>
+                        <h5 className="mt-0.5 text-[13px] font-black text-ink">
+                          {academyAd.academyName}
+                        </h5>
+                      </div>
+                    </div>
+
+                    {academyAd.discountCode && (
+                      <span className="rounded-xl border border-line bg-surface px-2.5 py-1 text-[12px] font-extrabold text-ink shadow-2xs">
+                        {academyAd.discountCode}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="pt-3">
+                    <h6 className="text-[13px] font-extrabold text-ink">{academyAd.title}</h6>
+                    <p className="mt-1 text-[12px] text-ink-muted">{academyAd.description}</p>
+                    <div className="mt-2.5 flex items-center justify-between text-[12px]">
+                      <span className="font-extrabold text-emerald-600">🏷️ {academyAd.discountText}</span>
+                      <span className="rounded-lg bg-primary px-3 py-1 font-bold text-white shadow-xs">
+                        {academyAd.ctaText}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    saveAcademyAd(academyAd);
+                    notify(lang === "fa" ? "تنظیمات تبلیغات آموزشگاه با موفقیت ذخیره شد." : "Saved ad settings.", "mint");
+                  }}
+                  className="flex items-center gap-2 rounded-xl bg-primary-deep px-5 py-2.5 text-[12.5px] font-bold text-white shadow-primary hover:bg-primary-deep/90"
+                >
+                  <Icon name="check" size={15} strokeWidth={2.4} />
+                  <span>{lang === "fa" ? "ذخیره تنظیمات تبلیغات" : "Save Ad Settings"}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 9. STORY BACKGROUNDS MANAGEMENT */}
+          {settingsSubTab === "story_backgrounds" && (
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-6">
+              <div className="border-b border-line pb-3">
+                <h3 className="font-extrabold text-[16px] text-ink">
+                  {lang === "fa" ? "مدیریت پس‌زمینه‌های استوری‌ساز (Story Backgrounds)" : "Story Backgrounds Management"}
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "ایجاد و ویرایش پس‌زمینه‌های متناسب با هر گروه و آرتیست و تعیین شرط حد نصاب امتیاز هواداران برای آزادسازی"
+                    : "Manage group-tailored story backgrounds & configure fan points unlock thresholds"}
+                </p>
+              </div>
+
+              {/* Add New Background Form */}
+              <div className="rounded-2xl border border-primary/30 bg-primary-faint/30 p-4 space-y-3.5">
+                <h4 className="text-[13.5px] font-extrabold text-ink flex items-center gap-1.5">
+                  <Icon name="plus" size={14} strokeWidth={2.4} />
+                  <span>{lang === "fa" ? "افزودن پس‌زمینه جدید برای استوری‌ساز" : "Add New Background"}</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "عنوان فارسی طرح" : "Title (Persian)"}
+                    </label>
+                    <input
+                      type="text"
+                      value={newBgTitleFa}
+                      onChange={(e) => setNewBgTitleFa(e.target.value)}
+                      placeholder="e.g. استی سرخ"
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "عنوان انگلیسی طرح" : "Title (English)"}
+                    </label>
+                    <input
+                      type="text"
+                      value={newBgTitleEn}
+                      onChange={(e) => setNewBgTitleEn(e.target.value)}
+                      placeholder="e.g. STAY Red"
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "گروه یا هنرمند مربوطه" : "Artist / Group"}
+                    </label>
+                    <select
+                      value={newBgArtistId}
+                      onChange={(e) => setNewBgArtistId(e.target.value)}
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                    >
+                      <option value="all">FAIMESS (عمومی)</option>
+                      {Object.entries(ARTIST_FANDOMS).map(([artistId, info]) => (
+                        <option key={artistId} value={artistId}>
+                          {info.artistName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "حد نصاب امتیاز برای آزادسازی" : "Points Required"}
+                    </label>
+                    <input
+                      type="number"
+                      value={newBgPoints}
+                      onChange={(e) => setNewBgPoints(Number(e.target.value))}
+                      placeholder="100"
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "رنگ شروع گرادیان (Hex)" : "Gradient From"}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={newBgGradFrom}
+                        onChange={(e) => setNewBgGradFrom(e.target.value)}
+                        className="size-8 rounded-lg border border-line cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={newBgGradFrom}
+                        onChange={(e) => setNewBgGradFrom(e.target.value)}
+                        className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] font-mono text-ink"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "رنگ پایان گرادیان (Hex)" : "Gradient To"}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={newBgGradTo}
+                        onChange={(e) => setNewBgGradTo(e.target.value)}
+                        className="size-8 rounded-lg border border-line cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={newBgGradTo}
+                        onChange={(e) => setNewBgGradTo(e.target.value)}
+                        className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] font-mono text-ink"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "الگوی نوری پس‌زمینه" : "Pattern"}
+                    </label>
+                    <select
+                      value={newBgPattern}
+                      onChange={(e) => setNewBgPattern(e.target.value as any)}
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                    >
+                      <option value="cosmic_stars">ستارگان کیهانی (Cosmic Stars)</option>
+                      <option value="neon_stage">پروژکتورهای استیج (Neon Stage)</option>
+                      <option value="prism_glow">درخشش منشوری (Prism Glow)</option>
+                      <option value="purple_haze">بنفش برند (Purple Haze)</option>
+                      <option value="minimal_dark">میدنایت نوار (Minimal Dark)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!newBgTitleFa.trim()) {
+                        notify(lang === "fa" ? "لطفاً عنوان طرح را وارد کنید" : "Enter title", "primary");
+                        return;
+                      }
+                      const artistObj = ARTIST_FANDOMS[newBgArtistId];
+                      const newBg: StoryBackground = {
+                        id: `bg-custom-${Date.now()}`,
+                        titleFa: newBgTitleFa.trim(),
+                        titleEn: newBgTitleEn.trim() || newBgTitleFa.trim(),
+                        artistId: newBgArtistId,
+                        artistName: artistObj ? artistObj.artistName : "FAIMESS",
+                        requiredPoints: Number(newBgPoints) || 0,
+                        gradientFrom: newBgGradFrom,
+                        gradientTo: newBgGradTo,
+                        accentColor: "#ffffff",
+                        pattern: newBgPattern,
+                        isOfficial: false,
+                      };
+                      const updated = saveStoryBackground(newBg);
+                      setAdminBackgrounds(updated);
+                      setNewBgTitleFa("");
+                      setNewBgTitleEn("");
+                      notify(lang === "fa" ? "طرح پس‌زمینه جدید اضافه شد." : "Added new background.", "mint");
+                    }}
+                    className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-[12px] font-bold text-white shadow-primary hover:bg-primary-deep"
+                  >
+                    <Icon name="plus" size={14} strokeWidth={2.4} />
+                    <span>{lang === "fa" ? "افزودن طرح به استوری‌ساز" : "Add Background"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Existing Backgrounds Grid */}
+              <div className="space-y-2.5">
+                <h4 className="text-[13px] font-extrabold text-ink">
+                  {lang === "fa" ? `طرح‌های موجود (${adminBackgrounds.length} پس‌زمینه):` : `Backgrounds (${adminBackgrounds.length}):`}
+                </h4>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {adminBackgrounds.map((bg) => (
+                    <div
+                      key={bg.id}
+                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-line p-3 shadow-xs transition hover:border-primary/50"
+                      style={{
+                        background: `linear-gradient(135deg, ${bg.gradientFrom}, ${bg.gradientTo})`,
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="rounded-full bg-black/50 px-2 py-0.5 text-[12px] font-black text-white backdrop-blur-2xs">
+                          {bg.artistName}
+                        </span>
+                        {!bg.isOfficial && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = deleteStoryBackground(bg.id);
+                              setAdminBackgrounds(updated);
+                              notify(lang === "fa" ? "طرح حذف شد." : "Deleted.", "primary");
+                            }}
+                            className="flex size-6 items-center justify-center rounded-full bg-black/60 text-rose-300 hover:text-rose-100 shadow-sm"
+                            title="حذف طرح سفارشی"
+                          >
+                            <Icon name="close" size={11} />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="mt-8">
+                        <h5 className="truncate text-[12.5px] font-black text-white drop-shadow-sm">
+                          {bg.titleFa}
+                        </h5>
+                        <div className="mt-1 flex items-center justify-between text-[12px] text-white/80">
+                          <span>{bg.pattern}</span>
+                          <span className="font-bold">{bg.requiredPoints === 0 ? "رایگان" : `${bg.requiredPoints}P`}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

@@ -642,6 +642,7 @@ export const STRINGS: Record<string, Entry> = {
   "player.shareTip": { en: "Share this song", fa: "اشتراک این آهنگ", ko: "이 곡 공유" },
   "player.addTip": { en: "Add to one of your playlists", fa: "افزودن به یکی از پلی‌لیست‌هایت", ko: "내 플레이리스트에 추가" },
   "player.storyTip": { en: "Make lyric story card", fa: "ساخت کارت استوری از لیریک", ko: "가사 스토리 카드 만들기" },
+  "player.learnTip": { en: "Learn Korean words & grammar for this line", fa: "آموزش زبان کره‌ای، واژگان و گرامر این خط", ko: "이 줄의 한국어 단어 및 문법 배우기" },
   "player.anthemTip": { en: "Pin as profile anthem", fa: "سنجاق به عنوان موزیک پروفایل", ko: "프로필 배경음악으로 고정" },
 
   "news.title": { en: "News", fa: "اخبار", ko: "뉴스" },

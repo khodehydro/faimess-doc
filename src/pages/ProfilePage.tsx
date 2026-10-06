@@ -2603,8 +2603,8 @@ export function ProfilePage() {
        *  EDIT PROFILE MODAL (دیالوگ ویرایش مشخصات با آپلود عکس و بنر فشرده)
        * ========================================================================= */}
       {isEditing && isSelf && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overscroll-contain">
-          <div className="flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface p-4 shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-3 sm:p-4 backdrop-blur-sm overscroll-contain overflow-hidden">
+          <div className="flex max-h-[90vh] sm:max-h-[92vh] w-[calc(100vw-2rem)] sm:w-full max-w-[440px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface p-3.5 sm:p-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <h3 className="font-extrabold text-[15px] text-ink">
                 {lang === "fa" ? "ویرایش مشخصات" : lang === "ko" ? "프로필 편집" : "Edit Profile"}
@@ -2618,9 +2618,9 @@ export function ProfilePage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveProfile} className="mt-3 space-y-3.5 overflow-y-auto pe-1">
+            <form onSubmit={handleSaveProfile} className="mt-3 min-w-0 w-full flex-1 space-y-3.5 overflow-y-auto overflow-x-hidden touch-pan-y scroll-slim pe-1.5">
               {/* Avatar Selector: Default dolls for everyone, gallery upload unlocked with points */}
-              <div>
+              <div className="w-full min-w-0 overflow-hidden">
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[12px] font-bold text-ink-muted">
                     {lang === "fa" ? "آواتارهای عروسکی پیش‌فرض" : lang === "ko" ? "기본 인형 아바타" : "Default Doll Avatars"}
@@ -2629,20 +2629,22 @@ export function ProfilePage() {
                     {AVAILABLE_AVATARS.length} {lang === "fa" ? "آواتار" : lang === "ko" ? "개" : "avatars"}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 overflow-x-auto scroll-rail pb-1">
-                  {AVAILABLE_AVATARS.map((av, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setEditAvatar(av)}
-                      className={cn(
-                        "size-12 shrink-0 overflow-hidden rounded-full ring-2 transition",
-                        editAvatar === av ? "ring-primary ring-offset-2 scale-105 shadow-md" : "ring-line opacity-75 hover:opacity-100",
-                      )}
-                    >
-                      <Photo src={av} alt="Avatar" />
-                    </button>
-                  ))}
+                <div className="w-full min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-2 overflow-x-auto scroll-rail pb-1">
+                    {AVAILABLE_AVATARS.map((av, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setEditAvatar(av)}
+                        className={cn(
+                          "size-12 shrink-0 overflow-hidden rounded-full ring-2 transition",
+                          editAvatar === av ? "ring-primary ring-offset-2 scale-105 shadow-md" : "ring-line opacity-75 hover:opacity-100",
+                        )}
+                      >
+                        <Photo src={av} alt="Avatar" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Custom Avatar Upload Button (Unlocked at 500 points) */}
@@ -2671,7 +2673,7 @@ export function ProfilePage() {
               </div>
 
               {/* Profile Banner Selector: Default System Banners + Custom Upload (Unlocked at 500 points) */}
-              <div>
+              <div className="w-full min-w-0 overflow-hidden">
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[12px] font-bold text-ink-muted">
                     {lang === "fa" ? "طرح‌های پیش‌فرض" : lang === "ko" ? "기본 배너" : "Default Banners"}
@@ -2682,32 +2684,34 @@ export function ProfilePage() {
                 </div>
 
                 {/* Default System Banners Carousel */}
-                <div className="flex items-center gap-2 overflow-x-auto scroll-rail pb-1">
-                  {DEFAULT_SYSTEM_BANNERS.map((bannerItem) => (
-                    <button
-                      key={bannerItem.id}
-                      type="button"
-                      onClick={() => setEditBanner(bannerItem.url)}
-                      title={lang === "fa" ? bannerItem.titleFa : lang === "ko" ? bannerItem.titleKo : bannerItem.titleEn}
-                      className={cn(
-                        "group relative h-12 w-20 shrink-0 overflow-hidden rounded-xl border transition",
-                        (editBanner === bannerItem.url || (!editBanner && !bannerItem.url))
-                          ? "border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md"
-                          : "border-line opacity-75 hover:opacity-100",
-                      )}
-                    >
-                      {bannerItem.url ? (
-                        <Photo src={bannerItem.url} alt={bannerItem.titleEn} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full bg-gradient-to-r from-primary-deep via-primary to-indigo-600 flex items-center justify-center">
-                          <Icon name="sparkle" size={14} className="text-white" />
-                        </div>
-                      )}
-                      <span className="absolute inset-x-0 bottom-0 bg-black/60 py-0.5 text-[12px] font-bold text-white text-center truncate px-1 backdrop-blur-2xs">
-                        {lang === "fa" ? bannerItem.titleFa : lang === "ko" ? bannerItem.titleKo : bannerItem.titleEn}
-                      </span>
-                    </button>
-                  ))}
+                <div className="w-full min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-2 overflow-x-auto scroll-rail pb-1">
+                    {DEFAULT_SYSTEM_BANNERS.map((bannerItem) => (
+                      <button
+                        key={bannerItem.id}
+                        type="button"
+                        onClick={() => setEditBanner(bannerItem.url)}
+                        title={lang === "fa" ? bannerItem.titleFa : lang === "ko" ? bannerItem.titleKo : bannerItem.titleEn}
+                        className={cn(
+                          "group relative h-12 w-20 shrink-0 overflow-hidden rounded-xl border transition",
+                          (editBanner === bannerItem.url || (!editBanner && !bannerItem.url))
+                            ? "border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md"
+                            : "border-line opacity-75 hover:opacity-100",
+                        )}
+                      >
+                        {bannerItem.url ? (
+                          <Photo src={bannerItem.url} alt={bannerItem.titleEn} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full bg-gradient-to-r from-primary-deep via-primary to-indigo-600 flex items-center justify-center">
+                            <Icon name="sparkle" size={14} className="text-white" />
+                          </div>
+                        )}
+                        <span className="absolute inset-x-0 bottom-0 bg-black/60 py-0.5 text-[12px] font-bold text-white text-center truncate px-1 backdrop-blur-2xs">
+                          {lang === "fa" ? bannerItem.titleFa : lang === "ko" ? bannerItem.titleKo : bannerItem.titleEn}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Custom Banner Upload from Gallery (Unlocked at 500 points) */}
@@ -2747,7 +2751,7 @@ export function ProfilePage() {
               </div>
 
               {/* Display Name */}
-              <div>
+              <div className="w-full min-w-0">
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
                   {lang === "fa" ? "نام" : lang === "ko" ? "이름" : "Name"}
                 </label>
@@ -2755,13 +2759,13 @@ export function ProfilePage() {
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  className="w-full min-w-0 rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
                   required
                 />
               </div>
 
               {/* Handle */}
-              <div>
+              <div className="w-full min-w-0">
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
                   {lang === "fa" ? "نام کاربری" : lang === "ko" ? "핸들" : "Username"}
                 </label>
@@ -2769,13 +2773,13 @@ export function ProfilePage() {
                   type="text"
                   value={editHandle}
                   onChange={(e) => setEditHandle(e.target.value)}
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep font-mono"
+                  className="w-full min-w-0 rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep font-mono"
                   required
                 />
               </div>
 
               {/* Favorite Genre */}
-              <div>
+              <div className="w-full min-w-0">
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
                   {lang === "fa" ? "سبک مورد علاقه" : lang === "ko" ? "선호 장르" : "Favorite Genre"}
                 </label>
@@ -2783,12 +2787,12 @@ export function ProfilePage() {
                   type="text"
                   value={editGenre}
                   onChange={(e) => setEditGenre(e.target.value)}
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  className="w-full min-w-0 rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
                 />
               </div>
 
               {/* Bio */}
-              <div>
+              <div className="w-full min-w-0">
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
                   {lang === "fa" ? "درباره من" : lang === "ko" ? "소개" : "Bio"}
                 </label>
@@ -2796,19 +2800,19 @@ export function ProfilePage() {
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
                   rows={2}
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep resize-none"
+                  className="w-full min-w-0 rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep resize-none"
                 />
               </div>
 
               {/* Ultimate Bias Selection */}
-              <div>
+              <div className="w-full min-w-0">
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
                   {lang === "fa" ? "بایس اصلی (فندوم من)" : lang === "ko" ? "최애 (얼티밋 바이어스)" : "Ultimate Bias"}
                 </label>
                 <select
                   value={editBias}
                   onChange={(e) => setEditBias(e.target.value)}
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  className="w-full min-w-0 rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
                 >
                   <option value="">{lang === "fa" ? "— بدون انتخاب —" : lang === "ko" ? "— 미선택 —" : "— Not set —"}</option>
                   {Object.entries(ARTIST_FANDOMS).map(([artistId, info]) => (
@@ -2853,7 +2857,7 @@ export function ProfilePage() {
               </div>
 
               {/* Profile Anthem Track */}
-              <div>
+              <div className="w-full min-w-0">
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-[12px] font-bold text-ink-muted">
                     {lang === "fa" ? "موزیک پروفایل (Vibe Track)" : lang === "ko" ? "프로필 배경음악" : "Profile Anthem"}

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon";
 import { usePreferences } from "../app/PreferencesContext";
@@ -6,9 +6,12 @@ import { useApp } from "../app/AppContext";
 import { type LyricLine } from "../data/lyrics";
 import { type PlayerTrack } from "../data/player";
 import { cn } from "../lib/cn";
+import {
+  loadAllStoryBackgrounds,
+  type StoryBackground,
+} from "../data/storyBackgrounds";
+import { socialApi } from "../api/socialApi";
 import faimessLogoSrc from "../assets/brand/faimess-logo.png";
-
-type StoryTheme = "brand_violet" | "midnight_noir";
 
 export function LyricStoryModal({
   open,
@@ -27,15 +30,24 @@ export function LyricStoryModal({
   const { notify } = useApp();
 
   const [selectedIndex, setSelectedIndex] = useState(initialLineIndex);
-  const [theme, setTheme] = useState<StoryTheme>("brand_violet");
+  const [backgrounds, setBackgrounds] = useState<StoryBackground[]>(() => loadAllStoryBackgrounds());
+  const [selectedBgId, setSelectedBgId] = useState<string>("bg-brand-violet");
   const [generating, setGenerating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const profile = socialApi.getProfile();
+  const userPoints = profile.points || 0;
 
   useEffect(() => {
     setSelectedIndex(Math.max(0, Math.min(initialLineIndex, (lines?.length || 1) - 1)));
   }, [initialLineIndex, lines]);
+
+  useEffect(() => {
+    if (open) {
+      const all = loadAllStoryBackgrounds();
+      setBackgrounds(all);
+    }
+  }, [open]);
 
   // Lock background scroll when open
   useEffect(() => {
@@ -47,9 +59,25 @@ export function LyricStoryModal({
     };
   }, [open]);
 
+  // Sort backgrounds so current artist and unlocked ones appear first
+  const sortedBackgrounds = useMemo(() => {
+    const artistLower = (track?.artist || "").toLowerCase();
+    return [...backgrounds].sort((a, b) => {
+      const aMatches = artistLower.includes(a.artistId.toLowerCase()) || a.artistId === "all";
+      const bMatches = artistLower.includes(b.artistId.toLowerCase()) || b.artistId === "all";
+      if (aMatches && !bMatches) return -1;
+      if (!aMatches && bMatches) return 1;
+      return a.requiredPoints - b.requiredPoints;
+    });
+  }, [backgrounds, track?.artist]);
+
+  const activeBg = useMemo(() => {
+    return backgrounds.find((b) => b.id === selectedBgId) || backgrounds[0];
+  }, [backgrounds, selectedBgId]);
+
   // Client-side HTML5 Canvas Story Generation (1080 x 1920) — 0% server load
   const renderStoryCanvas = useCallback(async (): Promise<string | null> => {
-    if (!track || !lines || lines.length === 0) return null;
+    if (!track || !lines || lines.length === 0 || !activeBg) return null;
     const activeLine = lines[selectedIndex] || lines[0];
 
     const canvas = document.createElement("canvas");
@@ -57,27 +85,6 @@ export function LyricStoryModal({
     canvas.height = 1920;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
-
-    const isViolet = theme === "brand_violet";
-    const BG_COLOR = isViolet ? "#8267f0" : "#0c0a14";
-    const CARD_BG = isViolet ? "rgba(255, 255, 255, 0.16)" : "rgba(255, 255, 255, 0.08)";
-    const CARD_BORDER = isViolet ? "rgba(255, 255, 255, 0.35)" : "rgba(130, 103, 240, 0.35)";
-    const TEXT_WHITE = "#ffffff";
-    const TEXT_SUBTLE = isViolet ? "rgba(255, 255, 255, 0.88)" : "rgba(255, 255, 255, 0.80)";
-    const TEXT_ACCENT = isViolet ? "#ffffff" : "#a78bfa";
-
-    // 1. Background Fill
-    ctx.fillStyle = BG_COLOR;
-    ctx.fillRect(0, 0, 1080, 1920);
-
-    // Subtle background artistic glow for midnight noir
-    if (!isViolet) {
-      const grad = ctx.createRadialGradient(540, 600, 50, 540, 600, 750);
-      grad.addColorStop(0, "rgba(130, 103, 240, 0.22)");
-      grad.addColorStop(1, "rgba(12, 10, 20, 0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 1080, 1920);
-    }
 
     // Load images helper
     const loadImg = (src: string): Promise<HTMLImageElement | null> =>
@@ -90,15 +97,94 @@ export function LyricStoryModal({
         img.src = src;
       });
 
+    // 1. Draw Background
+    if (activeBg.imageUrl) {
+      const bgImg = await loadImg(activeBg.imageUrl);
+      if (bgImg) {
+        ctx.drawImage(bgImg, 0, 0, 1080, 1920);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+        ctx.fillRect(0, 0, 1080, 1920);
+      } else {
+        const bgGrad = ctx.createLinearGradient(0, 0, 0, 1920);
+        bgGrad.addColorStop(0, activeBg.gradientFrom);
+        bgGrad.addColorStop(1, activeBg.gradientTo);
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, 1080, 1920);
+      }
+    } else {
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, 1920);
+      bgGrad.addColorStop(0, activeBg.gradientFrom);
+      bgGrad.addColorStop(1, activeBg.gradientTo);
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, 1080, 1920);
+    }
+
+    // Background Artistic Patterns
+    if (activeBg.pattern === "cosmic_stars") {
+      ctx.save();
+      // Glowing star specks
+      const starCoords = [
+        [180, 220, 3], [320, 150, 2], [890, 240, 3.5], [120, 850, 2],
+        [960, 920, 2.5], [200, 1650, 3], [850, 1750, 2.5], [540, 1820, 2],
+        [720, 400, 4], [250, 600, 2.5], [820, 1200, 3], [140, 1350, 2],
+      ];
+      starCoords.forEach(([x, y, r]) => {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      // Radial galaxy aura
+      const galaxyGrad = ctx.createRadialGradient(540, 500, 80, 540, 500, 650);
+      galaxyGrad.addColorStop(0, "rgba(255, 255, 255, 0.18)");
+      galaxyGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+      ctx.fillStyle = galaxyGrad;
+      ctx.fillRect(0, 0, 1080, 1920);
+      ctx.restore();
+    } else if (activeBg.pattern === "neon_stage") {
+      ctx.save();
+      // Angled light beams
+      ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+      ctx.beginPath();
+      ctx.moveTo(100, 0);
+      ctx.lineTo(350, 0);
+      ctx.lineTo(550, 1920);
+      ctx.lineTo(250, 1920);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(980, 0);
+      ctx.lineTo(730, 0);
+      ctx.lineTo(530, 1920);
+      ctx.lineTo(830, 1920);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else if (activeBg.pattern === "prism_glow") {
+      ctx.save();
+      const prismGrad = ctx.createRadialGradient(540, 800, 100, 540, 800, 700);
+      prismGrad.addColorStop(0, "rgba(255, 255, 255, 0.15)");
+      prismGrad.addColorStop(0.5, "rgba(236, 72, 153, 0.10)");
+      prismGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = prismGrad;
+      ctx.fillRect(0, 0, 1080, 1920);
+      ctx.restore();
+    }
+
     const [logoImg, coverImg] = await Promise.all([
       loadImg(faimessLogoSrc),
       loadImg(track.photo),
     ]);
 
+    const CARD_BG = "rgba(255, 255, 255, 0.14)";
+    const CARD_BORDER = "rgba(255, 255, 255, 0.35)";
+    const TEXT_WHITE = "#ffffff";
+    const TEXT_SUBTLE = "rgba(255, 255, 255, 0.88)";
+
     // 2. Header: Logo & Branding (Y: 140)
     ctx.save();
     if (logoImg) {
-      // Rounded logo container
       ctx.beginPath();
       ctx.arc(140, 160, 42, 0, Math.PI * 2);
       ctx.closePath();
@@ -122,16 +208,16 @@ export function LyricStoryModal({
     ctx.strokeStyle = CARD_BORDER;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(750, 132, 230, 52, 26);
+    ctx.roundRect(740, 132, 240, 52, 26);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = TEXT_WHITE;
-    ctx.font = "900 18px 'Vazirmatn', sans-serif";
+    ctx.font = "900 17px 'Vazirmatn', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("LYRIC STORY", 865, 165);
+    ctx.fillText(activeBg.titleEn.toUpperCase(), 860, 165);
 
-    // 3. Central Track Artwork (Square with rounded corners, Y: 290)
+    // 3. Central Track Artwork (Square, Y: 280)
     const artSize = 480;
     const artX = (1080 - artSize) / 2; // 300
     const artY = 280;
@@ -143,7 +229,7 @@ export function LyricStoryModal({
     if (coverImg) {
       ctx.drawImage(coverImg, artX, artY, artSize, artSize);
     } else {
-      ctx.fillStyle = isViolet ? "#6b4fdd" : "#1a162b";
+      ctx.fillStyle = "#1e1b4b";
       ctx.fillRect(artX, artY, artSize, artSize);
     }
     ctx.restore();
@@ -163,7 +249,7 @@ export function LyricStoryModal({
     const safeTitle = track.title.length > 34 ? track.title.slice(0, 32) + "..." : track.title;
     ctx.fillText(safeTitle, 540, 830);
 
-    ctx.fillStyle = TEXT_ACCENT;
+    ctx.fillStyle = TEXT_SUBTLE;
     ctx.font = "bold 26px 'Vazirmatn', sans-serif";
     ctx.fillText(`• ${track.artist} •`, 540, 875);
 
@@ -181,201 +267,160 @@ export function LyricStoryModal({
     ctx.fill();
     ctx.stroke();
 
-    // Large Quotation Glyph
-    ctx.fillStyle = isViolet ? "rgba(255, 255, 255, 0.28)" : "rgba(130, 103, 240, 0.32)";
-    ctx.font = "900 130px 'Pretendard', sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("“", 540, quoteBoxY + 130);
+    // Quotation Mark Icon
+    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.font = "900 110px 'Vazirmatn', sans-serif";
+    ctx.fillText("“", 540, 1025);
 
-    // Korean Original Line
+    // Korean Original Lyric
+    ctx.textAlign = "center";
     ctx.fillStyle = TEXT_WHITE;
-    ctx.font = "900 42px 'Pretendard', sans-serif";
-    ctx.direction = "ltr";
-    ctx.textAlign = "center";
+    ctx.font = "900 40px 'Pretendard', sans-serif";
 
-    // Split long lines if needed
-    const wrapText = (text: string, maxWidth: number) => {
+    // Text wrapping helper
+    const wrapText = (text: string, maxWidth: number): string[] => {
       const words = text.split(" ");
-      const wrapped: string[] = [];
-      let current = "";
-      for (const w of words) {
-        const test = current ? `${current} ${w}` : w;
-        if (ctx.measureText(test).width > maxWidth) {
-          wrapped.push(current);
-          current = w;
-        } else {
+      const linesOut: string[] = [];
+      let current = words[0] || "";
+      for (let i = 1; i < words.length; i++) {
+        const test = current + " " + words[i];
+        if (ctx.measureText(test).width <= maxWidth) {
           current = test;
+        } else {
+          linesOut.push(current);
+          current = words[i];
         }
       }
-      if (current) wrapped.push(current);
-      return wrapped;
+      linesOut.push(current);
+      return linesOut;
     };
 
-    const koLines = wrapText(activeLine.ko, 800);
-    let currY = quoteBoxY + 220;
+    const koLines = wrapText(activeLine.ko, quoteBoxW - 120);
+    let curY = 1100;
     koLines.forEach((l) => {
-      ctx.fillText(l, 540, currY);
-      currY += 56;
+      ctx.fillText(l, 540, curY);
+      curY += 56;
     });
 
-    // Divider line inside quote box
-    ctx.strokeStyle = isViolet ? "rgba(255, 255, 255, 0.3)" : "rgba(130, 103, 240, 0.35)";
+    // Divider Line inside quote box
+    curY += 20;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(340, currY + 20);
-    ctx.lineTo(740, currY + 20);
+    ctx.moveTo(340, curY);
+    ctx.lineTo(740, curY);
     ctx.stroke();
 
-    // Persian Translated Line
-    ctx.fillStyle = TEXT_SUBTLE;
-    ctx.font = "900 38px 'Vazirmatn', sans-serif";
-    ctx.direction = "rtl";
-    ctx.textAlign = "center";
-
-    const faLines = wrapText(`«${activeLine.fa}»`, 800);
-    currY += 80;
-    faLines.forEach((l) => {
-      ctx.fillText(l, 540, currY);
-      currY += 52;
-    });
-
-    // 6. Footer (faimess.ir + Subtitle)
-    ctx.strokeStyle = CARD_BORDER;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(140, 1680);
-    ctx.lineTo(940, 1680);
-    ctx.stroke();
-
-    // Website Capsule (faimess.ir)
-    ctx.fillStyle = CARD_BG;
-    ctx.strokeStyle = CARD_BORDER;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(330, 1720, 420, 72, 36);
-    ctx.fill();
-    ctx.stroke();
-
+    // Persian Lyric Translation
+    curY += 60;
     ctx.fillStyle = TEXT_WHITE;
-    ctx.font = "900 38px 'Vazirmatn', sans-serif";
-    ctx.textAlign = "center";
+    ctx.font = "bold 34px 'Vazirmatn', sans-serif";
+    ctx.direction = "rtl";
+    const faLines = wrapText(activeLine.fa, quoteBoxW - 120);
+    faLines.forEach((l) => {
+      ctx.fillText(l, 540, curY);
+      curY += 52;
+    });
+
+    // 6. Bottom Signature Strip (Y: 1680)
     ctx.direction = "ltr";
-    ctx.fillText("faimess.ir", 540, 1770);
+    ctx.textAlign = "center";
+
+    // Brand URL
+    ctx.fillStyle = TEXT_WHITE;
+    ctx.font = "900 32px 'Vazirmatn', sans-serif";
+    ctx.fillText("faimess.ir", 540, 1750);
 
     ctx.fillStyle = TEXT_SUBTLE;
-    ctx.font = "bold 19px 'Vazirmatn', sans-serif";
-    ctx.direction = "rtl";
-    ctx.fillText(
-      "پلتفرم استریم کی‌پاپ با لیریک فارسی و کره‌ای • @faimessofficial",
-      540,
-      1840,
-    );
+    ctx.font = "bold 20px 'Vazirmatn', sans-serif";
+    ctx.fillText("K-POP PLATFORM & OFFICIAL STREAMING", 540, 1795);
 
     return canvas.toDataURL("image/png");
-  }, [track, lines, selectedIndex, theme]);
+  }, [track, lines, selectedIndex, activeBg]);
 
-  // Update preview whenever line or theme changes
+  // Update preview image
   useEffect(() => {
-    if (!open) return;
-    let isCurrent = true;
+    let active = true;
+    if (!open || !track || !lines) return;
+    setGenerating(true);
     renderStoryCanvas().then((url) => {
-      if (isCurrent && url) {
+      if (active) {
         setPreviewUrl(url);
+        setGenerating(false);
       }
     });
     return () => {
-      isCurrent = false;
+      active = false;
     };
-  }, [open, renderStoryCanvas]);
+  }, [open, track, lines, selectedIndex, activeBg, renderStoryCanvas]);
 
-  const handleDownloadStory = async () => {
-    setGenerating(true);
+  if (!open || !track || !lines) return null;
+
+  // Handle PNG Download
+  const handleDownload = async () => {
     try {
       const dataUrl = await renderStoryCanvas();
-      if (!dataUrl) throw new Error("Canvas error");
+      if (!dataUrl) return;
 
       const a = document.createElement("a");
       a.href = dataUrl;
-      const cleanTitle = (track?.title || "faimess").toLowerCase().replace(/[^a-z0-9]/g, "-");
-      a.download = `faimess-story-${cleanTitle}.png`;
+      const cleanTitle = track.title.replace(/[^\w\s-]/gi, "").trim();
+      a.download = `faimess-story-${cleanTitle || "kpop"}-${selectedIndex + 1}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
 
       notify(
         lang === "fa"
-          ? "تصویر استوری با موفقیت دانلود شد!"
-          : lang === "ko"
-            ? "스토리 이미지가 저장되었습니다!"
-            : "Story image downloaded!",
+          ? "کارت استوری ۹:۱۶ با موفقیت دانلود شد."
+          : "Story card downloaded successfully.",
         "mint",
       );
     } catch {
       notify(
-        lang === "fa" ? "خطا در تولید تصویر استوری" : "Failed to create story image",
+        lang === "fa" ? "خطا در تولید تصویر استوری" : "Failed to generate story card",
         "primary",
       );
-    } finally {
-      setGenerating(false);
     }
   };
 
-  const handleShareStory = async () => {
-    const activeLine = lines?.[selectedIndex];
-    const textToShare = activeLine
-      ? `«${activeLine.fa}»\n${activeLine.ko}\n\n🎵 ${track?.title} — ${track?.artist}\n🌐 شنیدن در پلتفرم فیمس: https://faimess.ir`
-      : `🎵 ${track?.title} — ${track?.artist}\n🌐 شنیدن در پلتفرم فیمس: https://faimess.ir`;
-
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({
-          title: `لیریک ${track?.title}`,
-          text: textToShare,
-          url: "https://faimess.ir",
-        });
-        return;
-      } catch {
-        // cancelled
-      }
-    }
-
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      await navigator.clipboard.writeText(textToShare);
+  const handleSelectBackground = (bg: StoryBackground) => {
+    if (userPoints < bg.requiredPoints) {
+      const diff = bg.requiredPoints - userPoints;
       notify(
-        lang === "fa" ? "متن لیریک در کلیپ‌بورد کپی شد!" : "Lyric quote copied!",
-        "mint",
+        lang === "fa"
+          ? `برای این طرح نیاز به ${bg.requiredPoints} امتیاز دارید (${diff} امتیاز دیگر نیاز دارید).`
+          : `Requires ${bg.requiredPoints} points to unlock.`,
+        "primary",
       );
+      return;
     }
+    setSelectedBgId(bg.id);
   };
-
-  if (!open || !track || !lines || lines.length === 0) return null;
-
-  const currentLine = lines[selectedIndex] || lines[0];
 
   return createPortal(
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-2 sm:p-4 backdrop-blur-md animate-fade-in">
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 p-3 sm:p-4 backdrop-blur-md overscroll-contain animate-fadeIn"
+      onClick={onClose}
+    >
       <div
-        dir={dir}
-        className="flex max-h-[92vh] w-full max-w-[760px] flex-col overflow-hidden rounded-[26px] border border-line bg-surface shadow-2xl"
+        className="flex max-h-[94vh] w-full max-w-[840px] flex-col overflow-hidden rounded-[26px] border border-line bg-surface shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Top Header */}
-        <div className="flex items-center justify-between border-b border-line px-4 sm:px-6 py-3.5 sm:py-4">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-line px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-white shadow-primary">
-              <Icon name="sparkle" size={17} strokeWidth={2.4} />
+            <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-white shadow-primary">
+              <Icon name="sparkle" size={16} strokeWidth={2.4} />
             </span>
             <div>
-              <h3 className="text-[15px] font-black text-ink sm:text-[17px]">
-                {lang === "fa"
-                  ? "کارت استوری‌ساز لیریک"
-                  : lang === "ko"
-                    ? "가사 스토리 카드 생성기"
-                    : "Lyric Story Card Generator"}
+              <h3 className="font-extrabold text-[15px] sm:text-[16px] text-ink">
+                {lang === "fa" ? "کارت استوری‌ساز لیریک (۹:۱۶)" : "Lyric Story Creator (9:16)"}
               </h3>
-              <p className="text-[12px] font-medium text-ink-muted">
-                {lang === "fa"
-                  ? "تولید تصویر استوری عمودی ۱۶:۹ بدون فشار بر سرور (Client-side)"
-                  : "Zero server load • 100% Client-side 9:16 Story generation"}
+              <p className="text-[12px] font-bold text-ink-muted">
+                {track.title} • {track.artist}
               </p>
             </div>
           </div>
@@ -383,133 +428,163 @@ export function LyricStoryModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex size-8 items-center justify-center rounded-full text-ink-muted transition hover:bg-subtle hover:text-ink"
+            className="flex size-8 items-center justify-center rounded-full text-ink-faint transition hover:bg-subtle hover:text-ink"
+            aria-label="Close"
           >
             <Icon name="close" size={17} />
           </button>
         </div>
 
-        {/* Modal Content Body */}
-        <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
-          {/* Left/Center: Visual Story Preview */}
-          <div className="flex flex-1 items-center justify-center bg-subtle/50 p-4 overflow-y-auto">
-            <div className="relative aspect-[9/16] w-full max-w-[270px] sm:max-w-[290px] overflow-hidden rounded-[22px] border-2 border-line bg-black shadow-xl">
-              {previewUrl ? (
+        {/* Modal Body: Split 2-Column on Desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto p-4 sm:p-6 scroll-slim flex-1">
+          {/* Column 1: Live Phone Preview */}
+          <div className="flex flex-col items-center justify-center">
+            <div className="relative aspect-[9/16] w-full max-w-[270px] sm:max-w-[310px] overflow-hidden rounded-[28px] border-4 border-line/80 bg-black shadow-2xl ring-2 ring-black/40">
+              {generating ? (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-subtle">
+                  <span className="flex size-10 items-center justify-center rounded-full bg-primary/20 text-primary-deep animate-spin">
+                    <Icon name="sparkle" size={20} />
+                  </span>
+                  <span className="text-[12px] font-extrabold text-ink-muted">
+                    {lang === "fa" ? "در حال پردازش..." : "Rendering..."}
+                  </span>
+                </div>
+              ) : previewUrl ? (
                 <img
                   src={previewUrl}
-                  alt="Story preview"
+                  alt="Story Card Preview"
                   className="h-full w-full object-cover select-none pointer-events-none"
                 />
               ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-white/60">
-                  <span className="size-6 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                  <span className="text-[12px] font-bold">در حال پردازش گرافیک...</span>
+                <div className="flex h-full w-full items-center justify-center bg-subtle text-ink-faint">
+                  <Icon name="disc" size={32} />
                 </div>
               )}
+
+              {/* 9:16 badge */}
+              <span className="absolute top-3 end-3 rounded-full bg-black/60 px-2 py-0.5 text-[12px] font-black text-white backdrop-blur-md">
+                1080×1920
+              </span>
             </div>
+
+            <p className="mt-2.5 text-center text-[12px] font-bold text-ink-faint">
+              {lang === "fa" ? "پردازش ۱۰۰٪ سمت کلاینت روی مرورگر شما" : "Client-side HTML5 Canvas (Zero Server Load)"}
+            </p>
           </div>
 
-          {/* Right: Controls & Options */}
-          <div className="flex w-full md:w-[360px] flex-col border-t md:border-t-0 md:border-s border-line bg-surface p-4 sm:p-5 overflow-y-auto scroll-slim">
-            {/* Theme Selector */}
-            <div className="mb-4">
-              <label className="block text-[12px] font-bold text-ink-muted mb-2">
-                {lang === "fa" ? "قالب طراحی استوری" : "Story Visual Theme"}
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTheme("brand_violet")}
-                  className={cn(
-                    "flex items-center justify-center gap-2 rounded-xl border p-2.5 text-[12.5px] font-black transition",
-                    theme === "brand_violet"
-                      ? "border-primary bg-primary text-white shadow-primary"
-                      : "border-line bg-subtle/60 text-ink hover:bg-subtle",
-                  )}
-                >
-                  <span className="size-3 rounded-full bg-white ring-1 ring-black/20" />
-                  <span>{lang === "fa" ? "بنفش پلتفرم" : "Brand Violet"}</span>
-                </button>
+          {/* Column 2: Background Selection & Controls */}
+          <div className="flex flex-col gap-4">
+            {/* Background / Artist Theme Selection */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[12px] font-extrabold text-ink-muted">
+                  {lang === "fa" ? "پس‌زمینهٔ استوری (متناسب با گروه‌ها)" : "Story Background"}
+                </label>
+                <span className="text-[12px] font-bold text-primary-deep">
+                  {lang === "fa" ? `امتیاز شما: ${userPoints}` : `Your points: ${userPoints}`}
+                </span>
+              </div>
 
-                <button
-                  type="button"
-                  onClick={() => setTheme("midnight_noir")}
-                  className={cn(
-                    "flex items-center justify-center gap-2 rounded-xl border p-2.5 text-[12.5px] font-black transition",
-                    theme === "midnight_noir"
-                      ? "border-ink bg-ink text-surface shadow-xs"
-                      : "border-line bg-subtle/60 text-ink hover:bg-subtle",
-                  )}
-                >
-                  <span className="size-3 rounded-full bg-purple-500 ring-1 ring-white/20" />
-                  <span>{lang === "fa" ? "مشکی شبانه" : "Midnight Noir"}</span>
-                </button>
+              {/* Horizontal Backgrounds Rail */}
+              <div className="w-full min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 overflow-x-auto scroll-rail pb-1.5">
+                  {sortedBackgrounds.map((bg) => {
+                    const isUnlocked = userPoints >= bg.requiredPoints;
+                    const isSelected = selectedBgId === bg.id;
+
+                    return (
+                      <button
+                        key={bg.id}
+                        type="button"
+                        onClick={() => handleSelectBackground(bg)}
+                        title={`${bg.titleFa} (${bg.artistName}) - ${bg.requiredPoints} pts`}
+                        className={cn(
+                          "group relative flex h-20 w-28 shrink-0 flex-col justify-between overflow-hidden rounded-2xl border p-2 text-start transition",
+                          isSelected
+                            ? "border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md"
+                            : "border-line opacity-85 hover:opacity-100",
+                        )}
+                        style={{
+                          background: `linear-gradient(135deg, ${bg.gradientFrom}, ${bg.gradientTo})`,
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="rounded-full bg-black/40 px-1.5 py-0.5 text-[12px] font-black text-white backdrop-blur-2xs">
+                            {bg.artistName}
+                          </span>
+                          {!isUnlocked && (
+                            <span className="flex size-5 items-center justify-center rounded-full bg-black/70 text-amber-400 shadow-sm">
+                              <Icon name="lock" size={11} />
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="truncate text-[12px] font-black text-white drop-shadow-sm">
+                            {lang === "fa" ? bg.titleFa : bg.titleEn}
+                          </p>
+                          <span className="text-[12px] font-bold text-white/80">
+                            {bg.requiredPoints === 0 ? (lang === "fa" ? "رایگان" : "Free") : `${bg.requiredPoints} pts`}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
             {/* Lyric Line Selector */}
-            <div className="mb-4 flex-1">
-              <label className="block text-[12px] font-bold text-ink-muted mb-2">
-                {lang === "fa"
-                  ? `انتخاب مصرع لیریک (${lines.length} خط)`
-                  : `Select Lyric Line (${lines.length} lines)`}
+            <div className="flex-1">
+              <label className="text-[12px] font-extrabold text-ink-muted mb-1.5 block">
+                {lang === "fa" ? "انتخاب خط لیریک مورد نظر:" : "Select Lyric Quote:"}
               </label>
-              <div className="max-h-[180px] space-y-1.5 overflow-y-auto scroll-slim pe-1">
-                {lines.map((l, idx) => {
-                  const isSel = idx === selectedIndex;
-                  return (
-                    <button
-                      key={`${l.at}-${idx}`}
-                      type="button"
-                      onClick={() => setSelectedIndex(idx)}
-                      className={cn(
-                        "w-full rounded-xl p-2 text-start transition border",
-                        isSel
-                          ? "border-primary bg-primary-soft/50 text-primary-deep font-bold"
-                          : "border-line/60 bg-subtle/30 text-ink-body hover:bg-subtle hover:border-line",
-                      )}
+
+              <div className="max-h-[220px] space-y-1.5 overflow-y-auto rounded-2xl border border-line bg-subtle/50 p-2 scroll-slim">
+                {lines.map((line, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedIndex(idx)}
+                    className={cn(
+                      "w-full rounded-xl p-2.5 text-start transition cursor-pointer",
+                      selectedIndex === idx
+                        ? "bg-primary text-white shadow-primary"
+                        : "bg-surface hover:bg-surface/80 border border-line/60 text-ink",
+                    )}
+                  >
+                    <p className={cn("text-[13px] font-bold", selectedIndex === idx ? "text-white" : "text-ink")}>
+                      {line.ko}
+                    </p>
+                    <p
+                      dir="rtl"
+                      className={cn("mt-0.5 text-[12px] font-medium", selectedIndex === idx ? "text-white/90" : "text-ink-muted")}
                     >
-                      <p className="text-[12.5px] truncate font-sans">{l.ko}</p>
-                      <p dir="rtl" className="text-[12px] truncate text-ink-muted font-fa mt-0.5">
-                        {l.fa}
-                      </p>
-                    </button>
-                  );
-                })}
+                      {line.fa}
+                    </p>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Current Quote Preview Box */}
-            <div className="mb-4 rounded-xl border border-line bg-subtle/50 p-3 text-center">
-              <p className="text-[12.5px] font-bold text-ink">{currentLine.ko}</p>
-              <p dir="rtl" className="text-[12px] font-semibold text-primary-deep mt-0.5">
-                «{currentLine.fa}»
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-2 mt-auto pt-2">
+            {/* Actions */}
+            <div className="flex items-center gap-2.5 pt-2 border-t border-line">
               <button
                 type="button"
-                onClick={handleDownloadStory}
-                disabled={generating}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-[13px] font-bold text-white shadow-primary transition hover:bg-primary-deep disabled:opacity-50"
+                onClick={onClose}
+                className="flex-1 rounded-xl bg-subtle py-2.5 text-[12px] font-bold text-ink-muted hover:bg-subtle/80 hover:text-ink"
               >
-                <Icon name="download" size={15} strokeWidth={2.4} />
-                <span>
-                  {generating
-                    ? lang === "fa" ? "در حال آماده‌سازی..." : "Generating..."
-                    : lang === "fa" ? "دانلود تصویر استوری (PNG)" : "Download Story Image"}
-                </span>
+                {lang === "fa" ? "انصراف" : "Cancel"}
               </button>
 
               <button
                 type="button"
-                onClick={handleShareStory}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface py-2.5 text-[12.5px] font-bold text-ink transition hover:bg-subtle"
+                onClick={handleDownload}
+                disabled={generating}
+                className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-[12px] font-black text-white shadow-primary transition hover:bg-primary-deep disabled:opacity-50"
               >
-                <Icon name="share" size={14} />
-                <span>{lang === "fa" ? "اشتراک‌گذاری یا کپی متن" : "Share / Copy Quote"}</span>
+                <Icon name="download" size={15} strokeWidth={2.4} />
+                <span>{lang === "fa" ? "ذخیره کارت استوری (PNG)" : "Download Story PNG"}</span>
               </button>
             </div>
           </div>

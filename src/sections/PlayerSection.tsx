@@ -19,6 +19,7 @@ import { CommentsBar } from "./player/CommentsBar";
 import { CommentsSheet } from "./player/CommentsSheet";
 import { SubmitLyrics } from "./player/SubmitLyrics";
 import { LyricStoryModal } from "../ui/LyricStoryModal";
+import { LyricLearningModal } from "../ui/LyricLearningModal";
 import { socialApi } from "../api/socialApi";
 import { LYRIC_REWARD } from "../data/lyrics";
 import { me } from "../data/account";
@@ -71,9 +72,17 @@ export function PlayerSection({
   const [storyOpen, setStoryOpen] = useState(false);
   const [storyIndex, setStoryIndex] = useState(0);
 
+  const [learningOpen, setLearningOpen] = useState(false);
+  const [learningIndex, setLearningIndex] = useState(0);
+
   const handleOpenStory = (index = 0) => {
     setStoryIndex(index);
     setStoryOpen(true);
+  };
+
+  const handleOpenLearning = (index = 0) => {
+    setLearningIndex(index);
+    setLearningOpen(true);
   };
   const { approvedFor } = useContributions();
   /* an account is asked for at the door of an action, never at the door of
@@ -177,7 +186,7 @@ export function PlayerSection({
                 by={community?.by ?? null}
                 position={player.position}
                 playing={player.playing}
-                onLineClick={handleOpenStory}
+                onLineClick={handleOpenLearning}
                 onSend={() =>
                   requireAccount("gate.lyrics", () => setLyricsOpen(true))
                 }
@@ -212,6 +221,17 @@ export function PlayerSection({
           track={track}
           lines={lines}
           initialLineIndex={storyIndex}
+        />
+      )}
+
+      {track && lines && lines[learningIndex] && (
+        <LyricLearningModal
+          open={learningOpen}
+          onClose={() => setLearningOpen(false)}
+          track={track}
+          lineIndex={learningIndex}
+          koreanLine={lines[learningIndex].ko}
+          persianLine={lines[learningIndex].fa}
         />
       )}
     </div>
@@ -1131,7 +1151,7 @@ function LyricsPanel({
                   key={`${line.at}-${i}`}
                   ref={isActive ? activeRef : undefined}
                   onClick={() => onLineClick && onLineClick(i)}
-                  title={t("player.storyTip") || "ساخت کارت استوری از این لیریک"}
+                  title={t("player.learnTip")}
                   role="button"
                   tabIndex={0}
                   className={cn(
