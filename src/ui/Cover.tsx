@@ -17,7 +17,7 @@ export function Photo({ src, alt = "", className }: { src: string; alt?: string;
       loading="lazy"
       decoding="async"
       draggable={false}
-      className={cn("h-full w-full object-cover", className)}
+      className={cn("h-full w-full object-cover select-none pointer-events-none", className)}
     />
   );
 }

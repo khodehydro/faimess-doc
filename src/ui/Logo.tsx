@@ -23,7 +23,7 @@ export function Logo({ size = 32 }: { size?: number }) {
       draggable={false}
       width={size}
       height={size}
-      className="select-none"
+      className="select-none pointer-events-none"
       style={{ borderRadius: CORNER }}
     />
   );

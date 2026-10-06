@@ -57,7 +57,7 @@ type PreferencesValue = {
   text: (key: string, fallback: string) => string;
 };
 
-const PreferencesContext = createContext<PreferencesValue | null>(null);
+export const PreferencesContext = createContext<PreferencesValue | null>(null);
 
 const LANG_KEY = "faimess.lang";
 const THEME_KEY = "faimess.theme";

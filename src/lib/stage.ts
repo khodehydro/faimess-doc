@@ -13,7 +13,7 @@ export const STAGE = {
   width: 1580,
   height: 889,
   /** outer breathing room kept around the frame (px, viewport space) */
-  padding: 26,
+  padding: 28,
   /** never scale above this — keeps the UI at a comfortable size on 4K */
   maxScale: 1.5,
 } as const;

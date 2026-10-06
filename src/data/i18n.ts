@@ -53,6 +53,16 @@ export const STRINGS: Record<string, Entry> = {
   "nav.download": { en: "Download", fa: "دانلود", ko: "다운로드" },
   "nav.admin": { en: "Admin Console", fa: "پنل مدیریت کل", ko: "관리자 콘솔" },
   "brand.home": { en: "FAIMESS home", fa: "خانهٔ فیمس", ko: "FAIMESS 홈" },
+  "footer.copyright": {
+    en: "All rights reserved",
+    fa: "کپی رایت محفوظه",
+    ko: "모든 권리 보유",
+  },
+  "footer.developer": {
+    en: "Developed by HYDRO team",
+    fa: "توسعه دهنده HYDRO team",
+    ko: "HYDRO team 개발",
+  },
 
   /* ------------------------------ account ----------------------------- */
   "account.search": {

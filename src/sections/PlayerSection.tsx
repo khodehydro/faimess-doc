@@ -1008,13 +1008,13 @@ function LyricsPanel({
                   /* centred like a lyric sheet: the original line and its
                      translation both hang off the middle of the panel */
                   className={cn(
-                    "rounded-[12px] px-3 py-2.5 text-center transition-colors duration-300",
+                    "rounded-[12px] px-3 py-2.5 text-center transition-colors duration-300 select-none",
                     isActive ? "bg-primary-faint" : "bg-transparent",
                   )}
                 >
                   <p
                     className={cn(
-                      "text-[13.5px] leading-snug transition-colors duration-300",
+                      "text-[13.5px] leading-snug transition-colors duration-300 select-none",
                       isActive ? "font-bold text-ink" : "font-medium text-ink-muted/75",
                     )}
                   >
@@ -1024,7 +1024,7 @@ function LyricsPanel({
                     dir="rtl"
                     lang="fa"
                     className={cn(
-                      "font-fa mt-1 text-[12.5px] leading-relaxed transition-colors duration-300",
+                      "font-fa mt-1 text-[12.5px] leading-relaxed transition-colors duration-300 select-none",
                       isActive ? "font-semibold text-primary-deep" : "text-ink-faint",
                     )}
                   >

@@ -165,6 +165,99 @@ export function Shell() {
 
 function InnerApp() {
   const { deepLinkTrackId } = useApp();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const isEditable = (target: EventTarget | null) => {
+      if (!target || !(target instanceof HTMLElement)) return false;
+      const tag = target.tagName.toLowerCase();
+      return tag === "input" || tag === "textarea" || target.isContentEditable;
+    };
+
+    // 1. Block right-click context menu (Save image as..., Copy image, Copy text, etc.)
+    const handleContextMenu = (e: MouseEvent) => {
+      if (!isEditable(e.target)) {
+        e.preventDefault();
+      }
+    };
+
+    // 2. Block clipboard copy & cut operations for site content and lyrics
+    const handleCopy = (e: ClipboardEvent) => {
+      if (!isEditable(e.target)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    };
+
+    const handleCut = (e: ClipboardEvent) => {
+      if (!isEditable(e.target)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    };
+
+    // 3. Block dragging images or text to desktop or other tabs
+    const handleDragStart = (e: DragEvent) => {
+      e.preventDefault();
+    };
+
+    // 4. Block selection start event
+    const handleSelectStart = (e: Event) => {
+      if (!isEditable(e.target)) {
+        e.preventDefault();
+      }
+    };
+
+    // 5. Block save and copy shortcuts (Ctrl+S, Ctrl+C outside input, Ctrl+P, Ctrl+U, Ctrl+A)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isCtrl = e.ctrlKey || e.metaKey;
+      const key = e.key.toLowerCase();
+
+      // Block Ctrl+S / Cmd+S (Save page/assets)
+      if (isCtrl && key === "s") {
+        e.preventDefault();
+        return;
+      }
+      // Block Ctrl+P / Cmd+P (Print / Save as PDF)
+      if (isCtrl && key === "p") {
+        e.preventDefault();
+        return;
+      }
+      // Block Ctrl+U / Cmd+U (View Source)
+      if (isCtrl && key === "u") {
+        e.preventDefault();
+        return;
+      }
+      // Block Ctrl+C / Cmd+C outside input
+      if (isCtrl && key === "c" && !isEditable(e.target)) {
+        e.preventDefault();
+        return;
+      }
+      // Block Ctrl+A / Cmd+A outside input
+      if (isCtrl && key === "a" && !isEditable(e.target)) {
+        e.preventDefault();
+        return;
+      }
+    };
+
+    window.addEventListener("contextmenu", handleContextMenu, { capture: true });
+    window.addEventListener("copy", handleCopy, { capture: true });
+    window.addEventListener("cut", handleCut, { capture: true });
+    window.addEventListener("dragstart", handleDragStart, { capture: true });
+    window.addEventListener("selectstart", handleSelectStart, { capture: true });
+    window.addEventListener("keydown", handleKeyDown, { capture: true });
+
+    return () => {
+      window.removeEventListener("contextmenu", handleContextMenu, { capture: true });
+      window.removeEventListener("copy", handleCopy, { capture: true });
+      window.removeEventListener("cut", handleCut, { capture: true });
+      window.removeEventListener("dragstart", handleDragStart, { capture: true });
+      window.removeEventListener("selectstart", handleSelectStart, { capture: true });
+      window.removeEventListener("keydown", handleKeyDown, { capture: true });
+    };
+  }, []);
+
   return (
     <PlayerProvider initialTrackId={deepLinkTrackId ?? undefined}>
       <SeoHead />

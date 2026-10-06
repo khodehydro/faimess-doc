@@ -276,7 +276,8 @@ export function NewsDetailView({ newsId }: { newsId: string }) {
         <img
           src={item.photo}
           alt={text(`news.${item.id}.title`, item.title)}
-          className="h-[240px] w-full object-cover sm:h-[320px] lg:h-[400px]"
+          draggable={false}
+          className="h-[240px] w-full object-cover select-none pointer-events-none sm:h-[320px] lg:h-[400px]"
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
         <div className="absolute bottom-3.5 start-4 z-10 flex flex-wrap items-center gap-2 text-white/90 lg:bottom-5 lg:start-5">

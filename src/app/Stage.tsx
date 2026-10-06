@@ -2,6 +2,7 @@ import { useCallback, useRef, type ReactNode } from "react";
 import { MotionConfig } from "framer-motion";
 import { STAGE } from "../lib/stage";
 import { useStageScale } from "../hooks/useStageScale";
+import { Footer } from "../ui/Footer";
 
 /**
  * Desktop: the app is drawn on one fixed 1580×889 art-board that is
@@ -57,6 +58,7 @@ export function Stage({ children }: { children: ReactNode }) {
           </MotionConfig>
         </div>
       </div>
+      <Footer className="absolute bottom-1.5 inset-x-0 z-20" />
     </div>
   );
 }

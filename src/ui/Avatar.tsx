@@ -62,7 +62,7 @@ export function Avatar({ src, seed = 0, size = 36, className, ring, badge }: Ava
           loading="lazy"
           decoding="async"
           draggable={false}
-          className="h-full w-full rounded-full object-cover"
+          className="h-full w-full rounded-full object-cover select-none pointer-events-none"
         />
       ) : (
         <PhotoSvg size={size} p={p} variant={variant} id={id} />

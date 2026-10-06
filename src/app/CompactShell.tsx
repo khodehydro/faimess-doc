@@ -13,6 +13,7 @@ import { AdminMobileNav } from "../sections/admin/AdminMobileNav";
 import { MiniPlayer } from "../sections/MiniPlayer";
 import { PlayerSheet } from "../sections/PlayerSheet";
 import { SurfaceCard } from "../ui/primitives";
+import { Footer } from "../ui/Footer";
 import { EASE } from "../lib/motion";
 
 /* ------------------------------------------------------------------ *
@@ -140,6 +141,9 @@ export function CompactShell() {
         </div>
       </SurfaceCard>
 
+      {/* Footer on grey studio-backdrop */}
+      <Footer className="mx-auto w-full max-w-[720px] py-4" />
+
       {/* the bottom stack — mini player over the menu, both pinned */}
       {route === "admin" ? (
         <AdminMobileNav />
@@ -151,7 +155,6 @@ export function CompactShell() {
           </div>
         </div>
       )}
-
       {route !== "admin" && (
         <PlayerSheet open={playerOpen} onClose={() => setPlayerOpen(false)} />
       )}
