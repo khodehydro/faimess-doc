@@ -2,8 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 /* ------------------------------------------------------------------ *
  *  Minimal hash router — zero dependencies, back/forward works.
- *  Add a page by extending the route lists and dropping a component
- *  in pages/ (see docs/architecture.md).
+ *  Supports top-level pages as well as deep-linked entity paths:
+ *    #/artist/:id   -> opens artist detail
+ *    #/album/:id    -> opens album detail
+ *    #/playlist/:id -> opens playlist detail
+ *    #/track/:id    -> loads/plays track
+ *    #/news/:id     -> opens news article
  * ------------------------------------------------------------------ */
 
 export type RouteId =
@@ -13,7 +17,17 @@ export type RouteId =
   | "playlists"
   | "shop"
   | "news"
-  | "download";
+  | "download"
+  | "admin"
+  | "profile";
+
+export type EntityKind = "artist" | "album" | "playlist" | "track" | "news" | "admin" | "profile";
+
+export type ParsedRoute = {
+  route: RouteId;
+  entityKind?: EntityKind;
+  entityId?: string;
+};
 
 type RouteDef = { id: RouteId; label: string; path: string };
 
@@ -30,23 +44,62 @@ export const routes: RouteDef[] = [
 export const contextualRoutes: RouteDef[] = [
   { id: "news", label: "News", path: "#/news" },
   { id: "download", label: "Get the app", path: "#/download" },
+  { id: "admin", label: "Admin Console", path: "#/admin" },
+  { id: "profile", label: "User Profile", path: "#/profile" },
 ];
 
 export const allRoutes: RouteDef[] = [...routes, ...contextualRoutes];
 
-const fromHash = (hash: string): RouteId => {
-  const clean = hash.replace(/^#\/?/, "").split("?")[0].toLowerCase();
-  const match = allRoutes.find((r) => r.path.replace(/^#\/?/, "") === clean);
-  return (match?.id ?? "home") as RouteId;
-};
+export function parseHash(hashStr: string): ParsedRoute {
+  // strip leading #/ or # or leading slashes
+  const clean = hashStr.replace(/^[#/]+/, "").split("?")[0].trim();
+  if (!clean) {
+    return { route: "home" };
+  }
+
+  const parts = clean.split("/").filter(Boolean);
+  const head = parts[0]?.toLowerCase() ?? "";
+  const id = parts[1];
+
+  if (id) {
+    if (head === "artist" || head === "artists") {
+      return { route: "artists", entityKind: "artist", entityId: id };
+    }
+    if (head === "album" || head === "albums") {
+      return { route: "albums", entityKind: "album", entityId: id };
+    }
+    if (head === "playlist" || head === "playlists") {
+      return { route: "playlists", entityKind: "playlist", entityId: id };
+    }
+    if (head === "track" || head === "tracks") {
+      return { route: "home", entityKind: "track", entityId: id };
+    }
+    if (head === "news") {
+      return { route: "news", entityKind: "news", entityId: id };
+    }
+    if (head === "admin") {
+      return { route: "admin", entityKind: "admin", entityId: id };
+    }
+    if (head === "profile") {
+      return { route: "profile", entityKind: "profile", entityId: id };
+    }
+  }
+
+  const match = allRoutes.find((r) => r.path.replace(/^#\/?/, "") === head);
+  return { route: (match?.id ?? "home") as RouteId };
+}
 
 export function useRoute() {
-  const [route, setRoute] = useState<RouteId>(() =>
-    typeof window === "undefined" ? "home" : fromHash(window.location.hash),
-  );
+  const [route, setRoute] = useState<RouteId>(() => {
+    if (typeof window === "undefined") return "home";
+    return parseHash(window.location.hash || window.location.pathname).route;
+  });
 
   useEffect(() => {
-    const onHash = () => setRoute(fromHash(window.location.hash));
+    const onHash = () => {
+      const parsed = parseHash(window.location.hash);
+      setRoute(parsed.route);
+    };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
@@ -54,11 +107,15 @@ export function useRoute() {
   const navigate = useCallback((id: RouteId) => {
     const target = allRoutes.find((r) => r.id === id);
     if (!target) return;
-    if (window.location.hash === target.path) return;
-    window.location.hash = target.path;
+    if (typeof window !== "undefined") {
+      if (window.location.hash !== target.path) {
+        window.location.hash = target.path;
+      }
+    }
+    setRoute(id);
   }, []);
 
   const current = useMemo(() => allRoutes.find((r) => r.id === route) ?? allRoutes[0], [route]);
 
-  return { route, navigate, current };
+  return { route, navigate, current, setRoute };
 }

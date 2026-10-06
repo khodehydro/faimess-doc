@@ -14,7 +14,63 @@
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#8267f0" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#8b73f5" />
     <meta name="theme-color" content="#8267f0" />
-    <meta name="description" content="FAIMESS — a warm, soft-minimal studio dashboard." />
+    <meta name="description" content="FAIMESS — a warm, soft-minimal studio dashboard for K-pop streaming, bilingual synchronized lyrics, artist discographies, and community." />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="keywords" content="FAIMESS, K-pop, Korean music, streaming, artists, albums, playlists, lyrics, فیمس, استریم کیپاپ, دانلود کیپاپ, ترجمه آهنگ کیپاپ" />
+
+    <!-- Canonical & Hreflang alternates for global multilingual indexing -->
+    <link rel="canonical" href="https://faimess.app/" />
+    <link rel="alternate" hreflang="en" href="https://faimess.app/?lang=en" />
+    <link rel="alternate" hreflang="fa" href="https://faimess.app/?lang=fa" />
+    <link rel="alternate" hreflang="ko" href="https://faimess.app/?lang=ko" />
+    <link rel="alternate" hreflang="x-default" href="https://faimess.app/" />
+
+    <!-- OpenGraph & Social Cards -->
+    <meta property="og:site_name" content="FAIMESS" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="FAIMESS — K-Pop Streaming, Lyrics & Community" />
+    <meta property="og:description" content="Stream the latest K-pop releases, follow trending charts, discover fresh albums, and enjoy bilingual synchronized lyrics in Persian, English and Korean on FAIMESS." />
+    <meta property="og:url" content="https://faimess.app/" />
+    <meta property="og:image" content="https://faimess.app/og-banner.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FAIMESS — K-Pop Streaming, Lyrics & Community" />
+    <meta name="twitter:description" content="Stream the latest K-pop releases, follow trending charts, discover fresh albums, and enjoy bilingual synchronized lyrics in Persian, English and Korean on FAIMESS." />
+    <meta name="twitter:image" content="https://faimess.app/og-banner.png" />
+
+    <!-- Schema.org WebSite & Organization structured data -->
+    <script type="application/ld+json" id="faimess-jsonld">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://faimess.app/#website",
+            "name": "FAIMESS",
+            "alternateName": ["FAIMESS Music", "فیمس کیپاپ", "فیمس"],
+            "url": "https://faimess.app/",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://faimess.app/#/?q={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://faimess.app/#organization",
+            "name": "FAIMESS",
+            "url": "https://faimess.app/",
+            "logo": "https://faimess.app/icon-512.png",
+            "sameAs": [
+              "https://twitter.com/faimess_app"
+            ]
+          }
+        ]
+      }
+    </script>
 
     <!-- the tab, the home-screen icon and the installed app's own header all
          come from one artwork — src/assets/brand/faimess-logo.png — re-cut at
@@ -26,6 +82,8 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="apple-mobile-web-app-title" content="FAIMESS" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>FAIMESS</title>
   </head>
   <body>
