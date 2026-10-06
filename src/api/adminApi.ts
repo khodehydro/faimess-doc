@@ -11,13 +11,158 @@ import { newsItems as initialNews, type NewsItem, type NewsComment } from "../da
 import { shopProducts as initialShop, type ShopProduct, type ShopCategoryId, type ShopBadge } from "../data/shop";
 import { type LyricSubmission } from "../data/lyrics";
 
-export type AdminUserRole = "super_admin" | "admin" | "moderator" | "editor" | "user";
+export type AdminUserRole =
+  | "super_admin"
+  | "news_manager"
+  | "news_author"
+  | "comment_moderator"
+  | "music_curator"
+  | "shop_manager"
+  | "admin"
+  | "moderator"
+  | "editor"
+  | "user";
+
+export type UserPermissions = {
+  canManageTracks: boolean;
+  canManageAlbums: boolean;
+  canManageArtists: boolean;
+  canManagePlaylists: boolean;
+  canWriteNews: boolean;
+  canApproveNews: boolean;
+  canModerateComments: boolean;
+  canReviewLyrics: boolean;
+  canManageShop: boolean;
+  canManageUsers: boolean;
+  canViewAnalytics: boolean;
+};
+
+export function getDefaultPermissions(role: AdminUserRole): UserPermissions {
+  switch (role) {
+    case "super_admin":
+      return {
+        canManageTracks: true,
+        canManageAlbums: true,
+        canManageArtists: true,
+        canManagePlaylists: true,
+        canWriteNews: true,
+        canApproveNews: true,
+        canModerateComments: true,
+        canReviewLyrics: true,
+        canManageShop: true,
+        canManageUsers: true,
+        canViewAnalytics: true,
+      };
+    case "news_manager":
+      return {
+        canManageTracks: false,
+        canManageAlbums: false,
+        canManageArtists: false,
+        canManagePlaylists: false,
+        canWriteNews: true,
+        canApproveNews: true,
+        canModerateComments: false,
+        canReviewLyrics: false,
+        canManageShop: false,
+        canManageUsers: false,
+        canViewAnalytics: true,
+      };
+    case "news_author":
+      return {
+        canManageTracks: false,
+        canManageAlbums: false,
+        canManageArtists: false,
+        canManagePlaylists: false,
+        canWriteNews: true,
+        canApproveNews: false,
+        canModerateComments: false,
+        canReviewLyrics: false,
+        canManageShop: false,
+        canManageUsers: false,
+        canViewAnalytics: false,
+      };
+    case "comment_moderator":
+      return {
+        canManageTracks: false,
+        canManageAlbums: false,
+        canManageArtists: false,
+        canManagePlaylists: false,
+        canWriteNews: false,
+        canApproveNews: false,
+        canModerateComments: true,
+        canReviewLyrics: false,
+        canManageShop: false,
+        canManageUsers: false,
+        canViewAnalytics: true,
+      };
+    case "music_curator":
+      return {
+        canManageTracks: true,
+        canManageAlbums: true,
+        canManageArtists: true,
+        canManagePlaylists: true,
+        canWriteNews: false,
+        canApproveNews: false,
+        canModerateComments: false,
+        canReviewLyrics: true,
+        canManageShop: false,
+        canManageUsers: false,
+        canViewAnalytics: true,
+      };
+    case "shop_manager":
+      return {
+        canManageTracks: false,
+        canManageAlbums: false,
+        canManageArtists: false,
+        canManagePlaylists: false,
+        canWriteNews: false,
+        canApproveNews: false,
+        canModerateComments: false,
+        canReviewLyrics: false,
+        canManageShop: true,
+        canManageUsers: false,
+        canViewAnalytics: true,
+      };
+    case "admin":
+    case "moderator":
+    case "editor":
+      return {
+        canManageTracks: true,
+        canManageAlbums: true,
+        canManageArtists: true,
+        canManagePlaylists: true,
+        canWriteNews: true,
+        canApproveNews: true,
+        canModerateComments: true,
+        canReviewLyrics: true,
+        canManageShop: true,
+        canManageUsers: false,
+        canViewAnalytics: true,
+      };
+    case "user":
+    default:
+      return {
+        canManageTracks: false,
+        canManageAlbums: false,
+        canManageArtists: false,
+        canManagePlaylists: false,
+        canWriteNews: false,
+        canApproveNews: false,
+        canModerateComments: false,
+        canReviewLyrics: false,
+        canManageShop: false,
+        canManageUsers: false,
+        canViewAnalytics: false,
+      };
+  }
+}
 
 export type AdminUser = {
   id: string;
   username: string;
   displayName: string;
   role: AdminUserRole;
+  permissions?: UserPermissions;
   avatar: string;
   points: number;
   joinedAt: string;
@@ -28,6 +173,18 @@ export type AdminUser = {
 
 export type AdminAlbum = Album & {
   trackIds?: string[];
+};
+
+export type AdminPlaylist = Playlist & {
+  trackIds?: string[];
+};
+
+export type AdminTrack = PlayerTrack & {
+  isSingle?: boolean;
+};
+
+export type AdminNews = NewsItem & {
+  status?: "published" | "pending_review";
 };
 
 export type AdminCommentRecord = {
@@ -54,9 +211,19 @@ export type AdminOverviewStats = {
   totalComments: number;
   reportedComments: number;
   pendingLyrics: number;
+  pendingNews: number;
   totalShopProducts: number;
   totalUsers: number;
   activeListenersToday: number;
+  onlineUsers: number;
+  pageViewsToday: number;
+  pageViewsWeek: number;
+  pageViewsTotal: number;
+  commentsToday: number;
+  commentsWeek: number;
+  newUsersWeek: number;
+  streamsToday: number;
+  streamsWeek: number;
   totalStreams: number;
   totalPointsDistributed: number;
   estimatedRevenueToman: number;
@@ -67,25 +234,46 @@ export type AdminActivityLog = {
   timestamp: string;
   adminUser: string;
   action: string;
-  entityType: "track" | "artist" | "album" | "news" | "comment" | "lyrics" | "shop" | "user" | "playlist";
+  entityType: "track" | "artist" | "album" | "news" | "comment" | "lyrics" | "shop" | "user" | "playlist" | "settings";
   entityId: string;
   details: string;
 };
 
-const DB_KEY = "faimess.admin_db.v3";
+export type SiteFeatureSettings = {
+  showShop: boolean;
+  showNews: boolean;
+  showPlaylists: boolean;
+  showArtists: boolean;
+  showAlbums: boolean;
+  showLyricsSubmissions: boolean;
+  showCommentsSection: boolean;
+};
+
+const DEFAULT_SETTINGS: SiteFeatureSettings = {
+  showShop: true,
+  showNews: true,
+  showPlaylists: true,
+  showArtists: true,
+  showAlbums: true,
+  showLyricsSubmissions: true,
+  showCommentsSection: true,
+};
+
+const DB_KEY = "faimess.admin_db.v4";
 
 type AdminDbState = {
   artists: Artist[];
   albums: AdminAlbum[];
-  tracks: PlayerTrack[];
-  playlists: Playlist[];
-  news: NewsItem[];
+  tracks: AdminTrack[];
+  playlists: AdminPlaylist[];
+  news: AdminNews[];
   comments: AdminCommentRecord[];
   lyricsSubmissions: LyricSubmission[];
   lyricsByTrack: Record<string, { original: string; translation?: string }>;
   shop: ShopProduct[];
   users: AdminUser[];
   activities: AdminActivityLog[];
+  settings: SiteFeatureSettings;
   metrics: {
     dailyStreams: { day: string; streams: number; listeners: number }[];
   };
@@ -99,6 +287,7 @@ const SEED_USERS: AdminUser[] = [
     username: "admin",
     displayName: "Admin Operator",
     role: "super_admin",
+    permissions: getDefaultPermissions("super_admin"),
     avatar: "/assets/photos/account/me.webp",
     points: 12500,
     joinedAt: "2025-01-01",
@@ -107,60 +296,67 @@ const SEED_USERS: AdminUser[] = [
     bio: "Lead platform director & super-administrator.",
   },
   {
-    id: "usr-mod",
-    username: "moderator",
-    displayName: "Staff Moderator",
-    role: "moderator",
+    id: "usr-news-mgr",
+    username: "editor_chief",
+    displayName: "Editorial Director",
+    role: "news_manager",
+    permissions: getDefaultPermissions("news_manager"),
+    avatar: "/assets/photos/listeners/minho.webp",
+    points: 6200,
+    joinedAt: "2025-02-10",
+    lastActive: "15 mins ago",
+    status: "active",
+    bio: "Head of editorial desk and publication supervisor.",
+  },
+  {
+    id: "usr-news-writer",
+    username: "sarah_writer",
+    displayName: "Sarah Jin",
+    role: "news_author",
+    permissions: getDefaultPermissions("news_author"),
+    avatar: "/assets/photos/listeners/seojin.webp",
+    points: 2400,
+    joinedAt: "2025-03-05",
+    lastActive: "1 hr ago",
+    status: "active",
+    bio: "K-pop culture news contributor and columnist.",
+  },
+  {
+    id: "usr-comment-mod",
+    username: "comm_mod",
+    displayName: "Community Guardian",
+    role: "comment_moderator",
+    permissions: getDefaultPermissions("comment_moderator"),
     avatar: "/assets/photos/listeners/sora.webp",
-    points: 8400,
+    points: 4800,
     joinedAt: "2025-02-15",
     lastActive: "10 mins ago",
     status: "active",
-    bio: "Community and lyrics sheet moderation desk.",
+    bio: "Community reported comments & safety supervisor.",
   },
   {
-    id: "usr-minho",
-    username: "minho_k",
-    displayName: "Minho",
-    role: "editor",
-    avatar: "/assets/photos/listeners/minho.webp",
-    points: 3200,
-    joinedAt: "2025-03-01",
-    lastActive: "1 hr ago",
+    id: "usr-music-curator",
+    username: "music_lead",
+    displayName: "Sound Curator",
+    role: "music_curator",
+    permissions: getDefaultPermissions("music_curator"),
+    avatar: "/assets/photos/listeners/haru.webp",
+    points: 5900,
+    joinedAt: "2025-02-20",
+    lastActive: "Just now",
     status: "active",
-    bio: "Editorial columnist and review contributor.",
+    bio: "Music catalogue, discography and lyrics inspector.",
   },
   {
     id: "usr-yuna",
     username: "yuna_music",
     displayName: "Yuna",
     role: "user",
+    permissions: getDefaultPermissions("user"),
     avatar: "/assets/photos/listeners/yuna.webp",
     points: 1850,
     joinedAt: "2025-04-12",
     lastActive: "2 hrs ago",
-    status: "active",
-  },
-  {
-    id: "usr-haru",
-    username: "haru_beats",
-    displayName: "Haru",
-    role: "user",
-    avatar: "/assets/photos/listeners/haru.webp",
-    points: 920,
-    joinedAt: "2025-05-20",
-    lastActive: "Yesterday",
-    status: "active",
-  },
-  {
-    id: "usr-jinah",
-    username: "jinah_p",
-    displayName: "Jinah",
-    role: "user",
-    avatar: "/assets/photos/listeners/jinah.webp",
-    points: 450,
-    joinedAt: "2025-06-11",
-    lastActive: "3 days ago",
     status: "active",
   },
 ];
@@ -187,7 +383,6 @@ function seedComments(news: NewsItem[]): AdminCommentRecord[] {
     }
   }
 
-  // Sample track comment records
   records.push(
     {
       id: "cm-track-101",
@@ -263,11 +458,21 @@ function seedLyricSubmissions(): LyricSubmission[] {
 }
 
 function createInitialState(): AdminDbState {
-  const news = JSON.parse(JSON.stringify(initialNews)) as NewsItem[];
-  const tracks = JSON.parse(JSON.stringify(initialTracks)) as PlayerTrack[];
+  const rawNews = JSON.parse(JSON.stringify(initialNews)) as NewsItem[];
+  const news: AdminNews[] = rawNews.map((n, idx) => ({
+    ...n,
+    status: idx === 0 ? "published" : "published",
+  }));
+
+  const rawTracks = JSON.parse(JSON.stringify(initialTracks)) as PlayerTrack[];
+  const tracks: AdminTrack[] = rawTracks.map((t) => ({
+    ...t,
+    isSingle: t.album.toLowerCase().includes("single"),
+  }));
+
   const artists = JSON.parse(JSON.stringify(initialArtists)) as Artist[];
   const rawAlbums = JSON.parse(JSON.stringify(initialAlbums)) as Album[];
-  const playlists = JSON.parse(JSON.stringify(initialPlaylists)) as Playlist[];
+  const rawPlaylists = JSON.parse(JSON.stringify(initialPlaylists)) as Playlist[];
   const shop = JSON.parse(JSON.stringify(initialShop)) as ShopProduct[];
 
   // Connect tracks to albums
@@ -282,6 +487,11 @@ function createInitialState(): AdminDbState {
       tracks: matchingTracks.length || alb.tracks,
     };
   });
+
+  const playlists: AdminPlaylist[] = rawPlaylists.map((pl, idx) => ({
+    ...pl,
+    trackIds: tracks.slice(idx * 2, idx * 2 + 4).map((t) => t.id),
+  }));
 
   const lyricsByTrack: Record<string, { original: string; translation?: string }> = {
     sm1: {
@@ -304,11 +514,12 @@ function createInitialState(): AdminDbState {
     tracks,
     playlists,
     news,
-    comments: seedComments(news),
+    comments: seedComments(rawNews),
     lyricsSubmissions: seedLyricSubmissions(),
     lyricsByTrack,
     shop,
     users: SEED_USERS,
+    settings: DEFAULT_SETTINGS,
     activities: [
       {
         id: "act-1",
@@ -322,7 +533,7 @@ function createInitialState(): AdminDbState {
       {
         id: "act-2",
         timestamp: "10 mins ago",
-        adminUser: "moderator",
+        adminUser: "comm_mod",
         action: "Comment Flagged",
         entityType: "comment",
         entityId: "cm-track-102",
@@ -357,19 +568,19 @@ function loadStoredState(): AdminDbState {
       return initial;
     }
     const parsed = JSON.parse(raw) as Partial<AdminDbState>;
-    // Merge defensively with defaults
     const initial = createInitialState();
     return {
       artists: parsed.artists?.length ? parsed.artists : initial.artists,
       albums: parsed.albums?.length ? (parsed.albums as AdminAlbum[]) : initial.albums,
-      tracks: parsed.tracks?.length ? parsed.tracks : initial.tracks,
-      playlists: parsed.playlists?.length ? parsed.playlists : initial.playlists,
-      news: parsed.news?.length ? parsed.news : initial.news,
+      tracks: parsed.tracks?.length ? (parsed.tracks as AdminTrack[]) : initial.tracks,
+      playlists: parsed.playlists?.length ? (parsed.playlists as AdminPlaylist[]) : initial.playlists,
+      news: parsed.news?.length ? (parsed.news as AdminNews[]) : initial.news,
       comments: parsed.comments?.length ? parsed.comments : initial.comments,
       lyricsSubmissions: parsed.lyricsSubmissions?.length ? parsed.lyricsSubmissions : initial.lyricsSubmissions,
       lyricsByTrack: parsed.lyricsByTrack ?? initial.lyricsByTrack,
       shop: parsed.shop?.length ? parsed.shop : initial.shop,
       users: parsed.users?.length ? parsed.users : initial.users,
+      settings: parsed.settings ?? initial.settings,
       activities: parsed.activities?.length ? parsed.activities : initial.activities,
       metrics: parsed.metrics ?? initial.metrics,
     };
@@ -447,7 +658,10 @@ export const adminApi = {
       if (!parsed.tracks || !parsed.artists || !parsed.albums) {
         return false;
       }
-      state = parsed;
+      state = {
+        ...parsed,
+        settings: parsed.settings || DEFAULT_SETTINGS,
+      };
       notifyChanges();
       return true;
     } catch {
@@ -455,13 +669,27 @@ export const adminApi = {
     }
   },
 
-  /* ---------------- Overview & Stats ---------------- */
+  /* ---------------- Site Visibility Settings -------- */
+
+  getSiteSettings(): SiteFeatureSettings {
+    return state.settings || DEFAULT_SETTINGS;
+  },
+
+  updateSiteSettings(updates: Partial<SiteFeatureSettings>) {
+    state.settings = { ...state.settings, ...updates };
+    logActivity("super_admin", "Updated Site Visibility", "settings", "site_config", "Modified site feature toggles");
+    notifyChanges();
+    return state.settings;
+  },
+
+  /* ---------------- Overview & Master Analytics ----- */
 
   getOverviewStats(): AdminOverviewStats {
     const totalStreams = state.tracks.reduce((acc, t) => acc + (t.plays ?? 1000), 0);
     const totalRev = state.shop.reduce((acc, p) => acc + p.price * 24, 0);
     const pendingLyricsCount = state.lyricsSubmissions.filter((s) => s.status === "pending").length;
     const reportedCount = state.comments.filter((c) => c.status === "reported").length;
+    const pendingNewsCount = state.news.filter((n) => n.status === "pending_review").length;
 
     return {
       totalTracks: state.tracks.length,
@@ -469,12 +697,22 @@ export const adminApi = {
       totalAlbums: state.albums.length,
       totalPlaylists: state.playlists.length,
       totalNews: state.news.length,
+      pendingNews: pendingNewsCount,
       totalComments: state.comments.length,
       reportedComments: reportedCount,
       pendingLyrics: pendingLyricsCount,
       totalShopProducts: state.shop.length,
       totalUsers: state.users.length,
       activeListenersToday: 8940,
+      onlineUsers: 438,
+      pageViewsToday: 48250,
+      pageViewsWeek: 294100,
+      pageViewsTotal: 1480000,
+      commentsToday: 38,
+      commentsWeek: 245,
+      newUsersWeek: 84,
+      streamsToday: 34200,
+      streamsWeek: 160200,
       totalStreams,
       totalPointsDistributed: state.users.reduce((acc, u) => acc + u.points, 0),
       estimatedRevenueToman: totalRev,
@@ -525,17 +763,20 @@ export const adminApi = {
     lyricsOriginal?: string;
     lyricsTranslation?: string;
     plays?: number;
+    isSingle?: boolean;
   }) {
     const id = `tr-${Date.now().toString(36)}`;
-    const newTrack: PlayerTrack = {
+    const isSingle = Boolean(data.isSingle || data.album === "· single");
+    const newTrack: AdminTrack = {
       id,
       title: data.title,
       artist: data.artist,
-      album: data.album,
+      album: isSingle ? "· single" : data.album,
       seconds: toSeconds(data.duration),
       photo: data.photo || "/assets/photos/albums/afterglow.webp",
       audio: data.audio || "/assets/audio/faimess-demo.mp3",
       plays: data.plays ?? 120,
+      isSingle,
     };
     state.tracks = [newTrack, ...state.tracks];
 
@@ -547,8 +788,8 @@ export const adminApi = {
       };
     }
 
-    // Connect to album if exists
-    if (data.album && data.album !== "· single") {
+    // Connect to album if not a single
+    if (!isSingle && data.album && data.album !== "· single") {
       const alb = state.albums.find(
         (a) => a.title.toLowerCase() === data.album.toLowerCase(),
       );
@@ -558,31 +799,42 @@ export const adminApi = {
       }
     }
 
-    logActivity("admin", "Added Song", "track", id, `Published track "${data.title}" by ${data.artist}`);
+    logActivity("music_curator", "Added Song", "track", id, `Published ${isSingle ? "single " : ""}track "${data.title}" by ${data.artist}`);
     notifyChanges();
     return newTrack;
   },
 
   updateTrack(
     id: string,
-    updates: Partial<PlayerTrack> & {
+    updates: Partial<AdminTrack> & {
       duration?: string;
       lyricsOriginal?: string;
       lyricsTranslation?: string;
+      isSingle?: boolean;
     },
   ) {
     const idx = state.tracks.findIndex((t) => t.id === id);
     if (idx === -1) return null;
     const oldTrack = state.tracks[idx];
 
+    const isSingle = updates.isSingle !== undefined
+      ? updates.isSingle
+      : updates.album === "· single"
+        ? true
+        : oldTrack.isSingle;
+
+    const newAlbum = isSingle ? "· single" : (updates.album ?? oldTrack.album);
+
     const newSeconds = updates.duration
       ? toSeconds(updates.duration)
       : updates.seconds ?? oldTrack.seconds;
 
-    const updatedTrack: PlayerTrack = {
+    const updatedTrack: AdminTrack = {
       ...oldTrack,
       ...updates,
+      album: newAlbum,
       seconds: newSeconds,
+      isSingle,
     };
     state.tracks[idx] = updatedTrack;
 
@@ -593,9 +845,8 @@ export const adminApi = {
       };
     }
 
-    // If album changed, sync album trackIds
-    if (updates.album && updates.album !== oldTrack.album) {
-      // remove from old album
+    // Sync album trackIds
+    if (newAlbum !== oldTrack.album) {
       const prevAlb = state.albums.find(
         (a) => a.title.toLowerCase() === oldTrack.album.toLowerCase(),
       );
@@ -603,17 +854,18 @@ export const adminApi = {
         prevAlb.trackIds = prevAlb.trackIds.filter((tid) => tid !== id);
         prevAlb.tracks = prevAlb.trackIds.length;
       }
-      // add to new album
-      const nextAlb = state.albums.find(
-        (a) => a.title.toLowerCase() === updates.album?.toLowerCase(),
-      );
-      if (nextAlb) {
-        nextAlb.trackIds = [...(nextAlb.trackIds || []), id];
-        nextAlb.tracks = nextAlb.trackIds.length;
+      if (!isSingle && newAlbum !== "· single") {
+        const nextAlb = state.albums.find(
+          (a) => a.title.toLowerCase() === newAlbum.toLowerCase(),
+        );
+        if (nextAlb) {
+          nextAlb.trackIds = [...(nextAlb.trackIds || []), id];
+          nextAlb.tracks = nextAlb.trackIds.length;
+        }
       }
     }
 
-    logActivity("admin", "Updated Song", "track", id, `Modified track details for "${updatedTrack.title}"`);
+    logActivity("music_curator", "Updated Song", "track", id, `Modified track details for "${updatedTrack.title}"`);
     notifyChanges();
     return updatedTrack;
   },
@@ -621,16 +873,21 @@ export const adminApi = {
   deleteTrack(id: string) {
     const target = state.tracks.find((t) => t.id === id);
     state.tracks = state.tracks.filter((t) => t.id !== id);
-    // remove from album trackIds
     for (const alb of state.albums) {
       if (alb.trackIds) {
         alb.trackIds = alb.trackIds.filter((tid) => tid !== id);
         alb.tracks = alb.trackIds.length;
       }
     }
+    for (const pl of state.playlists) {
+      if (pl.trackIds) {
+        pl.trackIds = pl.trackIds.filter((tid) => tid !== id);
+        pl.tracks = pl.trackIds.length;
+      }
+    }
     delete state.lyricsByTrack[id];
     if (target) {
-      logActivity("admin", "Deleted Song", "track", id, `Removed track "${target.title}" from library`);
+      logActivity("music_curator", "Deleted Song", "track", id, `Removed track "${target.title}"`);
     }
     notifyChanges();
   },
@@ -641,7 +898,7 @@ export const adminApi = {
 
   saveTrackLyrics(trackId: string, original: string, translation?: string) {
     state.lyricsByTrack[trackId] = { original, translation };
-    logActivity("moderator", "Updated Lyrics", "lyrics", trackId, `Saved updated lyric sheet for track "${trackId}"`);
+    logActivity("music_curator", "Updated Lyrics", "lyrics", trackId, `Saved updated lyric sheet for track "${trackId}"`);
     notifyChanges();
   },
 
@@ -686,7 +943,7 @@ export const adminApi = {
       photo: data.photo || "/assets/photos/artists/novae.webp",
     };
     state.artists = [newArtist, ...state.artists];
-    logActivity("admin", "Added Artist", "artist", id, `Added artist profile "${data.name}"`);
+    logActivity("music_curator", "Added Artist", "artist", id, `Added artist profile "${data.name}"`);
     notifyChanges();
     return newArtist;
   },
@@ -695,7 +952,7 @@ export const adminApi = {
     const idx = state.artists.findIndex((a) => a.id === id);
     if (idx === -1) return null;
     state.artists[idx] = { ...state.artists[idx], ...updates };
-    logActivity("admin", "Updated Artist", "artist", id, `Updated artist profile "${state.artists[idx].name}"`);
+    logActivity("music_curator", "Updated Artist", "artist", id, `Updated artist profile "${state.artists[idx].name}"`);
     notifyChanges();
     return state.artists[idx];
   },
@@ -704,7 +961,7 @@ export const adminApi = {
     const target = state.artists.find((a) => a.id === id);
     state.artists = state.artists.filter((a) => a.id !== id);
     if (target) {
-      logActivity("admin", "Deleted Artist", "artist", id, `Removed artist "${target.name}"`);
+      logActivity("music_curator", "Deleted Artist", "artist", id, `Removed artist "${target.name}"`);
     }
     notifyChanges();
   },
@@ -713,7 +970,7 @@ export const adminApi = {
     const a = state.artists.find((item) => item.id === id);
     if (a) {
       a.verified = !a.verified;
-      logActivity("admin", "Toggled Badge", "artist", id, `Verified status: ${a.verified}`);
+      logActivity("music_curator", "Toggled Badge", "artist", id, `Verified status: ${a.verified}`);
       notifyChanges();
     }
   },
@@ -722,7 +979,7 @@ export const adminApi = {
     const a = state.artists.find((item) => item.id === id);
     if (a) {
       a.newRelease = !a.newRelease;
-      logActivity("admin", "Toggled New Release", "artist", id, `New release status: ${a.newRelease}`);
+      logActivity("music_curator", "Toggled New Release", "artist", id, `New release status: ${a.newRelease}`);
       notifyChanges();
     }
   },
@@ -769,11 +1026,12 @@ export const adminApi = {
       for (const t of state.tracks) {
         if (trackIds.includes(t.id)) {
           t.album = data.title;
+          t.isSingle = false;
         }
       }
     }
 
-    logActivity("admin", "Created Album", "album", id, `Published album "${data.title}" by ${data.artist} with ${trackIds.length} tracks`);
+    logActivity("music_curator", "Created Album", "album", id, `Published album "${data.title}" by ${data.artist} (${trackIds.length} tracks)`);
     notifyChanges();
     return newAlbum;
   },
@@ -797,14 +1055,16 @@ export const adminApi = {
     for (const t of state.tracks) {
       if (updatedTrackIds.includes(t.id)) {
         t.album = updatedAlbum.title;
+        t.isSingle = false;
       } else if (oldTrackIds.includes(t.id) && !updatedTrackIds.includes(t.id)) {
         if (t.album === oldTitle) {
           t.album = "· single";
+          t.isSingle = true;
         }
       }
     }
 
-    logActivity("admin", "Updated Album", "album", id, `Modified album "${updatedAlbum.title}" (${updatedTrackIds.length} tracks)`);
+    logActivity("music_curator", "Updated Album", "album", id, `Modified album "${updatedAlbum.title}" (${updatedTrackIds.length} tracks)`);
     notifyChanges();
     return updatedAlbum;
   },
@@ -813,13 +1073,13 @@ export const adminApi = {
     const target = state.albums.find((a) => a.id === id);
     state.albums = state.albums.filter((a) => a.id !== id);
     if (target) {
-      // Revert tracks to single
       for (const t of state.tracks) {
         if (t.album === target.title) {
           t.album = "· single";
+          t.isSingle = true;
         }
       }
-      logActivity("admin", "Deleted Album", "album", id, `Removed album "${target.title}"`);
+      logActivity("music_curator", "Deleted Album", "album", id, `Removed album "${target.title}"`);
     }
     notifyChanges();
   },
@@ -844,29 +1104,38 @@ export const adminApi = {
     mood: string;
     photo?: string;
     tracks?: number;
+    trackIds?: string[];
   }) {
     const id = `pl-${Date.now().toString(36)}`;
-    const newPlaylist: Playlist = {
+    const trackIds = data.trackIds ?? [];
+    const newPlaylist: AdminPlaylist = {
       id,
       name: data.name,
       curator: data.curator,
       mood: data.mood,
-      tracks: data.tracks ?? 10,
-      duration: "35 mins",
+      tracks: trackIds.length || data.tracks || 10,
+      duration: `${(trackIds.length || 10) * 3} mins`,
       seed: state.playlists.length % 8,
       photo: data.photo || "/assets/photos/playlists/golden-hour.webp",
+      trackIds,
     };
     state.playlists = [newPlaylist, ...state.playlists];
-    logActivity("admin", "Created Playlist", "playlist", id, `Created playlist "${data.name}"`);
+    logActivity("music_curator", "Created Playlist", "playlist", id, `Created playlist "${data.name}" (${trackIds.length} tracks)`);
     notifyChanges();
     return newPlaylist;
   },
 
-  updatePlaylist(id: string, updates: Partial<Playlist>) {
+  updatePlaylist(id: string, updates: Partial<AdminPlaylist> & { trackIds?: string[] }) {
     const idx = state.playlists.findIndex((p) => p.id === id);
     if (idx === -1) return null;
-    state.playlists[idx] = { ...state.playlists[idx], ...updates };
-    logActivity("admin", "Updated Playlist", "playlist", id, `Updated playlist "${state.playlists[idx].name}"`);
+    const updatedTrackIds = updates.trackIds ?? state.playlists[idx].trackIds ?? [];
+    state.playlists[idx] = {
+      ...state.playlists[idx],
+      ...updates,
+      trackIds: updatedTrackIds,
+      tracks: updatedTrackIds.length || updates.tracks || state.playlists[idx].tracks,
+    };
+    logActivity("music_curator", "Updated Playlist", "playlist", id, `Updated playlist "${state.playlists[idx].name}"`);
     notifyChanges();
     return state.playlists[idx];
   },
@@ -875,22 +1144,28 @@ export const adminApi = {
     const target = state.playlists.find((p) => p.id === id);
     state.playlists = state.playlists.filter((p) => p.id !== id);
     if (target) {
-      logActivity("admin", "Deleted Playlist", "playlist", id, `Removed playlist "${target.name}"`);
+      logActivity("music_curator", "Deleted Playlist", "playlist", id, `Removed playlist "${target.name}"`);
     }
     notifyChanges();
   },
 
   /* ---------------- News & Editorial API ------------ */
 
-  getNews(query = "") {
+  getNews(query = "", statusFilter: "all" | "published" | "pending_review" = "all") {
+    let result = [...state.news];
+    if (statusFilter !== "all") {
+      result = result.filter((n) => (n.status || "published") === statusFilter);
+    }
     const q = query.trim().toLowerCase();
-    if (!q) return [...state.news];
-    return state.news.filter(
-      (n) =>
-        n.title.toLowerCase().includes(q) ||
-        n.excerpt.toLowerCase().includes(q) ||
-        n.tag.toLowerCase().includes(q),
-    );
+    if (q) {
+      result = result.filter(
+        (n) =>
+          n.title.toLowerCase().includes(q) ||
+          n.excerpt.toLowerCase().includes(q) ||
+          n.tag.toLowerCase().includes(q),
+      );
+    }
+    return result;
   },
 
   getNewsItem(id: string) {
@@ -905,10 +1180,12 @@ export const adminApi = {
     photo?: string;
     featured?: boolean;
     body?: string;
+    status?: "published" | "pending_review";
   }) {
     const id = `nw-${Date.now().toString(36)}`;
     const tag = data.tag || "Tour";
-    const newArticle: NewsItem = {
+    const status = data.status || "published";
+    const newArticle: AdminNews = {
       id,
       title: data.title,
       excerpt: data.excerpt,
@@ -929,27 +1206,43 @@ export const adminApi = {
       bodyKeys: [data.body || data.excerpt],
       photo: data.photo || "/assets/photos/banners/asia-leg.webp",
       comments: [],
+      status,
     };
     state.news = [newArticle, ...state.news];
-    logActivity("editor", "Published Article", "news", id, `Published story "${data.title}"`);
+    logActivity(
+      status === "published" ? "news_manager" : "news_author",
+      status === "published" ? "Published Story" : "Submitted Draft",
+      "news",
+      id,
+      `${status === "published" ? "Published" : "Drafted"} story "${data.title}"`,
+    );
     notifyChanges();
     return newArticle;
   },
 
-  updateNews(id: string, updates: Partial<NewsItem>) {
+  updateNews(id: string, updates: Partial<AdminNews>) {
     const idx = state.news.findIndex((n) => n.id === id);
     if (idx === -1) return null;
     state.news[idx] = { ...state.news[idx], ...updates };
-    logActivity("editor", "Updated Story", "news", id, `Modified story "${state.news[idx].title}"`);
+    logActivity("news_manager", "Updated Story", "news", id, `Modified story "${state.news[idx].title}"`);
     notifyChanges();
     return state.news[idx];
+  },
+
+  approveNews(id: string) {
+    const n = state.news.find((item) => item.id === id);
+    if (n) {
+      n.status = "published";
+      logActivity("news_manager", "Approved & Published Story", "news", id, `Approved article "${n.title}"`);
+      notifyChanges();
+    }
   },
 
   deleteNews(id: string) {
     const target = state.news.find((n) => n.id === id);
     state.news = state.news.filter((n) => n.id !== id);
     if (target) {
-      logActivity("editor", "Deleted Story", "news", id, `Removed news article "${target.title}"`);
+      logActivity("news_manager", "Deleted Story", "news", id, `Removed news article "${target.title}"`);
     }
     notifyChanges();
   },
@@ -979,7 +1272,7 @@ export const adminApi = {
     if (c) {
       c.status = "approved";
       c.reportReason = undefined;
-      logActivity("moderator", "Approved Comment", "comment", id, `Restored comment by @${c.handle}`);
+      logActivity("comment_moderator", "Approved Comment", "comment", id, `Restored comment by @${c.handle}`);
       notifyChanges();
     }
   },
@@ -989,7 +1282,7 @@ export const adminApi = {
     if (c) {
       c.status = "reported";
       c.reportReason = reason;
-      logActivity("moderator", "Flagged Comment", "comment", id, `Flagged for: ${reason}`);
+      logActivity("comment_moderator", "Flagged Comment", "comment", id, `Flagged for: ${reason}`);
       notifyChanges();
     }
   },
@@ -998,7 +1291,7 @@ export const adminApi = {
     const target = state.comments.find((c) => c.id === id);
     state.comments = state.comments.filter((c) => c.id !== id);
     if (target) {
-      logActivity("moderator", "Deleted Comment", "comment", id, `Removed comment by @${target.handle}${cascadeReplies ? " with replies" : ""}`);
+      logActivity("comment_moderator", "Deleted Comment", "comment", id, `Removed comment by @${target.handle}${cascadeReplies ? " with replies" : ""}`);
     }
     notifyChanges();
   },
@@ -1015,12 +1308,11 @@ export const adminApi = {
     if (sub) {
       sub.status = "approved";
       sub.points = payout;
-      // Also save to track lyrics store
       state.lyricsByTrack[sub.trackId] = {
         original: sub.original,
         translation: sub.translation,
       };
-      logActivity("moderator", "Approved Lyrics Sheet", "lyrics", id, `Approved lyrics for "${sub.trackTitle}" (+${payout} pts)`);
+      logActivity("music_curator", "Approved Lyrics Sheet", "lyrics", id, `Approved lyrics for "${sub.trackTitle}" (+${payout} pts)`);
       notifyChanges();
     }
   },
@@ -1029,7 +1321,7 @@ export const adminApi = {
     const sub = state.lyricsSubmissions.find((s) => s.id === id);
     if (sub) {
       sub.status = "rejected";
-      logActivity("moderator", "Rejected Lyrics Sheet", "lyrics", id, `Rejected lyrics for "${sub.trackTitle}"`);
+      logActivity("music_curator", "Rejected Lyrics Sheet", "lyrics", id, `Rejected lyrics for "${sub.trackTitle}"`);
       notifyChanges();
     }
   },
@@ -1067,7 +1359,7 @@ export const adminApi = {
       photo: data.photo || "/assets/photos/shop/hoodie.webp",
     };
     state.shop = [newProduct, ...state.shop];
-    logActivity("admin", "Added Merch Item", "shop", id, `Added product "${data.name}" (${data.price} Toman)`);
+    logActivity("shop_manager", "Added Merch Item", "shop", id, `Added product "${data.name}" (${data.price} Toman)`);
     notifyChanges();
     return newProduct;
   },
@@ -1111,6 +1403,7 @@ export const adminApi = {
     username: string;
     displayName: string;
     role: AdminUserRole;
+    permissions?: UserPermissions;
     points?: number;
     avatar?: string;
     bio?: string;
@@ -1121,6 +1414,7 @@ export const adminApi = {
       username: data.username.toLowerCase().replace(/[^a-z0-9_]/g, ""),
       displayName: data.displayName,
       role: data.role,
+      permissions: data.permissions || getDefaultPermissions(data.role),
       avatar: data.avatar || "/assets/photos/account/me.webp",
       points: data.points ?? 100,
       joinedAt: "Today",
@@ -1146,6 +1440,7 @@ export const adminApi = {
     const u = state.users.find((item) => item.username.toLowerCase() === username.toLowerCase());
     if (u) {
       u.role = role;
+      u.permissions = getDefaultPermissions(role);
       logActivity("super_admin", "Changed User Role", "user", u.id, `Promoted @${u.username} to ${role}`);
       notifyChanges();
     }
@@ -1164,7 +1459,7 @@ export const adminApi = {
     const u = state.users.find((item) => item.username.toLowerCase() === username.toLowerCase());
     if (u) {
       u.points = Math.max(0, u.points + delta);
-      logActivity("admin", "Adjusted Fan Points", "user", u.id, `Awarded ${delta > 0 ? "+" : ""}${delta} pts to @${u.username} for "${reason}"`);
+      logActivity("super_admin", "Adjusted Fan Points", "user", u.id, `Awarded ${delta > 0 ? "+" : ""}${delta} pts to @${u.username} for "${reason}"`);
       notifyChanges();
     }
   },

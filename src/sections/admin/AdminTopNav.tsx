@@ -1,11 +1,10 @@
 /* ------------------------------------------------------------------ *
  *  FAIMESS Admin Console Top Navigation
  *  Replaces the site's consumer navigation with platform control tabs
- *  and quick exit affordance when in admin mode.
+ *  and quick new-window site launcher.
  * ------------------------------------------------------------------ */
 
 import { usePreferences } from "../../app/PreferencesContext";
-import { useRoute } from "../../app/router";
 import { Icon, type IconName } from "../../ui/Icon";
 import { cn } from "../../lib/cn";
 
@@ -16,20 +15,24 @@ export type AdminTabId =
   | "artists"
   | "playlists"
   | "news"
-  | "moderation"
+  | "comments"
+  | "lyrics"
   | "shop"
+  | "settings"
   | "users";
 
 export const ADMIN_TABS: { id: AdminTabId; labelFa: string; labelEn: string; icon: IconName }[] = [
-  { id: "dashboard", labelFa: "پیشخوان", labelEn: "Overview", icon: "sparkle" },
+  { id: "dashboard", labelFa: "پیشخوان و آمار", labelEn: "Overview", icon: "sparkle" },
   { id: "tracks", labelFa: "آهنگ‌ها", labelEn: "Tracks", icon: "music" },
   { id: "albums", labelFa: "آلبوم‌ها", labelEn: "Albums", icon: "disc" },
   { id: "artists", labelFa: "هنرمندان", labelEn: "Artists", icon: "mic" },
   { id: "playlists", labelFa: "پلی‌لیست‌ها", labelEn: "Playlists", icon: "list" },
   { id: "news", labelFa: "تحریریه اخبار", labelEn: "News", icon: "news" },
-  { id: "moderation", labelFa: "نظارت جامعه", labelEn: "Moderation", icon: "message" },
+  { id: "comments", labelFa: "نظارت دیدگاه‌ها", labelEn: "Comments", icon: "message" },
+  { id: "lyrics", labelFa: "نظارت لیریک‌ها", labelEn: "Lyrics Review", icon: "waveform" },
   { id: "shop", labelFa: "فروشگاه", labelEn: "Shop", icon: "shop" },
-  { id: "users", labelFa: "کاربران و دسترسی", labelEn: "Users", icon: "users" },
+  { id: "settings", labelFa: "نمایش بخش‌ها", labelEn: "Visibility", icon: "settings" },
+  { id: "users", labelFa: "کاربران و نقش‌ها", labelEn: "Staff & RBAC", icon: "users" },
 ];
 
 export function getActiveAdminTab(): AdminTabId {
@@ -46,8 +49,7 @@ export function getActiveAdminTab(): AdminTabId {
 }
 
 export function AdminTopNav() {
-  const { lang, t } = usePreferences();
-  const { navigate } = useRoute();
+  const { lang } = usePreferences();
   const currentTab = getActiveAdminTab();
 
   const handleSelectTab = (tabId: AdminTabId) => {
@@ -56,20 +58,27 @@ export function AdminTopNav() {
     }
   };
 
+  const handleOpenSiteInNewWindow = () => {
+    if (typeof window !== "undefined") {
+      const siteUrl = `${window.location.origin}${window.location.pathname}#/`;
+      window.open(siteUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
   return (
     <nav
       aria-label="Admin Navigation"
       className="flex min-w-0 max-w-full items-center gap-1.5 overflow-x-auto rounded-full border border-line bg-surface/90 px-3 py-1.5 shadow-sm backdrop-blur-md scroll-rail"
     >
-      {/* Return to Site Button */}
+      {/* View Site in New Window Button */}
       <button
         type="button"
-        onClick={() => navigate("home")}
-        className="flex shrink-0 items-center gap-1.5 rounded-full bg-subtle px-3 py-1.5 text-[12px] font-bold text-ink-muted transition hover:bg-subtle/80 hover:text-ink"
-        title={lang === "fa" ? "بازگشت به برنامه اصلی" : "Back to Main Site"}
+        onClick={handleOpenSiteInNewWindow}
+        className="flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-subtle px-3 py-1.5 text-[12px] font-bold text-ink transition hover:bg-primary-soft hover:text-primary-deep"
+        title={lang === "fa" ? "نمایش سایت در پنجره جدید" : "Open site in new window"}
       >
-        <Icon name="home" size={14} />
-        <span>{lang === "fa" ? "سایت اصلی" : "Exit"}</span>
+        <Icon name="arrowUpRight" size={14} />
+        <span>{lang === "fa" ? "نمایش سایت" : "View Site"}</span>
       </button>
 
       <div className="h-4 w-px shrink-0 bg-line" />

@@ -5,20 +5,23 @@ import { useApp } from "../app/AppContext";
 import { useAuth } from "../app/AuthContext";
 import {
   adminApi,
+  getDefaultPermissions,
   type AdminAlbum,
+  type AdminNews,
   type AdminOverviewStats,
+  type AdminPlaylist,
+  type AdminTrack,
   type AdminUser,
   type AdminUserRole,
+  type SiteFeatureSettings,
+  type UserPermissions,
 } from "../api/adminApi";
 import { Icon } from "../ui/Icon";
 import { toman, type ShopCategoryId, type ShopBadge } from "../data/shop";
-import { forwardIcon } from "../lib/rtl";
 import { cn } from "../lib/cn";
 import { FeaturedImagePicker } from "../sections/admin/FeaturedImagePicker";
 import { getActiveAdminTab, ADMIN_TABS, type AdminTabId } from "../sections/admin/AdminTopNav";
-import type { Artist, Playlist } from "../data/library";
-import type { PlayerTrack } from "../data/player";
-import type { NewsItem } from "../data/feed";
+import type { Artist } from "../data/library";
 
 export function AdminPage() {
   const { t, locale, dir, lang, dataLabel } = usePreferences();
@@ -27,7 +30,9 @@ export function AdminPage() {
 
   const [activeTab, setActiveTab] = useState<AdminTabId>(() => getActiveAdminTab());
   const [stats, setStats] = useState<AdminOverviewStats>(() => adminApi.getOverviewStats());
+  const [siteSettings, setSiteSettings] = useState<SiteFeatureSettings>(() => adminApi.getSiteSettings());
   const [searchQuery, setSearchQuery] = useState("");
+  const [statsPeriod, setStatsPeriod] = useState<"today" | "week" | "all">("today");
 
   // Track Hash Route for Admin Tabs
   useEffect(() => {
@@ -48,18 +53,20 @@ export function AdminPage() {
   // Synchronize with reactive updates from adminApi
   const refreshData = useCallback(() => {
     setStats(adminApi.getOverviewStats());
+    setSiteSettings(adminApi.getSiteSettings());
   }, []);
 
   useEffect(() => {
     return adminApi.subscribe(refreshData);
   }, [refreshData]);
 
-  /* ---------------- Track Modal (Create & Edit) ---------------- */
+  /* ---------------- Track Modal (Create & Edit with Single Track Support) ---------------- */
   const [trackModalOpen, setTrackModalOpen] = useState(false);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
   const [trackTitle, setTrackTitle] = useState("");
   const [trackArtist, setTrackArtist] = useState("NOVAE");
   const [trackAlbum, setTrackAlbum] = useState("Afterglow");
+  const [trackIsSingle, setTrackIsSingle] = useState(false);
   const [trackDuration, setTrackDuration] = useState("3:24");
   const [trackAudio, setTrackAudio] = useState("/assets/audio/faimess-demo.mp3");
   const [trackPhoto, setTrackPhoto] = useState("/assets/photos/albums/afterglow.webp");
@@ -72,6 +79,7 @@ export function AdminPage() {
     setTrackTitle("");
     setTrackArtist("NOVAE");
     setTrackAlbum("Afterglow");
+    setTrackIsSingle(false);
     setTrackDuration("3:24");
     setTrackAudio("/assets/audio/faimess-demo.mp3");
     setTrackPhoto("/assets/photos/albums/afterglow.webp");
@@ -81,11 +89,13 @@ export function AdminPage() {
     setTrackModalOpen(true);
   };
 
-  const openEditTrack = (tr: PlayerTrack) => {
+  const openEditTrack = (tr: AdminTrack) => {
     setEditingTrackId(tr.id);
     setTrackTitle(tr.title);
     setTrackArtist(tr.artist);
-    setTrackAlbum(tr.album);
+    const isSingle = Boolean(tr.isSingle || tr.album === "· single");
+    setTrackIsSingle(isSingle);
+    setTrackAlbum(isSingle ? "· single" : tr.album);
     const m = Math.floor(tr.seconds / 60);
     const s = Math.floor(tr.seconds % 60);
     setTrackDuration(`${m}:${String(s).padStart(2, "0")}`);
@@ -107,7 +117,8 @@ export function AdminPage() {
       adminApi.updateTrack(editingTrackId, {
         title: trackTitle.trim(),
         artist: trackArtist.trim(),
-        album: trackAlbum.trim(),
+        album: trackIsSingle ? "· single" : trackAlbum.trim(),
+        isSingle: trackIsSingle,
         duration: trackDuration.trim(),
         audio: trackAudio.trim() || "/assets/audio/faimess-demo.mp3",
         photo: trackPhoto.trim(),
@@ -120,7 +131,8 @@ export function AdminPage() {
       adminApi.createTrack({
         title: trackTitle.trim(),
         artist: trackArtist.trim(),
-        album: trackAlbum.trim(),
+        album: trackIsSingle ? "· single" : trackAlbum.trim(),
+        isSingle: trackIsSingle,
         duration: trackDuration.trim(),
         audio: trackAudio.trim() || "/assets/audio/faimess-demo.mp3",
         photo: trackPhoto.trim(),
@@ -197,6 +209,70 @@ export function AdminPage() {
     setAlbumModalOpen(false);
   };
 
+  /* ---------------- Playlist Modal (With Track Selection & Search) ---------------- */
+  const [playlistModalOpen, setPlaylistModalOpen] = useState(false);
+  const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
+  const [playlistName, setPlaylistName] = useState("");
+  const [playlistCurator, setPlaylistCurator] = useState("FAIMESS Editorial");
+  const [playlistMood, setPlaylistMood] = useState("Vibrant");
+  const [playlistPhoto, setPlaylistPhoto] = useState("/assets/photos/playlists/golden-hour.webp");
+  const [playlistSelectedTrackIds, setPlaylistSelectedTrackIds] = useState<string[]>([]);
+  const [playlistTrackSearch, setPlaylistTrackSearch] = useState("");
+
+  const openCreatePlaylist = () => {
+    setEditingPlaylistId(null);
+    setPlaylistName("");
+    setPlaylistCurator("FAIMESS Editorial");
+    setPlaylistMood("Vibrant");
+    setPlaylistPhoto("/assets/photos/playlists/golden-hour.webp");
+    setPlaylistSelectedTrackIds([]);
+    setPlaylistTrackSearch("");
+    setPlaylistModalOpen(true);
+  };
+
+  const openEditPlaylist = (pl: AdminPlaylist) => {
+    setEditingPlaylistId(pl.id);
+    setPlaylistName(pl.name);
+    setPlaylistCurator(pl.curator);
+    setPlaylistMood(pl.mood);
+    setPlaylistPhoto(pl.photo);
+    setPlaylistSelectedTrackIds(pl.trackIds ?? []);
+    setPlaylistTrackSearch("");
+    setPlaylistModalOpen(true);
+  };
+
+  const handleToggleTrackInPlaylist = (id: string) => {
+    setPlaylistSelectedTrackIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleSavePlaylist = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!playlistName.trim()) return;
+
+    if (editingPlaylistId) {
+      adminApi.updatePlaylist(editingPlaylistId, {
+        name: playlistName.trim(),
+        curator: playlistCurator.trim(),
+        mood: playlistMood.trim(),
+        photo: playlistPhoto,
+        trackIds: playlistSelectedTrackIds,
+      });
+      notify(lang === "fa" ? "پلی‌لیست و آهنگ‌های آن ویرایش شد" : "Playlist updated", "primary");
+    } else {
+      adminApi.createPlaylist({
+        name: playlistName.trim(),
+        curator: playlistCurator.trim(),
+        mood: playlistMood.trim(),
+        photo: playlistPhoto,
+        trackIds: playlistSelectedTrackIds,
+      });
+      notify(lang === "fa" ? "پلی‌لیست با آهنگ‌های انتخابی ساخته شد" : "Playlist created with tracks", "primary");
+    }
+    setPlaylistModalOpen(false);
+  };
+
   /* ---------------- Artist Modal (Create & Edit) ---------------- */
   const [artistModalOpen, setArtistModalOpen] = useState(false);
   const [editingArtistId, setEditingArtistId] = useState<string | null>(null);
@@ -257,57 +333,7 @@ export function AdminPage() {
     setArtistModalOpen(false);
   };
 
-  /* ---------------- Playlist Modal (Create & Edit) ---------------- */
-  const [playlistModalOpen, setPlaylistModalOpen] = useState(false);
-  const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
-  const [playlistName, setPlaylistName] = useState("");
-  const [playlistCurator, setPlaylistCurator] = useState("FAIMESS Editorial");
-  const [playlistMood, setPlaylistMood] = useState("Vibrant");
-  const [playlistPhoto, setPlaylistPhoto] = useState("/assets/photos/playlists/golden-hour.webp");
-
-  const openCreatePlaylist = () => {
-    setEditingPlaylistId(null);
-    setPlaylistName("");
-    setPlaylistCurator("FAIMESS Editorial");
-    setPlaylistMood("Vibrant");
-    setPlaylistPhoto("/assets/photos/playlists/golden-hour.webp");
-    setPlaylistModalOpen(true);
-  };
-
-  const openEditPlaylist = (pl: Playlist) => {
-    setEditingPlaylistId(pl.id);
-    setPlaylistName(pl.name);
-    setPlaylistCurator(pl.curator);
-    setPlaylistMood(pl.mood);
-    setPlaylistPhoto(pl.photo);
-    setPlaylistModalOpen(true);
-  };
-
-  const handleSavePlaylist = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!playlistName.trim()) return;
-
-    if (editingPlaylistId) {
-      adminApi.updatePlaylist(editingPlaylistId, {
-        name: playlistName.trim(),
-        curator: playlistCurator.trim(),
-        mood: playlistMood.trim(),
-        photo: playlistPhoto,
-      });
-      notify(lang === "fa" ? "پلی‌لیست ویرایش شد" : "Playlist updated", "primary");
-    } else {
-      adminApi.createPlaylist({
-        name: playlistName.trim(),
-        curator: playlistCurator.trim(),
-        mood: playlistMood.trim(),
-        photo: playlistPhoto,
-      });
-      notify(lang === "fa" ? "پلی‌لیست جدید ایجاد شد" : "Playlist created", "primary");
-    }
-    setPlaylistModalOpen(false);
-  };
-
-  /* ---------------- News Modal (Create & Edit) ---------------- */
+  /* ---------------- News Modal (Create, Edit & Status Workflow) ---------------- */
   const [newsModalOpen, setNewsModalOpen] = useState(false);
   const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
   const [newsTitle, setNewsTitle] = useState("");
@@ -316,7 +342,8 @@ export function AdminPage() {
   const [newsExcerpt, setNewsExcerpt] = useState("");
   const [newsBody, setNewsBody] = useState("");
   const [newsPhoto, setNewsPhoto] = useState("/assets/photos/banners/asia-leg.webp");
-  const [newsFeatured, setNewsFeatured] = useState(false);
+  const [newsStatus, setNewsStatus] = useState<"published" | "pending_review">("published");
+  const [newsFilterStatus, setNewsFilterStatus] = useState<"all" | "published" | "pending_review">("all");
 
   const openCreateNews = () => {
     setEditingNewsId(null);
@@ -326,11 +353,11 @@ export function AdminPage() {
     setNewsExcerpt("");
     setNewsBody("");
     setNewsPhoto("/assets/photos/banners/asia-leg.webp");
-    setNewsFeatured(false);
+    setNewsStatus("published");
     setNewsModalOpen(true);
   };
 
-  const openEditNews = (n: NewsItem) => {
+  const openEditNews = (n: AdminNews) => {
     setEditingNewsId(n.id);
     setNewsTitle(n.title);
     setNewsAuthor(n.author?.name || "FAIMESS Editorial");
@@ -338,7 +365,7 @@ export function AdminPage() {
     setNewsExcerpt(n.excerpt);
     setNewsBody(n.bodyKeys?.[0] || n.excerpt);
     setNewsPhoto(n.photo);
-    setNewsFeatured(false);
+    setNewsStatus(n.status || "published");
     setNewsModalOpen(true);
   };
 
@@ -359,6 +386,7 @@ export function AdminPage() {
         excerpt: newsExcerpt.trim(),
         bodyKeys: [newsBody.trim() || newsExcerpt.trim()],
         photo: newsPhoto,
+        status: newsStatus,
       });
       notify(lang === "fa" ? "مقاله خبری به‌روزرسانی شد" : "Article updated", "primary");
     } else {
@@ -369,9 +397,14 @@ export function AdminPage() {
         excerpt: newsExcerpt.trim(),
         body: newsBody.trim(),
         photo: newsPhoto,
-        featured: newsFeatured,
+        status: newsStatus,
       });
-      notify(lang === "fa" ? "مقاله خبری منتشر شد" : "Article published", "primary");
+      notify(
+        newsStatus === "published"
+          ? (lang === "fa" ? "مقاله خبری با موفقیت منتشر شد" : "Article published")
+          : (lang === "fa" ? "پیش‌نویس خبر جهت بررسی و تایید مدیر ثبت شد" : "Draft submitted for manager approval"),
+        "primary",
+      );
     }
     setNewsModalOpen(false);
   };
@@ -436,12 +469,13 @@ export function AdminPage() {
     setProductModalOpen(false);
   };
 
-  /* ---------------- User Modal (Create & Edit) ---------------- */
+  /* ---------------- User Modal (Roles & Multi-Permissions RBAC) ---------------- */
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [editingUsername, setEditingUsername] = useState<string | null>(null);
   const [userUsername, setUserUsername] = useState("");
   const [userDisplayName, setUserDisplayName] = useState("");
   const [userRole, setUserRole] = useState<AdminUserRole>("user");
+  const [userPerms, setUserPerms] = useState<UserPermissions>(() => getDefaultPermissions("user"));
   const [userPoints, setUserPoints] = useState(100);
   const [userAvatar, setUserAvatar] = useState("/assets/photos/account/me.webp");
 
@@ -450,6 +484,7 @@ export function AdminPage() {
     setUserUsername("");
     setUserDisplayName("");
     setUserRole("user");
+    setUserPerms(getDefaultPermissions("user"));
     setUserPoints(100);
     setUserAvatar("/assets/photos/account/me.webp");
     setUserModalOpen(true);
@@ -460,9 +495,22 @@ export function AdminPage() {
     setUserUsername(u.username);
     setUserDisplayName(u.displayName);
     setUserRole(u.role);
+    setUserPerms(u.permissions || getDefaultPermissions(u.role));
     setUserPoints(u.points);
     setUserAvatar(u.avatar);
     setUserModalOpen(true);
+  };
+
+  const handleRoleChange = (role: AdminUserRole) => {
+    setUserRole(role);
+    setUserPerms(getDefaultPermissions(role));
+  };
+
+  const handleTogglePermission = (permKey: keyof UserPermissions) => {
+    setUserPerms((prev) => ({
+      ...prev,
+      [permKey]: !prev[permKey],
+    }));
   };
 
   const handleSaveUser = (e: React.FormEvent) => {
@@ -473,19 +521,21 @@ export function AdminPage() {
       adminApi.updateUser(editingUsername, {
         displayName: userDisplayName.trim(),
         role: userRole,
+        permissions: userPerms,
         points: userPoints,
         avatar: userAvatar,
       });
-      notify(lang === "fa" ? "اطلاعات کاربر ذخیره شد" : "User updated", "primary");
+      notify(lang === "fa" ? "نقش و دسترسی‌های کاربر ذخیره شد" : "User & permissions updated", "primary");
     } else {
       adminApi.createUser({
         username: userUsername.trim(),
         displayName: userDisplayName.trim(),
         role: userRole,
+        permissions: userPerms,
         points: userPoints,
         avatar: userAvatar,
       });
-      notify(lang === "fa" ? "کاربر جدید ایجاد شد" : "User created", "primary");
+      notify(lang === "fa" ? "کاربر با دسترسی‌های تعیین‌شده ایجاد شد" : "Staff/User created", "primary");
     }
     setUserModalOpen(false);
   };
@@ -548,6 +598,7 @@ export function AdminPage() {
               FAIMESS Core
             </span>
             <span className="font-bold text-[12px] text-teal-deep">● Live Persistence</span>
+            <span className="font-mono text-[12px] text-ink-faint">v4.0.0</span>
           </div>
           <h1 className="mt-1 font-black text-[22px] tracking-tight text-ink sm:text-[26px]">
             {lang === "fa" ? "مرکز مدیریت کل استودیو فیمس" : "FAIMESS Studio Control Center"}
@@ -559,7 +610,7 @@ export function AdminPage() {
           </p>
         </div>
 
-        {/* Global Admin Tools: Export, Import, Reset */}
+        {/* Global Admin Tools: Backup, Reset */}
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -597,7 +648,7 @@ export function AdminPage() {
               type="button"
               onClick={() => switchTab(tab.id)}
               className={cn(
-                "flex shrink-0 items-center gap-2 rounded-[12px] px-3.5 py-2 text-[12px] font-extrabold transition",
+                "flex shrink-0 items-center gap-2 rounded-[12px] px-3 py-2 text-[12px] font-extrabold transition",
                 isActive
                   ? "bg-primary-deep text-white shadow-sm"
                   : "text-ink-muted hover:bg-subtle hover:text-ink",
@@ -605,57 +656,127 @@ export function AdminPage() {
             >
               <Icon name={tab.icon} size={15} />
               <span>{lang === "fa" ? tab.labelFa : tab.labelEn}</span>
+              {tab.id === "comments" && stats.reportedComments > 0 && (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-flame-deep text-[12px] text-white">
+                  {stats.reportedComments}
+                </span>
+              )}
+              {tab.id === "lyrics" && stats.pendingLyrics > 0 && (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-deep text-[12px] text-white">
+                  {stats.pendingLyrics}
+                </span>
+              )}
+              {tab.id === "news" && stats.pendingNews > 0 && (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-soft text-[12px] text-ink font-black">
+                  {stats.pendingNews}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* ===================== TAB 1: DASHBOARD OVERVIEW ===================== */}
+      {/* ===================== TAB 1: DASHBOARD & MASTER ANALYTICS ===================== */}
       {activeTab === "dashboard" && (
         <div className="space-y-6">
-          {/* Quick Metrics Grid */}
+          {/* Time Filter Chips */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-black text-[16px] text-ink">
+                {lang === "fa" ? "داشبورد تحلیلی و شاخص‌های کلیدی پلتفرم" : "Platform Executive KPI Suite"}
+              </h3>
+              <p className="text-[12px] text-ink-muted">
+                {lang === "fa" ? "آمار زنده ترافیک، استریم، درآمد، کامنت‌ها و کاربران فعال" : "Live real-time metrics"}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1 rounded-full border border-line bg-surface p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setStatsPeriod("today")}
+                className={cn(
+                  "rounded-full px-3 py-1 text-[12px] font-bold transition",
+                  statsPeriod === "today" ? "bg-primary-deep text-white" : "text-ink-muted hover:text-ink",
+                )}
+              >
+                {lang === "fa" ? "امروز" : "Today"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatsPeriod("week")}
+                className={cn(
+                  "rounded-full px-3 py-1 text-[12px] font-bold transition",
+                  statsPeriod === "week" ? "bg-primary-deep text-white" : "text-ink-muted hover:text-ink",
+                )}
+              >
+                {lang === "fa" ? "این هفته" : "This Week"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatsPeriod("all")}
+                className={cn(
+                  "rounded-full px-3 py-1 text-[12px] font-bold transition",
+                  statsPeriod === "all" ? "bg-primary-deep text-white" : "text-ink-muted hover:text-ink",
+                )}
+              >
+                {lang === "fa" ? "کل دوران" : "All Time"}
+              </button>
+            </div>
+          </div>
+
+          {/* Master KPI Cards Grid */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
+              <span className="text-[12px] text-teal-deep font-bold">● {lang === "fa" ? "کاربران آنلاین" : "Online Now"}</span>
+              <p className="mt-1 font-black text-[22px] text-ink">{stats.onlineUsers}</p>
+            </div>
+
+            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
+              <span className="text-[12px] text-ink-muted">
+                {statsPeriod === "today" ? (lang === "fa" ? "بازدید امروز" : "Views Today") : (lang === "fa" ? "کل بازدیدها" : "Total Views")}
+              </span>
+              <p className="mt-1 font-black text-[22px] text-primary-deep">
+                {(statsPeriod === "today" ? stats.pageViewsToday : stats.pageViewsTotal).toLocaleString(locale)}
+              </p>
+            </div>
+
+            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
+              <span className="text-[12px] text-ink-muted">
+                {statsPeriod === "today" ? (lang === "fa" ? "دیدگاه‌های امروز" : "Comments Today") : (lang === "fa" ? "کل دیدگاه‌ها" : "Total Comments")}
+              </span>
+              <p className="mt-1 font-black text-[22px] text-ink">
+                {statsPeriod === "today" ? stats.commentsToday : stats.totalComments}
+              </p>
+            </div>
+
             <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
               <span className="text-[12px] text-ink-muted">{t("admin.statsTracks")}</span>
               <p className="mt-1 font-black text-[22px] text-ink">{stats.totalTracks}</p>
             </div>
-            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
-              <span className="text-[12px] text-ink-muted">{t("admin.statsArtists")}</span>
-              <p className="mt-1 font-black text-[22px] text-ink">{stats.totalArtists}</p>
-            </div>
-            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
-              <span className="text-[12px] text-ink-muted">{t("admin.statsAlbums")}</span>
-              <p className="mt-1 font-black text-[22px] text-ink">{stats.totalAlbums}</p>
-            </div>
+
             <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
               <span className="text-[12px] text-ink-muted">{t("admin.statsStreams")}</span>
-              <p className="mt-1 font-black text-[22px] text-primary-deep">
-                {stats.totalStreams.toLocaleString(locale)}
+              <p className="mt-1 font-black text-[22px] text-ink">
+                {(statsPeriod === "today" ? stats.streamsToday : stats.totalStreams).toLocaleString(locale)}
               </p>
             </div>
+
             <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
               <span className="text-[12px] text-ink-muted">{t("admin.statsRevenue")}</span>
               <p className="mt-1 font-black text-[18px] text-teal-deep">
                 {toman(stats.estimatedRevenueToman, locale)}
               </p>
             </div>
-            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
-              <span className="text-[12px] text-ink-muted">{t("admin.statsModeration")}</span>
-              <p className="mt-1 font-black text-[22px] text-flame-deep">
-                {stats.reportedComments + stats.pendingLyrics}
-              </p>
-            </div>
           </div>
 
           {/* Quick Actions & Recent Activity Audit Log */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {/* Quick Actions Launcher */}
             <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
               <h3 className="font-extrabold text-[15px] text-ink">
                 {lang === "fa" ? "دسترسی سریع و ایجاد محتوا" : "Quick Action Shortcuts"}
               </h3>
               <p className="mt-1 text-[12px] text-ink-muted">
-                {lang === "fa" ? "ایجاد فوری آهنگ، آلبوم، خبر، محصول یا کاربر" : "Fast creation modals"}
+                {lang === "fa" ? "ایجاد فوری آهنگ، آلبوم، پلی‌لیست، خبر، محصول یا پرسنل" : "Fast creation modals"}
               </p>
 
               <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
@@ -687,10 +808,23 @@ export function AdminPage() {
 
                 <button
                   type="button"
-                  onClick={openCreateArtist}
+                  onClick={openCreatePlaylist}
                   className="flex flex-col items-center justify-center rounded-[16px] border border-line bg-subtle/50 p-3 text-center transition hover:border-primary-deep hover:bg-surface"
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-soft text-purple-deep">
+                    <Icon name="list" size={16} />
+                  </div>
+                  <span className="mt-2 font-bold text-[12px] text-ink">
+                    {lang === "fa" ? "+ ساخت پلی‌لیست" : "+ Create Playlist"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={openCreateArtist}
+                  className="flex flex-col items-center justify-center rounded-[16px] border border-line bg-subtle/50 p-3 text-center transition hover:border-primary-deep hover:bg-surface"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-soft text-ink">
                     <Icon name="mic" size={16} />
                   </div>
                   <span className="mt-2 font-bold text-[12px] text-ink">
@@ -703,24 +837,11 @@ export function AdminPage() {
                   onClick={openCreateNews}
                   className="flex flex-col items-center justify-center rounded-[16px] border border-line bg-subtle/50 p-3 text-center transition hover:border-primary-deep hover:bg-surface"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-soft text-ink">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-mint-soft text-teal-deep">
                     <Icon name="news" size={16} />
                   </div>
                   <span className="mt-2 font-bold text-[12px] text-ink">
                     {lang === "fa" ? "+ انتشار خبر" : "+ Publish News"}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={openCreateProduct}
-                  className="flex flex-col items-center justify-center rounded-[16px] border border-line bg-subtle/50 p-3 text-center transition hover:border-primary-deep hover:bg-surface"
-                >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-flame-soft text-flame-deep">
-                    <Icon name="shop" size={16} />
-                  </div>
-                  <span className="mt-2 font-bold text-[12px] text-ink">
-                    {lang === "fa" ? "+ محصول مرچ" : "+ Merch Item"}
                   </span>
                 </button>
 
@@ -733,7 +854,7 @@ export function AdminPage() {
                     <Icon name="users" size={16} />
                   </div>
                   <span className="mt-2 font-bold text-[12px] text-ink">
-                    {lang === "fa" ? "+ کاربر / مدیر" : "+ Add Staff"}
+                    {lang === "fa" ? "+ کاربر / پرسنل" : "+ Add Staff"}
                   </span>
                 </button>
               </div>
@@ -743,7 +864,7 @@ export function AdminPage() {
             <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
               <h3 className="font-extrabold text-[15px] text-ink">{t("admin.recentActivity")}</h3>
               <p className="mt-1 text-[12px] text-ink-muted">
-                {lang === "fa" ? "ثبت تغییرات لحظه‌ای مدیران و ناظران در سیستم" : "Live audit trail"}
+                {lang === "fa" ? "ثبت لاگ زنده از فعالیت‌های مدیران و ناظران در سیستم" : "Live audit trail"}
               </p>
 
               <div className="mt-4 max-h-64 space-y-2.5 overflow-y-auto pe-1 scroll-slim">
@@ -826,7 +947,15 @@ export function AdminPage() {
                     </td>
                     <td className="py-2.5 font-bold text-ink">{tr.title}</td>
                     <td className="py-2.5 text-ink-muted">{tr.artist}</td>
-                    <td className="py-2.5 text-ink-muted">{tr.album}</td>
+                    <td className="py-2.5">
+                      {tr.isSingle || tr.album === "· single" ? (
+                        <span className="rounded-full bg-purple-soft px-2.5 py-0.5 text-[12px] font-bold text-purple-deep">
+                          {lang === "fa" ? "تک‌آهنگ (Single)" : "Single"}
+                        </span>
+                      ) : (
+                        <span className="text-ink-muted">{tr.album}</span>
+                      )}
+                    </td>
                     <td className="py-2.5 text-[12px] font-mono text-ink-faint truncate max-w-[140px]" title={tr.audio}>
                       {tr.audio}
                     </td>
@@ -1081,21 +1210,34 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ===================== TAB 6: NEWS MANAGEMENT ===================== */}
+      {/* ===================== TAB 6: NEWS & EDITORIAL (WORKFLOW) ===================== */}
       {activeTab === "news" && (
         <div className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative min-w-0 max-w-sm flex-1">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={lang === "fa" ? "جستجو در اخبار..." : "Search news..."}
-                className="w-full rounded-[14px] border border-line bg-surface py-2 pe-3 ps-9 text-[12px] text-ink shadow-sm outline-none focus:border-primary-deep"
-              />
-              <div className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-faint">
-                <Icon name="search" size={14} />
+            <div className="flex flex-1 items-center gap-2">
+              <div className="relative min-w-0 max-w-sm flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={lang === "fa" ? "جستجو در اخبار..." : "Search news..."}
+                  className="w-full rounded-[14px] border border-line bg-surface py-2 pe-3 ps-9 text-[12px] text-ink shadow-sm outline-none focus:border-primary-deep"
+                />
+                <div className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-faint">
+                  <Icon name="search" size={14} />
+                </div>
               </div>
+
+              {/* Status filter: All, Published, Pending Review */}
+              <select
+                value={newsFilterStatus}
+                onChange={(e) => setNewsFilterStatus(e.target.value as any)}
+                className="rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none"
+              >
+                <option value="all">{lang === "fa" ? "همه اخبار" : "All Stories"}</option>
+                <option value="published">{lang === "fa" ? "منتشر شده" : "Published"}</option>
+                <option value="pending_review">{lang === "fa" ? "در انتظار تایید مدیر" : "Pending Approval"}</option>
+              </select>
             </div>
 
             <button
@@ -1109,7 +1251,7 @@ export function AdminPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {adminApi.getNews(searchQuery).map((item) => (
+            {adminApi.getNews(searchQuery, newsFilterStatus).map((item) => (
               <div
                 key={item.id}
                 className="flex flex-col overflow-hidden rounded-[20px] border border-line bg-surface shadow-sm"
@@ -1119,6 +1261,11 @@ export function AdminPage() {
                   <span className="absolute start-3 top-3 rounded-full bg-surface/90 px-2.5 py-0.5 text-[12px] font-black text-ink shadow-sm">
                     {dataLabel(item.tag)}
                   </span>
+                  {item.status === "pending_review" && (
+                    <span className="absolute end-3 top-3 rounded-full bg-amber-soft px-2.5 py-0.5 text-[12px] font-black text-ink shadow-sm">
+                      {lang === "fa" ? "در انتظار تایید" : "Pending Review"}
+                    </span>
+                  )}
                 </div>
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
@@ -1127,7 +1274,19 @@ export function AdminPage() {
                   </div>
                   <div className="mt-4 flex items-center justify-between border-t border-line/60 pt-3">
                     <span className="text-[12px] text-ink-faint">{item.author?.name || "Editorial"}</span>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
+                      {item.status === "pending_review" && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            adminApi.approveNews(item.id);
+                            notify(lang === "fa" ? "خبر توسط مدیر تایید و منتشر شد" : "Approved & Published", "primary");
+                          }}
+                          className="rounded-lg bg-teal-deep px-2.5 py-1 text-[12px] font-bold text-white hover:bg-teal-deep/90"
+                        >
+                          {lang === "fa" ? "تایید و انتشار" : "Approve"}
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => openEditNews(item)}
@@ -1156,17 +1315,23 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ===================== TAB 7: COMMUNITY MODERATION ===================== */}
-      {activeTab === "moderation" && (
-        <div className="space-y-6">
-          {/* Moderation Section 1: Flagged Comments */}
+      {/* ===================== TAB 7: REPORTED COMMENTS MODERATION ===================== */}
+      {activeTab === "comments" && (
+        <div className="space-y-4">
           <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
-            <h3 className="font-extrabold text-[15px] text-ink">
-              {lang === "fa" ? "صف نظارت بر دیدگاه‌های گزارش‌شده" : "Reported Comments Queue"}
-            </h3>
-            <p className="mt-0.5 text-[12px] text-ink-muted">
-              {lang === "fa" ? "بررسی گزارش‌های کاربران پیرامون کامنت‌های نامناسب یا تبلیغاتی" : "Review reported content"}
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-extrabold text-[15px] text-ink">
+                  {lang === "fa" ? "میز نظارت بر دیدگاه‌های گزارش‌شده" : "Reported Comments Queue"}
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa" ? "بررسی گزارش‌های ثبت‌شده توسط کاربران و تصمیم‌گیری حذف یا تایید" : "Review reported content"}
+                </p>
+              </div>
+              <span className="rounded-full bg-flame-soft px-3 py-1 font-extrabold text-[12px] text-flame-deep">
+                {stats.reportedComments} {lang === "fa" ? "مورد در صف" : "pending"}
+              </span>
+            </div>
 
             <div className="mt-4 space-y-3">
               {adminApi.getComments("reported").map((cm) => (
@@ -1178,6 +1343,7 @@ export function AdminPage() {
                     <div>
                       <span className="font-bold text-[13px] text-ink">{cm.author}</span>
                       <span className="ms-2 font-mono text-[12px] text-ink-faint">{cm.handle}</span>
+                      <span className="ms-2 text-[12px] text-ink-faint">در {cm.targetTitle}</span>
                     </div>
                     <span className="rounded-full bg-flame-soft px-2 py-0.5 text-[12px] font-extrabold text-flame-deep">
                       {cm.reportReason || "Flagged"}
@@ -1213,21 +1379,32 @@ export function AdminPage() {
                 <div className="py-8 text-center text-ink-muted">
                   <Icon name="check" size={24} className="mx-auto text-teal-deep" />
                   <p className="mt-2 text-[12px] font-bold">
-                    {lang === "fa" ? "صف کامنت‌های گزارش‌شده خالی است" : "No reported comments in queue"}
+                    {lang === "fa" ? "صف دیدگاه‌های گزارش‌شده خالی است" : "No reported comments in queue"}
                   </p>
                 </div>
               )}
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Moderation Section 2: Fan Lyric Submissions */}
+      {/* ===================== TAB 8: LYRICS SUBMISSIONS REVIEW ===================== */}
+      {activeTab === "lyrics" && (
+        <div className="space-y-4">
           <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
-            <h3 className="font-extrabold text-[15px] text-ink">
-              {lang === "fa" ? "پیشنهادات متن آهنگ ارسالی هواداران" : "Fan Lyric Sheet Submissions"}
-            </h3>
-            <p className="mt-0.5 text-[12px] text-ink-muted">
-              {lang === "fa" ? "تایید متن ارسالی و پرداخت ۱۸ امتیاز وفاداری به کاربر" : "Approve lyrics & award points"}
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-extrabold text-[15px] text-ink">
+                  {lang === "fa" ? "میز بررسی متن‌های آهنگ ارسالی هواداران" : "Fan Lyric Sheet Submissions Review"}
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa" ? "تایید متن ترانه و پرداخت ۱۸ امتیاز وفاداری به حساب هوادار" : "Approve lyrics & award points"}
+                </p>
+              </div>
+              <span className="rounded-full bg-primary-soft px-3 py-1 font-extrabold text-[12px] text-primary-deep">
+                {stats.pendingLyrics} {lang === "fa" ? "متن در انتظار" : "pending"}
+              </span>
+            </div>
 
             <div className="mt-4 space-y-3">
               {adminApi.getLyricSubmissions().map((sub) => (
@@ -1235,7 +1412,7 @@ export function AdminPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-bold text-[13.5px] text-ink">{sub.trackTitle}</h4>
-                      <span className="text-[12px] text-ink-muted">{sub.language} · {sub.sentAt}</span>
+                      <span className="text-[12px] text-ink-muted">{sub.language} · {dataLabel(sub.sentAt)}</span>
                     </div>
                     <span className={cn(
                       "rounded-full px-2 py-0.5 text-[12px] font-extrabold uppercase",
@@ -1245,7 +1422,7 @@ export function AdminPage() {
                     </span>
                   </div>
 
-                  <pre className="mt-2 max-h-24 overflow-y-auto rounded-lg bg-surface p-2 font-mono text-[12px] leading-relaxed text-ink-body scroll-slim">
+                  <pre className="mt-2 max-h-28 overflow-y-auto rounded-lg bg-surface p-2 font-mono text-[12px] leading-relaxed text-ink-body scroll-slim">
                     {sub.original}
                   </pre>
 
@@ -1280,7 +1457,7 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ===================== TAB 8: SHOP INVENTORY ===================== */}
+      {/* ===================== TAB 9: SHOP INVENTORY ===================== */}
       {activeTab === "shop" && (
         <div className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1347,7 +1524,103 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ===================== TAB 9: USERS & RBAC ===================== */}
+      {/* ===================== TAB 10: SITE VISIBILITY & FEATURE TOGGLES ===================== */}
+      {activeTab === "settings" && (
+        <div className="space-y-4">
+          <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
+            <h3 className="font-extrabold text-[16px] text-ink">
+              {lang === "fa" ? "مدیریت نمایش بخش‌ها و آیکون‌های سایت" : "Site Sections & Feature Visibility"}
+            </h3>
+            <p className="mt-1 text-[12px] text-ink-muted">
+              {lang === "fa"
+                ? "می‌توانید بخش‌های مختلف سایت نظیر فروشگاه، اخبار، پلی‌لیست‌ها و... را به صورت موقت فعال یا پنهان کنید."
+                : "Control which sections and navigation icons appear on the consumer site"}
+            </p>
+
+            <div className="mt-6 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
+                <div>
+                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "بخش و منوی فروشگاه (Shop)" : "Shop Section"}</span>
+                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "نمایش آیکون فروشگاه در منوی بالا و پایین" : "Show shop route & items"}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={siteSettings.showShop}
+                  onChange={(e) => adminApi.updateSiteSettings({ showShop: e.target.checked })}
+                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
+                <div>
+                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "بخش و شلف اخبار (News)" : "News Editorial"}</span>
+                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "نمایش شلف اخبار تحریریه در صفحه اصلی" : "Show news desk shelf"}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={siteSettings.showNews}
+                  onChange={(e) => adminApi.updateSiteSettings({ showNews: e.target.checked })}
+                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
+                <div>
+                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "پلی‌لیست‌ها (Playlists)" : "Playlists Shelf"}</span>
+                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "نمایش پلی‌لیست‌های اختصاصی و منتخب" : "Show curated playlists"}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={siteSettings.showPlaylists}
+                  onChange={(e) => adminApi.updateSiteSettings({ showPlaylists: e.target.checked })}
+                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
+                <div>
+                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "بخش آلبوم‌ها (Albums)" : "Albums"}</span>
+                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "نمایش شلف آلبوم‌های تازه" : "Show fresh albums shelf"}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={siteSettings.showAlbums}
+                  onChange={(e) => adminApi.updateSiteSettings({ showAlbums: e.target.checked })}
+                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
+                <div>
+                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "امکان ارسال لیریک توسط هواداران" : "Fan Lyrics Submissions"}</span>
+                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "فعال بودن فرم ارسال لیریک در پلیر" : "Allow fan sheet submissions"}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={siteSettings.showLyricsSubmissions}
+                  onChange={(e) => adminApi.updateSiteSettings({ showLyricsSubmissions: e.target.checked })}
+                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
+                />
+              </label>
+
+              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
+                <div>
+                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "بخش دیدگاه‌ها و گفتگو (Comments)" : "Comments Section"}</span>
+                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "امکان ارسال دیدگاه ذیل آهنگ‌ها و اخبار" : "Allow public comments"}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={siteSettings.showCommentsSection}
+                  onChange={(e) => adminApi.updateSiteSettings({ showCommentsSection: e.target.checked })}
+                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== TAB 11: USERS & GRANULAR RBAC ===================== */}
       {activeTab === "users" && (
         <div className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1370,96 +1643,114 @@ export function AdminPage() {
               className="flex shrink-0 items-center gap-2 rounded-[14px] bg-primary-deep px-4 py-2 font-bold text-[12px] text-white shadow-sm transition hover:bg-primary-deep/90"
             >
               <Icon name="plus" size={15} />
-              <span>{lang === "fa" ? "+ افزودن کاربر / پرسنل" : "+ Add Staff / User"}</span>
+              <span>{lang === "fa" ? "+ افزودن پرسنل / کاربر" : "+ Add Staff / User"}</span>
             </button>
           </div>
 
           <div className="overflow-x-auto rounded-[20px] border border-line bg-surface shadow-sm scroll-rail">
-            <table className="w-full min-w-[700px] text-start text-[13px]">
+            <table className="w-full min-w-[750px] text-start text-[13px]">
               <thead className="border-b border-line bg-subtle/40 text-ink-muted">
                 <tr>
                   <th className="py-3 ps-4 text-start font-bold">{lang === "fa" ? "کاربر" : "User"}</th>
-                  <th className="py-3 text-start font-bold">{lang === "fa" ? "نقش دسترسی" : "Role"}</th>
+                  <th className="py-3 text-start font-bold">{lang === "fa" ? "نقش اصلی" : "Primary Role"}</th>
+                  <th className="py-3 text-start font-bold">{lang === "fa" ? "دسترسی‌های فعال" : "Permissions"}</th>
                   <th className="py-3 text-start font-bold">{lang === "fa" ? "وضعیت حساب" : "Status"}</th>
-                  <th className="py-3 text-start font-bold">{lang === "fa" ? "امتیاز وفاداری" : "Fan Points"}</th>
-                  <th className="py-3 text-start font-bold">{lang === "fa" ? "عضویت" : "Joined"}</th>
+                  <th className="py-3 text-start font-bold">{lang === "fa" ? "امتیاز" : "Points"}</th>
                   <th className="py-3 pe-4 text-end font-bold">{lang === "fa" ? "عملیات" : "Actions"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line/60">
-                {adminApi.getUsers(searchQuery).map((u) => (
-                  <tr key={u.id} className="transition-colors hover:bg-subtle/50">
-                    <td className="py-2.5 ps-4">
-                      <div className="flex items-center gap-3">
-                        <img src={u.avatar} alt={u.username} className="h-9 w-9 rounded-full object-cover" />
-                        <div>
-                          <p className="font-bold text-ink">{u.displayName}</p>
-                          <p className="font-mono text-[12px] text-ink-faint">@{u.username}</p>
+                {adminApi.getUsers(searchQuery).map((u) => {
+                  const perms = u.permissions || getDefaultPermissions(u.role);
+                  return (
+                    <tr key={u.id} className="transition-colors hover:bg-subtle/50">
+                      <td className="py-2.5 ps-4">
+                        <div className="flex items-center gap-3">
+                          <img src={u.avatar} alt={u.username} className="h-9 w-9 rounded-full object-cover" />
+                          <div>
+                            <p className="font-bold text-ink">{u.displayName}</p>
+                            <p className="font-mono text-[12px] text-ink-faint">@{u.username}</p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-2.5">
-                      <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[12px] font-bold capitalize text-primary-deep">
-                        {u.role.replace("_", " ")}
-                      </span>
-                    </td>
-                    <td className="py-2.5">
-                      <span className={cn(
-                        "rounded-full px-2 py-0.5 text-[12px] font-bold",
-                        u.status === "active" ? "bg-mint-soft text-teal-deep" : "bg-flame-soft text-flame-deep",
-                      )}>
-                        {u.status}
-                      </span>
-                    </td>
-                    <td className="py-2.5 font-bold text-ink">{u.points.toLocaleString(locale)} pts</td>
-                    <td className="py-2.5 text-ink-faint text-[12px]">{u.joinedAt}</td>
-                    <td className="py-2.5 pe-4 text-end">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => openEditUser(u)}
-                          className="rounded-lg p-1.5 text-ink-faint hover:text-primary-deep"
-                          title="Edit User"
-                        >
-                          <Icon name="edit" size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            adminApi.toggleUserStatus(u.username);
-                            notify(lang === "fa" ? "وضعیت حساب کاربری تغییر کرد" : "Status toggled", "primary");
-                          }}
-                          className="rounded-lg p-1.5 text-ink-faint hover:text-ink"
-                          title={u.status === "active" ? "Suspend" : "Activate"}
-                        >
-                          <Icon name="lock" size={14} />
-                        </button>
-                        {u.role !== "super_admin" && (
+                      </td>
+                      <td className="py-2.5">
+                        <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[12px] font-bold capitalize text-primary-deep">
+                          {u.role.replace("_", " ")}
+                        </span>
+                      </td>
+                      <td className="py-2.5">
+                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          {perms.canApproveNews && (
+                            <span className="rounded bg-teal-soft px-1.5 py-0.5 text-[12px] text-teal-deep font-bold">مدیر خبر</span>
+                          )}
+                          {perms.canWriteNews && !perms.canApproveNews && (
+                            <span className="rounded bg-mint-soft px-1.5 py-0.5 text-[12px] text-ink font-bold">نویسنده</span>
+                          )}
+                          {perms.canModerateComments && (
+                            <span className="rounded bg-purple-soft px-1.5 py-0.5 text-[12px] text-purple-deep font-bold">مدیر کامنت</span>
+                          )}
+                          {perms.canManageTracks && (
+                            <span className="rounded bg-subtle px-1.5 py-0.5 text-[12px] text-ink font-bold">موسیقی</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2.5">
+                        <span className={cn(
+                          "rounded-full px-2 py-0.5 text-[12px] font-bold",
+                          u.status === "active" ? "bg-mint-soft text-teal-deep" : "bg-flame-soft text-flame-deep",
+                        )}>
+                          {u.status}
+                        </span>
+                      </td>
+                      <td className="py-2.5 font-bold text-ink">{u.points.toLocaleString(locale)}</td>
+                      <td className="py-2.5 pe-4 text-end">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => openEditUser(u)}
+                            className="rounded-lg p-1.5 text-ink-faint hover:text-primary-deep"
+                            title="Edit User & Permissions"
+                          >
+                            <Icon name="edit" size={14} />
+                          </button>
                           <button
                             type="button"
                             onClick={() => {
-                              if (window.confirm(lang === "fa" ? `آیا از حذف حساب @${u.username} اطمینان دارید؟` : `Delete user @${u.username}?`)) {
-                                adminApi.deleteUser(u.username);
-                                notify(lang === "fa" ? "کاربر حذف شد" : "User deleted", "primary");
-                              }
+                              adminApi.toggleUserStatus(u.username);
+                              notify(lang === "fa" ? "وضعیت حساب کاربری تغییر کرد" : "Status toggled", "primary");
                             }}
-                            className="rounded-lg p-1.5 text-ink-faint hover:text-flame-deep"
-                            title="Delete"
+                            className="rounded-lg p-1.5 text-ink-faint hover:text-ink"
+                            title={u.status === "active" ? "Suspend" : "Activate"}
                           >
-                            <Icon name="close" size={14} />
+                            <Icon name="lock" size={14} />
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {u.role !== "super_admin" && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(lang === "fa" ? `آیا از حذف حساب @${u.username} اطمینان دارید؟` : `Delete user @${u.username}?`)) {
+                                  adminApi.deleteUser(u.username);
+                                  notify(lang === "fa" ? "کاربر حذف شد" : "User deleted", "primary");
+                                }
+                              }}
+                              className="rounded-lg p-1.5 text-ink-faint hover:text-flame-deep"
+                              title="Delete"
+                            >
+                              <Icon name="close" size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* ===================== MODAL: TRACK (CREATE & EDIT) ===================== */}
+      {/* ===================== MODAL: TRACK (WITH SINGLE TRACK OPTION) ===================== */}
       {trackModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="flex max-h-[90vh] w-full max-w-[620px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
@@ -1510,23 +1801,41 @@ export function AdminPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "آلبوم مربوطه" : "Album"}
-                  </label>
-                  <select
-                    value={trackAlbum}
-                    onChange={(e) => setTrackAlbum(e.target.value)}
-                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
-                  >
-                    <option value="· single">{lang === "fa" ? "· تک‌آهنگ (Single)" : "· Single"}</option>
-                    {existingAlbums.map((alb) => (
-                      <option key={alb.id} value={alb.title}>{alb.title}</option>
-                    ))}
-                  </select>
-                </div>
+              {/* Single Track Release Option */}
+              <div className="rounded-[16px] border border-line bg-subtle/30 p-3.5 space-y-3">
+                <label className="flex items-center gap-2 text-[12px] font-bold text-ink cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={trackIsSingle}
+                    onChange={(e) => setTrackIsSingle(e.target.checked)}
+                    className="h-4 w-4 rounded accent-primary-deep cursor-pointer"
+                  />
+                  <span>{lang === "fa" ? "این اثر تک‌آهنگ است (Single Track Release)" : "This is a Single track"}</span>
+                </label>
 
+                {!trackIsSingle ? (
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted">
+                      {lang === "fa" ? "انتخاب آلبوم مربوطه" : "Album"}
+                    </label>
+                    <select
+                      value={trackAlbum}
+                      onChange={(e) => setTrackAlbum(e.target.value)}
+                      className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                    >
+                      {existingAlbums.map((alb) => (
+                        <option key={alb.id} value={alb.title}>{alb.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <p className="text-[12px] text-purple-deep font-bold">
+                    {lang === "fa" ? "● این اثر به صورت تک‌آهنگ (Single) در دیسکوگرافی منتشر خواهد شد." : "● Track will be published as an independent Single."}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-[12px] font-bold text-ink-muted">
                     {lang === "fa" ? "مدت زمان (دقیقه:ثانیه)" : "Duration (m:ss)"}
@@ -1537,6 +1846,18 @@ export function AdminPage() {
                     value={trackDuration}
                     onChange={(e) => setTrackDuration(e.target.value)}
                     placeholder="3:24"
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "تعداد پخش اولیه" : "Initial Streams"}
+                  </label>
+                  <input
+                    type="number"
+                    value={trackPlays}
+                    onChange={(e) => setTrackPlays(Number(e.target.value))}
                     className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
                   />
                 </div>
@@ -1797,6 +2118,151 @@ export function AdminPage() {
         </div>
       )}
 
+      {/* ===================== MODAL: PLAYLIST (WITH SEARCH & TRACK SELECTION) ===================== */}
+      {playlistModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-[620px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h3 className="font-extrabold text-[16px] text-ink">
+                {editingPlaylistId
+                  ? (lang === "fa" ? "ویرایش پلی‌لیست و انتخاب آهنگ‌ها" : "Edit Playlist & Tracks")
+                  : (lang === "fa" ? "ساخت پلی‌لیست جدید و انتخاب آهنگ‌ها" : "Create Playlist & Add Tracks")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setPlaylistModalOpen(false)}
+                className="rounded-full p-1.5 text-ink-faint hover:bg-subtle hover:text-ink"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePlaylist} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-slim">
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted">
+                  {lang === "fa" ? "نام پلی‌لیست" : "Playlist Name"}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={playlistName}
+                  onChange={(e) => setPlaylistName(e.target.value)}
+                  className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "گردآورنده / کیوریتور" : "Curator"}
+                  </label>
+                  <input
+                    type="text"
+                    value={playlistCurator}
+                    onChange={(e) => setPlaylistCurator(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "حال و هوا (Mood)" : "Mood"}
+                  </label>
+                  <input
+                    type="text"
+                    value={playlistMood}
+                    onChange={(e) => setPlaylistMood(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+              </div>
+
+              {/* Featured Image for Playlist */}
+              <FeaturedImagePicker
+                value={playlistPhoto}
+                onChange={setPlaylistPhoto}
+                label={lang === "fa" ? "تصویر شاخص پلی‌لیست" : "Playlist Artwork"}
+                defaultCategory="playlists"
+              />
+
+              {/* SEARCH & TRACK SELECTION FOR PLAYLIST */}
+              <div className="rounded-[18px] border border-line bg-subtle/30 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[12px] font-extrabold text-ink">
+                    {lang === "fa" ? "افزودن آهنگ‌ها به پلی‌لیست (با جستجو)" : "Add Tracks to Playlist"}
+                  </label>
+                  <span className="text-[12px] text-ink-muted">
+                    {playlistSelectedTrackIds.length} {lang === "fa" ? "آهنگ انتخاب شده" : "tracks"}
+                  </span>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={playlistTrackSearch}
+                    onChange={(e) => setPlaylistTrackSearch(e.target.value)}
+                    placeholder={lang === "fa" ? "جستجو در آهنگ‌ها برای افزودن به لیست..." : "Search tracks..."}
+                    className="w-full rounded-[12px] border border-line bg-surface py-2 pe-3 ps-8 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                  <div className="pointer-events-none absolute inset-y-0 start-2.5 flex items-center text-ink-faint">
+                    <Icon name="search" size={13} />
+                  </div>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto rounded-[14px] border border-line bg-surface p-2 divide-y divide-line/40 scroll-slim">
+                  {adminApi.getTracks(playlistTrackSearch).map((tr) => {
+                    const isChecked = playlistSelectedTrackIds.includes(tr.id);
+                    return (
+                      <label
+                        key={tr.id}
+                        className={cn(
+                          "flex cursor-pointer items-center justify-between p-2 rounded-[10px] transition text-[12px]",
+                          isChecked ? "bg-primary-soft/40" : "hover:bg-subtle",
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleToggleTrackInPlaylist(tr.id)}
+                            className="h-4 w-4 rounded accent-primary-deep cursor-pointer"
+                          />
+                          <img src={tr.photo} alt={tr.title} className="h-7 w-7 rounded object-cover" />
+                          <div className="min-w-0 truncate">
+                            <span className="font-bold text-ink">{tr.title}</span>
+                            <span className="ms-1.5 text-ink-muted">· {tr.artist}</span>
+                          </div>
+                        </div>
+                        <span className="text-ink-faint font-mono text-[12px]">
+                          {Math.floor(tr.seconds / 60)}:{String(Math.floor(tr.seconds % 60)).padStart(2, "0")}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
+                <button
+                  type="button"
+                  onClick={() => setPlaylistModalOpen(false)}
+                  className="rounded-[12px] border border-line bg-surface px-4 py-2 text-[12px] font-bold text-ink hover:bg-subtle"
+                >
+                  {lang === "fa" ? "انصراف" : "Cancel"}
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-[12px] bg-primary-deep px-5 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
+                >
+                  {editingPlaylistId
+                    ? (lang === "fa" ? "ذخیره تغییرات" : "Save")
+                    : (lang === "fa" ? "ساخت پلی‌لیست" : "Create")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ===================== MODAL: ARTIST (CREATE & EDIT) ===================== */}
       {artistModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -1913,95 +2379,7 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ===================== MODAL: PLAYLIST (CREATE & EDIT) ===================== */}
-      {playlistModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[90vh] w-full max-w-[540px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
-            <div className="flex items-center justify-between border-b border-line px-6 py-4">
-              <h3 className="font-extrabold text-[16px] text-ink">
-                {editingPlaylistId
-                  ? (lang === "fa" ? "ویرایش پلی‌لیست" : "Edit Playlist")
-                  : (lang === "fa" ? "ساخت پلی‌لیست جدید" : "Create Playlist")}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setPlaylistModalOpen(false)}
-                className="rounded-full p-1.5 text-ink-faint hover:bg-subtle hover:text-ink"
-              >
-                <Icon name="close" size={16} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSavePlaylist} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-slim">
-              <div>
-                <label className="block text-[12px] font-bold text-ink-muted">
-                  {lang === "fa" ? "نام پلی‌لیست" : "Playlist Name"}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={playlistName}
-                  onChange={(e) => setPlaylistName(e.target.value)}
-                  className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "گردآورنده / کیوریتور" : "Curator"}
-                  </label>
-                  <input
-                    type="text"
-                    value={playlistCurator}
-                    onChange={(e) => setPlaylistCurator(e.target.value)}
-                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "حال و هوا (Mood)" : "Mood"}
-                  </label>
-                  <input
-                    type="text"
-                    value={playlistMood}
-                    onChange={(e) => setPlaylistMood(e.target.value)}
-                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
-                  />
-                </div>
-              </div>
-
-              {/* Featured Image for Playlist */}
-              <FeaturedImagePicker
-                value={playlistPhoto}
-                onChange={setPlaylistPhoto}
-                label={lang === "fa" ? "تصویر شاخص پلی‌لیست" : "Playlist Artwork"}
-                defaultCategory="playlists"
-              />
-
-              <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
-                <button
-                  type="button"
-                  onClick={() => setPlaylistModalOpen(false)}
-                  className="rounded-[12px] border border-line bg-surface px-4 py-2 text-[12px] font-bold text-ink hover:bg-subtle"
-                >
-                  {lang === "fa" ? "انصراف" : "Cancel"}
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-[12px] bg-primary-deep px-5 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
-                >
-                  {editingPlaylistId
-                    ? (lang === "fa" ? "ذخیره تغییرات" : "Save")
-                    : (lang === "fa" ? "ساخت پلی‌لیست" : "Create")}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ===================== MODAL: NEWS (CREATE & EDIT) ===================== */}
+      {/* ===================== MODAL: NEWS (WITH AUTHOR & MANAGER WORKFLOW) ===================== */}
       {newsModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="flex max-h-[90vh] w-full max-w-[620px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
@@ -2009,7 +2387,7 @@ export function AdminPage() {
               <h3 className="font-extrabold text-[16px] text-ink">
                 {editingNewsId
                   ? (lang === "fa" ? "ویرایش خبر و مقاله" : "Edit News Article")
-                  : (lang === "fa" ? "انتشار خبر جدید" : "Publish Story")}
+                  : (lang === "fa" ? "نگارش یا انتشار خبر جدید" : "Write / Publish Story")}
               </h3>
               <button
                 type="button"
@@ -2050,12 +2428,17 @@ export function AdminPage() {
                   <label className="block text-[12px] font-bold text-ink-muted">
                     {lang === "fa" ? "تگ موضوعی" : "Topic Tag"}
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={newsTag}
                     onChange={(e) => setNewsTag(e.target.value)}
                     className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
-                  />
+                  >
+                    <option value="Tour">Tour</option>
+                    <option value="Comeback">Comeback</option>
+                    <option value="Charts">Charts</option>
+                    <option value="Editorial">Editorial</option>
+                    <option value="Awards">Awards</option>
+                  </select>
                 </div>
               </div>
 
@@ -2092,15 +2475,33 @@ export function AdminPage() {
                 defaultCategory="news"
               />
 
-              <label className="flex items-center gap-2 text-[12px] font-bold text-ink cursor-pointer pt-1">
-                <input
-                  type="checkbox"
-                  checked={newsFeatured}
-                  onChange={(e) => setNewsFeatured(e.target.checked)}
-                  className="h-4 w-4 rounded accent-primary-deep"
-                />
-                <span>{lang === "fa" ? "نمایش به عنوان خبر ویژه در صفحه اصلی (Featured)" : "Featured in Headline Carousel"}</span>
-              </label>
+              {/* Status / Publication Workflow Toggle */}
+              <div className="rounded-[16px] border border-line bg-subtle/30 p-3.5">
+                <label className="block text-[12px] font-bold text-ink">
+                  {lang === "fa" ? "وضعیت انتشار مقاله" : "Publication Workflow Status"}
+                </label>
+                <div className="mt-2 flex items-center gap-4">
+                  <label className="flex items-center gap-2 text-[12px] font-bold text-ink cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={newsStatus === "published"}
+                      onChange={() => setNewsStatus("published")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "انتشار مستقیم (تایید مدیر)" : "Publish Immediately"}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 text-[12px] font-bold text-ink cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={newsStatus === "pending_review"}
+                      onChange={() => setNewsStatus("pending_review")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "پیش‌نویس نویسنده (نیازمند تایید مدیر)" : "Draft (Requires Approval)"}</span>
+                  </label>
+                </div>
+              </div>
 
               <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
                 <button
@@ -2116,7 +2517,9 @@ export function AdminPage() {
                 >
                   {editingNewsId
                     ? (lang === "fa" ? "ذخیره تغییرات" : "Save")
-                    : (lang === "fa" ? "انتشار خبر" : "Publish")}
+                    : (newsStatus === "published"
+                        ? (lang === "fa" ? "انتشار مستقیم خبر" : "Publish Story")
+                        : (lang === "fa" ? "ارسال پیش‌نویس برای مدیر" : "Submit Draft"))}
                 </button>
               </div>
             </form>
@@ -2219,16 +2622,21 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ===================== MODAL: USER (CREATE & EDIT) ===================== */}
+      {/* ===================== MODAL: USER & GRANULAR RBAC ===================== */}
       {userModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[90vh] w-full max-w-[500px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+          <div className="flex max-h-[90vh] w-full max-w-[580px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
             <div className="flex items-center justify-between border-b border-line px-6 py-4">
-              <h3 className="font-extrabold text-[16px] text-ink">
-                {editingUsername
-                  ? (lang === "fa" ? "ویرایش مشخصات و دسترسی کاربر" : "Edit User / Staff")
-                  : (lang === "fa" ? "تعریف کاربر / پرسنل جدید" : "Add User")}
-              </h3>
+              <div>
+                <h3 className="font-extrabold text-[16px] text-ink">
+                  {editingUsername
+                    ? (lang === "fa" ? "ویرایش مشخصات و دسترسی‌های پرسنل" : "Edit User & Granular RBAC")
+                    : (lang === "fa" ? "تعریف پرسنل / کاربر با سطوح دسترسی" : "Add Staff / User with Permissions")}
+                </h3>
+                <p className="text-[12px] text-ink-muted">
+                  {lang === "fa" ? "تعیین نقش اصلی و اعطای دسترسی‌های بیشتر و اختصاصی" : "Set primary role and toggle granular permissions"}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setUserModalOpen(false)}
@@ -2239,48 +2647,53 @@ export function AdminPage() {
             </div>
 
             <form onSubmit={handleSaveUser} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-slim">
-              <div>
-                <label className="block text-[12px] font-bold text-ink-muted">
-                  {lang === "fa" ? "نام نمایشی" : "Display Name"}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={userDisplayName}
-                  onChange={(e) => setUserDisplayName(e.target.value)}
-                  className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
-                />
-              </div>
-
-              {!editingUsername && (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "نام کاربری (لاتین)" : "Username"}
+                    {lang === "fa" ? "نام نمایشی" : "Display Name"}
                   </label>
                   <input
                     type="text"
                     required
-                    value={userUsername}
-                    onChange={(e) => setUserUsername(e.target.value)}
-                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] font-mono text-ink outline-none focus:border-primary-deep"
+                    value={userDisplayName}
+                    onChange={(e) => setUserDisplayName(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
                   />
                 </div>
-              )}
 
-              <div className="grid grid-cols-2 gap-4">
+                {!editingUsername && (
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted">
+                      {lang === "fa" ? "نام کاربری (لاتین)" : "Username"}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={userUsername}
+                      onChange={(e) => setUserUsername(e.target.value)}
+                      className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] font-mono text-ink outline-none focus:border-primary-deep"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "نقش دسترسی (RBAC)" : "Role"}
+                    {lang === "fa" ? "نقش اصلی حساب" : "Primary Role"}
                   </label>
                   <select
                     value={userRole}
-                    onChange={(e) => setUserRole(e.target.value as AdminUserRole)}
+                    onChange={(e) => handleRoleChange(e.target.value as AdminUserRole)}
                     className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
                   >
-                    <option value="super_admin">{lang === "fa" ? "مدیر کل (Super Admin)" : "Super Admin"}</option>
-                    <option value="moderator">{lang === "fa" ? "ناظر محتوا (Moderator)" : "Moderator"}</option>
-                    <option value="editor">{lang === "fa" ? "تحریریه اخبار (Editor)" : "Editor"}</option>
-                    <option value="user">{lang === "fa" ? "کاربر هوادار (Fan)" : "Fan / User"}</option>
+                    <option value="super_admin">{lang === "fa" ? "مدیر کل ارشد (Super Admin)" : "Super Admin"}</option>
+                    <option value="news_manager">{lang === "fa" ? "مدیر اخبار (News Manager & Supervisor)" : "News Manager"}</option>
+                    <option value="news_author">{lang === "fa" ? "نویسنده اخبار (News Author)" : "News Author"}</option>
+                    <option value="comment_moderator">{lang === "fa" ? "مدیر نظارت دیدگاه‌ها (Comment Moderator)" : "Comment Moderator"}</option>
+                    <option value="music_curator">{lang === "fa" ? "مدیر کاتالوگ موسیقی و لیریک (Music Curator)" : "Music Curator"}</option>
+                    <option value="shop_manager">{lang === "fa" ? "مدیر فروشگاه (Shop Manager)" : "Shop Manager"}</option>
+                    <option value="user">{lang === "fa" ? "کاربر هوادار (Fan User)" : "Fan User"}</option>
                   </select>
                 </div>
 
@@ -2294,6 +2707,120 @@ export function AdminPage() {
                     onChange={(e) => setUserPoints(Number(e.target.value))}
                     className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
                   />
+                </div>
+              </div>
+
+              {/* GRANULAR PERMISSIONS MATRIX */}
+              <div className="rounded-[18px] border border-line bg-subtle/30 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[12px] font-extrabold text-ink">
+                    {lang === "fa" ? "ماتریس دسترسی‌های اختصاصی (افزودن دسترسی بیشتر)" : "Granular Permissions Matrix"}
+                  </label>
+                  <span className="text-[12px] text-ink-muted">
+                    {lang === "fa" ? "تغییر دسترسی فراتر از نقش پایه" : "Customize perms"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[12px]">
+                  <label className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userPerms.canManageTracks}
+                      onChange={() => handleTogglePermission("canManageTracks")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "مدیریت آهنگ‌ها" : "Manage Tracks"}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userPerms.canManageAlbums}
+                      onChange={() => handleTogglePermission("canManageAlbums")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "مدیریت آلبوم‌ها" : "Manage Albums"}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userPerms.canManagePlaylists}
+                      onChange={() => handleTogglePermission("canManagePlaylists")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "مدیریت پلی‌لیست‌ها" : "Manage Playlists"}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userPerms.canManageArtists}
+                      onChange={() => handleTogglePermission("canManageArtists")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "مدیریت هنرمندان" : "Manage Artists"}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userPerms.canWriteNews}
+                      onChange={() => handleTogglePermission("canWriteNews")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "نگارش اخبار (نویسنده)" : "Write News Drafts"}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userPerms.canApproveNews}
+                      onChange={() => handleTogglePermission("canApproveNews")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "تایید و انتشار اخبار (مدیر)" : "Publish & Approve News"}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userPerms.canModerateComments}
+                      onChange={() => handleTogglePermission("canModerateComments")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "نظارت بر دیدگاه‌ها" : "Moderate Comments"}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userPerms.canReviewLyrics}
+                      onChange={() => handleTogglePermission("canReviewLyrics")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "بررسی لیریک‌های ارسالی" : "Review Lyrics Sheets"}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userPerms.canManageShop}
+                      onChange={() => handleTogglePermission("canManageShop")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "مدیریت فروشگاه" : "Manage Merch Shop"}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userPerms.canViewAnalytics}
+                      onChange={() => handleTogglePermission("canViewAnalytics")}
+                      className="accent-primary-deep"
+                    />
+                    <span>{lang === "fa" ? "مشاهده آمار پیشرفته" : "View Analytics"}</span>
+                  </label>
                 </div>
               </div>
 

@@ -13,7 +13,6 @@ import { MiniPlayer } from "../sections/MiniPlayer";
 import { PlayerSheet } from "../sections/PlayerSheet";
 import { SurfaceCard } from "../ui/primitives";
 import { EASE } from "../lib/motion";
-import { AdminMobileNav } from "../sections/admin/AdminMobileNav";
 
 /* ------------------------------------------------------------------ *
  *  Compact shell — phones and tablets.
@@ -130,9 +129,7 @@ export function CompactShell() {
       </SurfaceCard>
 
       {/* the bottom stack — mini player over the menu, both pinned */}
-      {route === "admin" ? (
-        <AdminMobileNav />
-      ) : (
+      {route !== "admin" && (
         <div className="pointer-events-none fixed inset-x-3 bottom-3 z-50">
           <div className="mx-auto flex w-full max-w-[720px] flex-col gap-2">
             <MiniPlayer onOpen={() => setPlayerOpen(true)} />
