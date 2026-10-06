@@ -44,22 +44,33 @@ import { EASE } from "../lib/motion";
  * ------------------------------------------------------------------ */
 
 export function CompactShell() {
-  const { route, detail, selectedNewsId } = useApp();
+  const { route, detail, selectedNewsId, viewedProfileUsername } = useApp();
   const { dir } = usePreferences();
   const [playerOpen, setPlayerOpen] = useState(false);
   const Page = PAGES[route];
 
-  // If a top-level route navigation occurs while player is open (e.g. user clicked a shop banner),
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+    if (typeof document !== "undefined") {
+      document.querySelector("[data-content-scroll]")?.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, [route, detail, viewedProfileUsername]);
+
+  // If a top-level route navigation occurs while player is open (e.g. user clicked a shop banner or profile),
   // collapse the player so the user immediately sees the destination page!
   const prevRouteRef = useRef(route);
+  const prevProfileRef = useRef(viewedProfileUsername);
   useEffect(() => {
-    if (playerOpen && route !== prevRouteRef.current) {
+    if (playerOpen && (route !== prevRouteRef.current || viewedProfileUsername !== prevProfileRef.current)) {
       if (!selectedNewsId && !detail) {
         setPlayerOpen(false);
       }
     }
     prevRouteRef.current = route;
-  }, [route, playerOpen, selectedNewsId, detail]);
+    prevProfileRef.current = viewedProfileUsername;
+  }, [route, viewedProfileUsername, playerOpen, selectedNewsId, detail]);
 
   return (
     <div dir={dir} className="flex min-h-dvh w-full flex-col gap-3 px-4 pt-3.5 pb-[10rem] lg:gap-4 lg:pt-4 lg:pb-[11rem]">
@@ -114,7 +125,7 @@ export function CompactShell() {
               </motion.div>
             ) : (
               <motion.div
-                key={route}
+                key={route === "profile" ? `profile:${viewedProfileUsername ?? "me"}` : route}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}

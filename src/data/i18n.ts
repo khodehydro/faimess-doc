@@ -218,6 +218,7 @@ export const STRINGS: Record<string, Entry> = {
   "shelf.goToNews": { en: "Go to news", fa: "رفتن به اخبار", ko: "뉴스로 가기" },
   "shelf.allAlbums": { en: "All albums", fa: "همهٔ آلبوم‌ها", ko: "모든 앨범" },
   "shelf.leaderboard": { en: "Leaderboard", fa: "جدول امتیازها", ko: "리더보드" },
+  "shelf.viewProfile": { en: "Profile", fa: "پروفایل", ko: "프로필" },
   "shelf.onlineNow": { en: "Online now", fa: "آنلاین", ko: "지금 접속 중" },
   "shelf.verifiedArtist": { en: "Verified artist", fa: "هنرمند تأییدشده", ko: "인증된 아티스트" },
   "shelf.new": { en: "New", fa: "جدید", ko: "NEW" },

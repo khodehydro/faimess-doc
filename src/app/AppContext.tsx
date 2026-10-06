@@ -114,6 +114,9 @@ export function AppProvider({
         setViewedProfileUsername(null);
       }
 
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
       if (typeof document !== "undefined") {
         document.querySelector("[data-content-scroll]")?.scrollTo({ top: 0, behavior: "instant" });
       }
@@ -186,6 +189,7 @@ export function AppProvider({
         if (window.location.hash !== targetHash) {
           window.location.hash = targetHash;
         }
+        window.scrollTo({ top: 0, behavior: "instant" });
         if (typeof document !== "undefined" && typeof document.querySelector === "function") {
           document.querySelector("[data-content-scroll]")?.scrollTo({ top: 0, behavior: "instant" });
         }

@@ -65,6 +65,9 @@ export function Shell() {
   const compact = useCompact();
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
     if (typeof document !== "undefined") {
       document.querySelector("[data-content-scroll]")?.scrollTo({ top: 0, behavior: "instant" });
     }
@@ -133,7 +136,7 @@ export function Shell() {
                   </motion.div>
                 ) : (
                   <motion.div
-                    key={route}
+                    key={route === "profile" ? `profile:${viewedProfileUsername ?? "me"}` : route}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}

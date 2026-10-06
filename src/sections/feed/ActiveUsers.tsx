@@ -107,15 +107,27 @@ export function ActiveUsers() {
                   both copies paint. `mt-5` is what keeps the ribbon clear
                   of the ring — at `mt-3` the boxes overlapped and the
                   ribbon read as if the card had been cut. */}
-              <span className="relative mt-5">
+              <span
+                className="relative mt-5 cursor-pointer transition hover:scale-105"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openProfile(user.handle.replace(/^@/, ""));
+                }}
+              >
                 <Avatar src={user.photo} seed={user.seed} size={56} className={medal ? "ring-2 ring-primary ring-offset-2" : ""} />
               </span>
 
-              <span className="w-full">
+              <span
+                className="w-full cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openProfile(user.handle.replace(/^@/, ""));
+                }}
+              >
                 <span className="flex items-center justify-center gap-1.5">
-                  <span className="truncate text-[13px] font-bold text-ink lg:text-[14px]">{user.name}</span>
+                  <span className="truncate text-[13px] font-bold text-ink transition group-hover:text-primary lg:text-[14px]">{user.name}</span>
                 </span>
-              <span className="mt-0.5 block truncate text-[12px] text-ink-faint lg:mt-1">{user.handle}</span>
+                <span className="mt-0.5 block truncate text-[12px] text-ink-faint lg:mt-1">{user.handle}</span>
               </span>
 
               <span className="flex flex-col items-center gap-1.5">
@@ -139,14 +151,34 @@ export function ActiveUsers() {
                   <Icon name="flame" size={12.5} strokeWidth={2} />
                   {num(fanPoints(user.activity))}
                 </span>
-                  <span className="flex items-center gap-1.5 text-[12px] font-semibold text-ink-muted lg:gap-2">
+                <span className="flex items-center gap-1.5 text-[12px] font-semibold text-ink-muted lg:gap-2">
                   <span className="rounded-full bg-subtle px-2 py-[1px]">
                     {t("fans.level", { n: user.level })}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Icon name="bolt" size={11} strokeWidth={2.2} className="text-primary" />
+                    <Icon name="bolt" size={12} strokeWidth={2.2} className="text-primary" />
                     {t("fans.streak", { n: user.streak })}
                   </span>
+                </span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openProfile(user.handle.replace(/^@/, ""));
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      openProfile(user.handle.replace(/^@/, ""));
+                    }
+                  }}
+                  className="mt-0.5 flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[12px] font-bold text-primary transition hover:bg-primary hover:text-white"
+                  title={t("shelf.viewProfile")}
+                >
+                  <Icon name="users" size={12} strokeWidth={2} />
+                  <span>{t("shelf.viewProfile")}</span>
                 </span>
               </span>
             </motion.div>
