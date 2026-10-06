@@ -302,6 +302,29 @@ export type SiteFeatureSettings = {
   showCommentsSection: boolean;
   showReferralSystem: boolean;
 
+  // SMS Panel & API Keys (No .env file required!)
+  smsProvider: "kavenegar" | "ghasedak" | "farazsms" | "custom";
+  smsApiKey: string;
+  smsSenderNumber: string;
+  smsOtpPattern: string;
+
+  // Telegram Bot Integration
+  telegramBotToken: string;
+  telegramChannelId: string;
+  telegramAdminChatId: string;
+  telegramAutoPublish: boolean;
+
+  // Bale Messenger Integration
+  baleBotToken: string;
+  baleChannelId: string;
+  baleAutoPublish: boolean;
+
+  // Social Publishing Schedule Toggles
+  autoPublishSaturdayUsers: boolean;
+  autoPublishSundayComments: boolean;
+  autoPublishMondayTracks: boolean;
+  autoPublishTuesdayArtists: boolean;
+
   // Maintenance & System
   maintenanceMode: boolean;
   maintenanceNotice: string;
@@ -344,6 +367,25 @@ const DEFAULT_SETTINGS: SiteFeatureSettings = {
   showLyricsSubmissions: true,
   showCommentsSection: true,
   showReferralSystem: true,
+
+  smsProvider: "kavenegar",
+  smsApiKey: "",
+  smsSenderNumber: "10008000",
+  smsOtpPattern: "faimess-auth",
+
+  telegramBotToken: "",
+  telegramChannelId: "@faimess_app",
+  telegramAdminChatId: "",
+  telegramAutoPublish: true,
+
+  baleBotToken: "",
+  baleChannelId: "@faimess_music",
+  baleAutoPublish: true,
+
+  autoPublishSaturdayUsers: true,
+  autoPublishSundayComments: true,
+  autoPublishMondayTracks: true,
+  autoPublishTuesdayArtists: true,
 
   maintenanceMode: false,
   maintenanceNotice: "سیستم در حال ارتقا و به‌روزرسانی زیرساخت است. به‌زودی بازمی‌گردیم.",

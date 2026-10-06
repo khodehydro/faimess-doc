@@ -23,6 +23,20 @@ import { cn } from "../lib/cn";
 import { FeaturedImagePicker } from "../sections/admin/FeaturedImagePicker";
 import { getActiveAdminTab, ADMIN_TABS, type AdminTabId } from "../sections/admin/AdminTopNav";
 import type { Artist } from "../data/library";
+import {
+  executeCategoryPublish,
+  generateGraphicBanner,
+  generatePostCaption,
+  getAuditLogs,
+  getCategoryItems,
+  getCategoryTitle,
+  publishToBale,
+  publishToTelegram,
+  testSmsGateway,
+  checkAndRunWeeklyAutoPublish,
+  type PublishCategory,
+  type PublishLogEntry,
+} from "../api/channelPublisher";
 
 export function AdminPage() {
   const { t, locale, dir, lang, dataLabel } = usePreferences();
@@ -33,10 +47,39 @@ export function AdminPage() {
   const [stats, setStats] = useState<AdminOverviewStats>(() => adminApi.getOverviewStats());
   const [siteSettings, setSiteSettings] = useState<SiteFeatureSettings>(() => adminApi.getSiteSettings());
   const [settingsDraft, setSettingsDraft] = useState<SiteFeatureSettings>(() => adminApi.getSiteSettings());
-  const [settingsSubTab, setSettingsSubTab] = useState<"branding" | "colors" | "seo" | "texts" | "modules" | "database">("branding");
+  const [settingsSubTab, setSettingsSubTab] = useState<
+    "branding" | "colors" | "seo" | "texts" | "modules" | "integrations" | "social_automation" | "database"
+  >("branding");
   const [importJsonInput, setImportJsonInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statsPeriod, setStatsPeriod] = useState<"today" | "week" | "all">("today");
+
+  // Integrations & Social Automation State
+  const [showSmsKey, setShowSmsKey] = useState(false);
+  const [showTgToken, setShowTgToken] = useState(false);
+  const [showBaleToken, setShowBaleToken] = useState(false);
+
+  const [testSmsPhone, setTestSmsPhone] = useState("09120000000");
+  const [smsTesting, setSmsTesting] = useState(false);
+  const [smsTestMsg, setSmsTestMsg] = useState<string | null>(null);
+
+  const [tgTesting, setTgTesting] = useState(false);
+  const [tgTestMsg, setTgTestMsg] = useState<string | null>(null);
+
+  const [baleTesting, setBaleTesting] = useState(false);
+  const [baleTestMsg, setBaleTestMsg] = useState<string | null>(null);
+
+  // Social Publishing Preview & Audit State
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [selectedPublishCat, setSelectedPublishCat] = useState<PublishCategory | null>(null);
+  const [previewBannerImg, setPreviewBannerImg] = useState<string>("");
+  const [previewCaption, setPreviewCaption] = useState<string>("");
+  const [publishingCat, setPublishingCat] = useState<string | null>(null);
+  const [publishLogs, setPublishLogs] = useState<PublishLogEntry[]>(() => getAuditLogs());
+
+  useEffect(() => {
+    checkAndRunWeeklyAutoPublish();
+  }, []);
 
   // Track Hash Route for Admin Tabs
   useEffect(() => {
@@ -630,6 +673,64 @@ export function AdminPage() {
     if (e) e.preventDefault();
     adminApi.updateSiteSettings(settingsDraft);
     notify(lang === "fa" ? "تنظیمات ۰ تا ۱۰۰ سایت با موفقیت ذخیره شد" : "All site settings updated", "primary");
+  };
+
+  const handleTestSms = async () => {
+    setSmsTesting(true);
+    setSmsTestMsg(null);
+    const res = await testSmsGateway(testSmsPhone);
+    setSmsTesting(false);
+    setSmsTestMsg(res.message);
+    notify(res.message, res.success ? "mint" : "primary");
+  };
+
+  const handleTestTg = async () => {
+    setTgTesting(true);
+    setTgTestMsg(null);
+    const res = await publishToTelegram(
+      "saturday_top_users",
+      "🔔 پیام آزمایشی تست اتصال ربات تلگرام به کانال استودیو فیمس با موفقیت برقرار شد.",
+    );
+    setTgTesting(false);
+    setTgTestMsg(res.message);
+    notify(res.message, res.success ? "mint" : "primary");
+  };
+
+  const handleTestBale = async () => {
+    setBaleTesting(true);
+    setBaleTestMsg(null);
+    const res = await publishToBale(
+      "saturday_top_users",
+      "🔔 پیام آزمایشی تست اتصال ربات بله به کانال استودیو فیمس با موفقیت برقرار شد.",
+    );
+    setBaleTesting(false);
+    setBaleTestMsg(res.message);
+    notify(res.message, res.success ? "mint" : "primary");
+  };
+
+  const handleOpenPublishPreview = async (cat: PublishCategory) => {
+    setSelectedPublishCat(cat);
+    const cap = generatePostCaption(cat);
+    setPreviewCaption(cap);
+    setPublishModalOpen(true);
+    const img = await generateGraphicBanner(cat);
+    setPreviewBannerImg(img);
+  };
+
+  const handleExecutePublish = async (cat: PublishCategory) => {
+    setPublishingCat(cat);
+    try {
+      const res = await executeCategoryPublish(cat);
+      setPublishLogs(getAuditLogs());
+      notify(
+        lang === "fa"
+          ? `انتشار با موفقیت انجام شد: تلگرام (${res.telegram.success ? "موفق" : "خطا"}) | بله (${res.bale.success ? "موفق" : "خطا"})`
+          : "Published successfully",
+        res.telegram.success || res.bale.success ? "mint" : "primary",
+      );
+    } finally {
+      setPublishingCat(null);
+    }
   };
 
   const handleDownloadBackup = () => {
@@ -1787,6 +1888,8 @@ export function AdminPage() {
               { id: "seo", labelFa: "سئو و متاتگ‌ها", labelEn: "SEO & Social", icon: "globe" },
               { id: "texts", labelFa: "متن‌های سایت", labelEn: "Copywriting", icon: "message" },
               { id: "modules", labelFa: "بخش‌ها و ماژول‌ها", labelEn: "Modules", icon: "grid" },
+              { id: "integrations", labelFa: "کلیدها و توکن‌های API", labelEn: "API Keys & Integrations", icon: "lock" },
+              { id: "social_automation", labelFa: "اتوماسیون انتشار در کانال‌ها", labelEn: "Channel Publishing", icon: "sparkle" },
               { id: "database", labelFa: "پشتیبان‌گیری و دیتابیس", labelEn: "Database & Backup", icon: "folder" },
             ].map((sub) => {
               const isSubActive = settingsSubTab === sub.id;
@@ -2377,6 +2480,582 @@ export function AdminPage() {
                 >
                   {lang === "fa" ? "ذخیره وضعیت ماژول‌ها" : "Save Modules"}
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* 6. API KEYS & GATEWAYS (NO .ENV REQUIRED) */}
+          {settingsSubTab === "integrations" && (
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-6">
+              <div className="border-b border-line pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex size-7 items-center justify-center rounded-xl bg-primary-soft text-primary-deep">
+                    <Icon name="lock" size={16} />
+                  </span>
+                  <div>
+                    <h3 className="font-extrabold text-[16px] text-ink">
+                      {lang === "fa" ? "تنظیمات کلیدهای API و درگاه‌ها (بدون نیاز به فایل .env)" : "API Keys & Integrations"}
+                    </h3>
+                    <p className="mt-0.5 text-[12px] text-ink-muted">
+                      {lang === "fa"
+                        ? "کلیه کلیدها، توکن‌های ربات تلگرام، پیام‌رسان بله و درگاه پیامک را مستقیماً از این پنل وارد و مدیریت کنید."
+                        : "Configure SMS, Telegram, and Bale Messenger bot tokens directly inside this panel without touching .env files"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 1: SMS Gateway */}
+              <div className="rounded-2xl border border-line/80 bg-subtle/40 p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-6 items-center justify-center rounded-lg bg-teal-soft text-teal-deep">
+                      <Icon name="message" size={14} />
+                    </span>
+                    <h4 className="font-bold text-[14px] text-ink">
+                      {lang === "fa" ? "سامانه پیامک و OTP (ارسال کد تایید و اطلاعیه‌ها)" : "SMS Gateway & OTP Provider"}
+                    </h4>
+                  </div>
+                  <span className="rounded-full bg-teal-soft/80 px-2.5 py-0.5 text-[12px] font-bold text-teal-deep">
+                    {lang === "fa" ? "آماده ارسال" : "Active"}
+                  </span>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "ارائه‌دهنده وب‌سرویس پیامک" : "SMS Provider"}
+                    </label>
+                    <select
+                      value={settingsDraft.smsProvider}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, smsProvider: e.target.value as any })}
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink focus:border-primary-deep focus:outline-none"
+                    >
+                      <option value="kavenegar">کاوه نگار (Kavenegar)</option>
+                      <option value="ghasedak">قاصدک (Ghasedak)</option>
+                      <option value="farazsms">فراز اس‌ام‌اس (FarazSMS)</option>
+                      <option value="custom">وب‌سرویس سفارشی (Custom API)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "شماره خط اختصاصی پیامک" : "Sender Number"}
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsDraft.smsSenderNumber}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, smsSenderNumber: e.target.value })}
+                      placeholder="10008000"
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink focus:border-primary-deep focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[12px] font-bold text-ink-muted">
+                      {lang === "fa" ? "کلید API پنل پیامک (API Key / Token)" : "SMS API Key / Token"}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowSmsKey(!showSmsKey)}
+                      className="text-[12px] font-bold text-primary-deep hover:underline"
+                    >
+                      {showSmsKey ? (lang === "fa" ? "مخفی کردن" : "Hide") : (lang === "fa" ? "نمایش کلید" : "Show")}
+                    </button>
+                  </div>
+                  <input
+                    type={showSmsKey ? "text" : "password"}
+                    value={settingsDraft.smsApiKey}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, smsApiKey: e.target.value })}
+                    placeholder="e.g. 4B5A6C7D8E9F..."
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink font-mono focus:border-primary-deep focus:outline-none"
+                  />
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "کد الگوی پیامک (Pattern / Template Code)" : "OTP Template Pattern Code"}
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsDraft.smsOtpPattern}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, smsOtpPattern: e.target.value })}
+                      placeholder="faimess-otp"
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink focus:border-primary-deep focus:outline-none"
+                    />
+                  </div>
+
+                  {/* SMS Test Section */}
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "تست ارسال پیامک به شماره" : "Test Phone Number"}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="tel"
+                        value={testSmsPhone}
+                        onChange={(e) => setTestSmsPhone(e.target.value)}
+                        placeholder="09120000000"
+                        className="flex-1 rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink focus:border-primary-deep focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleTestSms}
+                        disabled={smsTesting}
+                        className="flex items-center gap-1.5 rounded-xl bg-teal-deep px-3 py-2 text-[12px] font-bold text-white shadow-2xs hover:bg-teal-deep/90 disabled:opacity-50 shrink-0"
+                      >
+                        <Icon name="send" size={13} />
+                        <span>{smsTesting ? (lang === "fa" ? "ارسال..." : "Sending...") : (lang === "fa" ? "تست ارسال" : "Test")}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {smsTestMsg && (
+                  <p className="rounded-xl bg-teal-soft/60 p-2.5 text-[12px] font-semibold text-teal-deep">
+                    {smsTestMsg}
+                  </p>
+                )}
+              </div>
+
+              {/* Section 2: Telegram Bot Integration */}
+              <div className="rounded-2xl border border-line/80 bg-subtle/40 p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-6 items-center justify-center rounded-lg bg-sky-soft text-sky-deep">
+                      <Icon name="send" size={14} />
+                    </span>
+                    <h4 className="font-bold text-[14px] text-ink">
+                      {lang === "fa" ? "ربات تلگرام (Telegram Bot API)" : "Telegram Bot Integration"}
+                    </h4>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-[12px] font-bold text-ink-muted">
+                      {lang === "fa" ? "ارسال خودکار به کانال" : "Auto Broadcast"}
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settingsDraft.telegramAutoPublish}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, telegramAutoPublish: e.target.checked })}
+                      className="size-4.5 rounded accent-primary-deep cursor-pointer"
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[12px] font-bold text-ink-muted">
+                      {lang === "fa" ? "توکن ربات تلگرام (Bot Token)" : "Telegram Bot Token"}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowTgToken(!showTgToken)}
+                      className="text-[12px] font-bold text-primary-deep hover:underline"
+                    >
+                      {showTgToken ? (lang === "fa" ? "مخفی کردن" : "Hide") : (lang === "fa" ? "نمایش توکن" : "Show")}
+                    </button>
+                  </div>
+                  <input
+                    type={showTgToken ? "text" : "password"}
+                    value={settingsDraft.telegramBotToken}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, telegramBotToken: e.target.value })}
+                    placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ..."
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink font-mono focus:border-primary-deep focus:outline-none"
+                  />
+                  <p className="mt-1 text-[12px] text-ink-muted">
+                    {lang === "fa"
+                      ? "توکن دریافتی از BotFather تلگرام را در این فیلد قرار دهید."
+                      : "Obtain token from @BotFather on Telegram."}
+                  </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "شناسه کانال تلگرام (Username یا Chat ID)" : "Telegram Channel ID"}
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsDraft.telegramChannelId}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, telegramChannelId: e.target.value })}
+                      placeholder="@faimess_app"
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink focus:border-primary-deep focus:outline-none font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "شناسه چت مدیر (جهت دریافت لاگ)" : "Admin Chat ID"}
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsDraft.telegramAdminChatId}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, telegramAdminChatId: e.target.value })}
+                      placeholder="e.g. 987654321"
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink focus:border-primary-deep focus:outline-none font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-[12px] text-ink-muted">
+                    {lang === "fa" ? "اطمینان حاصل کنید ربات در کانال به عنوان Administrator اضافه شده باشد." : "Ensure bot is added as Administrator in the channel."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleTestTg}
+                    disabled={tgTesting}
+                    className="flex items-center gap-1.5 rounded-xl bg-sky-600 px-3.5 py-1.5 text-[12px] font-bold text-white shadow-2xs hover:bg-sky-700 disabled:opacity-50"
+                  >
+                    <Icon name="send" size={13} />
+                    <span>{tgTesting ? (lang === "fa" ? "تست ارتباط..." : "Testing...") : (lang === "fa" ? "تست ارسال به کانال تلگرام" : "Test Telegram")}</span>
+                  </button>
+                </div>
+
+                {tgTestMsg && (
+                  <p className="rounded-xl bg-sky-soft/60 p-2.5 text-[12px] font-semibold text-sky-deep">
+                    {tgTestMsg}
+                  </p>
+                )}
+              </div>
+
+              {/* Section 3: Bale Messenger Bot Integration */}
+              <div className="rounded-2xl border border-line/80 bg-subtle/40 p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-6 items-center justify-center rounded-lg bg-emerald-soft text-emerald-deep">
+                      <Icon name="message" size={14} />
+                    </span>
+                    <h4 className="font-bold text-[14px] text-ink">
+                      {lang === "fa" ? "پیام‌رسان بله (Bale Messenger Bot API)" : "Bale Messenger Bot Integration"}
+                    </h4>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-[12px] font-bold text-ink-muted">
+                      {lang === "fa" ? "ارسال خودکار به کانال بله" : "Auto Broadcast"}
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settingsDraft.baleAutoPublish}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, baleAutoPublish: e.target.checked })}
+                      className="size-4.5 rounded accent-primary-deep cursor-pointer"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[12px] font-bold text-ink-muted">
+                        {lang === "fa" ? "توکن ربات بله (Bale Bot Token)" : "Bale Bot Token"}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowBaleToken(!showBaleToken)}
+                        className="text-[12px] font-bold text-primary-deep hover:underline"
+                      >
+                        {showBaleToken ? (lang === "fa" ? "مخفی" : "Hide") : (lang === "fa" ? "نمایش" : "Show")}
+                      </button>
+                    </div>
+                    <input
+                      type={showBaleToken ? "text" : "password"}
+                      value={settingsDraft.baleBotToken}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, baleBotToken: e.target.value })}
+                      placeholder="bot_token_from_bale..."
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink font-mono focus:border-primary-deep focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                      {lang === "fa" ? "شناسه کانال در بله" : "Bale Channel ID"}
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsDraft.baleChannelId}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, baleChannelId: e.target.value })}
+                      placeholder="@faimess_music"
+                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink font-mono focus:border-primary-deep focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-[12px] text-ink-muted">
+                    {lang === "fa" ? "ربات بله را در کانال اضافه و دسترسی پیام‌رسانی اعطا نمایید." : "Add the Bale bot to your channel with admin rights."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleTestBale}
+                    disabled={baleTesting}
+                    className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-[12px] font-bold text-white shadow-2xs hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    <Icon name="send" size={13} />
+                    <span>{baleTesting ? (lang === "fa" ? "تست بله..." : "Testing...") : (lang === "fa" ? "تست ارسال به کانال بله" : "Test Bale")}</span>
+                  </button>
+                </div>
+
+                {baleTestMsg && (
+                  <p className="rounded-xl bg-emerald-soft/60 p-2.5 text-[12px] font-semibold text-emerald-deep">
+                    {baleTestMsg}
+                  </p>
+                )}
+              </div>
+
+              {/* Save Bar */}
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleSaveAllSettings()}
+                  className="flex items-center gap-2 rounded-xl bg-primary-deep px-5 py-2.5 text-[12.5px] font-bold text-white shadow-primary hover:bg-primary-deep/90"
+                >
+                  <Icon name="check" size={15} />
+                  <span>{lang === "fa" ? "ذخیره تمامی کلیدها و تنظیمات API" : "Save API Settings"}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 7. SOCIAL CHANNELS PUBLISHING AUTOMATION */}
+          {settingsSubTab === "social_automation" && (
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-6">
+              <div className="border-b border-line pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex size-7 items-center justify-center rounded-xl bg-primary-soft text-primary-deep">
+                    <Icon name="sparkle" size={16} />
+                  </span>
+                  <div>
+                    <h3 className="font-extrabold text-[16px] text-ink">
+                      {lang === "fa" ? "اتوماسیون انتشار در شبکه‌ها و کانال‌ها (تلگرام و بله)" : "Channel Publishing Automation"}
+                    </h3>
+                    <p className="mt-0.5 text-[12px] text-ink-muted">
+                      {lang === "fa"
+                        ? "تولید خودکار تصویر گرافیکی با رزولوشن بالا و انتشار هفتگی در کانال‌های تلگرام و پیام‌رسان بله"
+                        : "Automated graphic banner generation and weekly scheduled publishing to Telegram & Bale channels"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Schedule explanation banner */}
+              <div className="rounded-2xl border border-primary/20 bg-primary-faint/60 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon name="calendar" size={16} className="text-primary-deep" />
+                  <span className="font-black text-[13px] text-primary-deep">
+                    {lang === "fa" ? "تقویم زمان‌بندی خودکار انتشار هفتگی" : "Weekly Automatic Schedule"}
+                  </span>
+                </div>
+                <div className="grid gap-2 text-[12px] sm:grid-cols-2 text-ink-body">
+                  <div className="flex items-center gap-2 rounded-lg bg-surface/70 px-3 py-1.5 border border-line/60">
+                    <span className="font-black text-primary-deep shrink-0">شنبه‌ها:</span>
+                    <span>پنج کاربر برتر هفته (Top 5 Leaderboard)</span>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg bg-surface/70 px-3 py-1.5 border border-line/60">
+                    <span className="font-black text-primary-deep shrink-0">یکشنبه‌ها:</span>
+                    <span>پرکامنت‌ترین کاربران سایت (Top Commenters)</span>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg bg-surface/70 px-3 py-1.5 border border-line/60">
+                    <span className="font-black text-primary-deep shrink-0">دوشنبه‌ها:</span>
+                    <span>پرشنیده‌شده‌ترین آهنگ‌های هفته (Top Played Tracks)</span>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg bg-surface/70 px-3 py-1.5 border border-line/60">
+                    <span className="font-black text-primary-deep shrink-0">سه‌شنبه‌ها:</span>
+                    <span>پرفالوترین آرتیست‌های استودیو (Most Followed Artists)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* The 4 Event Cards */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[
+                  {
+                    id: "saturday_top_users" as PublishCategory,
+                    day: "شنبه‌ها",
+                    dayEn: "Saturday",
+                    title: "۵ کاربر اول هفته",
+                    desc: "پنج کاربر با بالاترین امتیاز هواداری به همراه نشان‌ها و آمار تعاملات",
+                    toggleKey: "autoPublishSaturdayUsers" as const,
+                    color: "border-amber-400/40 bg-amber-500/5",
+                    iconColor: "text-amber-500 bg-amber-500/15",
+                  },
+                  {
+                    id: "sunday_top_comments" as PublishCategory,
+                    day: "یکشنبه‌ها",
+                    dayEn: "Sunday",
+                    title: "پرکامنت‌ترین کاربران",
+                    desc: "کاربران با بیشترین دیدگاه روی قطعات موسیقی و مشارکت در نقد و بررسی‌ها",
+                    toggleKey: "autoPublishSundayComments" as const,
+                    color: "border-sky-400/40 bg-sky-500/5",
+                    iconColor: "text-sky-500 bg-sky-500/15",
+                  },
+                  {
+                    id: "monday_top_tracks" as PublishCategory,
+                    day: "دوشنبه‌ها",
+                    dayEn: "Monday",
+                    title: "پرشنیده‌شده‌ترین آهنگ‌ها",
+                    desc: "آهنگ‌های صدرنشین با بالاترین تعداد پخش استودیو و لایک کاربران",
+                    toggleKey: "autoPublishMondayTracks" as const,
+                    color: "border-flame-400/40 bg-flame-500/5",
+                    iconColor: "text-flame bg-flame-soft",
+                  },
+                  {
+                    id: "tuesday_top_artists" as PublishCategory,
+                    day: "سه‌شنبه‌ها",
+                    dayEn: "Tuesday",
+                    title: "پرفالوترین آرتیست‌ها",
+                    desc: "هنرمندان استودیو با بالاترین آمار هواداران فعال و دنبال‌کنندگان",
+                    toggleKey: "autoPublishTuesdayArtists" as const,
+                    color: "border-primary-400/40 bg-primary-500/5",
+                    iconColor: "text-primary-deep bg-primary-soft",
+                  },
+                ].map((ev) => {
+                  const items = getCategoryItems(ev.id);
+                  const isPublishing = publishingCat === ev.id;
+                  const isEnabled = Boolean(settingsDraft[ev.toggleKey]);
+
+                  return (
+                    <div
+                      key={ev.id}
+                      className={cn(
+                        "rounded-2xl border p-4 flex flex-col justify-between gap-3 transition-shadow hover:shadow-sm",
+                        ev.color,
+                      )}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between pb-2 border-b border-line/60">
+                          <div className="flex items-center gap-2">
+                            <span className={cn("flex size-7 items-center justify-center rounded-xl font-black text-[12px]", ev.iconColor)}>
+                              {ev.day.slice(0, 1)}
+                            </span>
+                            <div>
+                              <span className="font-extrabold text-[14px] text-ink">{ev.title}</span>
+                              <span className="block text-[12px] font-bold text-ink-muted">
+                                {lang === "fa" ? ev.day : ev.dayEn}
+                              </span>
+                            </div>
+                          </div>
+
+                          <label className="flex items-center gap-1.5 cursor-pointer" title="فعال/غیرفعال کردن انتشار خودکار">
+                            <span className="text-[12px] text-ink-muted font-bold">
+                              {isEnabled ? (lang === "fa" ? "خودکار: فعال" : "Auto: On") : (lang === "fa" ? "خودکار: غیرفعال" : "Auto: Off")}
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={isEnabled}
+                              onChange={(e) => setSettingsDraft({ ...settingsDraft, [ev.toggleKey]: e.target.checked })}
+                              className="size-4.5 rounded accent-primary-deep cursor-pointer"
+                            />
+                          </label>
+                        </div>
+
+                        <p className="mt-2 text-[12px] leading-relaxed text-ink-muted">
+                          {ev.desc}
+                        </p>
+
+                        {/* Top 3 Live Preview Items */}
+                        <div className="mt-3 space-y-1.5 rounded-xl bg-surface/80 p-2.5 border border-line/70">
+                          <span className="block text-[12px] font-black text-ink-muted">
+                            {lang === "fa" ? "پیش‌نمایش ۵ رتبه اول هم‌اکنون:" : "Current Top 5 Preview:"}
+                          </span>
+                          {items.slice(0, 3).map((it) => (
+                            <div key={it.rank} className="flex items-center justify-between text-[12px]">
+                              <span className="flex items-center gap-1.5 truncate">
+                                <span className="font-black text-primary-deep">#{it.rank}</span>
+                                <span className="font-bold text-ink truncate">{it.title}</span>
+                              </span>
+                              <span className="text-ink-muted font-mono">{it.metricValue}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Action Buttons: Preview Graphic & Publish Now */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-line/50">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPublishPreview(ev.id)}
+                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-[12px] font-bold text-ink hover:bg-subtle transition"
+                        >
+                          <Icon name="sparkle" size={13} />
+                          <span>{lang === "fa" ? "پیش‌نمایش گرافیکی" : "Preview Graphic"}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleExecutePublish(ev.id)}
+                          disabled={isPublishing}
+                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-primary-deep px-3 py-2 text-[12px] font-bold text-white shadow-xs hover:bg-primary-deep/90 disabled:opacity-50 transition"
+                        >
+                          <Icon name="send" size={13} />
+                          <span>{isPublishing ? (lang === "fa" ? "در حال ارسال..." : "Publishing...") : (lang === "fa" ? "انتشار فوری و تست" : "Publish & Test")}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Publication Audit Log Table */}
+              <div className="rounded-2xl border border-line bg-subtle/30 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Icon name="clock" size={15} className="text-ink-muted" />
+                    <h4 className="font-bold text-[13px] text-ink">
+                      {lang === "fa" ? "گزارش و تاریخچه آخرین انتشارهای انجام‌شده" : "Publication Audit Log"}
+                    </h4>
+                  </div>
+                  <span className="text-[12px] text-ink-muted">
+                    {lang === "fa" ? `${publishLogs.length} رکورد ثبت شده` : `${publishLogs.length} logs recorded`}
+                  </span>
+                </div>
+
+                {publishLogs.length === 0 ? (
+                  <p className="py-6 text-center text-[12.5px] text-ink-muted">
+                    {lang === "fa" ? "هنوز هیچ انتشاری ثبت نشده است. با دکمه‌های بالا اولین انتشار تست را ارسال نمایید." : "No publication logs recorded yet."}
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto scroll-rail">
+                    <table className="w-full text-start text-[12px]">
+                      <thead>
+                        <tr className="border-b border-line text-ink-muted font-bold">
+                          <th className="pb-2 text-start">موضوع انتشار</th>
+                          <th className="pb-2 text-start">تاریخ و زمان</th>
+                          <th className="pb-2 text-center">تلگرام</th>
+                          <th className="pb-2 text-center">بله</th>
+                          <th className="pb-2 text-start">خلاصه گزارش</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-line/60">
+                        {publishLogs.slice(0, 10).map((log) => (
+                          <tr key={log.id} className="text-ink-body">
+                            <td className="py-2.5 font-bold text-ink">{log.categoryLabel}</td>
+                            <td className="py-2.5 text-ink-muted font-mono">{log.timestamp}</td>
+                            <td className="py-2.5 text-center">
+                              <span className={cn(
+                                "rounded-full px-2 py-0.5 text-[12px] font-bold",
+                                log.telegramStatus === "sent" ? "bg-emerald-soft text-emerald-deep" : "bg-rose-soft text-rose-deep",
+                              )}>
+                                {log.telegramStatus === "sent" ? "ارسال شد" : "ناموفق"}
+                              </span>
+                            </td>
+                            <td className="py-2.5 text-center">
+                              <span className={cn(
+                                "rounded-full px-2 py-0.5 text-[12px] font-bold",
+                                log.baleStatus === "sent" ? "bg-emerald-soft text-emerald-deep" : "bg-rose-soft text-rose-deep",
+                              )}>
+                                {log.baleStatus === "sent" ? "ارسال شد" : "ناموفق"}
+                              </span>
+                            </td>
+                            <td className="py-2.5 text-ink-muted truncate max-w-xs">{log.summary}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -4208,6 +4887,122 @@ export function AdminPage() {
                     {lang === "fa" ? "بازیابی دیتابیس" : "Apply Restore"}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== GRAPHIC BANNER & CAPTION PREVIEW MODAL ===================== */}
+      {publishModalOpen && selectedPublishCat && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-[560px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-line px-5 py-4">
+              <div className="flex items-center gap-2">
+                <span className="flex size-7 items-center justify-center rounded-xl bg-primary-soft text-primary-deep">
+                  <Icon name="sparkle" size={15} />
+                </span>
+                <div>
+                  <h3 className="font-extrabold text-[15px] text-ink">
+                    {lang === "fa" ? "پیش‌نمایش بنر گرافیکی و کپشن انتشار" : "Graphic Banner & Caption Preview"}
+                  </h3>
+                  <span className="text-[12px] text-ink-muted">{getCategoryTitle(selectedPublishCat, "fa")}</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPublishModalOpen(false)}
+                className="rounded-full p-1.5 text-ink-faint hover:bg-subtle hover:text-ink"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 scroll-slim">
+              {/* Graphic Banner Display */}
+              <div>
+                <span className="block text-[12px] font-bold text-ink-muted mb-1.5">
+                  {lang === "fa" ? "تصویر گرافیکی با کیفیت بالا (Canvas Rendered):" : "Generated Graphic Banner (1080x1080):"}
+                </span>
+                <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-line bg-black shadow-inner flex items-center justify-center">
+                  {previewBannerImg ? (
+                    <img
+                      src={previewBannerImg}
+                      alt="Banner Preview"
+                      className="h-full w-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-[13px] text-white/50 animate-pulse font-medium">
+                      {lang === "fa" ? "در حال رندر و تولید تصویر گرافیکی..." : "Rendering Graphic Banner..."}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Caption Text Preview */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "متن و کپشن کانال (تلگرام و بله):" : "Telegram & Bale Caption:"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        navigator.clipboard?.writeText?.(previewCaption);
+                        notify(lang === "fa" ? "کپشن در کلیپ‌بورد کپی شد" : "Caption copied", "mint");
+                      }
+                    }}
+                    className="text-[12px] font-bold text-primary-deep hover:underline"
+                  >
+                    {lang === "fa" ? "کپی متن کپشن" : "Copy Caption"}
+                  </button>
+                </div>
+                <textarea
+                  readOnly
+                  value={previewCaption}
+                  rows={7}
+                  className="w-full rounded-xl border border-line bg-subtle/50 p-3 text-[12px] leading-relaxed text-ink font-sans focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex items-center justify-between border-t border-line bg-subtle/30 px-5 py-3.5">
+              {previewBannerImg && (
+                <a
+                  href={previewBannerImg}
+                  download={`faimess-${selectedPublishCat}-${Date.now()}.png`}
+                  className="flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3.5 py-2 text-[12px] font-bold text-ink hover:bg-subtle transition shadow-2xs"
+                >
+                  <Icon name="download" size={14} />
+                  <span>{lang === "fa" ? "دانلود تصویر PNG" : "Download PNG"}</span>
+                </a>
+              )}
+
+              <div className="flex items-center gap-2 ms-auto">
+                <button
+                  type="button"
+                  onClick={() => setPublishModalOpen(false)}
+                  className="rounded-xl px-4 py-2 text-[12px] font-bold text-ink-muted hover:bg-subtle"
+                >
+                  {lang === "fa" ? "بستن" : "Close"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleExecutePublish(selectedPublishCat);
+                    setPublishModalOpen(false);
+                  }}
+                  className="flex items-center gap-1.5 rounded-xl bg-primary-deep px-4 py-2 text-[12px] font-bold text-white shadow-primary hover:bg-primary-deep/90 transition"
+                >
+                  <Icon name="send" size={14} />
+                  <span>{lang === "fa" ? "ارسال و انتشار مستقیم به کانال‌ها" : "Send & Publish to Channels"}</span>
+                </button>
               </div>
             </div>
           </div>

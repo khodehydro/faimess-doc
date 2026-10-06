@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "../ui/Icon";
 import { usePreferences } from "../app/PreferencesContext";
 import { useApp } from "../app/AppContext";
+import { useAuth } from "../app/AuthContext";
 import { usePlayer } from "../app/PlayerContext";
 import { usePlaylists } from "../app/PlaylistsContext";
 import { Photo } from "../ui/Cover";
@@ -259,6 +260,7 @@ function CompactClayBadgeCard({
 export function ProfilePage() {
   const { lang, dir } = usePreferences();
   const { notify, viewedProfileUsername, openProfile, openDetail } = useApp();
+  const { requireAccount } = useAuth();
   const player = usePlayer();
   const { mine: myPlaylists } = usePlaylists();
 
@@ -460,23 +462,25 @@ export function ProfilePage() {
   );
 
   const handleToggleFollow = () => {
-    const nowFollowing = socialApi.toggleFollow(profile.username);
-    setIsFollowing(nowFollowing);
-    setFollowStats(socialApi.getFollowStats(profile.username));
-    notify(
-      nowFollowing
-        ? lang === "fa"
-          ? `شما @${profile.username} را دنبال کردید`
-          : lang === "ko"
-            ? `@${profile.username}님을 팔로우했습니다`
-            : `You followed @${profile.username}`
-        : lang === "fa"
-          ? `دنبال کردن @${profile.username} لغو شد`
-          : lang === "ko"
-            ? `@${profile.username}님 언팔로우 완료`
-            : `Unfollowed @${profile.username}`,
-      nowFollowing ? "mint" : "primary",
-    );
+    requireAccount("gate.userFollow", () => {
+      const nowFollowing = socialApi.toggleFollow(profile.username);
+      setIsFollowing(nowFollowing);
+      setFollowStats(socialApi.getFollowStats(profile.username));
+      notify(
+        nowFollowing
+          ? lang === "fa"
+            ? `شما @${profile.username} را دنبال کردید`
+            : lang === "ko"
+              ? `@${profile.username}님을 팔로우했습니다`
+              : `You followed @${profile.username}`
+          : lang === "fa"
+            ? `دنبال کردن @${profile.username} لغو شد`
+            : lang === "ko"
+              ? `@${profile.username}님 언팔로우 완료`
+              : `Unfollowed @${profile.username}`,
+        nowFollowing ? "mint" : "primary",
+      );
+    });
   };
 
   const handleShareProfile = () => {
@@ -821,7 +825,7 @@ export function ProfilePage() {
 
                   <button
                     type="button"
-                    onClick={() => setRequestModalOpen(true)}
+                    onClick={() => requireAccount("gate.request", () => setRequestModalOpen(true))}
                     className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-[12px] sm:text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
                   >
                     <Icon name="plus" size={13} strokeWidth={2.4} />
@@ -1723,7 +1727,7 @@ export function ProfilePage() {
             {isSelf && (
               <button
                 type="button"
-                onClick={() => setCreatePlaylistOpen(true)}
+                onClick={() => requireAccount("gate.playlist", () => setCreatePlaylistOpen(true))}
                 className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-[12px] sm:text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
               >
                 <Icon name="plus" size={13} strokeWidth={2.4} />
@@ -1935,7 +1939,7 @@ export function ProfilePage() {
 
             <button
               type="button"
-              onClick={() => setRequestModalOpen(true)}
+              onClick={() => requireAccount("gate.request", () => setRequestModalOpen(true))}
               className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-[12px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
             >
               <Icon name="plus" size={13} strokeWidth={2.4} />

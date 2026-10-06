@@ -1270,6 +1270,26 @@ export const STRINGS: Record<string, Entry> = {
     fa: "برای پاسخ دادن به دعوت همکاری.",
     ko: "협업 초대에 답하려면 계정이 필요해요.",
   },
+  "gate.download": {
+    en: "Download songs and offline albums on the Android app.",
+    fa: "برای دانلود آهنگ‌ها و دریافت نسخه آفلاین در اپلیکیشن اندروید.",
+    ko: "안드로이드 앱에서 곡을 다운로드하고 오프라인으로 감상하세요.",
+  },
+  "gate.userFollow": {
+    en: "Follow other listeners and community members.",
+    fa: "برای فالو کردن سایر کاربران و اعضای جامعه هواداری.",
+    ko: "다른 리스너와 커뮤니티 멤버를 팔로우하려면 계정이 필요해요.",
+  },
+  "gate.request": {
+    en: "Submit content and song requests to the community.",
+    fa: "برای ثبت درخواست اثر و آهنگ به جامعه کاربران.",
+    ko: "콘텐츠 및 곡 요청을 등록하려면 계정이 필요해요.",
+  },
+  "gate.favorite": {
+    en: "Add community playlists to your personal favorites.",
+    fa: "برای افزودن پلی‌لیست‌های سایر کاربران به لیست علاقه‌مندی‌ها.",
+    ko: "다른 사용자의 플레이리스트를 즐겨찾기에 추가하려면 계정이 필요해요.",
+  },
 
   /* signing out asks first — it is the one destructive thing in the menu */
   "account.guest": { en: "Guest", fa: "مهمان", ko: "게스트" },

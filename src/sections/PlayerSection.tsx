@@ -739,12 +739,13 @@ function IconAction({
  */
 function DownloadButton({ onOpen }: { onOpen: () => void }) {
   const { t } = usePreferences();
+  const { requireAccount } = useAuth();
   return (
     <motion.button
       whileHover={{ y: -1.5 }}
       whileTap={{ scale: 0.9 }}
       transition={spring}
-      onClick={onOpen}
+      onClick={() => requireAccount("gate.download", onOpen)}
       title={t("player.downloadTip")}
       aria-label={t("player.downloadTip")}
       className="flex size-9 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"

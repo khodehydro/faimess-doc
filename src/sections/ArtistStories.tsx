@@ -49,12 +49,12 @@ export function ArtistStories() {
             whileTap={{ scale: 0.94 }}
             className="flex w-[66px] shrink-0 snap-start flex-col items-center gap-1.5"
           >
-            {/* ring → gap → face, three concentric circles */}
+            {/* ring → gap → face, three concentric circles — Instagram story styling on new release */}
             <span
               className={cn(
-                "block rounded-full p-[2.5px]",
+                "block rounded-full p-[2.5px] transition-transform duration-200",
                 artist.newRelease
-                  ? "bg-gradient-to-tr from-primary-deep via-primary to-teal"
+                  ? "bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] shadow-[0_0_10px_rgba(220,39,67,0.4)]"
                   : "bg-line-strong",
               )}
             >

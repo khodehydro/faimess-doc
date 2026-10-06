@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Icon } from "./Icon";
 import { usePreferences } from "../app/PreferencesContext";
 import { useApp } from "../app/AppContext";
+import { useAuth } from "../app/AuthContext";
 import { socialApi, type UserProfileSummary } from "../api/socialApi";
 import { cn } from "../lib/cn";
 import { Photo } from "./Cover";
@@ -23,6 +24,8 @@ export function FollowListModal({
   const [followers, setFollowers] = useState<UserProfileSummary[]>(() => socialApi.getFollowers());
   const [following, setFollowing] = useState<UserProfileSummary[]>(() => socialApi.getFollowing());
 
+  const { requireAccount } = useAuth();
+
   if (!open) return null;
 
   const refresh = () => {
@@ -32,8 +35,10 @@ export function FollowListModal({
   };
 
   const handleToggle = (user: UserProfileSummary) => {
-    socialApi.toggleFollow(user.id);
-    refresh();
+    requireAccount("gate.userFollow", () => {
+      socialApi.toggleFollow(user.id);
+      refresh();
+    });
   };
 
   const list = activeTab === "followers" ? followers : following;

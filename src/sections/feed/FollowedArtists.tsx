@@ -9,6 +9,7 @@ import { usePlayer } from "../../app/PlayerContext";
 import { leadTrackFor } from "../../data/player";
 import { spring } from "../../lib/motion";
 import { usePreferences } from "../../app/PreferencesContext";
+import { cn } from "../../lib/cn";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 1 — artists you follow: circular artwork, name underneath.
@@ -51,16 +52,27 @@ export function FollowedArtists() {
               className="relative"
               aria-label={t("page.openArtist", { name: artist.name })}
             >
-              {/* circular cover */}
-              <span className="relative block size-[72px] overflow-hidden rounded-full ring-[2.5px] ring-surface shadow-card">
-                <Cover src={artist.photo} seed={artist.seed} className="h-full w-full" />
+              {/* circular cover with Instagram story ring when artist has a new release */}
+              <span
+                className={cn(
+                  "relative block rounded-full p-[2.5px] transition-transform duration-300",
+                  artist.newRelease
+                    ? "bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] shadow-[0_0_12px_rgba(220,39,67,0.35)]"
+                    : "ring-[2.5px] ring-surface shadow-card",
+                )}
+              >
+                <span className="block rounded-full bg-surface p-[2px]">
+                  <span className="relative block size-[68px] overflow-hidden rounded-full">
+                    <Cover src={artist.photo} seed={artist.seed} className="h-full w-full" />
+                  </span>
+                </span>
               </span>
 
               {/* brand ring on hover */}
               <span className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-primary/0 transition-all duration-300 group-hover:ring-primary/60" />
 
               {artist.newRelease && (
-                <span className="absolute -end-0.5 top-0 flex size-4 items-center justify-center rounded-full bg-primary text-white ring-2 ring-surface">
+                <span className="absolute -end-0.5 top-0 flex size-4 items-center justify-center rounded-full bg-gradient-to-tr from-[#dc2743] to-[#f09433] text-white ring-2 ring-surface shadow-xs">
                   <Icon name="bolt" size={11} strokeWidth={2.4} />
                 </span>
               )}
