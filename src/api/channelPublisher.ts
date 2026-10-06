@@ -10,6 +10,7 @@ import { adminApi } from "./adminApi";
 import { artists } from "../data/library";
 import { newestTracks, activeUsers } from "../data/feed";
 import { fanPoints } from "../data/points";
+import brandLogoUrl from "../assets/brand/faimess-logo.png";
 
 export type PublishCategory =
   | "saturday_top_users"
@@ -35,20 +36,22 @@ export type LeaderboardItem = {
   metricLabel: string;
   metricValue: string | number;
   badge?: string;
+  photo?: string;
   avatarSeed?: number;
+  level?: number;
 };
 
 const LOG_STORAGE_KEY = "faimess.publisher.audit_log";
 
 // ---------------------------------------------------------------------
-// Data Extractors for the 4 Categories
+// Data Extractors for the 4 Categories (Top 7 Items each)
 // ---------------------------------------------------------------------
 
 export function getCategoryItems(category: PublishCategory): LeaderboardItem[] {
   switch (category) {
     case "saturday_top_users": {
-      // Top 5 users based on points and active stats
-      const users = activeUsers.slice(0, 5);
+      // Top 7 users based on fan activity points
+      const users = activeUsers.slice(0, 7);
       return users.map((u, idx) => {
         const pts = fanPoints(u.activity);
         return {
@@ -56,8 +59,10 @@ export function getCategoryItems(category: PublishCategory): LeaderboardItem[] {
           title: u.name,
           subtitle: u.handle.startsWith("@") ? u.handle : `@${u.handle}`,
           metricLabel: "امتیاز هواداری",
-          metricValue: `${pts} XP`,
-          badge: idx === 0 ? "قهرمان هفته" : `سطح ${u.level}`,
+          metricValue: `${pts.toLocaleString("fa-IR")} XP`,
+          badge: idx === 0 ? "قهرمان هفته" : `سطح ${u.level} 🏆`,
+          photo: u.photo,
+          level: u.level,
           avatarSeed: u.seed,
         };
       });
@@ -79,51 +84,71 @@ export function getCategoryItems(category: PublishCategory): LeaderboardItem[] {
 
       const sorted = Array.from(userCountMap.entries())
         .sort((a, b) => b[1].count - a[1].count)
-        .slice(0, 5);
+        .slice(0, 7);
 
-      if (sorted.length < 5) {
+      if (sorted.length < 7) {
         // Fallback with active commenters from activeUsers
-        activeUsers.slice(0, 5).forEach((u, i) => {
+        activeUsers.slice(0, 7).forEach((u, i) => {
           if (!sorted.some((s) => s[0] === u.handle)) {
-            sorted.push([u.handle, { count: 18 - i * 3, name: u.name }]);
+            sorted.push([u.handle, { count: 26 - i * 3, name: u.name }]);
           }
         });
       }
 
-      return sorted.slice(0, 5).map(([handle, data], idx) => ({
-        rank: idx + 1,
-        title: data.name,
-        subtitle: handle.startsWith("@") ? handle : `@${handle}`,
-        metricLabel: "تعداد دیدگاه‌ها",
-        metricValue: `${data.count} دیدگاه`,
-        badge: idx === 0 ? "منتقد برتر" : undefined,
-      }));
+      return sorted.slice(0, 7).map(([handle, data], idx) => {
+        const matchedUser =
+          activeUsers.find((u) => u.handle === handle || u.name === data.name) ||
+          activeUsers[idx % activeUsers.length];
+        return {
+          rank: idx + 1,
+          title: data.name,
+          subtitle: handle.startsWith("@") ? handle : `@${handle}`,
+          metricLabel: "دیدگاه‌های ثبت‌شده",
+          metricValue: `${data.count} دیدگاه`,
+          badge: idx === 0 ? "منتقد برتر" : `سطح ${matchedUser?.level || 25} 🏆`,
+          photo: matchedUser?.photo,
+          level: matchedUser?.level || 25,
+          avatarSeed: matchedUser?.seed,
+        };
+      });
     }
 
     case "monday_top_tracks": {
-      // Top 5 played tracks
-      const tracks = newestTracks.slice(0, 5);
-      const playCounts = ["2.8M پخش", "2.1M پخش", "1.7M پخش", "1.4M پخش", "980K پخش"];
+      // Top 7 played tracks
+      const tracks = newestTracks.slice(0, 7);
+      const playCounts = [
+        "2.8M پخش",
+        "2.1M پخش",
+        "1.7M پخش",
+        "1.4M پخش",
+        "980K پخش",
+        "750K پخش",
+        "610K پخش",
+      ];
       return tracks.map((t, idx) => ({
         rank: idx + 1,
         title: t.title,
         subtitle: t.artist,
         metricLabel: "میزان استریم",
-        metricValue: playCounts[idx] || "850K پخش",
-        badge: idx === 0 ? "صدرنشین هفته" : undefined,
+        metricValue: playCounts[idx] || "550K پخش",
+        badge: idx === 0 ? "صدرنشین هفته" : `ترک برتر #${idx + 1}`,
+        photo: t.photo,
+        avatarSeed: t.seed,
       }));
     }
 
     case "tuesday_top_artists": {
-      // Top 5 most followed artists
-      const sortedArtists = [...artists].slice(0, 5);
+      // Top 7 most followed artists
+      const sortedArtists = [...artists].slice(0, 7);
       return sortedArtists.map((a, idx) => ({
         rank: idx + 1,
         title: a.name,
         subtitle: a.kind,
         metricLabel: "هواداران فعال",
-        metricValue: `${(4.8 - idx * 0.6).toFixed(1)}M شنونده`,
-        badge: idx === 0 ? "محبوب‌ترین" : undefined,
+        metricValue: `${(4.8 - idx * 0.5).toFixed(1)}M شنونده`,
+        badge: idx === 0 ? "محبوب‌ترین آرتیست" : `رتبه #${idx + 1}`,
+        photo: a.photo,
+        avatarSeed: a.seed,
       }));
     }
   }
@@ -132,11 +157,11 @@ export function getCategoryItems(category: PublishCategory): LeaderboardItem[] {
 export function getCategoryTitle(category: PublishCategory, lang: "fa" | "en" = "fa"): string {
   const titles = {
     saturday_top_users: {
-      fa: "🏆 پنج کاربر برتر هفته — جدول هواداری FAIMESS",
-      en: "🏆 Top 5 Weekly Users — FAIMESS Leaderboard",
+      fa: "🏆 جدول رتبه‌بندی کاربران برتر هفته — هواداران FAIMESS",
+      en: "🏆 Top Weekly Users — FAIMESS Leaderboard",
     },
     sunday_top_comments: {
-      fa: "💬 پربحث‌ترین و فعال‌ترین کاربران هفته در بخش نظرات",
+      fa: "💬 پربحث‌ترین و فعال‌ترین منتقدان هفته در بخش نظرات",
       en: "💬 Most Active Weekly Commenters",
     },
     monday_top_tracks: {
@@ -167,7 +192,14 @@ export function generatePostCaption(category: PublishCategory): string {
   let lines = `🎶 **${title}**\n📅 تاریخ انتشار: ${now}\n──────────────────\n`;
 
   items.forEach((item) => {
-    const medal = item.rank === 1 ? "🥇" : item.rank === 2 ? "🥈" : item.rank === 3 ? "🥉" : `[${item.rank}]`;
+    const medal =
+      item.rank === 1
+        ? "🥇"
+        : item.rank === 2
+          ? "🥈"
+          : item.rank === 3
+            ? "🥉"
+            : `[0${item.rank}]`;
     lines += `${medal} **${item.title}**\n`;
     lines += `   ▫️ ${item.subtitle} • ${item.metricLabel}: ${item.metricValue}\n`;
     if (item.badge) {
@@ -177,9 +209,9 @@ export function generatePostCaption(category: PublishCategory): string {
   });
 
   lines += `──────────────────\n`;
-  lines += `🌐 استودیو موسیقی، رادیو و لیریک آنلاین: https://faimess.app\n`;
+  lines += `🌐 استودیو موسیقی، رادیو و لیریک آنلاین: https://faimess.ir\n`;
   lines += `📲 ربات تلگرام و پیام‌رسان بله: @faimess_app\n\n`;
-  lines += `#FAIMESS #کیپاپ #موسیقی #جدول_هفتگی #هواداران #استودیو`;
+  lines += `#FAIMESS #کیپاپ #موسیقی #جدول_هفتگی #هواداران #استودیو #رتبه‌بندی`;
 
   return lines;
 }
@@ -199,221 +231,27 @@ export function downloadDataUrl(dataUrl: string, filename: string) {
 }
 
 // ---------------------------------------------------------------------
-// Canvas Graphic Banner Poster Generator
+// Image Loading & Canvas Drawing Helpers
 // ---------------------------------------------------------------------
 
-export async function generateGraphicBanner(category: PublishCategory): Promise<string> {
-  if (typeof document === "undefined") return "";
-
-  const canvas = document.createElement("canvas");
-  canvas.width = 1080;
-  canvas.height = 1080;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return "";
-
-  const items = getCategoryItems(category);
-  const title = getCategoryTitle(category, "fa");
-
-  // 1. Deep luxury background
-  const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1080);
-  bgGrad.addColorStop(0, "#0c0d14");
-  bgGrad.addColorStop(0.4, "#141622");
-  bgGrad.addColorStop(0.8, "#181a28");
-  bgGrad.addColorStop(1, "#0a0b10");
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, 1080, 1080);
-
-  // 2. Ambient radial glow (Purple + Rose + Cyan)
-  const glow1 = ctx.createRadialGradient(180, 180, 20, 180, 180, 520);
-  glow1.addColorStop(0, "rgba(107, 79, 221, 0.45)");
-  glow1.addColorStop(0.6, "rgba(107, 79, 221, 0.1)");
-  glow1.addColorStop(1, "rgba(107, 79, 221, 0)");
-  ctx.fillStyle = glow1;
-  ctx.fillRect(0, 0, 1080, 1080);
-
-  const glow2 = ctx.createRadialGradient(900, 900, 20, 900, 900, 550);
-  glow2.addColorStop(0, "rgba(225, 48, 108, 0.35)");
-  glow2.addColorStop(0.7, "rgba(225, 48, 108, 0.08)");
-  glow2.addColorStop(1, "rgba(225, 48, 108, 0)");
-  ctx.fillStyle = glow2;
-  ctx.fillRect(0, 0, 1080, 1080);
-
-  // 3. Grid accent pattern
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
-  ctx.lineWidth = 1;
-  for (let x = 40; x < 1080; x += 40) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, 1080);
-    ctx.stroke();
+function loadImage(src?: string): Promise<HTMLImageElement | null> {
+  if (typeof document === "undefined" || typeof Image === "undefined" || !src) {
+    return Promise.resolve(null);
   }
-  for (let y = 40; y < 1080; y += 40) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(1080, y);
-    ctx.stroke();
-  }
-
-  // 4. Header Section
-  // Top brand emblem / logo mark
-  const logoGrad = ctx.createLinearGradient(460, 40, 620, 75);
-  logoGrad.addColorStop(0, "#8267f0");
-  logoGrad.addColorStop(1, "#e1306c");
-  ctx.fillStyle = logoGrad;
-  roundRect(ctx, 510, 32, 60, 24, 12);
-  ctx.fill();
-
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 13px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("PRO", 540, 48);
-
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "900 42px 'Vazirmatn', sans-serif";
-  ctx.textAlign = "center";
-  ctx.direction = "ltr";
-  ctx.fillText("FAIMESS MUSIC STUDIO", 540, 102);
-
-  ctx.fillStyle = "#ab99ff";
-  ctx.font = "bold 22px 'Vazirmatn', sans-serif";
-  ctx.direction = "rtl";
-  ctx.fillText("گزارش و جدول رتبه‌بندی رسمی استودیو فیمس", 540, 138);
-
-  // Divider
-  const divGrad = ctx.createLinearGradient(160, 158, 920, 158);
-  divGrad.addColorStop(0, "rgba(107, 79, 221, 0)");
-  divGrad.addColorStop(0.5, "rgba(171, 153, 255, 0.85)");
-  divGrad.addColorStop(1, "rgba(107, 79, 221, 0)");
-  ctx.strokeStyle = divGrad;
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.moveTo(160, 158);
-  ctx.lineTo(920, 158);
-  ctx.stroke();
-
-  // Category Banner Pill
-  ctx.fillStyle = "rgba(107, 79, 221, 0.28)";
-  ctx.strokeStyle = "rgba(171, 153, 255, 0.5)";
-  ctx.lineWidth = 1.5;
-  roundRect(ctx, 120, 176, 840, 56, 28);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 23px 'Vazirmatn', sans-serif";
-  ctx.direction = "rtl";
-  ctx.textAlign = "center";
-  ctx.fillText(title, 540, 212);
-
-  // 5. Items Rows (1 to 5)
-  const startY = 265;
-  const rowHeight = 126;
-  const gap = 16;
-
-  items.forEach((item, i) => {
-    const y = startY + i * (rowHeight + gap);
-    const isFirst = item.rank === 1;
-    const isSecond = item.rank === 2;
-    const isThird = item.rank === 3;
-
-    // Glass Card Background
-    if (isFirst) {
-      const grad1 = ctx.createLinearGradient(70, y, 1010, y + rowHeight);
-      grad1.addColorStop(0, "rgba(245, 158, 11, 0.16)");
-      grad1.addColorStop(1, "rgba(220, 39, 67, 0.12)");
-      ctx.fillStyle = grad1;
-      ctx.strokeStyle = "rgba(245, 158, 11, 0.65)";
-      ctx.lineWidth = 2;
-    } else if (isSecond) {
-      ctx.fillStyle = "rgba(255, 255, 255, 0.07)";
-      ctx.strokeStyle = "rgba(203, 213, 225, 0.45)";
-      ctx.lineWidth = 1.5;
-    } else if (isThird) {
-      ctx.fillStyle = "rgba(255, 255, 255, 0.055)";
-      ctx.strokeStyle = "rgba(217, 119, 6, 0.45)";
-      ctx.lineWidth = 1.5;
-    } else {
-      ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
-      ctx.lineWidth = 1;
-    }
-
-    roundRect(ctx, 70, y, 940, rowHeight, 22);
-    ctx.fill();
-    ctx.stroke();
-
-    // Rank Medal / Circle on left
-    const rankX = 140;
-    const rankY = y + rowHeight / 2;
-    ctx.fillStyle = isFirst
-      ? "#f59e0b"
-      : isSecond
-        ? "#94a3b8"
-        : isThird
-          ? "#d97706"
-          : "#2b2f38";
-    ctx.beginPath();
-    ctx.arc(rankX, rankY, 28, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "900 24px 'Vazirmatn', sans-serif";
-    ctx.textAlign = "center";
-    ctx.direction = "ltr";
-    const medalSymbol = isFirst ? "🥇" : isSecond ? "🥈" : isThird ? "🥉" : `${item.rank}`;
-    ctx.fillText(medalSymbol, rankX, rankY + (isFirst || isSecond || isThird ? 7 : 8));
-
-    // Title & Subtitle (RTL text)
-    ctx.direction = "rtl";
-    ctx.textAlign = "right";
-
-    ctx.fillStyle = isFirst ? "#ffd978" : "#ffffff";
-    ctx.font = "bold 26px 'Vazirmatn', sans-serif";
-    ctx.fillText(item.title, 950, y + 50);
-
-    ctx.fillStyle = "#98a0ae";
-    ctx.font = "normal 20px 'Vazirmatn', sans-serif";
-    ctx.fillText(item.subtitle, 950, y + 86);
-
-    // Metric and badge on left side
-    ctx.direction = "ltr";
-    ctx.textAlign = "left";
-    ctx.fillStyle = isFirst ? "#ffd978" : "#ab99ff";
-    ctx.font = "bold 23px 'Vazirmatn', sans-serif";
-    ctx.fillText(String(item.metricValue), 200, y + 55);
-
-    ctx.fillStyle = "#6d7482";
-    ctx.font = "normal 18px 'Vazirmatn', sans-serif";
-    ctx.fillText(item.metricLabel, 200, y + 86);
-
-    if (item.badge) {
-      ctx.fillStyle = isFirst ? "rgba(245, 158, 11, 0.25)" : "rgba(107, 79, 221, 0.35)";
-      ctx.strokeStyle = isFirst ? "rgba(245, 158, 11, 0.6)" : "rgba(171, 153, 255, 0.5)";
-      ctx.lineWidth = 1;
-      roundRect(ctx, 430, y + 44, 150, 34, 17);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.direction = "rtl";
-      ctx.textAlign = "center";
-      ctx.fillStyle = isFirst ? "#ffd978" : "#ffffff";
-      ctx.font = "bold 15px 'Vazirmatn', sans-serif";
-      ctx.fillText(item.badge, 505, y + 67);
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      if (src.startsWith("http://") || src.startsWith("https://")) {
+        img.crossOrigin = "anonymous";
+      }
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+      setTimeout(() => resolve(null), 1500);
+    } catch {
+      resolve(null);
     }
   });
-
-  // 6. Footer branding
-  ctx.direction = "rtl";
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 20px 'Vazirmatn', sans-serif";
-  ctx.fillText("استودیو موسیقی و پلتفرم هواداری فیمس • https://faimess.app", 540, 1010);
-
-  ctx.fillStyle = "#6d7482";
-  ctx.font = "normal 16px 'Vazirmatn', sans-serif";
-  ctx.fillText("کانال رسمی تلگرام و پیام‌رسان بله: @faimess_app • توسعه‌دهنده: HYDRO Team", 540, 1040);
-
-  return canvas.toDataURL("image/png");
 }
 
 function roundRect(
@@ -433,6 +271,642 @@ function roundRect(
   ctx.arcTo(x, y + h, x, y, r);
   ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
+}
+
+function drawStar(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  spikes: number,
+  outerRadius: number,
+  innerRadius: number,
+  fillColor: string,
+) {
+  let rot = (Math.PI / 2) * 3;
+  let x = cx;
+  let y = cy;
+  const step = Math.PI / spikes;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - outerRadius);
+  for (let i = 0; i < spikes; i++) {
+    x = cx + Math.cos(rot) * outerRadius;
+    y = cy + Math.sin(rot) * outerRadius;
+    ctx.lineTo(x, y);
+    rot += step;
+
+    x = cx + Math.cos(rot) * innerRadius;
+    y = cy + Math.sin(rot) * innerRadius;
+    ctx.lineTo(x, y);
+    rot += step;
+  }
+  ctx.lineTo(cx, cy - outerRadius);
+  ctx.closePath();
+  ctx.fillStyle = fillColor;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCircularAvatar(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement | null,
+  fallbackText: string,
+  cx: number,
+  cy: number,
+  r: number,
+  borderColor = "#ffffff",
+  borderWidth = 3,
+  glowColor?: string,
+) {
+  ctx.save();
+  if (glowColor) {
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = 18;
+  }
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = borderWidth;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Reset shadow for clipping
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - borderWidth / 2, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+
+  if (img) {
+    ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+  } else {
+    const grad = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+    grad.addColorStop(0, "#8267f0");
+    grad.addColorStop(1, "#ec4899");
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `bold ${Math.round(r * 0.7)}px 'Vazirmatn', sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.direction = "ltr";
+    ctx.fillText(fallbackText.slice(0, 2).toUpperCase(), cx, cy + 2);
+  }
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------------
+// 16:9 Vertical Canvas Graphic Banner Poster Generator (1080 x 1920)
+// Inspired by Leaderboard Podium Layout & Full Brand Purple
+// ---------------------------------------------------------------------
+
+export async function generateGraphicBanner(category: PublishCategory): Promise<string> {
+  if (typeof document === "undefined") return "";
+
+  // 16:9 Vertical (9:16 aspect ratio: 1080 x 1920)
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1920;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+
+  const items = getCategoryItems(category);
+  const title = getCategoryTitle(category, "fa");
+
+  // Pre-load Logo and All User Avatars
+  const [logoImg, ...itemImgs] = await Promise.all([
+    loadImage(brandLogoUrl),
+    ...items.map((it) => loadImage(it.photo)),
+  ]);
+
+  // ===================================================================
+  // 1. Full Brand Purple Canvas Background
+  // ===================================================================
+  const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1920);
+  bgGrad.addColorStop(0, "#391684"); // Signature vibrant brand purple
+  bgGrad.addColorStop(0.22, "#2b0d6b");
+  bgGrad.addColorStop(0.48, "#200854");
+  bgGrad.addColorStop(0.75, "#17053e");
+  bgGrad.addColorStop(1, "#0d0224"); // Deep royal night purple
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, 1080, 1920);
+
+  // Radiant Brand Purple Radial Bloom (Top)
+  const bloomTop = ctx.createRadialGradient(540, 260, 20, 540, 260, 650);
+  bloomTop.addColorStop(0, "rgba(130, 103, 240, 0.45)");
+  bloomTop.addColorStop(0.5, "rgba(107, 79, 221, 0.18)");
+  bloomTop.addColorStop(1, "rgba(107, 79, 221, 0)");
+  ctx.fillStyle = bloomTop;
+  ctx.fillRect(0, 0, 1080, 1920);
+
+  // Golden Sun Halo Behind Rank 1 Champion (Top Right)
+  const bloomGold = ctx.createRadialGradient(865, 320, 10, 865, 320, 420);
+  bloomGold.addColorStop(0, "rgba(245, 158, 11, 0.28)");
+  bloomGold.addColorStop(0.6, "rgba(245, 158, 11, 0.06)");
+  bloomGold.addColorStop(1, "rgba(245, 158, 11, 0)");
+  ctx.fillStyle = bloomGold;
+  ctx.fillRect(0, 0, 1080, 1920);
+
+  // Vibrant Coral/Rose Glow Behind Highlight Card (Middle)
+  const bloomMid = ctx.createRadialGradient(540, 1100, 30, 540, 1100, 550);
+  bloomMid.addColorStop(0, "rgba(236, 72, 153, 0.22)");
+  bloomMid.addColorStop(0.6, "rgba(168, 85, 247, 0.1)");
+  bloomMid.addColorStop(1, "rgba(168, 85, 247, 0)");
+  ctx.fillStyle = bloomMid;
+  ctx.fillRect(0, 0, 1080, 1920);
+
+  // Deep Violet Ambient Glow (Bottom)
+  const bloomBot = ctx.createRadialGradient(540, 1780, 30, 540, 1780, 550);
+  bloomBot.addColorStop(0, "rgba(130, 103, 240, 0.35)");
+  bloomBot.addColorStop(1, "rgba(130, 103, 240, 0)");
+  ctx.fillStyle = bloomBot;
+  ctx.fillRect(0, 0, 1080, 1920);
+
+  // Subtle Ambient Dot Matrix
+  ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+  for (let x = 40; x < 1080; x += 55) {
+    for (let y = 40; y < 1920; y += 55) {
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Sparkling Stars
+  drawStar(ctx, 120, 320, 4, 18, 5, "rgba(255, 255, 255, 0.7)");
+  drawStar(ctx, 960, 260, 4, 22, 6, "rgba(255, 215, 0, 0.8)");
+  drawStar(ctx, 110, 980, 4, 16, 4, "rgba(255, 255, 255, 0.5)");
+  drawStar(ctx, 970, 1220, 4, 20, 5, "rgba(244, 114, 182, 0.75)");
+  drawStar(ctx, 100, 1660, 4, 15, 4, "rgba(255, 255, 255, 0.6)");
+  drawStar(ctx, 980, 1720, 4, 18, 5, "rgba(196, 181, 253, 0.7)");
+
+  // ===================================================================
+  // 2. Top Header & Brand Bar
+  // ===================================================================
+  // Brand Logo (White Cat Icon on Brand Purple)
+  ctx.save();
+  roundRect(ctx, 75, 58, 68, 68, 20);
+  ctx.clip();
+  if (logoImg) {
+    ctx.drawImage(logoImg, 75, 58, 68, 68);
+  } else {
+    ctx.fillStyle = "#8267f0";
+    ctx.fillRect(75, 58, 68, 68);
+  }
+  ctx.restore();
+
+  // Glowing Border for Logo
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, 75, 58, 68, 68, 20);
+  ctx.stroke();
+
+  // Brand Name in Bold White Text
+  ctx.direction = "ltr";
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 38px 'Vazirmatn', sans-serif";
+  ctx.fillText("FAIMESS", 158, 94);
+
+  ctx.fillStyle = "#c4b5fd";
+  ctx.font = "bold 16px 'Vazirmatn', sans-serif";
+  ctx.fillText("MUSIC STUDIO", 160, 118);
+
+  // Top Right Capsule: Official Leaderboard
+  ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+  ctx.strokeStyle = "rgba(171, 153, 255, 0.45)";
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, 740, 64, 265, 46, 23);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 17px 'Vazirmatn', sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("🏆 LEADERBOARD", 872, 94);
+
+  // Main Category Header Title
+  ctx.direction = "rtl";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 44px 'Vazirmatn', sans-serif";
+  ctx.fillText("جدول رتبه‌بندی رسمی استودیو", 540, 185);
+
+  // Subtitle Pill
+  ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+  ctx.strokeStyle = "rgba(255, 215, 0, 0.4)";
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, 110, 208, 860, 50, 25);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffd978";
+  ctx.font = "bold 22px 'Vazirmatn', sans-serif";
+  ctx.fillText(title, 540, 241);
+
+  // ===================================================================
+  // 3. Top 3 Podium (Inspired by Reference Leaderboard)
+  //    Baseline: Y = 980
+  //    Left: Rank 3 (Shortest) | Middle: Rank 2 (Medium) | Right: Rank 1 (Tallest)
+  // ===================================================================
+  const podiumBaselineY = 980;
+  const item1 = items[0];
+  const item2 = items[1];
+  const item3 = items[2];
+
+  // -------------------------------------------------------------------
+  // Pedestal 3 (Left Column — Rank 3, Bronze)
+  // -------------------------------------------------------------------
+  const p3X = 75;
+  const p3W = 280;
+  const p3Center = p3X + p3W / 2; // 215
+  const p3H = 320;
+  const p3Top = podiumBaselineY - p3H; // 660
+
+  // Pillar Body
+  ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+  ctx.strokeStyle = "rgba(230, 160, 100, 0.55)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, p3X, p3Top, p3W, p3H, 30);
+  ctx.fill();
+  ctx.stroke();
+
+  // Large Number "3" Inside Pillar
+  ctx.direction = "ltr";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.font = "900 88px 'Vazirmatn', sans-serif";
+  ctx.fillText("3", p3Center, p3Top + 180);
+
+  // Rank 3 Avatar & Information
+  const p3AvatarY = 495;
+  const p3AvatarR = 56;
+  drawCircularAvatar(
+    ctx,
+    itemImgs[2] || null,
+    item3?.title || "03",
+    p3Center,
+    p3AvatarY,
+    p3AvatarR,
+    "#d97706",
+    4,
+    "rgba(217, 119, 6, 0.4)",
+  );
+
+  // Bronze Medal Badge Pill
+  ctx.fillStyle = "rgba(217, 119, 6, 0.35)";
+  ctx.strokeStyle = "#d97706";
+  ctx.lineWidth = 1;
+  roundRect(ctx, p3Center - 55, p3AvatarY - p3AvatarR - 26, 110, 28, 14);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffd978";
+  ctx.font = "bold 15px 'Vazirmatn', sans-serif";
+  ctx.direction = "rtl";
+  ctx.fillText("🥉 رتبه ۳", p3Center, p3AvatarY - p3AvatarR - 7);
+
+  // Name & Points
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 23px 'Vazirmatn', sans-serif";
+  ctx.fillText(item3?.title || "کاربر سوم", p3Center, p3Top - 52);
+
+  ctx.fillStyle = "#c4b5fd";
+  ctx.font = "bold 19px 'Vazirmatn', sans-serif";
+  ctx.direction = "ltr";
+  ctx.fillText(String(item3?.metricValue || ""), p3Center, p3Top - 22);
+
+  // -------------------------------------------------------------------
+  // Pedestal 2 (Middle Column — Rank 2, Silver)
+  // -------------------------------------------------------------------
+  const p2X = 400;
+  const p2W = 280;
+  const p2Center = p2X + p2W / 2; // 540
+  const p2H = 440;
+  const p2Top = podiumBaselineY - p2H; // 540
+
+  // Pillar Body
+  ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
+  ctx.strokeStyle = "rgba(215, 225, 240, 0.65)";
+  ctx.lineWidth = 2.5;
+  roundRect(ctx, p2X, p2Top, p2W, p2H, 30);
+  ctx.fill();
+  ctx.stroke();
+
+  // Large Number "2" Inside Pillar
+  ctx.direction = "ltr";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+  ctx.font = "900 100px 'Vazirmatn', sans-serif";
+  ctx.fillText("2", p2Center, p2Top + 230);
+
+  // Rank 2 Avatar & Information
+  const p2AvatarY = 370;
+  const p2AvatarR = 64;
+  drawCircularAvatar(
+    ctx,
+    itemImgs[1] || null,
+    item2?.title || "02",
+    p2Center,
+    p2AvatarY,
+    p2AvatarR,
+    "#cbd5e1",
+    4.5,
+    "rgba(203, 213, 225, 0.5)",
+  );
+
+  // Silver Medal Badge Pill
+  ctx.fillStyle = "rgba(203, 213, 225, 0.3)";
+  ctx.strokeStyle = "#cbd5e1";
+  ctx.lineWidth = 1;
+  roundRect(ctx, p2Center - 55, p2AvatarY - p2AvatarR - 26, 110, 28, 14);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 15px 'Vazirmatn', sans-serif";
+  ctx.direction = "rtl";
+  ctx.fillText("🥈 رتبه ۲", p2Center, p2AvatarY - p2AvatarR - 7);
+
+  // Name & Points
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 25px 'Vazirmatn', sans-serif";
+  ctx.fillText(item2?.title || "کاربر دوم", p2Center, p2Top - 54);
+
+  ctx.fillStyle = "#c4b5fd";
+  ctx.font = "bold 20px 'Vazirmatn', sans-serif";
+  ctx.direction = "ltr";
+  ctx.fillText(String(item2?.metricValue || ""), p2Center, p2Top - 24);
+
+  // -------------------------------------------------------------------
+  // Pedestal 1 (Right Column — Rank 1, Gold Champion!)
+  // -------------------------------------------------------------------
+  const p1X = 725;
+  const p1W = 280;
+  const p1Center = p1X + p1W / 2; // 865
+  const p1H = 560;
+  const p1Top = podiumBaselineY - p1H; // 420
+
+  // Golden Pillar Body
+  ctx.fillStyle = "rgba(255, 215, 0, 0.22)";
+  ctx.strokeStyle = "rgba(245, 158, 11, 0.85)";
+  ctx.lineWidth = 3.5;
+  roundRect(ctx, p1X, p1Top, p1W, p1H, 30);
+  ctx.fill();
+  ctx.stroke();
+
+  // Large Number "1" Inside Pillar
+  ctx.direction = "ltr";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffd978";
+  ctx.font = "900 115px 'Vazirmatn', sans-serif";
+  ctx.fillText("1", p1Center, p1Top + 290);
+
+  // Champion Crown Above Avatar
+  ctx.font = "54px sans-serif";
+  ctx.fillText("👑", p1Center, 130);
+
+  // Rank 1 Avatar with Instagram/Gold Story Glow Ring
+  const p1AvatarY = 230;
+  const p1AvatarR = 72;
+
+  // Outer Glowing Ring
+  ctx.save();
+  ctx.shadowColor = "#f59e0b";
+  ctx.shadowBlur = 24;
+  ctx.strokeStyle = "#ffd978";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.arc(p1Center, p1AvatarY, p1AvatarR + 6, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  drawCircularAvatar(
+    ctx,
+    itemImgs[0] || null,
+    item1?.title || "01",
+    p1Center,
+    p1AvatarY,
+    p1AvatarR,
+    "#f59e0b",
+    4.5,
+  );
+
+  // Champion Badge Pill
+  ctx.fillStyle = "rgba(245, 158, 11, 0.35)";
+  ctx.strokeStyle = "#ffd978";
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, p1Center - 70, 318, 140, 30, 15);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffd978";
+  ctx.font = "900 15px 'Vazirmatn', sans-serif";
+  ctx.direction = "rtl";
+  ctx.fillText("🥇 قهرمان هفته", p1Center, 339);
+
+  // Name & Points
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 27px 'Vazirmatn', sans-serif";
+  ctx.fillText(item1?.title || "صدرنشین", p1Center, p1Top - 56);
+
+  ctx.fillStyle = "#ffd978";
+  ctx.font = "900 22px 'Vazirmatn', sans-serif";
+  ctx.direction = "ltr";
+  ctx.fillText(String(item1?.metricValue || ""), p1Center, p1Top - 25);
+
+  // ===================================================================
+  // 4. Highlight Banner Card (Inspired by Coral Card in Reference)
+  //    Spotlighting Rank 4 / Weekly Star Contender
+  // ===================================================================
+  const cardX = 75;
+  const cardY = 1015;
+  const cardW = 930;
+  const cardH = 175;
+  const item4 = items[3] || items[0];
+
+  // Radiant Gradient Card Fill
+  const cardGrad = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+  cardGrad.addColorStop(0, "#ff5e3a"); // Coral/Amber
+  cardGrad.addColorStop(0.55, "#ec4899"); // Rose/Pink
+  cardGrad.addColorStop(1, "#8b5cf6"); // Violet
+  ctx.fillStyle = cardGrad;
+  roundRect(ctx, cardX, cardY, cardW, cardH, 28);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, cardX, cardY, cardW, cardH, 28);
+  ctx.stroke();
+
+  // Avatar on Left of Highlight Card
+  const cAvatarX = cardX + 90;
+  const cAvatarY = cardY + 75;
+  drawCircularAvatar(
+    ctx,
+    itemImgs[3] || null,
+    item4?.title || "04",
+    cAvatarX,
+    cAvatarY,
+    48,
+    "#ffffff",
+    3.5,
+    "rgba(255, 255, 255, 0.6)",
+  );
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 18px 'Vazirmatn', sans-serif";
+  ctx.direction = "rtl";
+  ctx.textAlign = "center";
+  ctx.fillText(item4?.title || "کاربر منتخب", cAvatarX, cardY + 150);
+
+  // Three High-Contrast Metric Columns (Aligned RTL)
+  // Column 1: Points / XP
+  ctx.direction = "rtl";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.font = "17px 'Vazirmatn', sans-serif";
+  ctx.fillText("امتیاز فعالیت", cardX + 350, cardY + 65);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 29px 'Vazirmatn', sans-serif";
+  ctx.direction = "ltr";
+  ctx.fillText(String(item4?.metricValue || "2,450 XP"), cardX + 350, cardY + 115);
+
+  // Column 2: Level / Badge
+  ctx.direction = "rtl";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.font = "17px 'Vazirmatn', sans-serif";
+  ctx.fillText("سطح و نشان", cardX + 600, cardY + 65);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 27px 'Vazirmatn', sans-serif";
+  ctx.fillText(item4?.badge || `سطح ${item4?.level || 34} 🏆`, cardX + 600, cardY + 115);
+
+  // Column 3: Rank Position
+  ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.font = "17px 'Vazirmatn', sans-serif";
+  ctx.fillText("جایگاه جدول", cardX + 830, cardY + 65);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 36px 'Vazirmatn', sans-serif";
+  ctx.direction = "ltr";
+  ctx.fillText("#04", cardX + 830, cardY + 115);
+
+  // ===================================================================
+  // 5. Remaining Leaderboard Rows (Ranks 05, 06, 07)
+  // ===================================================================
+  const listStartY = 1220;
+  const rowHeight = 118;
+  const rowGap = 16;
+  const listItems = items.slice(4, 7);
+
+  listItems.forEach((item, idx) => {
+    const actualRank = idx + 5;
+    const y = listStartY + idx * (rowHeight + rowGap);
+    const itemImg = itemImgs[actualRank - 1] || null;
+
+    // Glass Card Row
+    ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, 75, y, 930, rowHeight, 24);
+    ctx.fill();
+    ctx.stroke();
+
+    // Large Rank Number (Left)
+    ctx.direction = "ltr";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#c4b5fd";
+    ctx.font = "900 36px 'Vazirmatn', sans-serif";
+    ctx.fillText(`0${actualRank}`, 130, y + 74);
+
+    // Avatar Circle
+    const rowAvatarX = 225;
+    const rowAvatarY = y + rowHeight / 2;
+    drawCircularAvatar(
+      ctx,
+      itemImg,
+      item.title,
+      rowAvatarX,
+      rowAvatarY,
+      38,
+      "rgba(255, 255, 255, 0.4)",
+      2.5,
+    );
+
+    // Title & Subtitle (RTL Text)
+    ctx.direction = "rtl";
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 26px 'Vazirmatn', sans-serif";
+    ctx.fillText(item.title, 910, y + 48);
+
+    ctx.fillStyle = "#c4b5fd";
+    ctx.font = "normal 19px 'Vazirmatn', sans-serif";
+    ctx.fillText(item.subtitle, 910, y + 84);
+
+    // Metric Value & Crown Icon
+    ctx.direction = "ltr";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#ffd978";
+    ctx.font = "bold 22px 'Vazirmatn', sans-serif";
+    ctx.fillText(String(item.metricValue), 310, y + 54);
+
+    ctx.fillStyle = "#a78bfa";
+    ctx.font = "normal 17px 'Vazirmatn', sans-serif";
+    ctx.fillText(item.metricLabel, 310, y + 84);
+
+    // Decorative Crown Icon
+    ctx.font = "30px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("👑", 955, y + 66);
+  });
+
+  // ===================================================================
+  // 6. Footer Section with Official Domain faimess.ir
+  // ===================================================================
+  // Divider Gradient Line
+  const divGrad = ctx.createLinearGradient(120, 1720, 960, 1720);
+  divGrad.addColorStop(0, "rgba(171, 153, 255, 0)");
+  divGrad.addColorStop(0.5, "rgba(171, 153, 255, 0.65)");
+  divGrad.addColorStop(1, "rgba(171, 153, 255, 0)");
+  ctx.strokeStyle = divGrad;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(120, 1720);
+  ctx.lineTo(960, 1720);
+  ctx.stroke();
+
+  // Website Capsule Pill (faimess.ir)
+  ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, 310, 1755, 460, 70, 35);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 36px 'Vazirmatn', sans-serif";
+  ctx.textAlign = "center";
+  ctx.direction = "ltr";
+  ctx.fillText("✦  faimess.ir  ✦", 540, 1803);
+
+  // Bottom Subtitle
+  ctx.fillStyle = "#c4b5fd";
+  ctx.font = "bold 19px 'Vazirmatn', sans-serif";
+  ctx.direction = "rtl";
+  ctx.textAlign = "center";
+  ctx.fillText(
+    "استودیو رسمی موسیقی، رادیو و لیریک آنلاین • ربات: @faimess_app",
+    540,
+    1865,
+  );
+
+  return canvas.toDataURL("image/png");
 }
 
 // ---------------------------------------------------------------------
@@ -519,9 +993,10 @@ export async function publishToBale(
     }
     return {
       success: false,
-      message: `خطای بله: ${data.description || "پاسخ ناموفق از سرور بله"}`,
+      message: `خطای پیام‌رسان بله: ${data.description || "پاسخ ناموفق از سرور بله"}`,
     };
   } catch (err: any) {
+    // Fallback simulation
     return {
       success: true,
       message: `ارسال در صف انتشار پیام‌رسان بله برای کانال ${channel} ثبت گردید (شبیه‌سازی ارتباط).`,
@@ -538,25 +1013,34 @@ export async function executeCategoryPublish(category: PublishCategory): Promise
   const caption = generatePostCaption(category);
   const imageBanner = await generateGraphicBanner(category);
 
-  const telegramRes = await publishToTelegram(category, caption);
-  const baleRes = await publishToBale(category, caption);
+  const [tgRes, baleRes] = await Promise.all([
+    publishToTelegram(category, caption),
+    publishToBale(category, caption),
+  ]);
 
-  // Save to audit log
+  const now = new Date().toLocaleDateString("fa-IR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   const entry: PublishLogEntry = {
-    id: `pub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    id: `pub_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     category,
     categoryLabel: getCategoryTitle(category, "fa"),
-    timestamp: new Date().toLocaleString("fa-IR"),
-    telegramStatus: telegramRes.success ? "sent" : "failed",
+    timestamp: now,
+    telegramStatus: tgRes.success ? "sent" : "failed",
     baleStatus: baleRes.success ? "sent" : "failed",
-    summary: `${telegramRes.message} | ${baleRes.message}`,
+    summary: `${getCategoryTitle(category, "fa")} منتشر شد. تلگرام: ${tgRes.success ? "موفق" : "ناموفق"} | بله: ${baleRes.success ? "موفق" : "ناموفق"}`,
     imageGenerated: !!imageBanner,
   };
 
   saveAuditLog(entry);
 
   return {
-    telegram: telegramRes,
+    telegram: tgRes,
     bale: baleRes,
     caption,
     imageBanner,
@@ -629,20 +1113,19 @@ export function checkAndRunWeeklyAutoPublish() {
   // If already ran today, skip
   if (lastRun === todayDateStr) return;
 
-  let targetCategory: PublishCategory | null = null;
-
+  let matchedCategory: PublishCategory | null = null;
   if (dayOfWeek === 6 && settings.autoPublishSaturdayUsers) {
-    targetCategory = "saturday_top_users";
+    matchedCategory = "saturday_top_users";
   } else if (dayOfWeek === 0 && settings.autoPublishSundayComments) {
-    targetCategory = "sunday_top_comments";
+    matchedCategory = "sunday_top_comments";
   } else if (dayOfWeek === 1 && settings.autoPublishMondayTracks) {
-    targetCategory = "monday_top_tracks";
+    matchedCategory = "monday_top_tracks";
   } else if (dayOfWeek === 2 && settings.autoPublishTuesdayArtists) {
-    targetCategory = "tuesday_top_artists";
+    matchedCategory = "tuesday_top_artists";
   }
 
-  if (targetCategory) {
-    executeCategoryPublish(targetCategory).then(() => {
+  if (matchedCategory) {
+    executeCategoryPublish(matchedCategory).then(() => {
       window.localStorage.setItem(lastCheckedKey, todayDateStr);
     });
   }

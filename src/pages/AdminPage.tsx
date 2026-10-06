@@ -4930,7 +4930,7 @@ export function AdminPage() {
       {/* ===================== GRAPHIC BANNER & CAPTION PREVIEW MODAL ===================== */}
       {publishModalOpen && selectedPublishCat && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[90vh] w-full max-w-[560px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+          <div className="flex max-h-[92vh] w-full max-w-[620px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-line px-5 py-4">
               <div className="flex items-center gap-2">
@@ -4939,7 +4939,7 @@ export function AdminPage() {
                 </span>
                 <div>
                   <h3 className="font-extrabold text-[15px] text-ink">
-                    {lang === "fa" ? "پیش‌نمایش بنر گرافیکی و کپشن انتشار" : "Graphic Banner & Caption Preview"}
+                    {lang === "fa" ? "پیش‌نمایش پوستر گرافیکی و کپشن انتشار" : "Graphic Banner & Caption Preview"}
                   </h3>
                   <span className="text-[12px] text-ink-muted">{getCategoryTitle(selectedPublishCat, "fa")}</span>
                 </div>
@@ -4956,12 +4956,12 @@ export function AdminPage() {
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-5 space-y-4 scroll-slim">
-              {/* Graphic Banner Display */}
+              {/* Graphic Banner Display (16:9 Vertical) */}
               <div>
                 <span className="block text-[12px] font-bold text-ink-muted mb-1.5">
-                  {lang === "fa" ? "تصویر گرافیکی با کیفیت بالا (Canvas Rendered):" : "Generated Graphic Banner (1080x1080):"}
+                  {lang === "fa" ? "تصویر پوستر گرافیکی (16:9 عمودی 1080x1920):" : "Generated Graphic Poster (9:16 Vertical 1080x1920):"}
                 </span>
-                <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-line bg-black shadow-inner flex items-center justify-center">
+                <div className="relative aspect-[9/16] max-h-[560px] w-auto mx-auto overflow-hidden rounded-2xl border border-line bg-[#0d0224] shadow-2xl flex items-center justify-center">
                   {previewBannerImg ? (
                     <img
                       src={previewBannerImg}
