@@ -623,8 +623,6 @@ function TrackPanel({
         <div className="flex min-w-0 flex-1 items-center gap-0.5">
           <LikeButton player={player} />
           <AddToPlaylistButton />
-          <SetAnthemButton />
-          <RepeatButton player={player} />
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
@@ -664,9 +662,20 @@ function TrackPanel({
 
         {/* … send it on */}
         <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5">
-          <LyricStoryButton onOpen={onOpenStory} />
           <ShareSongButton />
           <DownloadButton onOpen={onDownload} />
+        </div>
+      </div>
+
+      {/* Secondary utility actions row — brought one row down to prevent collision */}
+      <div className="mt-2.5 flex items-center justify-between gap-1.5 border-t border-line/50 pt-2 text-[12px]">
+        <div className="flex items-center gap-1.5">
+          <SetAnthemButton />
+          <LyricStoryButton onOpen={onOpenStory} />
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <RepeatButton player={player} />
         </div>
       </div>
     </section>
@@ -776,8 +785,8 @@ function SetAnthemButton() {
 
   return (
     <motion.button
-      whileHover={{ y: -1.5 }}
-      whileTap={{ scale: 0.9 }}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.95 }}
       transition={spring}
       onClick={handleToggle}
       title={
@@ -791,13 +800,14 @@ function SetAnthemButton() {
           : (lang === "fa" ? "افزودن به موزیک پروفایل" : "Set as profile anthem")
       }
       className={cn(
-        "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
+        "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold transition-colors",
         isAnthem
-          ? "bg-primary text-white shadow-primary"
-          : "text-ink-muted hover:bg-subtle hover:text-ink",
+          ? "bg-primary text-white shadow-xs"
+          : "border border-line/70 bg-surface/80 text-ink-muted hover:border-primary/40 hover:text-primary-deep",
       )}
     >
-      <Icon name="pin" size={16} strokeWidth={2.1} />
+      <Icon name="pin" size={13} strokeWidth={2.1} />
+      <span>{isAnthem ? (lang === "fa" ? "آهنگ پروفایل" : "Anthem") : (lang === "fa" ? "سنجاق به پروفایل" : "Pin to profile")}</span>
     </motion.button>
   );
 }
@@ -806,15 +816,16 @@ function LyricStoryButton({ onOpen }: { onOpen: () => void }) {
   const { lang } = usePreferences();
   return (
     <motion.button
-      whileHover={{ y: -1.5 }}
-      whileTap={{ scale: 0.9 }}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.95 }}
       transition={spring}
       onClick={onOpen}
       title={lang === "fa" ? "ساخت کارت استوری لیریک" : "Create lyric story card"}
       aria-label={lang === "fa" ? "ساخت کارت استوری لیریک" : "Create lyric story card"}
-      className="flex size-9 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
+      className="flex items-center gap-1.5 rounded-full border border-line/70 bg-surface/80 px-2.5 py-1 text-[12px] font-bold text-ink-muted transition-colors hover:border-primary/40 hover:text-primary-deep"
     >
-      <Icon name="sparkle" size={16} strokeWidth={2.1} />
+      <Icon name="sparkle" size={13} strokeWidth={2.1} />
+      <span>{lang === "fa" ? "کارت استوری" : "Story Card"}</span>
     </motion.button>
   );
 }
@@ -951,10 +962,10 @@ function RepeatButton({ player }: { player: PlayerApi }) {
   const mode = player.repeat;
   const label =
     mode === "one"
-      ? (lang === "fa" ? "تکرار تک‌آهنگ فعال است" : "Repeat one track")
+      ? (lang === "fa" ? "تکرار ۱ آهنگ" : "Repeat 1")
       : mode === "all"
-        ? (lang === "fa" ? "تکرار کل فهرست فعال است" : "Repeat whole queue")
-        : (lang === "fa" ? "تکرار خاموش است" : "Repeat off");
+        ? (lang === "fa" ? "تکرار فهرست" : "Repeat All")
+        : (lang === "fa" ? "تکرار خاموش" : "Repeat Off");
 
   return (
     <motion.button
@@ -964,16 +975,16 @@ function RepeatButton({ player }: { player: PlayerApi }) {
       title={label}
       aria-label={label}
       className={cn(
-        "relative flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
+        "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold transition-colors",
         mode !== "off"
           ? "bg-primary-soft text-primary-deep"
-          : "text-ink-muted hover:bg-subtle hover:text-ink",
+          : "border border-line/70 bg-surface/80 text-ink-muted hover:border-primary/40 hover:text-ink",
       )}
     >
       <svg
         viewBox="0 0 24 24"
-        width={16}
-        height={16}
+        width={13}
+        height={13}
         fill="none"
         stroke="currentColor"
         strokeWidth={mode !== "off" ? 2.2 : 1.8}
@@ -999,9 +1010,7 @@ function RepeatButton({ player }: { player: PlayerApi }) {
           </text>
         )}
       </svg>
-      {mode !== "off" && (
-        <span className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-primary-deep" />
-      )}
+      <span>{label}</span>
     </motion.button>
   );
 }

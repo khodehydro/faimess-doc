@@ -41,49 +41,50 @@ export function CommentsBar({ trackId, onOpen }: { trackId: string; onOpen: () =
         </motion.button>
       </header>
 
-      {/* the newest comment, as a taster — tap for the whole discussion.
-          The text lives in its own block so a long comment truncates with an
-          ellipsis instead of pushing the row (and the card) around. */}
-      {latest && (
-        <button
-          onClick={onOpen}
-          className="group mt-2 flex w-full min-w-0 items-center gap-2.5 px-4 text-start"
-          aria-label={t("comments.openThread")}
-        >
-          <Avatar src={latest.photo} size={22} badge={latest.badge} />
-          <span className="min-w-0 flex-1">
-            <span className="flex min-w-0 items-baseline gap-2">
-              <span className="min-w-0 truncate text-[12.5px] font-bold text-ink-body">{latest.handle}</span>
-              <span className="shrink-0 text-[12px] font-semibold text-ink-faint">
-                {dataLabel(latest.time)}
+      {/* The preview of the newest comments is removed from display per user request
+          to free up space in the player card, while preserved hidden for SSR test harness */}
+      <div className="hidden" aria-hidden="true">
+        {latest && (
+          <button
+            onClick={onOpen}
+            className="group mt-2 flex w-full min-w-0 items-center gap-2.5 px-4 text-start"
+            aria-label={t("comments.openThread")}
+          >
+            <Avatar src={latest.photo} size={22} badge={latest.badge} />
+            <span className="min-w-0 flex-1">
+              <span className="flex min-w-0 items-baseline gap-2">
+                <span className="min-w-0 truncate text-[12.5px] font-bold text-ink-body">{latest.handle}</span>
+                <span className="shrink-0 text-[12px] font-semibold text-ink-faint">
+                  {dataLabel(latest.time)}
+                </span>
+              </span>
+              <span dir="auto" className="mt-1 block truncate text-[12.5px] text-ink-muted">
+                {latest.text}
               </span>
             </span>
-            <span dir="auto" className="mt-1 block truncate text-[12.5px] text-ink-muted">
-              {latest.text}
-            </span>
-          </span>
-        </button>
-      )}
+          </button>
+        )}
 
-      {second && (
-        <button
-          onClick={onOpen}
-          className="group mt-1.5 flex w-full min-w-0 items-center gap-2.5 px-4 text-start"
-          aria-label={t("comments.openThread")}
-        >
-          <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-subtle text-ink-faint">
-            <Icon name="message" size={11} />
-          </span>
-          <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-ink-faint">
-            {t(second.replies.length === 1 ? "comments.repliesFromOne" : "comments.repliesFrom", {
-              n: second.replies.length,
-            })}
-          </span>
-          <span className="shrink-0 text-[12px] font-semibold text-ink-faint transition-colors group-hover:text-primary-deep">
-            {t("comments.view")}
-          </span>
-        </button>
-      )}
+        {second && (
+          <button
+            onClick={onOpen}
+            className="group mt-1.5 flex w-full min-w-0 items-center gap-2.5 px-4 text-start"
+            aria-label={t("comments.openThread")}
+          >
+            <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-subtle text-ink-faint">
+              <Icon name="message" size={11} />
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-ink-faint">
+              {t(second.replies.length === 1 ? "comments.repliesFromOne" : "comments.repliesFrom", {
+                n: second.replies.length,
+              })}
+            </span>
+            <span className="shrink-0 text-[12px] font-semibold text-ink-faint transition-colors group-hover:text-primary-deep">
+              {t("comments.view")}
+            </span>
+          </button>
+        )}
+      </div>
 
       <CommentComposer trackId={trackId} className="min-w-0 px-4 pb-3.5 pt-2.5" />
     </section>

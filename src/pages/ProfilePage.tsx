@@ -30,6 +30,7 @@ import { CreatePlaylistDialog, CreateDuoPlaylistDialog } from "../ui/PlaylistDia
 import { FollowListModal } from "../ui/FollowListModal";
 import { ContentRequestModal } from "../ui/ContentRequestModal";
 import { ClayBadgeIcon } from "../ui/ClayBadgeIcon";
+import { FandomInsignia } from "../ui/FandomInsignia";
 import { backIcon } from "../lib/rtl";
 import { cn } from "../lib/cn";
 
@@ -923,22 +924,22 @@ export function ProfilePage() {
               </span>
             )}
 
-            {/* Ultimate Bias & Fandom Badge */}
-            {biasArtist && fandom && (
+            {/* Ultimate Bias & Fandom Badge with Official Group Insignia Logo */}
+            {fandom && (
               <span
                 title={fandom.mottoFa}
-                className="flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-black shadow-2xs border"
+                className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-black shadow-2xs border backdrop-blur-sm"
                 style={{
-                  backgroundColor: `${fandom.accentHex}15`,
+                  backgroundColor: `${fandom.accentHex}18`,
                   color: fandom.accentHex,
-                  borderColor: `${fandom.accentHex}35`,
+                  borderColor: `${fandom.accentHex}40`,
                 }}
               >
-                <Icon name="star" size={12} />
+                <FandomInsignia artistId={fandom.artistId} size={15} />
                 <span>
                   {lang === "fa"
-                    ? `بایس: ${biasArtist.name} • ${fandom.fandomNameFa}`
-                    : `Bias: ${biasArtist.name}`}
+                    ? `بایس: ${fandom.artistName} • ${fandom.fandomNameFa}`
+                    : `Bias: ${fandom.artistName} • ${fandom.fandomNameEn}`}
                 </span>
               </span>
             )}
@@ -2817,12 +2818,36 @@ export function ProfilePage() {
                   ))}
                 </select>
                 {editBias && ARTIST_FANDOMS[editBias] && (
-                  <div className="mt-1.5 flex items-center gap-2 rounded-lg bg-subtle/80 px-2.5 py-1 text-[12px]">
-                    <span className="size-2.5 rounded-full" style={{ backgroundColor: ARTIST_FANDOMS[editBias].accentHex }} />
-                    <span className="font-bold text-ink">
-                      {lang === "fa" ? `فندوم: ${ARTIST_FANDOMS[editBias].fandomNameFa}` : `Fandom: ${ARTIST_FANDOMS[editBias].fandomNameEn}`}
-                    </span>
-                    <span className="text-ink-muted">· {ARTIST_FANDOMS[editBias].mottoFa}</span>
+                  <div
+                    className="mt-2 flex items-center gap-2.5 rounded-xl border p-2.5 shadow-2xs transition"
+                    style={{
+                      backgroundColor: `${ARTIST_FANDOMS[editBias].accentHex}14`,
+                      borderColor: `${ARTIST_FANDOMS[editBias].accentHex}40`,
+                    }}
+                  >
+                    <div
+                      className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface shadow-2xs"
+                      style={{ color: ARTIST_FANDOMS[editBias].accentHex }}
+                    >
+                      <FandomInsignia artistId={editBias} size={22} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate text-[12.5px] font-black text-ink">
+                          {ARTIST_FANDOMS[editBias].artistName}
+                        </span>
+                        <span
+                          className="size-2 rounded-full shrink-0"
+                          style={{ backgroundColor: ARTIST_FANDOMS[editBias].accentHex }}
+                        />
+                      </div>
+                      <p className="truncate text-[12px] font-bold text-ink-muted">
+                        {lang === "fa"
+                          ? `فندوم: ${ARTIST_FANDOMS[editBias].fandomNameFa}`
+                          : `Fandom: ${ARTIST_FANDOMS[editBias].fandomNameEn}`}
+                        <span className="opacity-75"> • {ARTIST_FANDOMS[editBias].mottoFa}</span>
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
