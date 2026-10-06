@@ -13,6 +13,7 @@ import { MiniPlayer } from "../sections/MiniPlayer";
 import { PlayerSheet } from "../sections/PlayerSheet";
 import { SurfaceCard } from "../ui/primitives";
 import { EASE } from "../lib/motion";
+import { AdminMobileNav } from "../sections/admin/AdminMobileNav";
 
 /* ------------------------------------------------------------------ *
  *  Compact shell — phones and tablets.
@@ -88,7 +89,9 @@ export function CompactShell() {
           painted over the panel — a `z-40` *inside* the search capsule can
           never beat a sibling stacking context, because a z-index does not
           escape its own context. The capsule's context has to win instead. */}
-      <AccountCard part="search" className="relative z-30 mx-auto w-full max-w-[720px]" />
+      {route !== "admin" && (
+        <AccountCard part="search" className="relative z-30 mx-auto w-full max-w-[720px]" />
+      )}
 
       {/* the artists you follow — a story rail of their own, between the
           search field and the banner. Home is where the banner is, so the
@@ -127,14 +130,20 @@ export function CompactShell() {
       </SurfaceCard>
 
       {/* the bottom stack — mini player over the menu, both pinned */}
-      <div className="pointer-events-none fixed inset-x-3 bottom-3 z-50">
-        <div className="mx-auto flex w-full max-w-[720px] flex-col gap-2">
-          <MiniPlayer onOpen={() => setPlayerOpen(true)} />
-          <MobileNav />
+      {route === "admin" ? (
+        <AdminMobileNav />
+      ) : (
+        <div className="pointer-events-none fixed inset-x-3 bottom-3 z-50">
+          <div className="mx-auto flex w-full max-w-[720px] flex-col gap-2">
+            <MiniPlayer onOpen={() => setPlayerOpen(true)} />
+            <MobileNav />
+          </div>
         </div>
-      </div>
+      )}
 
-      <PlayerSheet open={playerOpen} onClose={() => setPlayerOpen(false)} />
+      {route !== "admin" && (
+        <PlayerSheet open={playerOpen} onClose={() => setPlayerOpen(false)} />
+      )}
 
       {/* Over-player overlay: when the full player is open on mobile, any
           view that opens (detail sheet, news reader) floats on top of the

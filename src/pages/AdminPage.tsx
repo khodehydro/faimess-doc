@@ -1,63 +1,49 @@
 import { useCallback, useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePreferences } from "../app/PreferencesContext";
 import { useApp } from "../app/AppContext";
 import { useAuth } from "../app/AuthContext";
-import { adminApi, type AdminOverviewStats, type AdminUserRole } from "../api/adminApi";
-import { Icon, type IconName } from "../ui/Icon";
-import { toman } from "../data/shop";
+import {
+  adminApi,
+  type AdminAlbum,
+  type AdminOverviewStats,
+  type AdminUser,
+  type AdminUserRole,
+} from "../api/adminApi";
+import { Icon } from "../ui/Icon";
+import { toman, type ShopCategoryId, type ShopBadge } from "../data/shop";
 import { forwardIcon } from "../lib/rtl";
 import { cn } from "../lib/cn";
-import type { Artist } from "../data/library";
+import { FeaturedImagePicker } from "../sections/admin/FeaturedImagePicker";
+import { getActiveAdminTab, ADMIN_TABS, type AdminTabId } from "../sections/admin/AdminTopNav";
+import type { Artist, Playlist } from "../data/library";
+import type { PlayerTrack } from "../data/player";
 import type { NewsItem } from "../data/feed";
-import type { ShopCategoryId } from "../data/shop";
-
-/* ------------------------------------------------------------------ *
- *  FAIMESS Super Admin Console — Master Management Dashboard
- *  Full-featured administrative cockpit for music catalog, editorial,
- *  community moderation, user access control, and platform analytics.
- * ------------------------------------------------------------------ */
-
-type AdminTab =
-  | "overview"
-  | "tracks"
-  | "artists"
-  | "albums"
-  | "news"
-  | "moderation"
-  | "shop"
-  | "users";
 
 export function AdminPage() {
-  const { t, locale, dir } = usePreferences();
+  const { t, locale, dir, lang, dataLabel } = usePreferences();
   const { navigate, notify } = useApp();
   const { isAdmin, openAccount } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [activeTab, setActiveTab] = useState<AdminTabId>(() => getActiveAdminTab());
   const [stats, setStats] = useState<AdminOverviewStats>(() => adminApi.getOverviewStats());
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Modals state
-  const [trackModalOpen, setTrackModalOpen] = useState(false);
-  const [newTrackTitle, setNewTrackTitle] = useState("");
-  const [newTrackArtist, setNewTrackArtist] = useState("NOVAE");
-  const [newTrackAlbum, setNewTrackAlbum] = useState("Afterglow");
-  const [newTrackDuration, setNewTrackDuration] = useState("3:24");
+  // Track Hash Route for Admin Tabs
+  useEffect(() => {
+    const onHashChange = () => {
+      setActiveTab(getActiveAdminTab());
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
 
-  const [artistModalOpen, setArtistModalOpen] = useState(false);
-  const [newArtistName, setNewArtistName] = useState("");
-  const [newArtistKind, setNewArtistKind] = useState<Artist["kind"]>("Boy group");
-  const [newArtistGenre, setNewArtistGenre] = useState("Electro pop");
-
-  const [newsModalOpen, setNewsModalOpen] = useState(false);
-  const [newNewsTitle, setNewNewsTitle] = useState("");
-  const [newNewsTag, setNewNewsTag] = useState<NewsItem["tag"]>("Tour");
-  const [newNewsExcerpt, setNewNewsExcerpt] = useState("");
-
-  const [productModalOpen, setProductModalOpen] = useState(false);
-  const [newProdName, setNewProdName] = useState("");
-  const [newProdCategory, setNewProdCategory] = useState<Exclude<ShopCategoryId, "all">>("apparel");
-  const [newProdPrice, setNewProdPrice] = useState(1500000);
+  const switchTab = (tab: AdminTabId) => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      window.location.hash = tab === "dashboard" ? "#/admin" : `#/admin/${tab}`;
+    }
+  };
 
   // Synchronize with reactive updates from adminApi
   const refreshData = useCallback(() => {
@@ -68,345 +54,713 @@ export function AdminPage() {
     return adminApi.subscribe(refreshData);
   }, [refreshData]);
 
-  // Auth gate
+  /* ---------------- Track Modal (Create & Edit) ---------------- */
+  const [trackModalOpen, setTrackModalOpen] = useState(false);
+  const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
+  const [trackTitle, setTrackTitle] = useState("");
+  const [trackArtist, setTrackArtist] = useState("NOVAE");
+  const [trackAlbum, setTrackAlbum] = useState("Afterglow");
+  const [trackDuration, setTrackDuration] = useState("3:24");
+  const [trackAudio, setTrackAudio] = useState("/assets/audio/faimess-demo.mp3");
+  const [trackPhoto, setTrackPhoto] = useState("/assets/photos/albums/afterglow.webp");
+  const [trackPlays, setTrackPlays] = useState(120);
+  const [trackLyricsOriginal, setTrackLyricsOriginal] = useState("");
+  const [trackLyricsTranslation, setTrackLyricsTranslation] = useState("");
+
+  const openCreateTrack = () => {
+    setEditingTrackId(null);
+    setTrackTitle("");
+    setTrackArtist("NOVAE");
+    setTrackAlbum("Afterglow");
+    setTrackDuration("3:24");
+    setTrackAudio("/assets/audio/faimess-demo.mp3");
+    setTrackPhoto("/assets/photos/albums/afterglow.webp");
+    setTrackPlays(120);
+    setTrackLyricsOriginal("");
+    setTrackLyricsTranslation("");
+    setTrackModalOpen(true);
+  };
+
+  const openEditTrack = (tr: PlayerTrack) => {
+    setEditingTrackId(tr.id);
+    setTrackTitle(tr.title);
+    setTrackArtist(tr.artist);
+    setTrackAlbum(tr.album);
+    const m = Math.floor(tr.seconds / 60);
+    const s = Math.floor(tr.seconds % 60);
+    setTrackDuration(`${m}:${String(s).padStart(2, "0")}`);
+    setTrackAudio(tr.audio || "/assets/audio/faimess-demo.mp3");
+    setTrackPhoto(tr.photo || "/assets/photos/albums/afterglow.webp");
+    setTrackPlays(tr.plays ?? 1000);
+
+    const existingLyrics = adminApi.getTrackLyrics(tr.id);
+    setTrackLyricsOriginal(existingLyrics?.original ?? "");
+    setTrackLyricsTranslation(existingLyrics?.translation ?? "");
+    setTrackModalOpen(true);
+  };
+
+  const handleSaveTrack = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trackTitle.trim() || !trackArtist.trim()) return;
+
+    if (editingTrackId) {
+      adminApi.updateTrack(editingTrackId, {
+        title: trackTitle.trim(),
+        artist: trackArtist.trim(),
+        album: trackAlbum.trim(),
+        duration: trackDuration.trim(),
+        audio: trackAudio.trim() || "/assets/audio/faimess-demo.mp3",
+        photo: trackPhoto.trim(),
+        plays: trackPlays,
+        lyricsOriginal: trackLyricsOriginal.trim() || undefined,
+        lyricsTranslation: trackLyricsTranslation.trim() || undefined,
+      });
+      notify(lang === "fa" ? "مشخصات آهنگ با موفقیت به‌روزرسانی شد" : "Track updated successfully", "primary");
+    } else {
+      adminApi.createTrack({
+        title: trackTitle.trim(),
+        artist: trackArtist.trim(),
+        album: trackAlbum.trim(),
+        duration: trackDuration.trim(),
+        audio: trackAudio.trim() || "/assets/audio/faimess-demo.mp3",
+        photo: trackPhoto.trim(),
+        plays: trackPlays,
+        lyricsOriginal: trackLyricsOriginal.trim() || undefined,
+        lyricsTranslation: trackLyricsTranslation.trim() || undefined,
+      });
+      notify(lang === "fa" ? "آهنگ جدید با موفقیت منتشر شد" : "Track published successfully", "primary");
+    }
+    setTrackModalOpen(false);
+  };
+
+  /* ---------------- Album Modal (Create & Edit) ---------------- */
+  const [albumModalOpen, setAlbumModalOpen] = useState(false);
+  const [editingAlbumId, setEditingAlbumId] = useState<string | null>(null);
+  const [albumTitle, setAlbumTitle] = useState("");
+  const [albumArtist, setAlbumArtist] = useState("NOVAE");
+  const [albumYear, setAlbumYear] = useState(2026);
+  const [albumPhoto, setAlbumPhoto] = useState("/assets/photos/albums/afterglow.webp");
+  const [albumSelectedTrackIds, setAlbumSelectedTrackIds] = useState<string[]>([]);
+  const [albumTrackSearch, setAlbumTrackSearch] = useState("");
+
+  const openCreateAlbum = () => {
+    setEditingAlbumId(null);
+    setAlbumTitle("");
+    setAlbumArtist("NOVAE");
+    setAlbumYear(2026);
+    setAlbumPhoto("/assets/photos/albums/afterglow.webp");
+    setAlbumSelectedTrackIds([]);
+    setAlbumTrackSearch("");
+    setAlbumModalOpen(true);
+  };
+
+  const openEditAlbum = (alb: AdminAlbum) => {
+    setEditingAlbumId(alb.id);
+    setAlbumTitle(alb.title);
+    setAlbumArtist(alb.artist);
+    setAlbumYear(alb.year);
+    setAlbumPhoto(alb.photo);
+    setAlbumSelectedTrackIds(alb.trackIds ?? []);
+    setAlbumTrackSearch("");
+    setAlbumModalOpen(true);
+  };
+
+  const handleToggleTrackInAlbum = (id: string) => {
+    setAlbumSelectedTrackIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleSaveAlbum = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!albumTitle.trim() || !albumArtist.trim()) return;
+
+    if (editingAlbumId) {
+      adminApi.updateAlbum(editingAlbumId, {
+        title: albumTitle.trim(),
+        artist: albumArtist.trim(),
+        year: albumYear,
+        photo: albumPhoto,
+        trackIds: albumSelectedTrackIds,
+      });
+      notify(lang === "fa" ? "آلبوم و فهرست آهنگ‌های آن با موفقیت ویرایش شد" : "Album & tracklist updated", "primary");
+    } else {
+      adminApi.createAlbum({
+        title: albumTitle.trim(),
+        artist: albumArtist.trim(),
+        year: albumYear,
+        photo: albumPhoto,
+        trackIds: albumSelectedTrackIds,
+      });
+      notify(lang === "fa" ? "آلبوم جدید ایجاد و آهنگ‌ها متصل شدند" : "Album created & tracks linked", "primary");
+    }
+    setAlbumModalOpen(false);
+  };
+
+  /* ---------------- Artist Modal (Create & Edit) ---------------- */
+  const [artistModalOpen, setArtistModalOpen] = useState(false);
+  const [editingArtistId, setEditingArtistId] = useState<string | null>(null);
+  const [artistName, setArtistName] = useState("");
+  const [artistKind, setArtistKind] = useState<Artist["kind"]>("Boy group");
+  const [artistGenre, setArtistGenre] = useState("Electro pop");
+  const [artistPhoto, setArtistPhoto] = useState("/assets/photos/artists/novae.webp");
+  const [artistVerified, setArtistVerified] = useState(false);
+  const [artistNewRelease, setArtistNewRelease] = useState(false);
+
+  const openCreateArtist = () => {
+    setEditingArtistId(null);
+    setArtistName("");
+    setArtistKind("Boy group");
+    setArtistGenre("Electro pop");
+    setArtistPhoto("/assets/photos/artists/novae.webp");
+    setArtistVerified(false);
+    setArtistNewRelease(false);
+    setArtistModalOpen(true);
+  };
+
+  const openEditArtist = (art: Artist) => {
+    setEditingArtistId(art.id);
+    setArtistName(art.name);
+    setArtistKind(art.kind);
+    setArtistGenre(art.genre);
+    setArtistPhoto(art.photo);
+    setArtistVerified(Boolean(art.verified));
+    setArtistNewRelease(Boolean(art.newRelease));
+    setArtistModalOpen(true);
+  };
+
+  const handleSaveArtist = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!artistName.trim()) return;
+
+    if (editingArtistId) {
+      adminApi.updateArtist(editingArtistId, {
+        name: artistName.trim(),
+        kind: artistKind,
+        genre: artistGenre.trim(),
+        photo: artistPhoto,
+        verified: artistVerified,
+        newRelease: artistNewRelease,
+      });
+      notify(lang === "fa" ? "مشخصات هنرمند به‌روزرسانی شد" : "Artist profile updated", "primary");
+    } else {
+      adminApi.createArtist({
+        name: artistName.trim(),
+        kind: artistKind,
+        genre: artistGenre.trim(),
+        photo: artistPhoto,
+        verified: artistVerified,
+        newRelease: artistNewRelease,
+      });
+      notify(lang === "fa" ? "هنرمند جدید اضافه شد" : "Artist added successfully", "primary");
+    }
+    setArtistModalOpen(false);
+  };
+
+  /* ---------------- Playlist Modal (Create & Edit) ---------------- */
+  const [playlistModalOpen, setPlaylistModalOpen] = useState(false);
+  const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
+  const [playlistName, setPlaylistName] = useState("");
+  const [playlistCurator, setPlaylistCurator] = useState("FAIMESS Editorial");
+  const [playlistMood, setPlaylistMood] = useState("Vibrant");
+  const [playlistPhoto, setPlaylistPhoto] = useState("/assets/photos/playlists/golden-hour.webp");
+
+  const openCreatePlaylist = () => {
+    setEditingPlaylistId(null);
+    setPlaylistName("");
+    setPlaylistCurator("FAIMESS Editorial");
+    setPlaylistMood("Vibrant");
+    setPlaylistPhoto("/assets/photos/playlists/golden-hour.webp");
+    setPlaylistModalOpen(true);
+  };
+
+  const openEditPlaylist = (pl: Playlist) => {
+    setEditingPlaylistId(pl.id);
+    setPlaylistName(pl.name);
+    setPlaylistCurator(pl.curator);
+    setPlaylistMood(pl.mood);
+    setPlaylistPhoto(pl.photo);
+    setPlaylistModalOpen(true);
+  };
+
+  const handleSavePlaylist = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!playlistName.trim()) return;
+
+    if (editingPlaylistId) {
+      adminApi.updatePlaylist(editingPlaylistId, {
+        name: playlistName.trim(),
+        curator: playlistCurator.trim(),
+        mood: playlistMood.trim(),
+        photo: playlistPhoto,
+      });
+      notify(lang === "fa" ? "پلی‌لیست ویرایش شد" : "Playlist updated", "primary");
+    } else {
+      adminApi.createPlaylist({
+        name: playlistName.trim(),
+        curator: playlistCurator.trim(),
+        mood: playlistMood.trim(),
+        photo: playlistPhoto,
+      });
+      notify(lang === "fa" ? "پلی‌لیست جدید ایجاد شد" : "Playlist created", "primary");
+    }
+    setPlaylistModalOpen(false);
+  };
+
+  /* ---------------- News Modal (Create & Edit) ---------------- */
+  const [newsModalOpen, setNewsModalOpen] = useState(false);
+  const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
+  const [newsTitle, setNewsTitle] = useState("");
+  const [newsAuthor, setNewsAuthor] = useState("FAIMESS Editorial");
+  const [newsTag, setNewsTag] = useState("Tour");
+  const [newsExcerpt, setNewsExcerpt] = useState("");
+  const [newsBody, setNewsBody] = useState("");
+  const [newsPhoto, setNewsPhoto] = useState("/assets/photos/banners/asia-leg.webp");
+  const [newsFeatured, setNewsFeatured] = useState(false);
+
+  const openCreateNews = () => {
+    setEditingNewsId(null);
+    setNewsTitle("");
+    setNewsAuthor("FAIMESS Editorial");
+    setNewsTag("Tour");
+    setNewsExcerpt("");
+    setNewsBody("");
+    setNewsPhoto("/assets/photos/banners/asia-leg.webp");
+    setNewsFeatured(false);
+    setNewsModalOpen(true);
+  };
+
+  const openEditNews = (n: NewsItem) => {
+    setEditingNewsId(n.id);
+    setNewsTitle(n.title);
+    setNewsAuthor(n.author?.name || "FAIMESS Editorial");
+    setNewsTag(n.tag);
+    setNewsExcerpt(n.excerpt);
+    setNewsBody(n.bodyKeys?.[0] || n.excerpt);
+    setNewsPhoto(n.photo);
+    setNewsFeatured(false);
+    setNewsModalOpen(true);
+  };
+
+  const handleSaveNews = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsTitle.trim() || !newsExcerpt.trim()) return;
+
+    if (editingNewsId) {
+      adminApi.updateNews(editingNewsId, {
+        title: newsTitle.trim(),
+        author: {
+          name: newsAuthor.trim(),
+          role: "Staff Columnist",
+          avatar: "/assets/photos/account/me.webp",
+          seed: 1,
+        },
+        tag: newsTag as any,
+        excerpt: newsExcerpt.trim(),
+        bodyKeys: [newsBody.trim() || newsExcerpt.trim()],
+        photo: newsPhoto,
+      });
+      notify(lang === "fa" ? "مقاله خبری به‌روزرسانی شد" : "Article updated", "primary");
+    } else {
+      adminApi.createNews({
+        title: newsTitle.trim(),
+        authorName: newsAuthor.trim(),
+        tag: newsTag as any,
+        excerpt: newsExcerpt.trim(),
+        body: newsBody.trim(),
+        photo: newsPhoto,
+        featured: newsFeatured,
+      });
+      notify(lang === "fa" ? "مقاله خبری منتشر شد" : "Article published", "primary");
+    }
+    setNewsModalOpen(false);
+  };
+
+  /* ---------------- Product Modal (Create & Edit) ---------------- */
+  const [productModalOpen, setProductModalOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [prodName, setProdName] = useState("");
+  const [prodCategory, setProdCategory] = useState<Exclude<ShopCategoryId, "all">>("apparel");
+  const [prodPrice, setProdPrice] = useState(1500000);
+  const [prodWasPrice, setProdWasPrice] = useState<number | undefined>(undefined);
+  const [prodBadge, setProdBadge] = useState<ShopBadge | undefined>(undefined);
+  const [prodPhoto, setProdPhoto] = useState("/assets/photos/shop/hoodie.webp");
+
+  const openCreateProduct = () => {
+    setEditingProductId(null);
+    setProdName("");
+    setProdCategory("apparel");
+    setProdPrice(1500000);
+    setProdWasPrice(undefined);
+    setProdBadge(undefined);
+    setProdPhoto("/assets/photos/shop/hoodie.webp");
+    setProductModalOpen(true);
+  };
+
+  const openEditProduct = (p: any) => {
+    setEditingProductId(p.id);
+    setProdName(p.name);
+    setProdCategory(p.category);
+    setProdPrice(p.price);
+    setProdWasPrice(p.wasPrice);
+    setProdBadge(p.badge);
+    setProdPhoto(p.photo);
+    setProductModalOpen(true);
+  };
+
+  const handleSaveProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!prodName.trim()) return;
+
+    if (editingProductId) {
+      adminApi.updateProduct(editingProductId, {
+        name: prodName.trim(),
+        category: prodCategory,
+        price: prodPrice,
+        wasPrice: prodWasPrice,
+        badge: prodBadge,
+        photo: prodPhoto,
+      });
+      notify(lang === "fa" ? "محصول به‌روزرسانی شد" : "Product updated", "primary");
+    } else {
+      adminApi.createProduct({
+        name: prodName.trim(),
+        category: prodCategory,
+        price: prodPrice,
+        wasPrice: prodWasPrice,
+        badge: prodBadge,
+        photo: prodPhoto,
+      });
+      notify(lang === "fa" ? "محصول جدید اضافه شد" : "Product created", "primary");
+    }
+    setProductModalOpen(false);
+  };
+
+  /* ---------------- User Modal (Create & Edit) ---------------- */
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [editingUsername, setEditingUsername] = useState<string | null>(null);
+  const [userUsername, setUserUsername] = useState("");
+  const [userDisplayName, setUserDisplayName] = useState("");
+  const [userRole, setUserRole] = useState<AdminUserRole>("user");
+  const [userPoints, setUserPoints] = useState(100);
+  const [userAvatar, setUserAvatar] = useState("/assets/photos/account/me.webp");
+
+  const openCreateUser = () => {
+    setEditingUsername(null);
+    setUserUsername("");
+    setUserDisplayName("");
+    setUserRole("user");
+    setUserPoints(100);
+    setUserAvatar("/assets/photos/account/me.webp");
+    setUserModalOpen(true);
+  };
+
+  const openEditUser = (u: AdminUser) => {
+    setEditingUsername(u.username);
+    setUserUsername(u.username);
+    setUserDisplayName(u.displayName);
+    setUserRole(u.role);
+    setUserPoints(u.points);
+    setUserAvatar(u.avatar);
+    setUserModalOpen(true);
+  };
+
+  const handleSaveUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userUsername.trim() || !userDisplayName.trim()) return;
+
+    if (editingUsername) {
+      adminApi.updateUser(editingUsername, {
+        displayName: userDisplayName.trim(),
+        role: userRole,
+        points: userPoints,
+        avatar: userAvatar,
+      });
+      notify(lang === "fa" ? "اطلاعات کاربر ذخیره شد" : "User updated", "primary");
+    } else {
+      adminApi.createUser({
+        username: userUsername.trim(),
+        displayName: userDisplayName.trim(),
+        role: userRole,
+        points: userPoints,
+        avatar: userAvatar,
+      });
+      notify(lang === "fa" ? "کاربر جدید ایجاد شد" : "User created", "primary");
+    }
+    setUserModalOpen(false);
+  };
+
+  /* ---------------- Backup & Restore State ---------------- */
+  const [backupModalOpen, setBackupModalOpen] = useState(false);
+  const [backupJsonText, setBackupJsonText] = useState("");
+
+  const handleOpenBackupModal = () => {
+    setBackupJsonText(adminApi.exportDatabaseJson());
+    setBackupModalOpen(true);
+  };
+
+  const handleApplyImport = () => {
+    if (!backupJsonText.trim()) return;
+    const ok = adminApi.importDatabaseJson(backupJsonText.trim());
+    if (ok) {
+      notify(lang === "fa" ? "دیتابیس با موفقیت بازیابی شد" : "Database restored from JSON", "primary");
+      setBackupModalOpen(false);
+    } else {
+      notify(lang === "fa" ? "خطا در قالب فایل پشتیبان JSON" : "Invalid backup JSON format", "primary");
+    }
+  };
+
+  // Auth gate check
   if (!isAdmin) {
     return (
-      <div className="flex min-h-[520px] w-full flex-col items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md rounded-[24px] border border-line bg-surface p-6 shadow-card sm:p-8"
+      <div className="flex min-h-[460px] flex-col items-center justify-center p-6 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-soft text-primary-deep shadow-sm">
+          <Icon name="lock" size={28} />
+        </div>
+        <h2 className="mt-4 font-black text-[20px] text-ink">
+          {t("admin.restricted")}
+        </h2>
+        <p className="mt-1.5 max-w-[420px] text-[13px] text-ink-muted leading-relaxed">
+          {t("admin.restrictedDesc")}
+        </p>
+        <button
+          type="button"
+          onClick={() => openAccount()}
+          className="mt-6 flex items-center gap-2 rounded-full bg-primary-deep px-6 py-2.5 font-bold text-[13px] text-white shadow-frame transition hover:bg-primary-deep/90"
         >
-          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary-deep ring-1 ring-primary/20">
-            <Icon name="lock" size={26} strokeWidth={2.2} />
-          </div>
-
-          <h2 className="mt-4 text-center font-display text-[20px] font-bold tracking-tight text-ink">
-            {t("admin.loginPrompt")}
-          </h2>
-          <p className="mt-2 text-center text-[13px] leading-relaxed text-ink-muted">
-            {t("admin.loginDesc")}
-          </p>
-
-          <div className="mt-6 space-y-3">
-            <button
-              type="button"
-              onClick={() => openAccount("admin.loginPrompt")}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-[12px] bg-primary text-[13.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
-            >
-              <Icon name="lock" size={15} />
-              <span>{t("admin.loginButton")}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => openAccount("admin.loginPrompt")}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-[12px] border border-primary/30 bg-primary/5 text-[12.5px] font-bold text-primary-deep transition hover:bg-primary/10"
-            >
-              <Icon name="sparkle" size={14} />
-              <span>{t("admin.fastLogin")}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate("home")}
-              className="mt-3 flex w-full justify-center text-[12.5px] font-semibold text-ink-muted hover:text-ink"
-            >
-              {t("admin.exitConsole")}
-            </button>
-          </div>
-        </motion.div>
+          <Icon name="lock" size={16} />
+          <span>{lang === "fa" ? "ورود با حساب مدیر" : "Sign in as Admin"}</span>
+        </button>
       </div>
     );
   }
 
-  /* ---------------- Tab Navigation Config -------------------------- */
-
-  const TABS: { id: AdminTab; labelKey: string; icon: IconName }[] = [
-    { id: "overview", labelKey: "admin.tab.overview", icon: "activity" },
-    { id: "tracks", labelKey: "admin.tab.tracks", icon: "music" },
-    { id: "artists", labelKey: "admin.tab.artists", icon: "mic" },
-    { id: "albums", labelKey: "admin.tab.albums", icon: "disc" },
-    { id: "news", labelKey: "admin.tab.news", icon: "news" },
-    { id: "moderation", labelKey: "admin.tab.moderation", icon: "message" },
-    { id: "shop", labelKey: "admin.tab.shop", icon: "shop" },
-    { id: "users", labelKey: "admin.tab.users", icon: "users" },
-  ];
-
-  /* ---------------- Handlers --------------------------------------- */
-
-  const handleCreateTrack = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTrackTitle.trim()) return;
-    adminApi.createTrack({
-      title: newTrackTitle.trim(),
-      artist: newTrackArtist,
-      album: newTrackAlbum,
-      duration: newTrackDuration,
-    });
-    setTrackModalOpen(false);
-    setNewTrackTitle("");
-    notify(t("admin.savedToast"), "mint");
-  };
-
-  const handleCreateArtist = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newArtistName.trim()) return;
-    adminApi.createArtist({
-      name: newArtistName.trim(),
-      kind: newArtistKind,
-      genre: newArtistGenre,
-      verified: true,
-      newRelease: true,
-    });
-    setArtistModalOpen(false);
-    setNewArtistName("");
-    notify(t("admin.savedToast"), "mint");
-  };
-
-  const handleCreateNews = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newNewsTitle.trim()) return;
-    adminApi.createNews({
-      title: newNewsTitle.trim(),
-      tag: newNewsTag,
-      source: "FAIMESS Desk",
-      excerpt: newNewsExcerpt || newNewsTitle,
-      bodyParagraphs: ["Detailed article coverage."],
-    });
-    setNewsModalOpen(false);
-    setNewNewsTitle("");
-    setNewNewsExcerpt("");
-    notify(t("admin.savedToast"), "mint");
-  };
-
-  const handleCreateProduct = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newProdName.trim()) return;
-    adminApi.createProduct({
-      name: newProdName.trim(),
-      category: newProdCategory,
-      price: newProdPrice,
-      badge: "new",
-    });
-    setProductModalOpen(false);
-    setNewProdName("");
-    notify(t("admin.savedToast"), "mint");
-  };
-
-  /* ---------------- Render ----------------------------------------- */
+  const existingAlbums = adminApi.getAlbums();
+  const existingArtists = adminApi.getArtists();
 
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
-      {/* Top Banner & Title Bar */}
-      <div className="flex flex-col justify-between gap-4 rounded-[22px] border border-line bg-surface p-5 shadow-card sm:flex-row sm:items-center sm:p-6">
+    <div className="flex min-h-0 flex-1 flex-col p-4 lg:p-6 space-y-6">
+      {/* Executive Header & Quick Controls */}
+      <div className="flex flex-col gap-4 rounded-[22px] border border-line bg-surface/80 p-4 shadow-sm backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-white shadow-primary">
-              <Icon name="crown" size={17} strokeWidth={2.4} />
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 items-center rounded-full bg-primary-deep px-2.5 font-black text-[12px] uppercase tracking-wider text-white">
+              FAIMESS Core
             </span>
-            <h1 className="font-display text-[22px] font-extrabold tracking-tight text-ink sm:text-[26px]">
-              {t("admin.title")}
-            </h1>
-            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[12px] font-extrabold uppercase text-primary-deep">
-              Super Admin
-            </span>
+            <span className="font-bold text-[12px] text-teal-deep">● Live Persistence</span>
           </div>
-          <p className="mt-1 text-[13px] text-ink-muted">{t("admin.subtitle")}</p>
+          <h1 className="mt-1 font-black text-[22px] tracking-tight text-ink sm:text-[26px]">
+            {lang === "fa" ? "مرکز مدیریت کل استودیو فیمس" : "FAIMESS Studio Control Center"}
+          </h1>
+          <p className="text-[12px] text-ink-muted">
+            {lang === "fa"
+              ? "مدیریت جامع کاتالوگ دیسکوگرافی، آرتیست‌ها، پخش صوت، تحریریه و نظارت جامعه"
+              : "Enterprise management for catalog, artists, audio streaming, editorial and moderation"}
+          </p>
         </div>
 
+        {/* Global Admin Tools: Export, Import, Reset */}
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => {
-              adminApi.resetDatabase();
-              notify(t("admin.savedToast"), "mint");
-            }}
-            className="flex h-9 items-center gap-1.5 rounded-full border border-line bg-subtle px-3 text-[12px] font-bold text-ink-body transition hover:bg-surface"
+            onClick={handleOpenBackupModal}
+            className="flex items-center gap-1.5 rounded-[12px] border border-line bg-surface px-3 py-1.5 text-[12px] font-bold text-ink shadow-sm transition hover:bg-subtle"
+            title="Database JSON Backup & Restore"
           >
-            <Icon name="sparkle" size={13} />
-            <span>{t("admin.resetDb")}</span>
+            <Icon name="folder" size={14} />
+            <span>{lang === "fa" ? "پشتیبان‌گیری / بازیابی دیتابیس" : "Backup / Restore"}</span>
           </button>
+
           <button
             type="button"
-            onClick={() => navigate("home")}
-            className="flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
+            onClick={() => {
+              if (window.confirm(lang === "fa" ? "آیا از بازنشانی داده‌ها به حالت اولیه اطمینان دارید؟" : "Reset database to initial demo state?")) {
+                adminApi.resetDatabase();
+                notify(lang === "fa" ? "پایگاه داده بازنشانی شد" : "Database reset to defaults", "primary");
+              }
+            }}
+            className="flex items-center gap-1.5 rounded-[12px] border border-flame-deep/20 bg-flame-soft px-3 py-1.5 text-[12px] font-bold text-flame-deep shadow-sm transition hover:bg-flame-soft/80"
           >
-            <Icon name={forwardIcon(dir)} size={13} />
-            <span>{t("admin.exitConsole")}</span>
+            <Icon name="close" size={14} />
+            <span>{lang === "fa" ? "بازنشانی دمو" : "Reset Demo"}</span>
           </button>
         </div>
       </div>
 
-      {/* Tabs Strip */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scroll-rail">
-        {TABS.map((tab) => {
-          const active = activeTab === tab.id;
+      {/* Main Tab Switcher Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto rounded-[16px] border border-line bg-surface p-1.5 shadow-sm scroll-rail">
+        {ADMIN_TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setSearchQuery("");
-              }}
+              type="button"
+              onClick={() => switchTab(tab.id)}
               className={cn(
-                "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-[13px] font-bold transition-all",
-                active
-                  ? "bg-primary text-white shadow-primary"
-                  : "bg-surface border border-line/60 text-ink-muted hover:text-ink hover:bg-subtle",
+                "flex shrink-0 items-center gap-2 rounded-[12px] px-3.5 py-2 text-[12px] font-extrabold transition",
+                isActive
+                  ? "bg-primary-deep text-white shadow-sm"
+                  : "text-ink-muted hover:bg-subtle hover:text-ink",
               )}
             >
-              <Icon name={tab.icon} size={15} strokeWidth={2.2} />
-              <span>{t(tab.labelKey)}</span>
+              <Icon name={tab.icon} size={15} />
+              <span>{lang === "fa" ? tab.labelFa : tab.labelEn}</span>
             </button>
           );
         })}
       </div>
 
-      {/* ----------------- TAB: OVERVIEW ----------------- */}
-      {activeTab === "overview" && (
+      {/* ===================== TAB 1: DASHBOARD OVERVIEW ===================== */}
+      {activeTab === "dashboard" && (
         <div className="space-y-6">
-          {/* Quick Actions Bar */}
-          <div className="rounded-[18px] border border-line bg-surface p-4 shadow-card sm:p-5">
-            <h3 className="text-[13px] font-bold uppercase tracking-wider text-ink-faint">
-              {t("admin.quickActions")}
-            </h3>
-            <div className="mt-3 flex flex-wrap gap-2.5">
-              <button
-                type="button"
-                onClick={() => setTrackModalOpen(true)}
-                className="flex items-center gap-2 rounded-[12px] bg-primary/10 px-3.5 py-2 text-[12.5px] font-bold text-primary-deep transition hover:bg-primary/20"
-              >
-                <Icon name="plus" size={14} strokeWidth={2.4} />
-                <span>{t("admin.action.addTrack")}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setArtistModalOpen(true)}
-                className="flex items-center gap-2 rounded-[12px] bg-teal-soft px-3.5 py-2 text-[12.5px] font-bold text-teal-deep transition hover:opacity-85"
-              >
-                <Icon name="plus" size={14} strokeWidth={2.4} />
-                <span>{t("admin.action.addArtist")}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setNewsModalOpen(true)}
-                className="flex items-center gap-2 rounded-[12px] bg-flame-soft px-3.5 py-2 text-[12.5px] font-bold text-flame-deep transition hover:opacity-85"
-              >
-                <Icon name="plus" size={14} strokeWidth={2.4} />
-                <span>{t("admin.action.addNews")}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setProductModalOpen(true)}
-                className="flex items-center gap-2 rounded-[12px] bg-mint-soft px-3.5 py-2 text-[12.5px] font-bold text-teal-deep transition hover:opacity-85"
-              >
-                <Icon name="plus" size={14} strokeWidth={2.4} />
-                <span>{t("admin.action.addProduct")}</span>
-              </button>
+          {/* Quick Metrics Grid */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
+              <span className="text-[12px] text-ink-muted">{t("admin.statsTracks")}</span>
+              <p className="mt-1 font-black text-[22px] text-ink">{stats.totalTracks}</p>
             </div>
-          </div>
-
-          {/* 6 Metric KPI Cards */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 sm:gap-4">
-            <div className="rounded-[18px] border border-line bg-surface p-4 shadow-card">
-              <span className="text-[12px] font-bold text-ink-muted">{t("admin.stat.streams")}</span>
-              <p className="mt-1 font-display text-[22px] font-extrabold text-ink">
+            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
+              <span className="text-[12px] text-ink-muted">{t("admin.statsArtists")}</span>
+              <p className="mt-1 font-black text-[22px] text-ink">{stats.totalArtists}</p>
+            </div>
+            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
+              <span className="text-[12px] text-ink-muted">{t("admin.statsAlbums")}</span>
+              <p className="mt-1 font-black text-[22px] text-ink">{stats.totalAlbums}</p>
+            </div>
+            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
+              <span className="text-[12px] text-ink-muted">{t("admin.statsStreams")}</span>
+              <p className="mt-1 font-black text-[22px] text-primary-deep">
                 {stats.totalStreams.toLocaleString(locale)}
               </p>
-              <span className="mt-1 inline-block text-[12px] font-bold text-mint-deep">↑ +14% weekly</span>
             </div>
-
-            <div className="rounded-[18px] border border-line bg-surface p-4 shadow-card">
-              <span className="text-[12px] font-bold text-ink-muted">{t("admin.stat.listeners")}</span>
-              <p className="mt-1 font-display text-[22px] font-extrabold text-ink">
-                {stats.activeListenersToday.toLocaleString(locale)}
-              </p>
-              <span className="mt-1 inline-block text-[12px] font-bold text-mint-deep">● Live</span>
-            </div>
-
-            <div className="rounded-[18px] border border-line bg-surface p-4 shadow-card">
-              <span className="text-[12px] font-bold text-ink-muted">{t("admin.stat.reported")}</span>
-              <p className="mt-1 font-display text-[22px] font-extrabold text-flame-deep">
-                {stats.reportedComments}
-              </p>
-              <span className="mt-1 inline-block text-[12px] font-bold text-ink-faint">Requires review</span>
-            </div>
-
-            <div className="rounded-[18px] border border-line bg-surface p-4 shadow-card">
-              <span className="text-[12px] font-bold text-ink-muted">{t("admin.stat.pendingLyrics")}</span>
-              <p className="mt-1 font-display text-[22px] font-extrabold text-primary-deep">
-                {stats.pendingLyrics}
-              </p>
-              <span className="mt-1 inline-block text-[12px] font-bold text-primary-deep">Sheets</span>
-            </div>
-
-            <div className="rounded-[18px] border border-line bg-surface p-4 shadow-card">
-              <span className="text-[12px] font-bold text-ink-muted">{t("admin.stat.revenue")}</span>
-              <p className="mt-1 font-display text-[17px] font-extrabold text-ink sm:text-[19px]">
+            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
+              <span className="text-[12px] text-ink-muted">{t("admin.statsRevenue")}</span>
+              <p className="mt-1 font-black text-[18px] text-teal-deep">
                 {toman(stats.estimatedRevenueToman, locale)}
               </p>
-              <span className="mt-1 inline-block text-[12px] font-bold text-ink-faint">Est. Gross</span>
             </div>
-
-            <div className="rounded-[18px] border border-line bg-surface p-4 shadow-card">
-              <span className="text-[12px] font-bold text-ink-muted">{t("admin.stat.users")}</span>
-              <p className="mt-1 font-display text-[22px] font-extrabold text-ink">
-                {stats.totalUsers}
+            <div className="rounded-[18px] border border-line bg-surface p-3.5 shadow-sm">
+              <span className="text-[12px] text-ink-muted">{t("admin.statsModeration")}</span>
+              <p className="mt-1 font-black text-[22px] text-flame-deep">
+                {stats.reportedComments + stats.pendingLyrics}
               </p>
-              <span className="mt-1 inline-block text-[12px] font-bold text-ink-faint">Accounts</span>
             </div>
           </div>
 
-          {/* Weekly Streams Chart & Audit Log */}
+          {/* Quick Actions & Recent Activity Audit Log */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {/* Stream Growth */}
-            <div className="rounded-[20px] border border-line bg-surface p-5 shadow-card">
-              <h3 className="font-display text-[16px] font-bold text-ink">Daily Streaming Trends</h3>
-              <p className="text-[12px] text-ink-muted">Past 7 days volume across catalogue</p>
+            {/* Quick Actions Launcher */}
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
+              <h3 className="font-extrabold text-[15px] text-ink">
+                {lang === "fa" ? "دسترسی سریع و ایجاد محتوا" : "Quick Action Shortcuts"}
+              </h3>
+              <p className="mt-1 text-[12px] text-ink-muted">
+                {lang === "fa" ? "ایجاد فوری آهنگ، آلبوم، خبر، محصول یا کاربر" : "Fast creation modals"}
+              </p>
 
-              <div className="mt-6 flex h-40 items-end justify-between gap-3 px-2">
-                {adminApi.getStreamChart().map((point) => {
-                  const heightPercent = Math.round((point.streams / 35000) * 100);
-                  return (
-                    <div key={point.day} className="flex flex-1 flex-col items-center gap-2">
-                      <span className="text-[12px] font-bold text-ink-muted">
-                        {(point.streams / 1000).toFixed(0)}k
-                      </span>
-                      <div className="w-full max-w-[32px] rounded-t-lg bg-primary/20 transition-all hover:bg-primary">
-                        <div
-                          style={{ height: `${heightPercent}%` }}
-                          className="w-full rounded-t-lg bg-primary transition-all"
-                        />
-                      </div>
-                      <span className="text-[12px] font-semibold text-ink-faint">{point.day}</span>
-                    </div>
-                  );
-                })}
+              <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                <button
+                  type="button"
+                  onClick={openCreateTrack}
+                  className="flex flex-col items-center justify-center rounded-[16px] border border-line bg-subtle/50 p-3 text-center transition hover:border-primary-deep hover:bg-surface"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
+                    <Icon name="plus" size={16} />
+                  </div>
+                  <span className="mt-2 font-bold text-[12px] text-ink">
+                    {lang === "fa" ? "+ افزودن آهنگ" : "+ Add Song"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={openCreateAlbum}
+                  className="flex flex-col items-center justify-center rounded-[16px] border border-line bg-subtle/50 p-3 text-center transition hover:border-primary-deep hover:bg-surface"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-mint-soft text-teal-deep">
+                    <Icon name="disc" size={16} />
+                  </div>
+                  <span className="mt-2 font-bold text-[12px] text-ink">
+                    {lang === "fa" ? "+ ساخت آلبوم" : "+ Create Album"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={openCreateArtist}
+                  className="flex flex-col items-center justify-center rounded-[16px] border border-line bg-subtle/50 p-3 text-center transition hover:border-primary-deep hover:bg-surface"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-soft text-purple-deep">
+                    <Icon name="mic" size={16} />
+                  </div>
+                  <span className="mt-2 font-bold text-[12px] text-ink">
+                    {lang === "fa" ? "+ هنرمند جدید" : "+ New Artist"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={openCreateNews}
+                  className="flex flex-col items-center justify-center rounded-[16px] border border-line bg-subtle/50 p-3 text-center transition hover:border-primary-deep hover:bg-surface"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-soft text-ink">
+                    <Icon name="news" size={16} />
+                  </div>
+                  <span className="mt-2 font-bold text-[12px] text-ink">
+                    {lang === "fa" ? "+ انتشار خبر" : "+ Publish News"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={openCreateProduct}
+                  className="flex flex-col items-center justify-center rounded-[16px] border border-line bg-subtle/50 p-3 text-center transition hover:border-primary-deep hover:bg-surface"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-flame-soft text-flame-deep">
+                    <Icon name="shop" size={16} />
+                  </div>
+                  <span className="mt-2 font-bold text-[12px] text-ink">
+                    {lang === "fa" ? "+ محصول مرچ" : "+ Merch Item"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={openCreateUser}
+                  className="flex flex-col items-center justify-center rounded-[16px] border border-line bg-subtle/50 p-3 text-center transition hover:border-primary-deep hover:bg-surface"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-subtle text-ink">
+                    <Icon name="users" size={16} />
+                  </div>
+                  <span className="mt-2 font-bold text-[12px] text-ink">
+                    {lang === "fa" ? "+ کاربر / مدیر" : "+ Add Staff"}
+                  </span>
+                </button>
               </div>
             </div>
 
-            {/* Audit Log */}
-            <div className="rounded-[20px] border border-line bg-surface p-5 shadow-card">
-              <div className="flex items-center justify-between">
-                <h3 className="font-display text-[16px] font-bold text-ink">{t("admin.auditLog")}</h3>
-                <span className="rounded-full bg-subtle px-2 py-0.5 text-[12px] font-bold text-ink-muted">
-                  Live Feed
-                </span>
-              </div>
+            {/* Audit Log / Activity */}
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
+              <h3 className="font-extrabold text-[15px] text-ink">{t("admin.recentActivity")}</h3>
+              <p className="mt-1 text-[12px] text-ink-muted">
+                {lang === "fa" ? "ثبت تغییرات لحظه‌ای مدیران و ناظران در سیستم" : "Live audit trail"}
+              </p>
 
-              <div className="mt-4 space-y-2.5 max-h-[220px] overflow-y-auto scroll-slim pe-1">
+              <div className="mt-4 max-h-64 space-y-2.5 overflow-y-auto pe-1 scroll-slim">
                 {adminApi.getRecentActivities().map((act) => (
-                  <div key={act.id} className="flex items-start gap-3 rounded-xl border border-line/60 bg-subtle/50 p-2.5 text-[12.5px]">
-                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary-deep">
-                      <Icon name="check" size={12} strokeWidth={2.4} />
-                    </span>
+                  <div
+                    key={act.id}
+                    className="flex items-start gap-3 rounded-[14px] border border-line/60 bg-subtle/40 p-2.5"
+                  >
+                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
+                      <Icon name="check" size={12} />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-ink">{act.action}</span>
+                        <span className="font-bold text-[12px] text-ink">{act.action}</span>
                         <span className="text-[12px] text-ink-faint">{act.timestamp}</span>
                       </div>
-                      <p className="truncate text-ink-muted">{act.details}</p>
+                      <p className="mt-0.5 truncate text-[12px] text-ink-muted">{act.details}</p>
                     </div>
                   </div>
                 ))}
@@ -416,64 +770,94 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ----------------- TAB: TRACKS ------------------- */}
+      {/* ===================== TAB 2: TRACKS MANAGEMENT ===================== */}
       {activeTab === "tracks" && (
-        <div className="space-y-4 rounded-[20px] border border-line bg-surface p-5 shadow-card">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <h3 className="font-display text-[17px] font-bold text-ink">Tracks & Songs Catalogue</h3>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder={t("admin.searchPlaceholder")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 rounded-full border border-line bg-subtle px-3.5 py-1.5 text-[12.5px] outline-none focus:border-primary"
-              />
-              <button
-                type="button"
-                onClick={() => setTrackModalOpen(true)}
-                className="flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-[12.5px] font-bold text-white shadow-primary hover:bg-primary-deep"
-              >
-                <Icon name="plus" size={13} strokeWidth={2.4} />
-                <span>{t("admin.action.addTrack")}</span>
-              </button>
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-1 items-center gap-2">
+              <div className="relative min-w-0 max-w-sm flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={lang === "fa" ? "جستجو در آهنگ‌ها، خواننده‌ها یا آلبوم‌ها..." : "Search tracks..."}
+                  className="w-full rounded-[14px] border border-line bg-surface py-2 pe-3 ps-9 text-[12px] text-ink shadow-sm outline-none focus:border-primary-deep"
+                />
+                <div className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-faint">
+                  <Icon name="search" size={14} />
+                </div>
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={openCreateTrack}
+              className="flex shrink-0 items-center gap-2 rounded-[14px] bg-primary-deep px-4 py-2 font-bold text-[12px] text-white shadow-sm transition hover:bg-primary-deep/90"
+            >
+              <Icon name="plus" size={15} />
+              <span>{t("admin.addTrack")}</span>
+            </button>
           </div>
 
-          <div className="overflow-x-auto scroll-rail">
-            <table className="w-full text-start text-[13px]">
-              <thead>
-                <tr className="border-b border-line text-ink-faint text-[12px] uppercase">
-                  <th className="pb-2.5 text-start font-bold">Track</th>
-                  <th className="pb-2.5 text-start font-bold">Artist</th>
-                  <th className="pb-2.5 text-start font-bold">Album</th>
-                  <th className="pb-2.5 text-start font-bold">Duration</th>
-                  <th className="pb-2.5 text-start font-bold">Streams</th>
-                  <th className="pb-2.5 text-end font-bold">Actions</th>
+          {/* Tracks Table */}
+          <div className="overflow-x-auto rounded-[20px] border border-line bg-surface shadow-sm scroll-rail">
+            <table className="w-full min-w-[700px] text-start text-[13px]">
+              <thead className="border-b border-line bg-subtle/40 text-ink-muted">
+                <tr>
+                  <th className="py-3 ps-4 text-start font-bold">{lang === "fa" ? "کاور" : "Art"}</th>
+                  <th className="py-3 text-start font-bold">{t("admin.colTitle")}</th>
+                  <th className="py-3 text-start font-bold">{t("admin.colArtist")}</th>
+                  <th className="py-3 text-start font-bold">{t("admin.colAlbum")}</th>
+                  <th className="py-3 text-start font-bold">{lang === "fa" ? "لینک پخش" : "Stream URL"}</th>
+                  <th className="py-3 text-start font-bold">{t("admin.colDuration")}</th>
+                  <th className="py-3 text-start font-bold">{t("admin.colPlays")}</th>
+                  <th className="py-3 pe-4 text-end font-bold">{t("admin.colActions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line/60">
                 {adminApi.getTracks(searchQuery).map((tr) => (
                   <tr key={tr.id} className="transition-colors hover:bg-subtle/50">
+                    <td className="py-2.5 ps-4">
+                      <img
+                        src={tr.photo || "/assets/photos/albums/afterglow.webp"}
+                        alt={tr.title}
+                        className="h-10 w-10 rounded-lg object-cover"
+                      />
+                    </td>
                     <td className="py-2.5 font-bold text-ink">{tr.title}</td>
                     <td className="py-2.5 text-ink-muted">{tr.artist}</td>
                     <td className="py-2.5 text-ink-muted">{tr.album}</td>
+                    <td className="py-2.5 text-[12px] font-mono text-ink-faint truncate max-w-[140px]" title={tr.audio}>
+                      {tr.audio}
+                    </td>
                     <td className="py-2.5 font-mono text-[12px] text-ink-faint">
                       {Math.floor(tr.seconds / 60)}:{String(Math.floor(tr.seconds % 60)).padStart(2, "0")}
                     </td>
                     <td className="py-2.5 text-ink-muted">{(tr.plays ?? 1000).toLocaleString(locale)}</td>
-                    <td className="py-2.5 text-end">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          adminApi.deleteTrack(tr.id);
-                          notify(t("admin.deletedToast"), "primary");
-                        }}
-                        className="rounded-lg p-1.5 text-ink-faint transition hover:bg-flame-soft hover:text-flame-deep"
-                        title="Delete"
-                      >
-                        <Icon name="close" size={14} />
-                      </button>
+                    <td className="py-2.5 pe-4 text-end">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openEditTrack(tr)}
+                          className="rounded-lg p-1.5 text-ink-faint transition hover:bg-primary-soft hover:text-primary-deep"
+                          title="Edit Track"
+                        >
+                          <Icon name="edit" size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(lang === "fa" ? `آیا از حذف آهنگ "${tr.title}" اطمینان دارید؟` : `Delete track "${tr.title}"?`)) {
+                              adminApi.deleteTrack(tr.id);
+                              notify(t("admin.deletedToast"), "primary");
+                            }
+                          }}
+                          className="rounded-lg p-1.5 text-ink-faint transition hover:bg-flame-soft hover:text-flame-deep"
+                          title="Delete"
+                        >
+                          <Icon name="close" size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -483,62 +867,144 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ----------------- TAB: ARTISTS ------------------ */}
-      {activeTab === "artists" && (
-        <div className="space-y-4 rounded-[20px] border border-line bg-surface p-5 shadow-card">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <h3 className="font-display text-[17px] font-bold text-ink">Artists & Groups Roster</h3>
-            <div className="flex items-center gap-2">
+      {/* ===================== TAB 3: ALBUMS MANAGEMENT ===================== */}
+      {activeTab === "albums" && (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative min-w-0 max-w-sm flex-1">
               <input
                 type="text"
-                placeholder={t("admin.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 rounded-full border border-line bg-subtle px-3.5 py-1.5 text-[12.5px] outline-none focus:border-primary"
+                placeholder={lang === "fa" ? "جستجو در آلبوم‌ها..." : "Search albums..."}
+                className="w-full rounded-[14px] border border-line bg-surface py-2 pe-3 ps-9 text-[12px] text-ink shadow-sm outline-none focus:border-primary-deep"
               />
-              <button
-                type="button"
-                onClick={() => setArtistModalOpen(true)}
-                className="flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-[12.5px] font-bold text-white shadow-primary hover:bg-primary-deep"
-              >
-                <Icon name="plus" size={13} strokeWidth={2.4} />
-                <span>{t("admin.action.addArtist")}</span>
-              </button>
+              <div className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-faint">
+                <Icon name="search" size={14} />
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={openCreateAlbum}
+              className="flex shrink-0 items-center gap-2 rounded-[14px] bg-primary-deep px-4 py-2 font-bold text-[12px] text-white shadow-sm transition hover:bg-primary-deep/90"
+            >
+              <Icon name="plus" size={15} />
+              <span>{lang === "fa" ? "+ ایجاد آلبوم جدید" : "+ Create Album"}</span>
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {adminApi.getArtists(searchQuery).map((a) => (
-              <div key={a.id} className="flex items-center justify-between rounded-[16px] border border-line/70 bg-subtle/40 p-3.5">
-                <div className="flex items-center gap-3">
-                  <img src={a.photo} alt={a.name} className="size-11 rounded-full object-cover ring-1 ring-line" />
+          {/* Albums Grid */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {adminApi.getAlbums(searchQuery).map((alb) => (
+              <div
+                key={alb.id}
+                className="flex gap-3.5 rounded-[20px] border border-line bg-surface p-3.5 shadow-sm transition hover:shadow-md"
+              >
+                <img
+                  src={alb.photo}
+                  alt={alb.title}
+                  className="h-24 w-24 shrink-0 rounded-[14px] object-cover"
+                />
+                <div className="min-w-0 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-display text-[14px] font-bold text-ink">{a.name}</span>
-                      {a.verified && <Icon name="verified" size={14} className="text-primary-deep" />}
-                    </div>
-                    <span className="text-[12px] text-ink-muted">{a.genre} · {a.kind}</span>
+                    <h4 className="font-extrabold text-[14px] text-ink truncate">{alb.title}</h4>
+                    <p className="text-[12px] text-ink-muted">{alb.artist}</p>
+                    <p className="text-[12px] text-ink-faint mt-1">
+                      {alb.year} · {alb.tracks ?? alb.trackIds?.length ?? 0} {lang === "fa" ? "ترک" : "tracks"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => openEditAlbum(alb)}
+                      className="flex items-center gap-1 rounded-lg border border-line bg-subtle px-2.5 py-1 text-[12px] font-bold text-ink transition hover:bg-primary-soft hover:text-primary-deep"
+                    >
+                      <Icon name="edit" size={13} />
+                      <span>{lang === "fa" ? "ویرایش و لیست آهنگ‌ها" : "Edit & Tracks"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm(lang === "fa" ? `آیا از حذف آلبوم "${alb.title}" مطمئن هستید؟` : `Delete album "${alb.title}"?`)) {
+                          adminApi.deleteAlbum(alb.id);
+                          notify(lang === "fa" ? "آلبوم با موفقیت حذف شد" : "Album deleted", "primary");
+                        }
+                      }}
+                      className="rounded-lg p-1 text-ink-faint hover:text-flame-deep"
+                    >
+                      <Icon name="close" size={14} />
+                    </button>
                   </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-                <div className="flex items-center gap-1.5">
+      {/* ===================== TAB 4: ARTISTS MANAGEMENT ===================== */}
+      {activeTab === "artists" && (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative min-w-0 max-w-sm flex-1">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={lang === "fa" ? "جستجو در هنرمندان..." : "Search artists..."}
+                className="w-full rounded-[14px] border border-line bg-surface py-2 pe-3 ps-9 text-[12px] text-ink shadow-sm outline-none focus:border-primary-deep"
+              />
+              <div className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-faint">
+                <Icon name="search" size={14} />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={openCreateArtist}
+              className="flex shrink-0 items-center gap-2 rounded-[14px] bg-primary-deep px-4 py-2 font-bold text-[12px] text-white shadow-sm transition hover:bg-primary-deep/90"
+            >
+              <Icon name="plus" size={15} />
+              <span>{t("admin.addArtist")}</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+            {adminApi.getArtists(searchQuery).map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center gap-3 rounded-[18px] border border-line bg-surface p-3.5 shadow-sm transition hover:shadow-md"
+              >
+                <img src={a.photo} alt={a.name} className="h-12 w-12 rounded-full object-cover" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="truncate font-extrabold text-[13.5px] text-ink">{a.name}</h4>
+                    {a.verified && <Icon name="verified" size={14} className="text-primary-deep shrink-0" />}
+                  </div>
+                  <p className="text-[12px] text-ink-muted">{a.genre} · {a.kind}</p>
+                </div>
+
+                <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => adminApi.toggleArtistVerified(a.id)}
-                    className={cn(
-                      "rounded-lg px-2 py-1 text-[12px] font-bold transition",
-                      a.verified ? "bg-primary/10 text-primary-deep" : "bg-subtle text-ink-faint hover:text-ink",
-                    )}
+                    onClick={() => openEditArtist(a)}
+                    className="rounded-lg p-1.5 text-ink-faint hover:text-primary-deep"
+                    title="Edit Artist"
                   >
-                    Verified
+                    <Icon name="edit" size={14} />
                   </button>
                   <button
                     type="button"
                     onClick={() => {
-                      adminApi.deleteArtist(a.id);
-                      notify(t("admin.deletedToast"), "primary");
+                      if (window.confirm(lang === "fa" ? `آیا از حذف هنرمند "${a.name}" مطمئن هستید؟` : `Delete artist "${a.name}"?`)) {
+                        adminApi.deleteArtist(a.id);
+                        notify(t("admin.deletedToast"), "primary");
+                      }
                     }}
-                    className="rounded-lg p-1.5 text-ink-faint hover:bg-flame-soft hover:text-flame-deep"
+                    className="rounded-lg p-1.5 text-ink-faint hover:text-flame-deep"
+                    title="Delete"
                   >
                     <Icon name="close" size={14} />
                   </button>
@@ -549,169 +1015,221 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ----------------- TAB: ALBUMS ------------------- */}
-      {activeTab === "albums" && (
-        <div className="space-y-4 rounded-[20px] border border-line bg-surface p-5 shadow-card">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <h3 className="font-display text-[17px] font-bold text-ink">Albums & Releases</h3>
-            <input
-              type="text"
-              placeholder={t("admin.searchPlaceholder")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-64 rounded-full border border-line bg-subtle px-3.5 py-1.5 text-[12.5px] outline-none focus:border-primary"
-            />
+      {/* ===================== TAB 5: PLAYLISTS MANAGEMENT ===================== */}
+      {activeTab === "playlists" && (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative min-w-0 max-w-sm flex-1">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={lang === "fa" ? "جستجو در پلی‌لیست‌ها..." : "Search playlists..."}
+                className="w-full rounded-[14px] border border-line bg-surface py-2 pe-3 ps-9 text-[12px] text-ink shadow-sm outline-none focus:border-primary-deep"
+              />
+              <div className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-faint">
+                <Icon name="search" size={14} />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={openCreatePlaylist}
+              className="flex shrink-0 items-center gap-2 rounded-[14px] bg-primary-deep px-4 py-2 font-bold text-[12px] text-white shadow-sm transition hover:bg-primary-deep/90"
+            >
+              <Icon name="plus" size={15} />
+              <span>{lang === "fa" ? "+ ساخت پلی‌لیست جدید" : "+ Create Playlist"}</span>
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {adminApi.getAlbums(searchQuery).map((al) => (
-              <div key={al.id} className="overflow-hidden rounded-[16px] border border-line/70 bg-subtle/30">
-                <img src={al.photo} alt={al.title} className="h-32 w-full object-cover" />
-                <div className="p-3">
-                  <h4 className="font-bold text-ink truncate text-[14px]">{al.title}</h4>
-                  <p className="text-[12px] text-ink-muted">{al.artist} · {al.year}</p>
-                  <span className="mt-2 inline-block rounded-md bg-subtle px-2 py-0.5 text-[12px] font-bold text-ink-faint">
-                    {al.tracks} tracks
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {adminApi.getPlaylists(searchQuery).map((pl) => (
+              <div
+                key={pl.id}
+                className="flex items-center gap-3.5 rounded-[20px] border border-line bg-surface p-3.5 shadow-sm"
+              >
+                <img src={pl.photo} alt={pl.name} className="h-16 w-16 rounded-[14px] object-cover" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-extrabold text-[14px] text-ink truncate">{pl.name}</h4>
+                  <p className="text-[12px] text-ink-muted">{pl.curator}</p>
+                  <p className="text-[12px] text-ink-faint mt-0.5">{pl.mood} · {pl.tracks} {lang === "fa" ? "ترک" : "tracks"}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => openEditPlaylist(pl)}
+                    className="rounded-lg p-1.5 text-ink-faint hover:text-primary-deep"
+                  >
+                    <Icon name="edit" size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(lang === "fa" ? `حذف پلی‌لیست "${pl.name}"؟` : `Delete playlist "${pl.name}"?`)) {
+                        adminApi.deletePlaylist(pl.id);
+                        notify(lang === "fa" ? "پلی‌لیست حذف شد" : "Playlist deleted", "primary");
+                      }
+                    }}
+                    className="rounded-lg p-1.5 text-ink-faint hover:text-flame-deep"
+                  >
+                    <Icon name="close" size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ===================== TAB 6: NEWS MANAGEMENT ===================== */}
+      {activeTab === "news" && (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative min-w-0 max-w-sm flex-1">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={lang === "fa" ? "جستجو در اخبار..." : "Search news..."}
+                className="w-full rounded-[14px] border border-line bg-surface py-2 pe-3 ps-9 text-[12px] text-ink shadow-sm outline-none focus:border-primary-deep"
+              />
+              <div className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-faint">
+                <Icon name="search" size={14} />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={openCreateNews}
+              className="flex shrink-0 items-center gap-2 rounded-[14px] bg-primary-deep px-4 py-2 font-bold text-[12px] text-white shadow-sm transition hover:bg-primary-deep/90"
+            >
+              <Icon name="plus" size={15} />
+              <span>{t("admin.publishNews")}</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {adminApi.getNews(searchQuery).map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-col overflow-hidden rounded-[20px] border border-line bg-surface shadow-sm"
+              >
+                <div className="relative aspect-video w-full overflow-hidden bg-subtle">
+                  <img src={item.photo} alt={item.title} className="h-full w-full object-cover" />
+                  <span className="absolute start-3 top-3 rounded-full bg-surface/90 px-2.5 py-0.5 text-[12px] font-black text-ink shadow-sm">
+                    {dataLabel(item.tag)}
                   </span>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ----------------- TAB: NEWS --------------------- */}
-      {activeTab === "news" && (
-        <div className="space-y-4 rounded-[20px] border border-line bg-surface p-5 shadow-card">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <h3 className="font-display text-[17px] font-bold text-ink">News & Editorial Articles</h3>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder={t("admin.searchPlaceholder")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 rounded-full border border-line bg-subtle px-3.5 py-1.5 text-[12.5px] outline-none focus:border-primary"
-              />
-              <button
-                type="button"
-                onClick={() => setNewsModalOpen(true)}
-                className="flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-[12.5px] font-bold text-white shadow-primary hover:bg-primary-deep"
-              >
-                <Icon name="plus" size={13} strokeWidth={2.4} />
-                <span>{t("admin.action.addNews")}</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-2.5">
-            {adminApi.getNews(searchQuery).map((n) => (
-              <div key={n.id} className="flex items-center justify-between gap-4 rounded-[16px] border border-line/60 bg-subtle/40 p-3.5">
-                <div className="flex items-center gap-3 min-w-0">
-                  <img src={n.photo} alt={n.title} className="size-14 rounded-xl object-cover shrink-0" />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[12px] font-bold text-primary-deep">
-                        {n.tag}
-                      </span>
-                      <span className="text-[12px] text-ink-faint">{n.ago}</span>
-                    </div>
-                    <h4 className="mt-0.5 truncate font-bold text-[13.5px] text-ink">{n.title}</h4>
-                    <p className="line-clamp-1 text-[12px] text-ink-muted">{n.excerpt}</p>
+                <div className="p-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h4 className="font-extrabold text-[14px] text-ink line-clamp-1">{item.title}</h4>
+                    <p className="mt-1 text-[12px] text-ink-muted line-clamp-2">{item.excerpt}</p>
                   </div>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-[12px] text-ink-faint">{n.views} views</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      adminApi.deleteNews(n.id);
-                      notify(t("admin.deletedToast"), "primary");
-                    }}
-                    className="rounded-lg p-1.5 text-ink-faint hover:bg-flame-soft hover:text-flame-deep"
-                  >
-                    <Icon name="close" size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ----------------- TAB: MODERATION --------------- */}
-      {activeTab === "moderation" && (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Comments Moderation */}
-          <div className="space-y-3 rounded-[20px] border border-line bg-surface p-5 shadow-card">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display text-[16px] font-bold text-ink">Comments Moderation</h3>
-              <span className="rounded-full bg-flame-soft px-2.5 py-0.5 text-[12px] font-extrabold text-flame-deep">
-                {stats.reportedComments} flagged
-              </span>
-            </div>
-
-            <div className="space-y-2.5 max-h-[460px] overflow-y-auto scroll-slim pe-1">
-              {adminApi.getComments().map((cm) => (
-                <div
-                  key={cm.id}
-                  className={cn(
-                    "rounded-[16px] border p-3.5 transition",
-                    cm.status === "reported"
-                      ? "border-flame-deep/30 bg-flame-soft/30"
-                      : "border-line/60 bg-subtle/40",
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[13px] text-ink">{cm.author} <span className="font-normal text-ink-faint">{cm.handle}</span></span>
-                    <span className="text-[12px] text-ink-faint">{cm.time}</span>
-                  </div>
-                  <p className="mt-1 text-[12.5px] leading-relaxed text-ink-body">{cm.text}</p>
-                  {cm.reportReason && (
-                    <p className="mt-1.5 rounded-lg bg-flame-deep/10 px-2 py-1 text-[12px] font-bold text-flame-deep">
-                      Flag: {cm.reportReason}
-                    </p>
-                  )}
-                  <div className="mt-2.5 flex items-center justify-end gap-2">
-                    {cm.status === "reported" && (
+                  <div className="mt-4 flex items-center justify-between border-t border-line/60 pt-3">
+                    <span className="text-[12px] text-ink-faint">{item.author?.name || "Editorial"}</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => openEditNews(item)}
+                        className="rounded-lg p-1.5 text-ink-faint hover:text-primary-deep"
+                      >
+                        <Icon name="edit" size={14} />
+                      </button>
                       <button
                         type="button"
                         onClick={() => {
-                          adminApi.approveComment(cm.id);
-                          notify(t("admin.savedToast"), "mint");
+                          if (window.confirm(lang === "fa" ? `حذف مقاله "${item.title}"؟` : `Delete article "${item.title}"?`)) {
+                            adminApi.deleteNews(item.id);
+                            notify(t("admin.deletedToast"), "primary");
+                          }
                         }}
-                        className="rounded-lg bg-teal-soft px-2.5 py-1 text-[12px] font-bold text-teal-deep hover:opacity-85"
+                        className="rounded-lg p-1.5 text-ink-faint hover:text-flame-deep"
                       >
-                        {t("admin.approve")}
+                        <Icon name="close" size={14} />
                       </button>
-                    )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ===================== TAB 7: COMMUNITY MODERATION ===================== */}
+      {activeTab === "moderation" && (
+        <div className="space-y-6">
+          {/* Moderation Section 1: Flagged Comments */}
+          <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
+            <h3 className="font-extrabold text-[15px] text-ink">
+              {lang === "fa" ? "صف نظارت بر دیدگاه‌های گزارش‌شده" : "Reported Comments Queue"}
+            </h3>
+            <p className="mt-0.5 text-[12px] text-ink-muted">
+              {lang === "fa" ? "بررسی گزارش‌های کاربران پیرامون کامنت‌های نامناسب یا تبلیغاتی" : "Review reported content"}
+            </p>
+
+            <div className="mt-4 space-y-3">
+              {adminApi.getComments("reported").map((cm) => (
+                <div
+                  key={cm.id}
+                  className="rounded-[16px] border border-flame-deep/20 bg-flame-soft/30 p-3.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-[13px] text-ink">{cm.author}</span>
+                      <span className="ms-2 font-mono text-[12px] text-ink-faint">{cm.handle}</span>
+                    </div>
+                    <span className="rounded-full bg-flame-soft px-2 py-0.5 text-[12px] font-extrabold text-flame-deep">
+                      {cm.reportReason || "Flagged"}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[13px] text-ink-body leading-relaxed">{cm.text}</p>
+                  <div className="mt-3 flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        adminApi.approveComment(cm.id);
+                        notify(lang === "fa" ? "دیدگاه تایید و برگردانده شد" : "Comment restored", "primary");
+                      }}
+                      className="rounded-lg border border-line bg-surface px-3 py-1 text-[12px] font-bold text-ink hover:bg-subtle"
+                    >
+                      {lang === "fa" ? "رد گزارش (تایید دیدگاه)" : "Dismiss Flag"}
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
                         adminApi.deleteComment(cm.id);
-                        notify(t("admin.deletedToast"), "primary");
+                        notify(lang === "fa" ? "دیدگاه با موفقیت حذف شد" : "Comment deleted", "primary");
                       }}
-                      className="rounded-lg bg-flame-soft px-2.5 py-1 text-[12px] font-bold text-flame-deep hover:opacity-85"
+                      className="rounded-lg bg-flame-deep px-3 py-1 text-[12px] font-bold text-white hover:bg-flame-deep/90"
                     >
-                      {t("admin.delete")}
+                      {lang === "fa" ? "حذف دیدگاه و پاسخ‌ها" : "Delete"}
                     </button>
                   </div>
                 </div>
               ))}
+
+              {adminApi.getComments("reported").length === 0 && (
+                <div className="py-8 text-center text-ink-muted">
+                  <Icon name="check" size={24} className="mx-auto text-teal-deep" />
+                  <p className="mt-2 text-[12px] font-bold">
+                    {lang === "fa" ? "صف کامنت‌های گزارش‌شده خالی است" : "No reported comments in queue"}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Lyrics Submissions Review */}
-          <div className="space-y-3 rounded-[20px] border border-line bg-surface p-5 shadow-card">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display text-[16px] font-bold text-ink">Lyrics Submissions</h3>
-              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[12px] font-extrabold text-primary-deep">
-                {stats.pendingLyrics} pending review
-              </span>
-            </div>
+          {/* Moderation Section 2: Fan Lyric Submissions */}
+          <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
+            <h3 className="font-extrabold text-[15px] text-ink">
+              {lang === "fa" ? "پیشنهادات متن آهنگ ارسالی هواداران" : "Fan Lyric Sheet Submissions"}
+            </h3>
+            <p className="mt-0.5 text-[12px] text-ink-muted">
+              {lang === "fa" ? "تایید متن ارسالی و پرداخت ۱۸ امتیاز وفاداری به کاربر" : "Approve lyrics & award points"}
+            </p>
 
-            <div className="space-y-2.5 max-h-[460px] overflow-y-auto scroll-slim pe-1">
+            <div className="mt-4 space-y-3">
               {adminApi.getLyricSubmissions().map((sub) => (
                 <div key={sub.id} className="rounded-[16px] border border-line/60 bg-subtle/40 p-3.5">
                   <div className="flex items-center justify-between">
@@ -737,21 +1255,21 @@ export function AdminPage() {
                         type="button"
                         onClick={() => {
                           adminApi.rejectLyricSubmission(sub.id);
-                          notify(t("admin.deletedToast"), "primary");
+                          notify(lang === "fa" ? "پیشنهاد رد شد" : "Submission rejected", "primary");
                         }}
-                        className="rounded-lg bg-subtle px-3 py-1 text-[12px] font-bold text-ink-muted hover:text-ink"
+                        className="rounded-lg border border-line bg-surface px-3 py-1 text-[12px] font-bold text-ink-muted hover:text-ink"
                       >
-                        Reject
+                        {lang === "fa" ? "رد" : "Reject"}
                       </button>
                       <button
                         type="button"
                         onClick={() => {
                           adminApi.approveLyricSubmission(sub.id, 18);
-                          notify(t("admin.savedToast"), "mint");
+                          notify(lang === "fa" ? "متن تایید شد و ۱۸ امتیاز به هوادار پرداخت گردید" : "Approved & +18 pts awarded", "primary");
                         }}
-                        className="rounded-lg bg-primary px-3 py-1 text-[12px] font-bold text-white shadow-primary hover:bg-primary-deep"
+                        className="rounded-lg bg-primary-deep px-3 py-1 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
                       >
-                        Approve (+18 pts)
+                        {lang === "fa" ? "تایید و پرداخت ۱۸ امتیاز" : "Approve (+18 pts)"}
                       </button>
                     </div>
                   )}
@@ -762,47 +1280,66 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ----------------- TAB: SHOP --------------------- */}
+      {/* ===================== TAB 8: SHOP INVENTORY ===================== */}
       {activeTab === "shop" && (
-        <div className="space-y-4 rounded-[20px] border border-line bg-surface p-5 shadow-card">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <h3 className="font-display text-[17px] font-bold text-ink">Shop & Merch Inventory</h3>
-            <div className="flex items-center gap-2">
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative min-w-0 max-w-sm flex-1">
               <input
                 type="text"
-                placeholder={t("admin.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 rounded-full border border-line bg-subtle px-3.5 py-1.5 text-[12.5px] outline-none focus:border-primary"
+                placeholder={lang === "fa" ? "جستجو در محصولات..." : "Search products..."}
+                className="w-full rounded-[14px] border border-line bg-surface py-2 pe-3 ps-9 text-[12px] text-ink shadow-sm outline-none focus:border-primary-deep"
               />
-              <button
-                type="button"
-                onClick={() => setProductModalOpen(true)}
-                className="flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-[12.5px] font-bold text-white shadow-primary hover:bg-primary-deep"
-              >
-                <Icon name="plus" size={13} strokeWidth={2.4} />
-                <span>{t("admin.action.addProduct")}</span>
-              </button>
+              <div className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-faint">
+                <Icon name="search" size={14} />
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={openCreateProduct}
+              className="flex shrink-0 items-center gap-2 rounded-[14px] bg-primary-deep px-4 py-2 font-bold text-[12px] text-white shadow-sm transition hover:bg-primary-deep/90"
+            >
+              <Icon name="plus" size={15} />
+              <span>{lang === "fa" ? "+ افزودن محصول به فروشگاه" : "+ Add Product"}</span>
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {adminApi.getProducts(searchQuery).map((p) => (
-              <div key={p.id} className="overflow-hidden rounded-[16px] border border-line/70 bg-subtle/30">
-                <img src={p.photo} alt={p.name} className="h-36 w-full object-cover" />
-                <div className="p-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-extrabold uppercase text-primary-deep">{p.category}</span>
-                    {p.badge && (
-                      <span className="rounded-full bg-subtle px-2 py-0.5 text-[12px] font-bold text-ink-muted">
-                        {p.badge}
-                      </span>
-                    )}
+              <div
+                key={p.id}
+                className="flex flex-col overflow-hidden rounded-[20px] border border-line bg-surface p-3.5 shadow-sm"
+              >
+                <img src={p.photo} alt={p.name} className="aspect-square w-full rounded-[14px] object-cover" />
+                <h4 className="mt-2.5 font-extrabold text-[13.5px] text-ink truncate">{p.name}</h4>
+                <p className="text-[12px] font-bold text-teal-deep">{toman(p.price, locale)}</p>
+
+                <div className="mt-3 flex items-center justify-between border-t border-line/60 pt-2">
+                  <span className="text-[12px] capitalize text-ink-faint">{p.category}</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => openEditProduct(p)}
+                      className="rounded-lg p-1.5 text-ink-faint hover:text-primary-deep"
+                    >
+                      <Icon name="edit" size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm(lang === "fa" ? `حذف محصول "${p.name}"؟` : `Delete product "${p.name}"?`)) {
+                          adminApi.deleteProduct(p.id);
+                          notify(t("admin.deletedToast"), "primary");
+                        }
+                      }}
+                      className="rounded-lg p-1.5 text-ink-faint hover:text-flame-deep"
+                    >
+                      <Icon name="close" size={14} />
+                    </button>
                   </div>
-                  <h4 className="mt-1 font-bold text-ink text-[13.5px] truncate">{p.name}</h4>
-                  <p className="mt-1 font-display text-[14px] font-extrabold text-primary-deep">
-                    {toman(p.price, locale)}
-                  </p>
                 </div>
               </div>
             ))}
@@ -810,81 +1347,109 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ----------------- TAB: USERS -------------------- */}
+      {/* ===================== TAB 9: USERS & RBAC ===================== */}
       {activeTab === "users" && (
-        <div className="space-y-4 rounded-[20px] border border-line bg-surface p-5 shadow-card">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <h3 className="font-display text-[17px] font-bold text-ink">User Accounts & Role Permissions</h3>
-            <input
-              type="text"
-              placeholder={t("admin.searchPlaceholder")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-64 rounded-full border border-line bg-subtle px-3.5 py-1.5 text-[12.5px] outline-none focus:border-primary"
-            />
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative min-w-0 max-w-sm flex-1">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={lang === "fa" ? "جستجو در کاربران بر اساس نام یا نام کاربری..." : "Search users..."}
+                className="w-full rounded-[14px] border border-line bg-surface py-2 pe-3 ps-9 text-[12px] text-ink shadow-sm outline-none focus:border-primary-deep"
+              />
+              <div className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-faint">
+                <Icon name="search" size={14} />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={openCreateUser}
+              className="flex shrink-0 items-center gap-2 rounded-[14px] bg-primary-deep px-4 py-2 font-bold text-[12px] text-white shadow-sm transition hover:bg-primary-deep/90"
+            >
+              <Icon name="plus" size={15} />
+              <span>{lang === "fa" ? "+ افزودن کاربر / پرسنل" : "+ Add Staff / User"}</span>
+            </button>
           </div>
 
-          <div className="overflow-x-auto scroll-rail">
-            <table className="w-full text-start text-[13px]">
-              <thead>
-                <tr className="border-b border-line text-ink-faint text-[12px] uppercase">
-                  <th className="pb-2.5 text-start font-bold">User</th>
-                  <th className="pb-2.5 text-start font-bold">Role</th>
-                  <th className="pb-2.5 text-start font-bold">Points</th>
-                  <th className="pb-2.5 text-start font-bold">Status</th>
-                  <th className="pb-2.5 text-start font-bold">Last Active</th>
-                  <th className="pb-2.5 text-end font-bold">Manage</th>
+          <div className="overflow-x-auto rounded-[20px] border border-line bg-surface shadow-sm scroll-rail">
+            <table className="w-full min-w-[700px] text-start text-[13px]">
+              <thead className="border-b border-line bg-subtle/40 text-ink-muted">
+                <tr>
+                  <th className="py-3 ps-4 text-start font-bold">{lang === "fa" ? "کاربر" : "User"}</th>
+                  <th className="py-3 text-start font-bold">{lang === "fa" ? "نقش دسترسی" : "Role"}</th>
+                  <th className="py-3 text-start font-bold">{lang === "fa" ? "وضعیت حساب" : "Status"}</th>
+                  <th className="py-3 text-start font-bold">{lang === "fa" ? "امتیاز وفاداری" : "Fan Points"}</th>
+                  <th className="py-3 text-start font-bold">{lang === "fa" ? "عضویت" : "Joined"}</th>
+                  <th className="py-3 pe-4 text-end font-bold">{lang === "fa" ? "عملیات" : "Actions"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line/60">
                 {adminApi.getUsers(searchQuery).map((u) => (
                   <tr key={u.id} className="transition-colors hover:bg-subtle/50">
-                    <td className="py-2.5 font-bold text-ink">
-                      <div className="flex items-center gap-2">
-                        <img src={u.avatar} alt={u.displayName} className="size-7 rounded-full object-cover" />
+                    <td className="py-2.5 ps-4">
+                      <div className="flex items-center gap-3">
+                        <img src={u.avatar} alt={u.username} className="h-9 w-9 rounded-full object-cover" />
                         <div>
-                          <span>{u.displayName}</span>
-                          <span className="block text-[12px] font-normal text-ink-faint">@{u.username}</span>
+                          <p className="font-bold text-ink">{u.displayName}</p>
+                          <p className="font-mono text-[12px] text-ink-faint">@{u.username}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-2.5">
-                      <select
-                        value={u.role}
-                        onChange={(e) => {
-                          adminApi.updateUserRole(u.username, e.target.value as AdminUserRole);
-                          notify(t("admin.savedToast"), "mint");
-                        }}
-                        className="rounded-lg border border-line bg-surface px-2 py-1 text-[12px] font-bold text-ink outline-none"
-                      >
-                        <option value="super_admin">Super Admin</option>
-                        <option value="admin">Admin</option>
-                        <option value="moderator">Moderator</option>
-                        <option value="editor">Editor</option>
-                        <option value="user">Fan User</option>
-                      </select>
+                      <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[12px] font-bold capitalize text-primary-deep">
+                        {u.role.replace("_", " ")}
+                      </span>
                     </td>
-                    <td className="py-2.5 font-bold text-ink-body">{u.points.toLocaleString(locale)} pts</td>
                     <td className="py-2.5">
                       <span className={cn(
-                        "rounded-full px-2 py-0.5 text-[12px] font-bold uppercase",
+                        "rounded-full px-2 py-0.5 text-[12px] font-bold",
                         u.status === "active" ? "bg-mint-soft text-teal-deep" : "bg-flame-soft text-flame-deep",
                       )}>
                         {u.status}
                       </span>
                     </td>
-                    <td className="py-2.5 text-[12px] text-ink-muted">{u.lastActive}</td>
-                    <td className="py-2.5 text-end">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          adminApi.adjustUserPoints(u.username, 50, "Admin bonus");
-                          notify(t("admin.savedToast"), "mint");
-                        }}
-                        className="rounded-md bg-primary/10 px-2 py-1 text-[12px] font-bold text-primary-deep hover:bg-primary/20"
-                      >
-                        +50 pts
-                      </button>
+                    <td className="py-2.5 font-bold text-ink">{u.points.toLocaleString(locale)} pts</td>
+                    <td className="py-2.5 text-ink-faint text-[12px]">{u.joinedAt}</td>
+                    <td className="py-2.5 pe-4 text-end">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openEditUser(u)}
+                          className="rounded-lg p-1.5 text-ink-faint hover:text-primary-deep"
+                          title="Edit User"
+                        >
+                          <Icon name="edit" size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            adminApi.toggleUserStatus(u.username);
+                            notify(lang === "fa" ? "وضعیت حساب کاربری تغییر کرد" : "Status toggled", "primary");
+                          }}
+                          className="rounded-lg p-1.5 text-ink-faint hover:text-ink"
+                          title={u.status === "active" ? "Suspend" : "Activate"}
+                        >
+                          <Icon name="lock" size={14} />
+                        </button>
+                        {u.role !== "super_admin" && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(lang === "fa" ? `آیا از حذف حساب @${u.username} اطمینان دارید؟` : `Delete user @${u.username}?`)) {
+                                adminApi.deleteUser(u.username);
+                                notify(lang === "fa" ? "کاربر حذف شد" : "User deleted", "primary");
+                              }
+                            }}
+                            className="rounded-lg p-1.5 text-ink-faint hover:text-flame-deep"
+                            title="Delete"
+                          >
+                            <Icon name="close" size={14} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -894,70 +1459,176 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ----------------- MODALS ------------------------ */}
-
-      {/* Add Track Modal */}
+      {/* ===================== MODAL: TRACK (CREATE & EDIT) ===================== */}
       {trackModalOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[22px] border border-line bg-surface p-6 shadow-2xl">
-            <h3 className="font-display text-[18px] font-bold text-ink">{t("admin.action.addTrack")}</h3>
-            <form onSubmit={handleCreateTrack} className="mt-4 space-y-3">
-              <div>
-                <label className="text-[12px] font-bold text-ink-muted">Title</label>
-                <input
-                  type="text"
-                  required
-                  value={newTrackTitle}
-                  onChange={(e) => setNewTrackTitle(e.target.value)}
-                  placeholder="e.g. Midnight City"
-                  className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-[620px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h3 className="font-extrabold text-[16px] text-ink">
+                {editingTrackId
+                  ? (lang === "fa" ? "ویرایش کامل قطعه موسیقی" : "Edit Track")
+                  : (lang === "fa" ? "افزودن قطعه موسیقی جدید" : "Add New Track")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setTrackModalOpen(false)}
+                className="rounded-full p-1.5 text-ink-faint hover:bg-subtle hover:text-ink"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTrack} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-slim">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="text-[12px] font-bold text-ink-muted">Artist</label>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "عنوان آهنگ" : "Track Title"}
+                  </label>
                   <input
                     type="text"
                     required
-                    value={newTrackArtist}
-                    onChange={(e) => setNewTrackArtist(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
+                    value={trackTitle}
+                    onChange={(e) => setTrackTitle(e.target.value)}
+                    placeholder="e.g. Midnight Seoul"
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
                   />
                 </div>
+
                 <div>
-                  <label className="text-[12px] font-bold text-ink-muted">Album</label>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "هنرمند / گروه" : "Artist"}
+                  </label>
+                  <select
+                    value={trackArtist}
+                    onChange={(e) => setTrackArtist(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  >
+                    {existingArtists.map((a) => (
+                      <option key={a.id} value={a.name}>{a.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "آلبوم مربوطه" : "Album"}
+                  </label>
+                  <select
+                    value={trackAlbum}
+                    onChange={(e) => setTrackAlbum(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  >
+                    <option value="· single">{lang === "fa" ? "· تک‌آهنگ (Single)" : "· Single"}</option>
+                    {existingAlbums.map((alb) => (
+                      <option key={alb.id} value={alb.title}>{alb.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "مدت زمان (دقیقه:ثانیه)" : "Duration (m:ss)"}
+                  </label>
                   <input
                     type="text"
                     required
-                    value={newTrackAlbum}
-                    onChange={(e) => setNewTrackAlbum(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
+                    value={trackDuration}
+                    onChange={(e) => setTrackDuration(e.target.value)}
+                    placeholder="3:24"
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
                   />
                 </div>
               </div>
-              <div>
-                <label className="text-[12px] font-bold text-ink-muted">Duration</label>
+
+              {/* Direct Stream Audio Link from Download Host */}
+              <div className="rounded-[16px] border border-line bg-subtle/30 p-3.5 space-y-1.5">
+                <label className="block text-[12px] font-bold text-ink">
+                  {lang === "fa" ? "لینک مستقیم پخش صوتی (هاست دانلود / CDN)" : "Audio Stream URL (Direct Host / CDN)"}
+                </label>
                 <input
                   type="text"
-                  required
-                  value={newTrackDuration}
-                  onChange={(e) => setNewTrackDuration(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
+                  value={trackAudio}
+                  onChange={(e) => setTrackAudio(e.target.value)}
+                  placeholder="https://dl.example.com/tracks/song-master.mp3"
+                  className="w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] font-mono text-ink outline-none focus:border-primary-deep"
                 />
+                <p className="text-[12px] text-ink-faint">
+                  {lang === "fa"
+                    ? "فایل صوتی نیازی به آپلود در سرور سایت ندارد؛ لینک مستقیم MP3 از هاست دانلود یا کلود در اینجا قرار می‌گیرد."
+                    : "No upload required: enter direct MP3 stream URL from your download host or CDN."}
+                </p>
               </div>
-              <div className="mt-5 flex justify-end gap-2">
+
+              {/* Featured Image Picker for Track */}
+              <FeaturedImagePicker
+                value={trackPhoto}
+                onChange={setTrackPhoto}
+                label={lang === "fa" ? "تصویر شاخص و کاور آهنگ" : "Track Artwork"}
+                defaultCategory="albums"
+              />
+
+              {/* Lyrics Editor (LRC & Translation) */}
+              <div className="rounded-[16px] border border-line bg-subtle/30 p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[12px] font-bold text-ink">
+                    {lang === "fa" ? "ویرایشگر متن آهنگ و لیریک همگام (LRC / متن ترانه)" : "Lyrics Editor"}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTrackLyricsOriginal("[00:10.00] Line 1 original text\n[00:15.50] Line 2 chorus");
+                      setTrackLyricsTranslation("[00:10.00] ترجمه فارسی سطر اول\n[00:15.50] ترجمه فارسی سطر دوم");
+                    }}
+                    className="text-[12px] font-bold text-primary-deep hover:underline"
+                  >
+                    {lang === "fa" ? "درج نمونه LRC" : "Insert LRC Sample"}
+                  </button>
+                </div>
+
+                <div>
+                  <span className="text-[12px] text-ink-muted">
+                    {lang === "fa" ? "متن اصلی (کره‌ای / انگلیسی با برچسب زمان اختیاری)" : "Original Text"}
+                  </span>
+                  <textarea
+                    rows={4}
+                    value={trackLyricsOriginal}
+                    onChange={(e) => setTrackLyricsOriginal(e.target.value)}
+                    placeholder="[00:12.4] Signal in the blue rain&#10;[00:16.8] Neon lights fading away"
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface p-2.5 font-mono text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <span className="text-[12px] text-ink-muted">
+                    {lang === "fa" ? "ترجمه فارسی متن آهنگ" : "Persian Translation"}
+                  </span>
+                  <textarea
+                    rows={3}
+                    value={trackLyricsTranslation}
+                    onChange={(e) => setTrackLyricsTranslation(e.target.value)}
+                    placeholder="[00:12.4] سیگنال در باران آبی&#10;[00:16.8] نورهای نئونی در حال محو شدن"
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface p-2.5 font-mono text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
                 <button
                   type="button"
                   onClick={() => setTrackModalOpen(false)}
-                  className="rounded-xl px-4 py-2 text-[12.5px] font-bold text-ink-muted hover:text-ink"
+                  className="rounded-[12px] border border-line bg-surface px-4 py-2 text-[12px] font-bold text-ink hover:bg-subtle"
                 >
-                  {t("admin.cancel")}
+                  {lang === "fa" ? "انصراف" : "Cancel"}
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-primary px-4 py-2 text-[12.5px] font-bold text-white shadow-primary hover:bg-primary-deep"
+                  className="rounded-[12px] bg-primary-deep px-5 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
                 >
-                  {t("admin.save")}
+                  {editingTrackId
+                    ? (lang === "fa" ? "ذخیره تغییرات" : "Save Changes")
+                    : (lang === "fa" ? "انتشار قطعه" : "Publish Track")}
                 </button>
               </div>
             </form>
@@ -965,60 +1636,276 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* Add Artist Modal */}
-      {artistModalOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[22px] border border-line bg-surface p-6 shadow-2xl">
-            <h3 className="font-display text-[18px] font-bold text-ink">{t("admin.action.addArtist")}</h3>
-            <form onSubmit={handleCreateArtist} className="mt-4 space-y-3">
+      {/* ===================== MODAL: ALBUM (CREATE & EDIT & TRACK LIST) ===================== */}
+      {albumModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-[650px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
               <div>
-                <label className="text-[12px] font-bold text-ink-muted">Artist Name</label>
+                <h3 className="font-extrabold text-[16px] text-ink">
+                  {editingAlbumId
+                    ? (lang === "fa" ? "ویرایش آلبوم و لیست آهنگ‌ها" : "Edit Album & Tracklist")
+                    : (lang === "fa" ? "ایجاد آلبوم جدید و انتخاب آهنگ‌ها" : "Create New Album")}
+                </h3>
+                <p className="text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "تعیین عنوان، هنرمند، تصویر شاخص و انتخاب یا جستجوی آهنگ‌های مربوط به این آلبوم"
+                    : "Configure album details and link tracks"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAlbumModalOpen(false)}
+                className="rounded-full p-1.5 text-ink-faint hover:bg-subtle hover:text-ink"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAlbum} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-slim">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "عنوان آلبوم" : "Album Title"}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={albumTitle}
+                    onChange={(e) => setAlbumTitle(e.target.value)}
+                    placeholder="e.g. Neon Horizon"
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "هنرمند" : "Artist"}
+                  </label>
+                  <select
+                    value={albumArtist}
+                    onChange={(e) => setAlbumArtist(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  >
+                    {existingArtists.map((a) => (
+                      <option key={a.id} value={a.name}>{a.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted">
+                  {lang === "fa" ? "سال انتشار" : "Release Year"}
+                </label>
                 <input
-                  type="text"
-                  required
-                  value={newArtistName}
-                  onChange={(e) => setNewArtistName(e.target.value)}
-                  placeholder="e.g. VELVET ECHO"
-                  className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
+                  type="number"
+                  value={albumYear}
+                  onChange={(e) => setAlbumYear(Number(e.target.value))}
+                  className="mt-1 w-full max-w-[140px] rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
                 />
               </div>
-              <div>
-                <label className="text-[12px] font-bold text-ink-muted">Category / Kind</label>
-                <select
-                  value={newArtistKind}
-                  onChange={(e) => setNewArtistKind(e.target.value as Artist["kind"])}
-                  className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
+
+              {/* Featured Image for Album */}
+              <FeaturedImagePicker
+                value={albumPhoto}
+                onChange={setAlbumPhoto}
+                label={lang === "fa" ? "کاور و تصویر شاخص آلبوم" : "Album Cover Artwork"}
+                defaultCategory="albums"
+              />
+
+              {/* DUAL TRACK SELECTION FOR ALBUM */}
+              <div className="rounded-[18px] border border-line bg-subtle/30 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-[12px] font-extrabold text-ink">
+                      {lang === "fa" ? "آهنگ‌های آلبوم (جستجو و انتخاب)" : "Album Tracklist Selection"}
+                    </label>
+                    <span className="text-[12px] text-ink-muted">
+                      {albumSelectedTrackIds.length} {lang === "fa" ? "آهنگ انتخاب شده است" : "tracks selected"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Track Search Box */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={albumTrackSearch}
+                    onChange={(e) => setAlbumTrackSearch(e.target.value)}
+                    placeholder={lang === "fa" ? "جستجو در عنوان قطعات برای افزودن به آلبوم..." : "Search tracks to add..."}
+                    className="w-full rounded-[12px] border border-line bg-surface py-2 pe-3 ps-8 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                  <div className="pointer-events-none absolute inset-y-0 start-2.5 flex items-center text-ink-faint">
+                    <Icon name="search" size={13} />
+                  </div>
+                </div>
+
+                {/* Checkable Tracks List */}
+                <div className="max-h-48 overflow-y-auto rounded-[14px] border border-line bg-surface p-2 divide-y divide-line/40 scroll-slim">
+                  {adminApi.getTracks(albumTrackSearch).map((tr) => {
+                    const isChecked = albumSelectedTrackIds.includes(tr.id);
+                    return (
+                      <label
+                        key={tr.id}
+                        className={cn(
+                          "flex cursor-pointer items-center justify-between p-2 rounded-[10px] transition text-[12px]",
+                          isChecked ? "bg-primary-soft/40" : "hover:bg-subtle",
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleToggleTrackInAlbum(tr.id)}
+                            className="h-4 w-4 rounded accent-primary-deep cursor-pointer"
+                          />
+                          <img src={tr.photo} alt={tr.title} className="h-7 w-7 rounded object-cover" />
+                          <div className="min-w-0 truncate">
+                            <span className="font-bold text-ink">{tr.title}</span>
+                            <span className="ms-1.5 text-ink-muted">· {tr.artist}</span>
+                          </div>
+                        </div>
+                        <span className="text-ink-faint font-mono text-[12px]">
+                          {Math.floor(tr.seconds / 60)}:{String(Math.floor(tr.seconds % 60)).padStart(2, "0")}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
+                <button
+                  type="button"
+                  onClick={() => setAlbumModalOpen(false)}
+                  className="rounded-[12px] border border-line bg-surface px-4 py-2 text-[12px] font-bold text-ink hover:bg-subtle"
                 >
-                  <option value="Boy group">Boy group</option>
-                  <option value="Girl group">Girl group</option>
-                  <option value="Soloist">Soloist</option>
-                  <option value="Duo">Duo</option>
-                </select>
+                  {lang === "fa" ? "انصراف" : "Cancel"}
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-[12px] bg-primary-deep px-5 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
+                >
+                  {editingAlbumId
+                    ? (lang === "fa" ? "ذخیره تغییرات آلبوم" : "Save Album")
+                    : (lang === "fa" ? "ایجاد آلبوم و اتصال آهنگ‌ها" : "Create Album")}
+                </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== MODAL: ARTIST (CREATE & EDIT) ===================== */}
+      {artistModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-[560px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h3 className="font-extrabold text-[16px] text-ink">
+                {editingArtistId
+                  ? (lang === "fa" ? "ویرایش پروفایل هنرمند" : "Edit Artist Profile")
+                  : (lang === "fa" ? "افزودن هنرمند جدید" : "Add Artist")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setArtistModalOpen(false)}
+                className="rounded-full p-1.5 text-ink-faint hover:bg-subtle hover:text-ink"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveArtist} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-slim">
               <div>
-                <label className="text-[12px] font-bold text-ink-muted">Genre</label>
+                <label className="block text-[12px] font-bold text-ink-muted">
+                  {lang === "fa" ? "نام هنرمند / گروه" : "Artist Name"}
+                </label>
                 <input
                   type="text"
                   required
-                  value={newArtistGenre}
-                  onChange={(e) => setNewArtistGenre(e.target.value)}
-                  placeholder="e.g. Dance pop"
-                  className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
+                  value={artistName}
+                  onChange={(e) => setArtistName(e.target.value)}
+                  placeholder="e.g. SEORA"
+                  className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
                 />
               </div>
-              <div className="mt-5 flex justify-end gap-2">
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "نوع ساختار" : "Kind"}
+                  </label>
+                  <select
+                    value={artistKind}
+                    onChange={(e) => setArtistKind(e.target.value as Artist["kind"])}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  >
+                    <option value="Boy group">Boy group</option>
+                    <option value="Girl group">Girl group</option>
+                    <option value="Soloist">Soloist</option>
+                    <option value="Duo">Duo</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "سبک موسیقی" : "Genre"}
+                  </label>
+                  <input
+                    type="text"
+                    value={artistGenre}
+                    onChange={(e) => setArtistGenre(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+              </div>
+
+              {/* Featured Image for Artist */}
+              <FeaturedImagePicker
+                value={artistPhoto}
+                onChange={setArtistPhoto}
+                label={lang === "fa" ? "تصویر شاخص هنرمند" : "Artist Photo"}
+                defaultCategory="artists"
+              />
+
+              <div className="flex items-center gap-6 pt-2">
+                <label className="flex items-center gap-2 text-[12px] font-bold text-ink cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={artistVerified}
+                    onChange={(e) => setArtistVerified(e.target.checked)}
+                    className="h-4 w-4 rounded accent-primary-deep"
+                  />
+                  <span>{lang === "fa" ? "نشان تایید رسمی (Verified Badge)" : "Verified Artist"}</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-[12px] font-bold text-ink cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={artistNewRelease}
+                    onChange={(e) => setArtistNewRelease(e.target.checked)}
+                    className="h-4 w-4 rounded accent-primary-deep"
+                  />
+                  <span>{lang === "fa" ? "نشان انتشار جدید (New Release Flag)" : "New Release Pulse"}</span>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
                 <button
                   type="button"
                   onClick={() => setArtistModalOpen(false)}
-                  className="rounded-xl px-4 py-2 text-[12.5px] font-bold text-ink-muted hover:text-ink"
+                  className="rounded-[12px] border border-line bg-surface px-4 py-2 text-[12px] font-bold text-ink hover:bg-subtle"
                 >
-                  {t("admin.cancel")}
+                  {lang === "fa" ? "انصراف" : "Cancel"}
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-primary px-4 py-2 text-[12.5px] font-bold text-white shadow-primary hover:bg-primary-deep"
+                  className="rounded-[12px] bg-primary-deep px-5 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
                 >
-                  {t("admin.save")}
+                  {editingArtistId
+                    ? (lang === "fa" ? "ذخیره تغییرات" : "Save Changes")
+                    : (lang === "fa" ? "ثبت هنرمند" : "Add Artist")}
                 </button>
               </div>
             </form>
@@ -1026,60 +1913,210 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* Add News Modal */}
-      {newsModalOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[22px] border border-line bg-surface p-6 shadow-2xl">
-            <h3 className="font-display text-[18px] font-bold text-ink">{t("admin.action.addNews")}</h3>
-            <form onSubmit={handleCreateNews} className="mt-4 space-y-3">
+      {/* ===================== MODAL: PLAYLIST (CREATE & EDIT) ===================== */}
+      {playlistModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-[540px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h3 className="font-extrabold text-[16px] text-ink">
+                {editingPlaylistId
+                  ? (lang === "fa" ? "ویرایش پلی‌لیست" : "Edit Playlist")
+                  : (lang === "fa" ? "ساخت پلی‌لیست جدید" : "Create Playlist")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setPlaylistModalOpen(false)}
+                className="rounded-full p-1.5 text-ink-faint hover:bg-subtle hover:text-ink"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePlaylist} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-slim">
               <div>
-                <label className="text-[12px] font-bold text-ink-muted">Title / Headline</label>
+                <label className="block text-[12px] font-bold text-ink-muted">
+                  {lang === "fa" ? "نام پلی‌لیست" : "Playlist Name"}
+                </label>
                 <input
                   type="text"
                   required
-                  value={newNewsTitle}
-                  onChange={(e) => setNewNewsTitle(e.target.value)}
-                  placeholder="Headline..."
-                  className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
+                  value={playlistName}
+                  onChange={(e) => setPlaylistName(e.target.value)}
+                  className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
                 />
               </div>
-              <div>
-                <label className="text-[12px] font-bold text-ink-muted">Tag</label>
-                <select
-                  value={newNewsTag}
-                  onChange={(e) => setNewNewsTag(e.target.value as NewsItem["tag"])}
-                  className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
-                >
-                  <option value="Tour">Tour</option>
-                  <option value="Comeback">Comeback</option>
-                  <option value="Charts">Charts</option>
-                  <option value="Awards">Awards</option>
-                  <option value="Editorial">Editorial</option>
-                </select>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "گردآورنده / کیوریتور" : "Curator"}
+                  </label>
+                  <input
+                    type="text"
+                    value={playlistCurator}
+                    onChange={(e) => setPlaylistCurator(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "حال و هوا (Mood)" : "Mood"}
+                  </label>
+                  <input
+                    type="text"
+                    value={playlistMood}
+                    onChange={(e) => setPlaylistMood(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
               </div>
+
+              {/* Featured Image for Playlist */}
+              <FeaturedImagePicker
+                value={playlistPhoto}
+                onChange={setPlaylistPhoto}
+                label={lang === "fa" ? "تصویر شاخص پلی‌لیست" : "Playlist Artwork"}
+                defaultCategory="playlists"
+              />
+
+              <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
+                <button
+                  type="button"
+                  onClick={() => setPlaylistModalOpen(false)}
+                  className="rounded-[12px] border border-line bg-surface px-4 py-2 text-[12px] font-bold text-ink hover:bg-subtle"
+                >
+                  {lang === "fa" ? "انصراف" : "Cancel"}
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-[12px] bg-primary-deep px-5 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
+                >
+                  {editingPlaylistId
+                    ? (lang === "fa" ? "ذخیره تغییرات" : "Save")
+                    : (lang === "fa" ? "ساخت پلی‌لیست" : "Create")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== MODAL: NEWS (CREATE & EDIT) ===================== */}
+      {newsModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-[620px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h3 className="font-extrabold text-[16px] text-ink">
+                {editingNewsId
+                  ? (lang === "fa" ? "ویرایش خبر و مقاله" : "Edit News Article")
+                  : (lang === "fa" ? "انتشار خبر جدید" : "Publish Story")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setNewsModalOpen(false)}
+                className="rounded-full p-1.5 text-ink-faint hover:bg-subtle hover:text-ink"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNews} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-slim">
               <div>
-                <label className="text-[12px] font-bold text-ink-muted">Excerpt</label>
+                <label className="block text-[12px] font-bold text-ink-muted">
+                  {lang === "fa" ? "عنوان خبر" : "Headline"}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newsTitle}
+                  onChange={(e) => setNewsTitle(e.target.value)}
+                  className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "نویسنده / تحریریه" : "Author"}
+                  </label>
+                  <input
+                    type="text"
+                    value={newsAuthor}
+                    onChange={(e) => setNewsAuthor(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "تگ موضوعی" : "Topic Tag"}
+                  </label>
+                  <input
+                    type="text"
+                    value={newsTag}
+                    onChange={(e) => setNewsTag(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted">
+                  {lang === "fa" ? "خلاصه خبر (چکیده)" : "Excerpt"}
+                </label>
                 <textarea
                   rows={2}
-                  value={newNewsExcerpt}
-                  onChange={(e) => setNewNewsExcerpt(e.target.value)}
-                  placeholder="Short summary excerpt..."
-                  className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
+                  required
+                  value={newsExcerpt}
+                  onChange={(e) => setNewsExcerpt(e.target.value)}
+                  className="mt-1 w-full rounded-[12px] border border-line bg-surface p-2.5 text-[12px] text-ink outline-none focus:border-primary-deep"
                 />
               </div>
-              <div className="mt-5 flex justify-end gap-2">
+
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted">
+                  {lang === "fa" ? "متن کامل مقاله" : "Full Story Content"}
+                </label>
+                <textarea
+                  rows={4}
+                  value={newsBody}
+                  onChange={(e) => setNewsBody(e.target.value)}
+                  className="mt-1 w-full rounded-[12px] border border-line bg-surface p-2.5 text-[12px] text-ink outline-none focus:border-primary-deep"
+                />
+              </div>
+
+              {/* Featured Image for News */}
+              <FeaturedImagePicker
+                value={newsPhoto}
+                onChange={setNewsPhoto}
+                label={lang === "fa" ? "تصویر شاخص و بنر خبر" : "News Banner Image"}
+                defaultCategory="news"
+              />
+
+              <label className="flex items-center gap-2 text-[12px] font-bold text-ink cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  checked={newsFeatured}
+                  onChange={(e) => setNewsFeatured(e.target.checked)}
+                  className="h-4 w-4 rounded accent-primary-deep"
+                />
+                <span>{lang === "fa" ? "نمایش به عنوان خبر ویژه در صفحه اصلی (Featured)" : "Featured in Headline Carousel"}</span>
+              </label>
+
+              <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
                 <button
                   type="button"
                   onClick={() => setNewsModalOpen(false)}
-                  className="rounded-xl px-4 py-2 text-[12.5px] font-bold text-ink-muted hover:text-ink"
+                  className="rounded-[12px] border border-line bg-surface px-4 py-2 text-[12px] font-bold text-ink hover:bg-subtle"
                 >
-                  {t("admin.cancel")}
+                  {lang === "fa" ? "انصراف" : "Cancel"}
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-primary px-4 py-2 text-[12.5px] font-bold text-white shadow-primary hover:bg-primary-deep"
+                  className="rounded-[12px] bg-primary-deep px-5 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
                 >
-                  {t("admin.save")}
+                  {editingNewsId
+                    ? (lang === "fa" ? "ذخیره تغییرات" : "Save")
+                    : (lang === "fa" ? "انتشار خبر" : "Publish")}
                 </button>
               </div>
             </form>
@@ -1087,62 +2124,266 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* Add Product Modal */}
+      {/* ===================== MODAL: SHOP (CREATE & EDIT) ===================== */}
       {productModalOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[22px] border border-line bg-surface p-6 shadow-2xl">
-            <h3 className="font-display text-[18px] font-bold text-ink">{t("admin.action.addProduct")}</h3>
-            <form onSubmit={handleCreateProduct} className="mt-4 space-y-3">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-[540px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h3 className="font-extrabold text-[16px] text-ink">
+                {editingProductId
+                  ? (lang === "fa" ? "ویرایش محصول فروشگاه" : "Edit Merch Item")
+                  : (lang === "fa" ? "افزودن محصول جدید به فروشگاه" : "Add Product")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setProductModalOpen(false)}
+                className="rounded-full p-1.5 text-ink-faint hover:bg-subtle hover:text-ink"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProduct} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-slim">
               <div>
-                <label className="text-[12px] font-bold text-ink-muted">Product Name</label>
+                <label className="block text-[12px] font-bold text-ink-muted">
+                  {lang === "fa" ? "نام محصول" : "Product Name"}
+                </label>
                 <input
                   type="text"
                   required
-                  value={newProdName}
-                  onChange={(e) => setNewProdName(e.target.value)}
-                  placeholder="e.g. Tour Cap"
-                  className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
+                  value={prodName}
+                  onChange={(e) => setProdName(e.target.value)}
+                  className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
                 />
               </div>
-              <div>
-                <label className="text-[12px] font-bold text-ink-muted">Category</label>
-                <select
-                  value={newProdCategory}
-                  onChange={(e) => setNewProdCategory(e.target.value as Exclude<ShopCategoryId, "all">)}
-                  className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
-                >
-                  <option value="apparel">Apparel</option>
-                  <option value="accessories">Accessories</option>
-                  <option value="collectibles">Collectibles</option>
-                </select>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "دسته‌بندی" : "Category"}
+                  </label>
+                  <select
+                    value={prodCategory}
+                    onChange={(e) => setProdCategory(e.target.value as any)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  >
+                    <option value="apparel">{lang === "fa" ? "پوشاک" : "Apparel"}</option>
+                    <option value="lightstick">{lang === "fa" ? "لایت‌استیک" : "Lightstick"}</option>
+                    <option value="vinyl">{lang === "fa" ? "آلبوم فیزیکی / دیسک" : "Vinyl & CDs"}</option>
+                    <option value="accessories">{lang === "fa" ? "اکسسوری و لوازم" : "Accessories"}</option>
+                    <option value="collectibles">{lang === "fa" ? "کلکسیونی" : "Collectibles"}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "قیمت (تومان)" : "Price (Toman)"}
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={prodPrice}
+                    onChange={(e) => setProdPrice(Number(e.target.value))}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-[12px] font-bold text-ink-muted">Price (Toman)</label>
-                <input
-                  type="number"
-                  required
-                  step={50000}
-                  value={newProdPrice}
-                  onChange={(e) => setNewProdPrice(Number(e.target.value))}
-                  className="mt-1 w-full rounded-xl border border-line bg-subtle px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
-                />
-              </div>
-              <div className="mt-5 flex justify-end gap-2">
+
+              {/* Featured Image for Product */}
+              <FeaturedImagePicker
+                value={prodPhoto}
+                onChange={setProdPhoto}
+                label={lang === "fa" ? "تصویر شاخص محصول" : "Product Photo"}
+                defaultCategory="shop"
+              />
+
+              <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
                 <button
                   type="button"
                   onClick={() => setProductModalOpen(false)}
-                  className="rounded-xl px-4 py-2 text-[12.5px] font-bold text-ink-muted hover:text-ink"
+                  className="rounded-[12px] border border-line bg-surface px-4 py-2 text-[12px] font-bold text-ink hover:bg-subtle"
                 >
-                  {t("admin.cancel")}
+                  {lang === "fa" ? "انصراف" : "Cancel"}
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-primary px-4 py-2 text-[12.5px] font-bold text-white shadow-primary hover:bg-primary-deep"
+                  className="rounded-[12px] bg-primary-deep px-5 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
                 >
-                  {t("admin.save")}
+                  {editingProductId
+                    ? (lang === "fa" ? "ذخیره تغییرات" : "Save")
+                    : (lang === "fa" ? "افزودن محصول" : "Add Product")}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== MODAL: USER (CREATE & EDIT) ===================== */}
+      {userModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-[500px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h3 className="font-extrabold text-[16px] text-ink">
+                {editingUsername
+                  ? (lang === "fa" ? "ویرایش مشخصات و دسترسی کاربر" : "Edit User / Staff")
+                  : (lang === "fa" ? "تعریف کاربر / پرسنل جدید" : "Add User")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setUserModalOpen(false)}
+                className="rounded-full p-1.5 text-ink-faint hover:bg-subtle hover:text-ink"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveUser} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-slim">
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted">
+                  {lang === "fa" ? "نام نمایشی" : "Display Name"}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={userDisplayName}
+                  onChange={(e) => setUserDisplayName(e.target.value)}
+                  className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                />
+              </div>
+
+              {!editingUsername && (
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "نام کاربری (لاتین)" : "Username"}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={userUsername}
+                    onChange={(e) => setUserUsername(e.target.value)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] font-mono text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "نقش دسترسی (RBAC)" : "Role"}
+                  </label>
+                  <select
+                    value={userRole}
+                    onChange={(e) => setUserRole(e.target.value as AdminUserRole)}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  >
+                    <option value="super_admin">{lang === "fa" ? "مدیر کل (Super Admin)" : "Super Admin"}</option>
+                    <option value="moderator">{lang === "fa" ? "ناظر محتوا (Moderator)" : "Moderator"}</option>
+                    <option value="editor">{lang === "fa" ? "تحریریه اخبار (Editor)" : "Editor"}</option>
+                    <option value="user">{lang === "fa" ? "کاربر هوادار (Fan)" : "Fan / User"}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "امتیاز وفاداری" : "Loyalty Points"}
+                  </label>
+                  <input
+                    type="number"
+                    value={userPoints}
+                    onChange={(e) => setUserPoints(Number(e.target.value))}
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+              </div>
+
+              {/* Avatar Selector via FeaturedImagePicker */}
+              <FeaturedImagePicker
+                value={userAvatar}
+                onChange={setUserAvatar}
+                label={lang === "fa" ? "تصویر آواتار کاربر" : "User Avatar"}
+                defaultCategory="all"
+              />
+
+              <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
+                <button
+                  type="button"
+                  onClick={() => setUserModalOpen(false)}
+                  className="rounded-[12px] border border-line bg-surface px-4 py-2 text-[12px] font-bold text-ink hover:bg-subtle"
+                >
+                  {lang === "fa" ? "انصراف" : "Cancel"}
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-[12px] bg-primary-deep px-5 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
+                >
+                  {editingUsername
+                    ? (lang === "fa" ? "ذخیره تغییرات" : "Save")
+                    : (lang === "fa" ? "افزودن کاربر" : "Add User")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== MODAL: BACKUP & RESTORE ===================== */}
+      {backupModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-[560px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h3 className="font-extrabold text-[16px] text-ink">
+                {lang === "fa" ? "پشتیبان‌گیری و بازیابی پایگاه داده" : "Database Backup & Restore"}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setBackupModalOpen(false)}
+                className="rounded-full p-1.5 text-ink-faint hover:bg-subtle hover:text-ink"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4 overflow-y-auto scroll-slim">
+              <p className="text-[12px] text-ink-muted leading-relaxed">
+                {lang === "fa"
+                  ? "متن داده‌های دیتابیس را برای پشتیبان‌گیری کپی کنید، یا فایل پشتیبان JSON قبلی را در کادر زیر جای‌گذاری کرده و دکمه بازیابی را بزنید."
+                  : "Copy current JSON database state or paste backup JSON below to restore."}
+              </p>
+              <textarea
+                rows={10}
+                value={backupJsonText}
+                onChange={(e) => setBackupJsonText(e.target.value)}
+                className="w-full rounded-[14px] border border-line bg-subtle/50 p-3 font-mono text-[12px] text-ink outline-none focus:border-primary-deep"
+              />
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(backupJsonText);
+                    notify(lang === "fa" ? "داده‌ها در کلیپ‌بورد کپی شد" : "Copied to clipboard", "primary");
+                  }}
+                  className="rounded-[12px] border border-line bg-surface px-4 py-2 text-[12px] font-bold text-ink hover:bg-subtle"
+                >
+                  {lang === "fa" ? "کپی در کلیپ‌بورد" : "Copy to Clipboard"}
+                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setBackupModalOpen(false)}
+                    className="rounded-[12px] border border-line bg-surface px-4 py-2 text-[12px] font-bold text-ink hover:bg-subtle"
+                  >
+                    {lang === "fa" ? "بستن" : "Close"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleApplyImport}
+                    className="rounded-[12px] bg-primary-deep px-5 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
+                  >
+                    {lang === "fa" ? "بازیابی دیتابیس" : "Apply Restore"}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

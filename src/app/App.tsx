@@ -20,6 +20,7 @@ import { AuthProvider } from "./AuthContext";
 import { AccountDoor } from "../sections/AccountDoor";
 import { Splash } from "../ui/Splash";
 import { SeoHead } from "../sections/SeoHead";
+import { AdminTopNav } from "../sections/admin/AdminTopNav";
 
 /* ------------------------------------------------------------------ *
  *  Shell — the parent card and the five cards inside it.
@@ -73,7 +74,11 @@ export function Shell() {
       {/* top row — three separate pills */}
       <div className="flex flex-wrap items-center gap-4 lg:flex-nowrap">
         <SectionSlot id="brand" params={undefined} />
-        <SectionSlot id="nav" params={undefined} />
+        {route === "admin" ? (
+          <AdminTopNav />
+        ) : (
+          <SectionSlot id="nav" params={undefined} />
+        )}
         <div className="ms-auto flex items-center">
           <SectionSlot id="account" params={undefined} />
         </div>
@@ -86,53 +91,64 @@ export function Shell() {
           direction, so in Persian the content card takes the right-hand
           column and the player the left one. Each card re-declares `dir` for
           its own text, so nothing inside depends on where it landed. */}
-      <div
-        dir={dir}
-        className={cn(
-          "flex min-h-0 flex-1 flex-col gap-4 lg:flex-row",
-          wide && "home-split-wide",
-        )}
-      >
-        <SurfaceCard dir={dir} className="home-split-left lg:min-h-0">
+      {route === "admin" ? (
+        <SurfaceCard dir={dir} className="w-full flex-1 min-h-0">
           <div
             data-content-scroll
             className="scroll-slim flex min-h-0 flex-1 flex-col lg:overflow-y-auto"
           >
-            <AnimatePresence mode="wait" initial={false}>
-              {detail ? (
-                <motion.div
-                  key={`detail:${detail.kind}:${detail.id}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.28, ease: EASE }}
-                  className="flex min-h-0 flex-col"
-                >
-                  <BrowseDetailView />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key={route}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.34, ease: EASE }}
-                  className="flex min-h-0 flex-1 flex-col"
-                >
-                  <Page />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <Page />
           </div>
         </SurfaceCard>
+      ) : (
+        <div
+          dir={dir}
+          className={cn(
+            "flex min-h-0 flex-1 flex-col gap-4 lg:flex-row",
+            wide && "home-split-wide",
+          )}
+        >
+          <SurfaceCard dir={dir} className="home-split-left lg:min-h-0">
+            <div
+              data-content-scroll
+              className="scroll-slim flex min-h-0 flex-1 flex-col lg:overflow-y-auto"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {detail ? (
+                  <motion.div
+                    key={`detail:${detail.kind}:${detail.id}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.28, ease: EASE }}
+                    className="flex min-h-0 flex-col"
+                  >
+                    <BrowseDetailView />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key={route}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.34, ease: EASE }}
+                    className="flex min-h-0 flex-1 flex-col"
+                  >
+                    <Page />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </SurfaceCard>
 
-        <SurfaceCard dir={dir} className="home-split-right lg:min-h-0">
-          <SectionSlot
-            id="player"
-            params={{ expanded: wide, onToggleExpand: () => setWide((w) => !w) }}
-          />
-        </SurfaceCard>
-      </div>
+          <SurfaceCard dir={dir} className="home-split-right lg:min-h-0">
+            <SectionSlot
+              id="player"
+              params={{ expanded: wide, onToggleExpand: () => setWide((w) => !w) }}
+            />
+          </SurfaceCard>
+        </div>
+      )}
     </div>
   );
 }
