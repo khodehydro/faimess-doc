@@ -35,8 +35,14 @@ import {
   testSmsGateway,
   checkAndRunWeeklyAutoPublish,
   downloadDataUrl,
+  SAMPLE_RELEASE_ITEMS,
+  generateItemSquareBanner,
+  generateItemCaption,
+  publishItemToChannels,
   type PublishCategory,
   type PublishLogEntry,
+  type PublishItemPayload,
+  type ItemPublishType,
 } from "../api/channelPublisher";
 
 export function AdminPage() {
@@ -73,6 +79,8 @@ export function AdminPage() {
   // Social Publishing Preview & Audit State
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [selectedPublishCat, setSelectedPublishCat] = useState<PublishCategory | null>(null);
+  const [previewIsSquare, setPreviewIsSquare] = useState(false);
+  const [previewItemPayload, setPreviewItemPayload] = useState<PublishItemPayload | null>(null);
   const [previewBannerImg, setPreviewBannerImg] = useState<string>("");
   const [previewCaption, setPreviewCaption] = useState<string>("");
   const [publishingCat, setPublishingCat] = useState<string | null>(null);
@@ -249,7 +257,26 @@ export function AdminPage() {
         lyricsOriginal: trackLyricsOriginal.trim() || undefined,
         lyricsTranslation: trackLyricsTranslation.trim() || undefined,
       });
-      notify(lang === "fa" ? "آهنگ جدید با موفقیت منتشر شد" : "Track published successfully", "primary");
+
+      // Auto-publish to channels
+      publishItemToChannels({
+        type: "track",
+        title: trackTitle.trim(),
+        subtitle: trackArtist.trim(),
+        details: trackIsSingle ? "تک‌آهنگ رسمی" : trackAlbum.trim(),
+        photo: trackPhoto.trim(),
+        link: "https://faimess.ir",
+        metaCol1Label: "خواننده",
+        metaCol1Value: trackArtist.trim(),
+        metaCol2Label: "مدت زمان",
+        metaCol2Value: trackDuration.trim() || "3:20",
+        metaCol3Label: "کیفیت پخش",
+        metaCol3Value: "320K FLAC",
+      }).then(() => {
+        setPublishLogs(getAuditLogs());
+      });
+
+      notify(lang === "fa" ? "آهنگ جدید منتشر و در کانال‌ها اطلاع‌رسانی شد" : "Track published & announced to channels", "primary");
     }
     setTrackModalOpen(false);
   };
@@ -313,7 +340,26 @@ export function AdminPage() {
         photo: albumPhoto,
         trackIds: albumSelectedTrackIds,
       });
-      notify(lang === "fa" ? "آلبوم جدید ایجاد و آهنگ‌ها متصل شدند" : "Album created & tracks linked", "primary");
+
+      // Auto-publish to channels
+      publishItemToChannels({
+        type: "album",
+        title: albumTitle.trim(),
+        subtitle: albumArtist.trim(),
+        details: `${albumSelectedTrackIds.length || 1} قطعه • انتشار ${albumYear}`,
+        photo: albumPhoto,
+        link: "https://faimess.ir/#albums",
+        metaCol1Label: "هنرمند",
+        metaCol1Value: albumArtist.trim(),
+        metaCol2Label: "تعداد قطعات",
+        metaCol2Value: `${albumSelectedTrackIds.length || 1} ترک`,
+        metaCol3Label: "سال انتشار",
+        metaCol3Value: String(albumYear),
+      }).then(() => {
+        setPublishLogs(getAuditLogs());
+      });
+
+      notify(lang === "fa" ? "آلبوم جدید ایجاد و در کانال‌ها اطلاع‌رسانی شد" : "Album created & announced to channels", "primary");
     }
     setAlbumModalOpen(false);
   };
@@ -377,7 +423,26 @@ export function AdminPage() {
         photo: playlistPhoto,
         trackIds: playlistSelectedTrackIds,
       });
-      notify(lang === "fa" ? "پلی‌لیست با آهنگ‌های انتخابی ساخته شد" : "Playlist created with tracks", "primary");
+
+      // Auto-publish to channels
+      publishItemToChannels({
+        type: "playlist",
+        title: playlistName.trim(),
+        subtitle: `حال و هوا: ${playlistMood.trim()}`,
+        details: `کیوریتور: ${playlistCurator.trim()} • ${playlistSelectedTrackIds.length || 10} قطعه`,
+        photo: playlistPhoto,
+        link: "https://faimess.ir/#playlists",
+        metaCol1Label: "کیوریتور",
+        metaCol1Value: playlistCurator.trim(),
+        metaCol2Label: "حال و هوا",
+        metaCol2Value: playlistMood.trim(),
+        metaCol3Label: "تعداد قطعات",
+        metaCol3Value: `${playlistSelectedTrackIds.length || 10} ترک`,
+      }).then(() => {
+        setPublishLogs(getAuditLogs());
+      });
+
+      notify(lang === "fa" ? "پلی‌لیست ساخته شد و در کانال‌ها منتشر گردید" : "Playlist created & announced to channels", "primary");
     }
     setPlaylistModalOpen(false);
   };
@@ -437,7 +502,26 @@ export function AdminPage() {
         verified: artistVerified,
         newRelease: artistNewRelease,
       });
-      notify(lang === "fa" ? "هنرمند جدید اضافه شد" : "Artist added successfully", "primary");
+
+      // Auto-publish to channels
+      publishItemToChannels({
+        type: "artist",
+        title: artistName.trim(),
+        subtitle: `${artistKind} • ${artistGenre.trim()}`,
+        details: "پروفایل رسمی و دیسکوگرافی",
+        photo: artistPhoto,
+        link: "https://faimess.ir/#artists",
+        metaCol1Label: "نوع فعالیت",
+        metaCol1Value: artistKind,
+        metaCol2Label: "سبک اصلی",
+        metaCol2Value: artistGenre.trim(),
+        metaCol3Label: "وضعیت",
+        metaCol3Value: "تایید شده ✓",
+      }).then(() => {
+        setPublishLogs(getAuditLogs());
+      });
+
+      notify(lang === "fa" ? "هنرمند جدید اضافه و در کانال‌ها معرفی گردید" : "Artist added & announced to channels", "primary");
     }
     setArtistModalOpen(false);
   };
@@ -508,9 +592,31 @@ export function AdminPage() {
         photo: newsPhoto,
         status: newsStatus,
       });
+
+      if (newsStatus === "published") {
+        // Auto-publish breaking news to channels
+        publishItemToChannels({
+          type: "news",
+          title: newsTitle.trim(),
+          subtitle: newsExcerpt.trim(),
+          details: newsAuthor.trim(),
+          tag: newsTag,
+          photo: newsPhoto,
+          link: "https://faimess.ir/#news",
+          metaCol1Label: "دسته‌بندی",
+          metaCol1Value: newsTag,
+          metaCol2Label: "نویسنده",
+          metaCol2Value: newsAuthor.trim(),
+          metaCol3Label: "وضعیت",
+          metaCol3Value: "منتشر شد ✓",
+        }).then(() => {
+          setPublishLogs(getAuditLogs());
+        });
+      }
+
       notify(
         newsStatus === "published"
-          ? (lang === "fa" ? "مقاله خبری با موفقیت منتشر شد" : "Article published")
+          ? (lang === "fa" ? "مقاله خبری با موفقیت منتشر و در کانال‌ها اطلاع‌رسانی شد" : "Article published & shared to channels")
           : (lang === "fa" ? "پیش‌نویس خبر جهت بررسی و تایید مدیر ثبت شد" : "Draft submitted for manager approval"),
         "primary",
       );
@@ -710,12 +816,62 @@ export function AdminPage() {
   };
 
   const handleOpenPublishPreview = async (cat: PublishCategory) => {
+    setPreviewIsSquare(false);
+    setPreviewItemPayload(null);
     setSelectedPublishCat(cat);
     const cap = generatePostCaption(cat);
     setPreviewCaption(cap);
     setPublishModalOpen(true);
     const img = await generateGraphicBanner(cat);
     setPreviewBannerImg(img);
+  };
+
+  const handleOpenItemPreview = async (item: PublishItemPayload) => {
+    setPreviewIsSquare(true);
+    setPreviewItemPayload(item);
+    setSelectedPublishCat(null);
+    const cap = generateItemCaption(item);
+    setPreviewCaption(cap);
+    setPublishModalOpen(true);
+    const img = await generateItemSquareBanner(item);
+    setPreviewBannerImg(img);
+  };
+
+  const handleExecuteItemPublish = async (item: PublishItemPayload) => {
+    setPublishingCat(item.type);
+    try {
+      const res = await publishItemToChannels(item);
+      setPublishLogs(getAuditLogs());
+      if (res.imageBanner) {
+        downloadDataUrl(res.imageBanner, `faimess-${item.type}-${Date.now()}.png`);
+      }
+      notify(
+        lang === "fa"
+          ? `پوستر ۱:۱ و پیام ${item.title} دانلود و در کانال‌های تلگرام و بله منتشر شد.`
+          : "1:1 Poster and post published to Telegram & Bale channels.",
+        "mint",
+      );
+    } finally {
+      setPublishingCat(null);
+    }
+  };
+
+  const handleDownloadItemBanner = async (item: PublishItemPayload) => {
+    setPublishingCat(item.type);
+    try {
+      const img = await generateItemSquareBanner(item);
+      if (img) {
+        downloadDataUrl(img, `faimess-${item.type}-${Date.now()}.png`);
+        notify(
+          lang === "fa"
+            ? "تصویر پوستر ۱:۱ مربع (1080x1080) با موفقیت دانلود شد."
+            : "1:1 Square poster image downloaded.",
+          "mint",
+        );
+      }
+    } finally {
+      setPublishingCat(null);
+    }
   };
 
   const handleExecutePublish = async (cat: PublishCategory) => {
@@ -3032,6 +3188,103 @@ export function AdminPage() {
                 })}
               </div>
 
+              {/* 1:1 Content Releases (Track, Album, Artist, Playlist, News) */}
+              <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-5">
+                <div className="border-b border-line pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-7 items-center justify-center rounded-xl bg-primary-soft text-primary-deep">
+                      <Icon name="sparkle" size={15} />
+                    </span>
+                    <div>
+                      <h3 className="font-extrabold text-[15px] text-ink">
+                        {lang === "fa" ? "انتشار خودکار و دستی محتوای جدید در کانال‌ها (پوستر ۱:۱ مربع)" : "New Content Auto-Publishing (1:1 Square Posters)"}
+                      </h3>
+                      <p className="mt-0.5 text-[12px] text-ink-muted">
+                        {lang === "fa"
+                          ? "انتشار خودکار آهنگ جدید، آلبوم، آرتیست، پلی‌لیست و اخبار با پوستر مینیمال بنفش و سفید (1080x1080) به همراه خلاصه، تایتل و لینک اختصاصی سایت"
+                          : "Automatic broadcast for new tracks, albums, artists, playlists, and breaking news with 1:1 square posters"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
+                  {Object.entries(SAMPLE_RELEASE_ITEMS).map(([key, item]) => {
+                    const isPublishing = publishingCat === key;
+                    const typeIcons: Record<string, any> = {
+                      track: "music",
+                      album: "disc",
+                      artist: "users",
+                      playlist: "list",
+                      news: "news",
+                    };
+                    const typeLabels: Record<string, string> = {
+                      track: "آهنگ جدید",
+                      album: "آلبوم رسمی",
+                      artist: "آرتیست جدید",
+                      playlist: "پلی‌لیست منتخب",
+                      news: "خبر و رویداد",
+                    };
+
+                    return (
+                      <div key={key} className="rounded-2xl border border-line bg-subtle/30 p-4 space-y-3.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <span className="flex size-8 items-center justify-center rounded-xl bg-primary-soft text-primary-deep font-bold">
+                              <Icon name={typeIcons[key] || "sparkle"} size={16} />
+                            </span>
+                            <div>
+                              <span className="inline-block rounded-md bg-primary-soft px-2 py-0.5 text-[12px] font-bold text-primary-deep">
+                                {typeLabels[key]}
+                              </span>
+                              <h4 className="font-bold text-[14px] text-ink mt-0.5">{item.title}</h4>
+                            </div>
+                          </div>
+                          <span className="text-[12px] font-bold text-ink-muted">{item.tag || "1:1 مربع"}</span>
+                        </div>
+
+                        <p className="text-[12px] text-ink-muted leading-relaxed line-clamp-2">
+                          {item.subtitle}
+                        </p>
+
+                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-line/50">
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadItemBanner(item)}
+                            disabled={isPublishing}
+                            className="flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-[12px] font-bold text-ink hover:border-primary/40 hover:bg-subtle transition shadow-2xs"
+                            title="دانلود مستقیم پوستر مربع ۱:۱ با رزولوشن بالا"
+                          >
+                            <Icon name="download" size={13} />
+                            <span>{lang === "fa" ? "دانلود پوستر ۱:۱" : "Download 1:1"}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenItemPreview(item)}
+                            className="flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-[12px] font-bold text-ink hover:bg-subtle transition shadow-2xs"
+                          >
+                            <Icon name="sparkle" size={13} />
+                            <span>{lang === "fa" ? "پیش‌نمایش" : "Preview"}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleExecuteItemPublish(item)}
+                            disabled={isPublishing}
+                            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-primary-deep px-3 py-2 text-[12px] font-bold text-white shadow-xs hover:bg-primary-deep/90 disabled:opacity-50 transition"
+                            title="دانلود خودکار پوستر ۱:۱ و ارسال به کانال‌های تلگرام و بله"
+                          >
+                            <Icon name="send" size={13} />
+                            <span>{isPublishing ? (lang === "fa" ? "در حال ارسال..." : "Publishing...") : (lang === "fa" ? "انتشار و دانلود ۱:۱" : "Publish & Download")}</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Publication Audit Log Table */}
               <div className="rounded-2xl border border-line bg-subtle/30 p-4 space-y-3">
                 <div className="flex items-center justify-between">
@@ -4928,7 +5181,7 @@ export function AdminPage() {
       )}
 
       {/* ===================== GRAPHIC BANNER & CAPTION PREVIEW MODAL ===================== */}
-      {publishModalOpen && selectedPublishCat && (
+      {publishModalOpen && (selectedPublishCat || (previewIsSquare && previewItemPayload)) && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="flex max-h-[92vh] w-full max-w-[620px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-2xl">
             {/* Header */}
@@ -4941,7 +5194,11 @@ export function AdminPage() {
                   <h3 className="font-extrabold text-[15px] text-ink">
                     {lang === "fa" ? "پیش‌نمایش پوستر گرافیکی و کپشن انتشار" : "Graphic Banner & Caption Preview"}
                   </h3>
-                  <span className="text-[12px] text-ink-muted">{getCategoryTitle(selectedPublishCat, "fa")}</span>
+                  <span className="text-[12px] text-ink-muted">
+                    {previewIsSquare && previewItemPayload
+                      ? `${previewItemPayload.title} (${previewItemPayload.type})`
+                      : (selectedPublishCat ? getCategoryTitle(selectedPublishCat, "fa") : "")}
+                  </span>
                 </div>
               </div>
 
@@ -4956,12 +5213,17 @@ export function AdminPage() {
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-5 space-y-4 scroll-slim">
-              {/* Graphic Banner Display (16:9 Vertical) */}
+              {/* Graphic Banner Display (16:9 Vertical OR 1:1 Square) */}
               <div>
                 <span className="block text-[12px] font-bold text-ink-muted mb-1.5">
-                  {lang === "fa" ? "تصویر پوستر گرافیکی (16:9 عمودی 1080x1920):" : "Generated Graphic Poster (9:16 Vertical 1080x1920):"}
+                  {previewIsSquare
+                    ? (lang === "fa" ? "تصویر پوستر محتوای جدید (1:1 مربع 1080x1080):" : "Generated 1:1 Square Poster (1080x1080):")
+                    : (lang === "fa" ? "تصویر پوستر جدول رتبه‌بندی (16:9 عمودی 1080x1920):" : "Generated 9:16 Vertical Poster (1080x1920):")}
                 </span>
-                <div className="relative aspect-[9/16] max-h-[560px] w-auto mx-auto overflow-hidden rounded-2xl border border-line bg-[#0d0224] shadow-2xl flex items-center justify-center">
+                <div className={cn(
+                  "relative mx-auto overflow-hidden rounded-2xl border border-line bg-[#5833e6] shadow-2xl flex items-center justify-center",
+                  previewIsSquare ? "aspect-square max-h-[480px] w-auto" : "aspect-[9/16] max-h-[560px] w-auto",
+                )}>
                   {previewBannerImg ? (
                     <img
                       src={previewBannerImg}
@@ -5009,7 +5271,11 @@ export function AdminPage() {
               {previewBannerImg && (
                 <a
                   href={previewBannerImg}
-                  download={`faimess-${selectedPublishCat}-${Date.now()}.png`}
+                  download={
+                    previewIsSquare && previewItemPayload
+                      ? `faimess-${previewItemPayload.type}-${Date.now()}.png`
+                      : `faimess-leaderboard-${selectedPublishCat || "poster"}-${Date.now()}.png`
+                  }
                   className="flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3.5 py-2 text-[12px] font-bold text-ink hover:bg-subtle transition shadow-2xs"
                 >
                   <Icon name="download" size={14} />
@@ -5029,7 +5295,11 @@ export function AdminPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    handleExecutePublish(selectedPublishCat);
+                    if (previewIsSquare && previewItemPayload) {
+                      handleExecuteItemPublish(previewItemPayload);
+                    } else if (selectedPublishCat) {
+                      handleExecutePublish(selectedPublishCat);
+                    }
                     setPublishModalOpen(false);
                   }}
                   className="flex items-center gap-1.5 rounded-xl bg-primary-deep px-4 py-2 text-[12px] font-bold text-white shadow-primary hover:bg-primary-deep/90 transition"

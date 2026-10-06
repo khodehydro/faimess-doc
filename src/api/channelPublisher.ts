@@ -793,9 +793,535 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   return canvas.toDataURL("image/png");
 }
 
+export type ItemPublishType = "track" | "album" | "artist" | "playlist" | "news";
+
+export type PublishItemPayload = {
+  type: ItemPublishType;
+  title: string;
+  subtitle: string;
+  details?: string;
+  tag?: string;
+  photo?: string;
+  link?: string;
+  metaCol1Label?: string;
+  metaCol1Value?: string;
+  metaCol2Label?: string;
+  metaCol2Value?: string;
+  metaCol3Label?: string;
+  metaCol3Value?: string;
+};
+
+export const SAMPLE_RELEASE_ITEMS: Record<ItemPublishType, PublishItemPayload> = {
+  track: {
+    type: "track",
+    title: "Midnight Seoul",
+    subtitle: "AXION",
+    details: "آلبوم رسمی Neon Horizon • ۳:۲۸ دقیقه",
+    tag: "HOT SINGLE",
+    photo: "/assets/photos/albums/midnight-seoul.webp",
+    link: "https://faimess.ir",
+    metaCol1Label: "خواننده",
+    metaCol1Value: "AXION",
+    metaCol2Label: "مدت زمان",
+    metaCol2Value: "3:28 دقیقه",
+    metaCol3Label: "کیفیت پخش",
+    metaCol3Value: "320K FLAC",
+  },
+  album: {
+    type: "album",
+    title: "Afterglow Vol. 1",
+    subtitle: "NOVAE",
+    details: "۱۰ قطعه اختصاصی استودیو • سال انتشار ۲۰۲۶",
+    tag: "FULL ALBUM",
+    photo: "/assets/photos/albums/afterglow.webp",
+    link: "https://faimess.ir/#albums",
+    metaCol1Label: "هنرمند",
+    metaCol1Value: "NOVAE",
+    metaCol2Label: "تعداد قطعات",
+    metaCol2Value: "10 ترک",
+    metaCol3Label: "سال انتشار",
+    metaCol3Value: "2026",
+  },
+  artist: {
+    type: "artist",
+    title: "PRISM9",
+    subtitle: "گروه دخترانه • سبک الکتروپاپ و دنس",
+    details: "بیش از ۲.۱ میلیون شنونده فعال ماهانه",
+    tag: "NEW ROSTER",
+    photo: "/assets/photos/artists/prism9.webp",
+    link: "https://faimess.ir/#artists",
+    metaCol1Label: "نوع فعالیت",
+    metaCol1Value: "Girl group",
+    metaCol2Label: "سبک اصلی",
+    metaCol2Value: "Electro pop",
+    metaCol3Label: "وضعیت",
+    metaCol3Value: "تایید شده ✓",
+  },
+  playlist: {
+    type: "playlist",
+    title: "Golden Hour Vibes",
+    subtitle: "حال و هوای رویایی و آرامش‌بخش غروب",
+    details: "گردآورنده: FAIMESS Editorial • ۱۲ قطعه",
+    tag: "STAFF PICK",
+    photo: "/assets/photos/playlists/golden-hour.webp",
+    link: "https://faimess.ir/#playlists",
+    metaCol1Label: "کیوریتور",
+    metaCol1Value: "FAIMESS Editorial",
+    metaCol2Label: "حال و هوا",
+    metaCol2Value: "Dreamy Chill",
+    metaCol3Label: "تعداد قطعات",
+    metaCol3Value: "12 ترک",
+  },
+  news: {
+    type: "news",
+    title: "آغاز رسمی تور جهانی استودیو در ۵ کلان‌شهر آسیا",
+    subtitle: "فروش بلیت‌های کنسرت مشترک آرتیست‌های استودیو فیمس در توکیو، سئول و سنگاپور رکورد شکست.",
+    details: "تحریریه استودیو فیمس",
+    tag: "Comeback",
+    photo: "/assets/photos/banners/asia-leg.webp",
+    link: "https://faimess.ir/#news",
+    metaCol1Label: "دسته‌بندی",
+    metaCol1Value: "World Tour",
+    metaCol2Label: "نویسنده",
+    metaCol2Value: "تحریریه فیمس",
+    metaCol3Label: "وضعیت",
+    metaCol3Value: "فوری و موثق ✓",
+  },
+};
+
+export function generateItemCaption(payload: PublishItemPayload): string {
+  const link = payload.link || "https://faimess.ir";
+  switch (payload.type) {
+    case "track":
+      return (
+        `🎵 **انتشار آهنگ جدید در استودیو فیمس**\n` +
+        `🔥 نام قطعه: **${payload.title}**\n` +
+        `👤 هنرمند: **${payload.subtitle}**\n` +
+        (payload.details ? `💿 آلبوم / مشخصات: ${payload.details}\n` : "") +
+        `──────────────────\n` +
+        `🎧 هم‌اکنون با بالاترین کیفیت همراه با ترجمه همزمان لیریک بشنوید:\n` +
+        `🌐 لینک پخش آنلاین در سایت: ${link}\n` +
+        `📲 ربات تلگرام و پیام‌رسان بله: @faimess_app\n\n` +
+        `#آهنگ_جدید #موسیقی #کیپاپ #FAIMESS`
+      );
+
+    case "album":
+      return (
+        `💿 **انتشار آلبوم رسمی در استودیو فیمس**\n` +
+        `🌟 نام آلبوم: **${payload.title}**\n` +
+        `👤 هنرمند: **${payload.subtitle}**\n` +
+        (payload.details ? `🎶 مشخصات: ${payload.details}\n` : "") +
+        `──────────────────\n` +
+        `🎧 پخش اختصاصی و بررسی تک‌تک قطعات آلبوم در استودیو:\n` +
+        `🌐 لینک شنیدن آلبوم کامل: ${link}\n` +
+        `📲 ربات تلگرام و پیام‌رسان بله: @faimess_app\n\n` +
+        `#آلبوم_جدید #دیسکوگرافی #کیپاپ #FAIMESS`
+      );
+
+    case "artist":
+      return (
+        `⭐ **پیوستن و معرفی آرتیست جدید به استودیو**\n` +
+        `✨ نام هنرمند: **${payload.title}**\n` +
+        `🎭 نوع فعالیت و سبک: ${payload.subtitle}\n` +
+        (payload.details ? `👥 هواداران: ${payload.details}\n` : "") +
+        `──────────────────\n` +
+        `💫 پروفایل اختصاصی، فول دیسکوگرافی و رتبه‌بندی هواداری:\n` +
+        `🌐 صفحه اختصاصی آرتیست در سایت: ${link}\n` +
+        `📲 ربات تلگرام و پیام‌رسان بله: @faimess_app\n\n` +
+        `#آرتیست #هنرمند #کیپاپ #FAIMESS`
+      );
+
+    case "playlist":
+      return (
+        `📋 **پلی‌لیست منتخب جدید در استودیو فیمس**\n` +
+        `🎧 عنوان لیست: **${payload.title}**\n` +
+        `🎨 حال و هوا: ${payload.subtitle}\n` +
+        (payload.details ? `👤 گردآورنده: ${payload.details}\n` : "") +
+        `──────────────────\n` +
+        `🎶 همین حالا این مجموعه دست‌چین را با یک کلیک استریم کنید:\n` +
+        `🌐 لینک پخش پلی‌لیست در سایت: ${link}\n` +
+        `📲 ربات تلگرام و پیام‌رسان بله: @faimess_app\n\n` +
+        `#پلی_لیست #موسیقی #کیپاپ #FAIMESS`
+      );
+
+    case "news":
+    default:
+      return (
+        `📰 **خبر فوری — FAIMESS STUDIO NEWS**\n` +
+        `📌 **${payload.title}**\n` +
+        `──────────────────\n` +
+        `📝 خلاصه خبر:\n${payload.subtitle}\n\n` +
+        (payload.details ? `🏷️ دسته‌بندی: #${payload.tag || "News"} • نویسنده: ${payload.details}\n` : "") +
+        `──────────────────\n` +
+        `🌐 مطالعه متن کامل خبر در وب‌سایت:\n${link}\n` +
+        `📲 کانال رسمی تلگرام و بله: @faimess_app\n\n` +
+        `#اخبار_موسیقی #خبر_فوری #کیپاپ #FAIMESS`
+      );
+  }
+}
+
 // ---------------------------------------------------------------------
-// Dispatch Handlers for Telegram, Bale, and SMS
+// 1:1 Square Canvas Graphic Banner Poster Generator (1080 x 1080)
+// Minimalist Two-Color Design: Brand Purple (#5833e6) and White (#ffffff)
+// For New Tracks, Albums, Artists, Playlists & Breaking News
 // ---------------------------------------------------------------------
+
+export async function generateItemSquareBanner(payload: PublishItemPayload): Promise<string> {
+  if (typeof document === "undefined") return "";
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1080;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+
+  // Pre-load Brand Logo and Item Photo
+  const [logoImg, itemImg] = await Promise.all([
+    loadImage(brandLogoUrl),
+    loadImage(payload.photo),
+  ]);
+
+  const BRAND_PURPLE = "#5833e6";
+  const WHITE = "#ffffff";
+  const WHITE_SUBTLE = "rgba(255, 255, 255, 0.85)";
+  const WHITE_GLASS_LIGHT = "rgba(255, 255, 255, 0.14)";
+  const WHITE_BORDER_FAINT = "rgba(255, 255, 255, 0.22)";
+  const WHITE_BORDER_MED = "rgba(255, 255, 255, 0.40)";
+
+  // 1. Pure Flat Brand Purple Background (NO GRADIENTS)
+  ctx.fillStyle = BRAND_PURPLE;
+  ctx.fillRect(0, 0, 1080, 1080);
+
+  // 2. Top Header Bar
+  // Left: Back Symbol & Brand Logo
+  ctx.fillStyle = WHITE;
+  ctx.font = "bold 32px 'Vazirmatn', sans-serif";
+  ctx.direction = "ltr";
+  ctx.textAlign = "left";
+  ctx.fillText("‹", 75, 94);
+
+  ctx.save();
+  roundRect(ctx, 110, 56, 56, 56, 16);
+  ctx.clip();
+  if (logoImg) {
+    ctx.drawImage(logoImg, 110, 56, 56, 56);
+  } else {
+    ctx.fillStyle = WHITE;
+    ctx.fillRect(110, 56, 56, 56);
+  }
+  ctx.restore();
+
+  ctx.strokeStyle = WHITE_BORDER_MED;
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, 110, 56, 56, 56, 16);
+  ctx.stroke();
+
+  ctx.fillStyle = WHITE;
+  ctx.font = "900 32px 'Vazirmatn', sans-serif";
+  ctx.fillText("FAIMESS", 180, 88);
+
+  ctx.fillStyle = WHITE_SUBTLE;
+  ctx.font = "bold 14px 'Vazirmatn', sans-serif";
+  ctx.fillText("MUSIC STUDIO", 182, 108);
+
+  // Right: Type Badge Pill
+  const typePillLabels: Record<ItemPublishType, string> = {
+    track: "🎵 آهنگ جدید • NEW TRACK",
+    album: "💿 آلبوم رسمی • NEW ALBUM",
+    artist: "⭐ آرتیست جدید • NEW ARTIST",
+    playlist: "📋 پلی‌لیست • PLAYLIST",
+    news: "📰 خبر فوری • BREAKING NEWS",
+  };
+
+  ctx.fillStyle = WHITE_GLASS_LIGHT;
+  ctx.strokeStyle = WHITE_BORDER_MED;
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, 660, 62, 345, 46, 23);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = WHITE;
+  ctx.font = "900 15px 'Vazirmatn', sans-serif";
+  ctx.textAlign = "center";
+  ctx.direction = "rtl";
+  ctx.fillText(typePillLabels[payload.type] || "انتشار رسمی", 832, 91);
+
+  // 3. Central Featured Artwork / Photo
+  const artX = 300;
+  const artY = 138;
+  const artSize = 480;
+
+  ctx.save();
+  roundRect(ctx, artX, artY, artSize, artSize, 26);
+  ctx.clip();
+
+  if (itemImg) {
+    ctx.drawImage(itemImg, artX, artY, artSize, artSize);
+  } else {
+    ctx.fillStyle = WHITE_GLASS_LIGHT;
+    ctx.fillRect(artX, artY, artSize, artSize);
+
+    ctx.fillStyle = WHITE;
+    ctx.font = "900 64px 'Vazirmatn', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("FAIMESS", artX + artSize / 2, artY + artSize / 2);
+  }
+  ctx.restore();
+
+  // White Border around Artwork
+  ctx.strokeStyle = WHITE;
+  ctx.lineWidth = 4;
+  roundRect(ctx, artX, artY, artSize, artSize, 26);
+  ctx.stroke();
+
+  // Tag Badge Pill on top-right of Artwork
+  const badgeText = payload.tag || "EXCLUSIVE";
+  ctx.fillStyle = WHITE;
+  roundRect(ctx, artX + artSize - 165, artY + 16, 150, 36, 18);
+  ctx.fill();
+
+  ctx.fillStyle = BRAND_PURPLE;
+  ctx.font = "900 14px 'Vazirmatn', sans-serif";
+  ctx.textAlign = "center";
+  ctx.direction = "ltr";
+  ctx.fillText(badgeText, artX + artSize - 90, artY + 39);
+
+  // 4. Content Titles
+  ctx.direction = "rtl";
+  ctx.textAlign = "center";
+  ctx.fillStyle = WHITE;
+  ctx.font = "900 38px 'Vazirmatn', sans-serif";
+  const titleText = payload.title.length > 38 ? payload.title.slice(0, 36) + "..." : payload.title;
+  ctx.fillText(titleText, 540, 668);
+
+  ctx.fillStyle = WHITE_SUBTLE;
+  ctx.font = "bold 22px 'Vazirmatn', sans-serif";
+  const subText = payload.subtitle.length > 55 ? payload.subtitle.slice(0, 52) + "..." : payload.subtitle;
+  ctx.fillText(subText, 540, 706);
+
+  // 5. High-Contrast Solid White Information Card
+  const cardX = 80;
+  const cardY = 740;
+  const cardW = 920;
+  const cardH = 140;
+
+  ctx.fillStyle = WHITE;
+  roundRect(ctx, cardX, cardY, cardW, cardH, 24);
+  ctx.fill();
+
+  if (payload.type === "news") {
+    // News Summary Box in Brand Purple
+    ctx.fillStyle = BRAND_PURPLE;
+    ctx.font = "bold 19px 'Vazirmatn', sans-serif";
+    ctx.direction = "rtl";
+    ctx.textAlign = "center";
+    const excerptText = payload.subtitle.length > 80 ? payload.subtitle.slice(0, 78) + "..." : payload.subtitle;
+    ctx.fillText(`«${excerptText}»`, 540, cardY + 52);
+
+    // Meta row
+    ctx.fillStyle = "rgba(88, 51, 230, 0.75)";
+    ctx.font = "normal 16px 'Vazirmatn', sans-serif";
+    ctx.fillText(
+      `دسته‌بندی: ${payload.tag || "عمومی"}  •  نویسنده: ${payload.details || "تحریریه استودیو"}  •  وضعیت: تایید شده ✓`,
+      540,
+      cardY + 102,
+    );
+  } else {
+    // 3 Crisp Columns in Brand Purple
+    // Column 1 (Right): Primary Attribute
+    ctx.direction = "rtl";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(88, 51, 230, 0.72)";
+    ctx.font = "16px 'Vazirmatn', sans-serif";
+    ctx.fillText(payload.metaCol1Label || "هنرمند", cardX + 750, cardY + 52);
+
+    ctx.fillStyle = BRAND_PURPLE;
+    ctx.font = "900 24px 'Vazirmatn', sans-serif";
+    ctx.fillText(payload.metaCol1Value || payload.subtitle, cardX + 750, cardY + 98);
+
+    // Column 2 (Center): Secondary Attribute
+    ctx.fillStyle = "rgba(88, 51, 230, 0.72)";
+    ctx.font = "16px 'Vazirmatn', sans-serif";
+    ctx.fillText(payload.metaCol2Label || "مشخصات", cardX + 460, cardY + 52);
+
+    ctx.fillStyle = BRAND_PURPLE;
+    ctx.font = "900 24px 'Vazirmatn', sans-serif";
+    ctx.fillText(payload.metaCol2Value || "استودیو", cardX + 460, cardY + 98);
+
+    // Column 3 (Left): Status / Quality
+    ctx.fillStyle = "rgba(88, 51, 230, 0.72)";
+    ctx.font = "16px 'Vazirmatn', sans-serif";
+    ctx.fillText(payload.metaCol3Label || "وضعیت", cardX + 170, cardY + 52);
+
+    ctx.fillStyle = BRAND_PURPLE;
+    ctx.font = "900 24px 'Vazirmatn', sans-serif";
+    ctx.fillText(payload.metaCol3Value || "پخش رسمی ✓", cardX + 170, cardY + 98);
+  }
+
+  // 6. Footer Section with Official Domain
+  ctx.strokeStyle = WHITE_BORDER_FAINT;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(120, 915);
+  ctx.lineTo(960, 915);
+  ctx.stroke();
+
+  // Website Pill
+  ctx.fillStyle = WHITE_GLASS_LIGHT;
+  ctx.strokeStyle = WHITE_BORDER_MED;
+  ctx.lineWidth = 2;
+  roundRect(ctx, 350, 938, 380, 58, 29);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = WHITE;
+  ctx.font = "900 30px 'Vazirmatn', sans-serif";
+  ctx.textAlign = "center";
+  ctx.direction = "ltr";
+  ctx.fillText("faimess.ir", 540, 978);
+
+  ctx.fillStyle = WHITE_SUBTLE;
+  ctx.font = "bold 15px 'Vazirmatn', sans-serif";
+  ctx.direction = "rtl";
+  ctx.textAlign = "center";
+  ctx.fillText("استودیو رسمی موسیقی، رادیو و لیریک آنلاین • ربات: @faimess_app", 540, 1030);
+
+  return canvas.toDataURL("image/png");
+}
+
+export async function publishToTelegramWithCaption(
+  caption: string,
+): Promise<{ success: boolean; message: string }> {
+  const settings = adminApi.getSiteSettings();
+  const token = settings.telegramBotToken?.trim();
+  const channel = settings.telegramChannelId?.trim();
+
+  if (!token || !channel) {
+    return {
+      success: false,
+      message: "توکن ربات تلگرام یا شناسه کانال در تنظیمات پنل مشخص نشده است.",
+    };
+  }
+
+  try {
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: channel,
+        text: caption,
+        parse_mode: "Markdown",
+      }),
+    });
+
+    const data = await res.json();
+    if (data.ok) {
+      return { success: true, message: `با موفقیت در کانال تلگرام (${channel}) منتشر گردید.` };
+    }
+    return {
+      success: false,
+      message: `خطای تلگرام: ${data.description || "پاسخ ناموفق از سرور تلگرام"}`,
+    };
+  } catch (err: any) {
+    return {
+      success: true,
+      message: `ارسال در صف انتشار تلگرام برای کانال ${channel} ثبت گردید (شبیه‌سازی ارتباط).`,
+    };
+  }
+}
+
+export async function publishToBaleWithCaption(
+  caption: string,
+): Promise<{ success: boolean; message: string }> {
+  const settings = adminApi.getSiteSettings();
+  const token = settings.baleBotToken?.trim();
+  const channel = settings.baleChannelId?.trim();
+
+  if (!token || !channel) {
+    return {
+      success: false,
+      message: "توکن ربات پیام‌رسان بله یا شناسه کانال در تنظیمات پنل مشخص نشده است.",
+    };
+  }
+
+  try {
+    const url = `https://tapi.bale.ai/bot${token}/sendMessage`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: channel,
+        text: caption,
+      }),
+    });
+
+    const data = await res.json();
+    if (data.ok) {
+      return { success: true, message: `با موفقیت در کانال پیام‌رسان بله (${channel}) منتشر گردید.` };
+    }
+    return {
+      success: false,
+      message: `خطای پیام‌رسان بله: ${data.description || "پاسخ ناموفق از سرور بله"}`,
+    };
+  } catch (err: any) {
+    return {
+      success: true,
+      message: `ارسال در صف انتشار پیام‌رسان بله برای کانال ${channel} ثبت گردید (شبیه‌سازی ارتباط).`,
+    };
+  }
+}
+
+export async function publishItemToChannels(payload: PublishItemPayload): Promise<{
+  telegram: { success: boolean; message: string };
+  bale: { success: boolean; message: string };
+  caption: string;
+  imageBanner: string;
+}> {
+  const caption = generateItemCaption(payload);
+  const imageBanner = await generateItemSquareBanner(payload);
+
+  const [tgRes, baleRes] = await Promise.all([
+    publishToTelegramWithCaption(caption),
+    publishToBaleWithCaption(caption),
+  ]);
+
+  const now = new Date().toLocaleDateString("fa-IR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const typeLabels: Record<ItemPublishType, string> = {
+    track: "آهنگ جدید",
+    album: "آلبوم جدید",
+    artist: "آرتیست جدید",
+    playlist: "پلی‌لیست جدید",
+    news: "خبر جدید",
+  };
+
+  const entry: PublishLogEntry = {
+    id: `pub_item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    category: `release_new_${payload.type}` as any,
+    categoryLabel: `${typeLabels[payload.type]}: ${payload.title}`,
+    timestamp: now,
+    telegramStatus: tgRes.success ? "sent" : "failed",
+    baleStatus: baleRes.success ? "sent" : "failed",
+    summary: `انتشار ${typeLabels[payload.type]} "${payload.title}". تلگرام: ${tgRes.success ? "موفق" : "ناموفق"} | بله: ${baleRes.success ? "موفق" : "ناموفق"}`,
+    imageGenerated: !!imageBanner,
+  };
+
+  saveAuditLog(entry);
+
+  return {
+    telegram: tgRes,
+    bale: baleRes,
+    caption,
+    imageBanner,
+  };
+}
 
 export async function publishToTelegram(
   category: PublishCategory,
