@@ -12,13 +12,17 @@ import { ContributionsModal } from "./ContributionsModal";
 import { useAuth } from "../app/AuthContext";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { PointsDialog } from "../ui/PointsDialog";
-import { navItems, notifications } from "../data/navigation";
+import { navItems, notifications, type Notification } from "../data/navigation";
 import { allRoutes } from "../app/router";
 import { artists, albums, playlists } from "../data/library";
 import { me } from "../data/account";
 import { cn } from "../lib/cn";
 import { forwardIcon } from "../lib/rtl";
 import { EASE, spring } from "../lib/motion";
+import { usePwaInstall } from "../lib/pwa";
+import { usePlayer } from "../app/PlayerContext";
+import { trackById } from "../data/player";
+import { socialApi } from "../api/socialApi";
 
 /* ------------------------------------------------------------------ *
  *  Card 3 — search + alerts + profile.
@@ -41,8 +45,9 @@ export function AccountCard({
   part?: "all" | "search" | "controls" | "notification" | "profile";
   className?: string;
 } = {}) {
-  const { route, navigate, notify, openDetail } = useApp();
-  const { t, has, dir, dataLabel } = usePreferences();
+  const { route, navigate, notify, openDetail, openNews, openProfile } = useApp();
+  const { play } = usePlayer();
+  const { t, has, dir, dataLabel, lang } = usePreferences();
   const { signOut, signedIn } = useAuth();
   /** the menu is inside a popover that closes on click, so the dialog the
       `Sign out` row asks for has to live here, one level up from the menu */
@@ -57,6 +62,44 @@ export function AccountCard({
   const [contribOpen, setContribOpen] = useState(false);
   const [pointsOpen, setPointsOpen] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [notifList, setNotifList] = useState<Notification[]>(notifications);
+  const unreadCount = notifList.filter((n) => n.unread).length;
+
+  const markAllRead = () => {
+    setNotifList((list) => list.map((n) => ({ ...n, unread: false })));
+  };
+
+  const handleNotificationClick = (n: Notification) => {
+    setBellOpen(false);
+    setNotifList((list) =>
+      list.map((item) => (item.id === n.id ? { ...item, unread: false } : item)),
+    );
+
+    if (n.newsId) {
+      openNews(n.newsId);
+      return;
+    }
+    if (n.trackId) {
+      const tr = trackById(n.trackId);
+      if (tr) play(tr);
+      notify(t(n.textKey, n.vars), n.tone === "flame" ? "primary" : n.tone);
+      return;
+    }
+    if (n.albumId) {
+      openDetail({ kind: "album", id: n.albumId });
+      return;
+    }
+    if (n.playlistId) {
+      openDetail({ kind: "playlist", id: n.playlistId });
+      return;
+    }
+    if (n.points) {
+      setPointsOpen(true);
+      return;
+    }
+
+    notify(t(n.textKey, n.vars), n.tone === "flame" ? "primary" : n.tone);
+  };
   const showSearch = part === "all" || part === "search";
   const showNotifications = part === "all" || part === "controls" || part === "notification";
   const showProfile = part === "all" || part === "controls" || part === "profile";
@@ -106,42 +149,114 @@ export function AccountCard({
   );
 
   const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    const pool = [
+    const rawQ = query.trim().toLowerCase();
+    if (!rawQ) return [];
+    const cleanQ = rawQ.replace(/^@/, "");
+
+    const allUsers = socialApi.getAllSearchableUsers();
+    const matchedUsers = allUsers.filter((u) => {
+      const uSlug = u.username.toLowerCase();
+      const dName = u.displayName.toLowerCase();
+      const hName = u.handle.toLowerCase();
+      return (
+        uSlug.includes(cleanQ) ||
+        dName.includes(cleanQ) ||
+        dName.includes(rawQ) ||
+        hName.includes(rawQ) ||
+        hName.includes(cleanQ)
+      );
+    }).map((u) => ({
+      id: u.username,
+      label: `${u.displayName} (${u.handle})`,
+      labelKey: "",
+      kind: "user" as const,
+      icon: "users" as const,
+      route: undefined,
+      username: u.username,
+    }));
+
+    // If query starts with @, prioritize only users and direct profile navigation
+    if (rawQ.startsWith("@")) {
+      const directAction = {
+        id: `direct_user_${cleanQ}`,
+        label: lang === "fa" ? `مشاهده پروفایل کاربر @${cleanQ}` : `View profile @${cleanQ}`,
+        labelKey: "",
+        kind: "user" as const,
+        icon: "users" as const,
+        route: undefined,
+        username: cleanQ,
+      };
+
+      const hasExactMatch = matchedUsers.some(
+        (u) => u.username.toLowerCase() === cleanQ || u.id.toLowerCase() === cleanQ,
+      );
+
+      return hasExactMatch ? matchedUsers.slice(0, 6) : [directAction, ...matchedUsers].slice(0, 6);
+    }
+
+    const otherPool = [
       ...quick,
+      ...matchedUsers,
       ...artists.map((a) => ({
         id: a.id,
         label: a.name,
         labelKey: "",
-        kind: "artist",
+        kind: "artist" as const,
         icon: "mic" as const,
         route: undefined,
+        username: undefined,
       })),
       ...albums.map((a) => ({
         id: a.id,
         label: a.title,
         labelKey: "",
-        kind: "album",
+        kind: "album" as const,
         icon: "disc" as const,
         route: undefined,
+        username: undefined,
       })),
       ...playlists.map((p) => ({
         id: p.id,
         label: p.name,
         labelKey: "",
-        kind: "playlist",
+        kind: "playlist" as const,
         icon: "music" as const,
         route: undefined,
+        username: undefined,
       })),
     ];
-    return pool.filter((p) => p.label.toLowerCase().includes(q)).slice(0, 5);
-  }, [query, quick]);
+
+    const filtered = otherPool.filter((p) => {
+      if (p.kind === "user") return true; // already matched
+      return p.label.toLowerCase().includes(rawQ);
+    });
+
+    // If no direct matches but user typed a clean username, always offer profile jump
+    if (filtered.length === 0 && cleanQ.length > 0) {
+      return [
+        {
+          id: `direct_user_${cleanQ}`,
+          label: lang === "fa" ? `مشاهده پروفایل کاربر @${cleanQ}` : `View profile @${cleanQ}`,
+          labelKey: "",
+          kind: "user" as const,
+          icon: "users" as const,
+          route: undefined,
+          username: cleanQ,
+        },
+      ];
+    }
+
+    return filtered.slice(0, 6);
+  }, [query, quick, artists, albums, playlists, lang]);
 
   /** a search hit for a playlist / artist / album opens it in the content
-      *  card — only the plain pages still change route */
-  const go = (r: { label: string; route?: string; id?: string; kind?: string }) => {
+   *  card — user opens profile — only plain pages change route */
+  const go = (r: { label: string; route?: string; id?: string; kind?: string; username?: string }) => {
     setSearchOpen(false);
+    if (r.kind === "user" && (r.username || r.id)) {
+      openProfile(r.username || r.id);
+      return;
+    }
     if ((r.kind === "artist" || r.kind === "album" || r.kind === "playlist") && r.id) {
       openDetail({ kind: r.kind, id: r.id });
       return;
@@ -268,7 +383,12 @@ export function AccountCard({
             iconClassName="anim-bell"
             onClick={() => setBellOpen((v) => !v)}
           />
-          <span className="pointer-events-none absolute end-2 top-2 size-2 rounded-full bg-primary ring-2 ring-surface" />
+          {unreadCount > 0 && (
+            <span className="pointer-events-none absolute end-1.5 top-1.5 flex size-2.5 items-center justify-center">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex size-2 rounded-full bg-primary ring-2 ring-surface" />
+            </span>
+          )}
           <AnimatePresence>
             {bellOpen && (
               <motion.div
@@ -277,41 +397,89 @@ export function AccountCard({
                 exit={{ opacity: 0, y: -8, scale: 0.98 }}
                 transition={{ duration: 0.22, ease: EASE }}
                 className={cn(
-                  "absolute top-[calc(100%+12px)] z-40 w-[292px] rounded-panel border border-line bg-surface p-2.5 shadow-float",
+                  "absolute top-[calc(100%+12px)] z-40 w-[310px] sm:w-[340px] rounded-panel border border-line bg-surface p-2.5 shadow-float",
                   part === "notification" ? "left-0" : "end-0",
                 )}
               >
-                <p className="px-2.5 py-1.5 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
-                  {t("account.notifications")}
-                </p>
-                {notifications.map((n, i) => (
-                  <motion.button
-                    key={n.id}
-                    initial={{ opacity: 0, x: 8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.04 * i, duration: 0.3 }}
-                    onClick={() => {
-                      setBellOpen(false);
-                      notify(t(n.textKey, n.vars), n.tone);
-                    }}
-                    className="flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-start transition-colors hover:bg-subtle"
-                  >
-                    <span
-                      className={cn(
-                        "mt-1 size-2 shrink-0 rounded-full",
-                        n.tone === "primary" && "bg-primary",
-                        n.tone === "teal" && "bg-teal",
-                        n.tone === "mint" && "bg-mint",
-                      )}
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[13.5px] font-semibold leading-snug text-ink">
-                        {t(n.textKey, n.vars)}
+                <div className="flex items-center justify-between border-b border-line px-2 pb-2 pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[12px] font-bold uppercase tracking-wider text-ink-faint">
+                      {t("account.notifications")}
+                    </p>
+                    {unreadCount > 0 && (
+                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[12px] font-bold text-primary-deep">
+                        {unreadCount}
                       </span>
-                      <span className="mt-0.5 block text-[12px] text-ink-muted">{dataLabel(n.at)}</span>
-                    </span>
-                  </motion.button>
-                ))}
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {unreadCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={markAllRead}
+                        className="text-[12px] font-semibold text-primary transition-colors hover:text-primary-deep"
+                      >
+                        {t("notif.markAllRead")}
+                      </button>
+                    )}
+                    {notifList.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setNotifList([])}
+                        className="text-[12px] font-semibold text-ink-faint transition-colors hover:text-rose-500"
+                      >
+                        {lang === "fa" ? "پاکسازی" : "Clear"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-1.5 max-h-[380px] overflow-y-auto scroll-slim space-y-1">
+                  {notifList.length === 0 ? (
+                    <div className="py-8 text-center text-[13px] text-ink-muted">
+                      {t("notif.empty")}
+                    </div>
+                  ) : (
+                    notifList.map((n, i) => (
+                      <motion.button
+                        key={n.id}
+                        initial={{ opacity: 0, x: 8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.03 * i, duration: 0.25 }}
+                        onClick={() => handleNotificationClick(n)}
+                        className={cn(
+                          "group flex w-full items-start gap-2.5 rounded-xl p-2.5 text-start transition-colors",
+                          n.unread
+                            ? "bg-primary-soft/30 hover:bg-primary-soft/50"
+                            : "hover:bg-subtle",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-white shadow-xs",
+                            n.tone === "primary" && "bg-primary",
+                            n.tone === "teal" && "bg-teal",
+                            n.tone === "mint" && "bg-mint",
+                            n.tone === "flame" && "bg-flame",
+                          )}
+                        >
+                          <Icon name={n.icon ?? "bell"} size={13} strokeWidth={2.2} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[13px] font-semibold leading-snug text-ink transition-colors group-hover:text-primary">
+                            {t(n.textKey, n.vars)}
+                          </span>
+                          <span className="mt-1 flex items-center justify-between text-[12px] text-ink-muted">
+                            <span>{dataLabel(n.at)}</span>
+                            {n.unread && (
+                              <span className="size-1.5 rounded-full bg-primary" />
+                            )}
+                          </span>
+                        </span>
+                      </motion.button>
+                    ))
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -436,25 +604,56 @@ export function ProfileMenuContent({
   onSignOut: () => void;
 }) {
   const { t, lang, setLang, theme, setTheme, locale, dir, dataLabel } = usePreferences();
-  const { notify } = useApp();
-  const { signedIn, openAccount } = useAuth();
+  const { notify, navigate } = useApp();
+  const { signedIn, isAdmin, openAccount } = useAuth();
   const { points, submissions } = useContributions();
+  const { canInstall, isInstalled, isIOS, isAndroid, isSecure, install } = usePwaInstall();
   const pendingSheets = submissions.filter(
     (s) => s.status === "pending",
   ).length;
 
+  const handlePwa = async () => {
+    onClose();
+    if (isInstalled) {
+      notify(t("pwa.installed"), "primary");
+      return;
+    }
+    if (canInstall) {
+      const ok = await install();
+      if (ok) notify(t("pwa.installedToast"), "mint");
+    } else if (isIOS) {
+      notify(t("pwa.iosGuide"), "primary");
+    } else if (isAndroid) {
+      if (!isSecure) {
+        notify(t("pwa.insecureNotice"), "primary");
+      } else {
+        notify(t("pwa.androidGuide"), "primary");
+      }
+    } else {
+      notify(t("pwa.installPrompt"), "primary");
+    }
+  };
+
   return (
     <div className="w-[252px] rounded-panel border border-line bg-surface p-2.5 shadow-float">
       {signedIn ? (
-        <div className="flex items-center gap-3 px-2.5 py-2.5">
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            navigate("profile");
+          }}
+          className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-start transition-colors hover:bg-subtle"
+        >
           <Avatar src={me.photo} seed={0} size={34} />
-          <span className="min-w-0">
+          <span className="min-w-0 flex-1">
             <span className="block truncate text-[14px] font-bold text-ink">
               {me.name}
             </span>
             <span className="text-[12px] text-ink-muted">{dataLabel(me.tier)}</span>
           </span>
-        </div>
+          <Icon name={forwardIcon(dir)} size={13} className="text-ink-faint" />
+        </button>
       ) : (
         /* the guest header tells the truth about who is looking and offers
            the one thing the menu is for at that point: an account */
@@ -515,6 +714,26 @@ export function ProfileMenuContent({
       </button>
       )}
 
+      {/* admin console link for administrative staff */}
+      {isAdmin && (
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            navigate("admin");
+          }}
+          className="mx-1.5 mb-1.5 flex w-[calc(100%-12px)] items-center justify-between rounded-[13px] border border-primary/30 bg-primary/10 px-3 py-2 text-start transition-colors hover:bg-primary/20"
+        >
+          <div className="flex items-center gap-2">
+            <Icon name="crown" size={14} className="text-primary-deep" />
+            <span className="text-[12px] font-bold text-primary-deep">
+              {t("admin.console")}
+            </span>
+          </div>
+          <Icon name={forwardIcon(dir)} size={12} className="text-primary-deep/70" />
+        </button>
+      )}
+
       {/* preferences — language + appearance, both kept in the browser */}
       <div className="mt-2 rounded-[13px] bg-subtle px-2.5 py-2.5">
         <p className="flex items-center gap-2 px-1 pb-2 text-[12px] font-bold uppercase tracking-wider text-ink-faint">
@@ -570,6 +789,16 @@ export function ProfileMenuContent({
         <p className="px-0.5 pt-1.5 text-[12px] leading-relaxed text-ink-faint">
           {lang === "fa" ? t("pref.persianNote") : t("pref.note")}
         </p>
+
+        {!isInstalled && (
+          <button
+            onClick={handlePwa}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-[10px] bg-primary/10 px-2.5 py-1.5 text-[12px] font-bold text-primary-deep transition-colors hover:bg-primary/20"
+          >
+            <Icon name="bolt" size={13} strokeWidth={2.2} />
+            <span>{t("pwa.installButton")}</span>
+          </button>
+        )}
       </div>
 
       {/* everything below belongs to somebody: your contributions, your
@@ -579,6 +808,11 @@ export function ProfileMenuContent({
         <>
       <span className="my-1.5 block h-px w-full bg-line" />
       {[
+        {
+          labelKey: "account.profile",
+          icon: "users" as const,
+          action: () => navigate("profile"),
+        },
         {
           labelKey: "account.contributions",
           icon: "medal" as const,
@@ -596,7 +830,8 @@ export function ProfileMenuContent({
           key={r.labelKey}
           onClick={() => {
             onClose();
-            if (r.contributions) onContributions();
+            if (r.action) r.action();
+            else if (r.contributions) onContributions();
             else if (r.signOut) onSignOut();
             else notify(t(r.labelKey));
           }}

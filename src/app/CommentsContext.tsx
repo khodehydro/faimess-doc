@@ -164,11 +164,42 @@ export function useTrackComments(trackId: string): CommentsValue {
         }),
 
       remove: (id: string, replyId?: string) =>
-        mapList((list) =>
-          replyId
-            ? list.map((c) => (c.id === id ? { ...c, replies: c.replies.filter((r) => r.id !== replyId) } : c))
-            : list.filter((c) => c.id !== id),
-        ),
+        update(trackId, (s) => {
+          const nextReported = { ...s.reported };
+          if (replyId) {
+            delete nextReported[key(id, replyId)];
+            return {
+              ...s,
+              list: s.list.map((c) =>
+                c.id === id
+                  ? { ...c, replies: c.replies.filter((r) => r.id !== replyId) }
+                  : c,
+              ),
+              reported: nextReported,
+            };
+          }
+
+          // Removing comment and all of its replies
+          for (const k of Object.keys(nextReported)) {
+            if (k === id || k.startsWith(`${id}:`) || k.endsWith(`:${id}`)) {
+              delete nextReported[k];
+            }
+          }
+
+          const isTopLevel = s.list.some((c) => c.id === id);
+          const nextList = isTopLevel
+            ? s.list.filter((c) => c.id !== id)
+            : s.list.map((c) => ({
+                ...c,
+                replies: c.replies.filter((r) => r.id !== id),
+              }));
+
+          return {
+            ...s,
+            list: nextList,
+            reported: nextReported,
+          };
+        }),
 
       reportOf: (id: string, replyId?: string) => state.reported[key(id, replyId)] ?? null,
     }),

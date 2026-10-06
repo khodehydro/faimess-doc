@@ -1,4 +1,5 @@
 import { usePreferences } from "../app/PreferencesContext";
+import { useApp } from "../app/AppContext";
 import { fanLines, fanPoints, listenedHours, type FanActivity } from "../data/points";
 import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
@@ -34,7 +35,8 @@ export function PointsDialog({
   onClose: () => void;
   subject: PointsSubject | null;
 }) {
-  const { t, locale } = usePreferences();
+  const { t, locale, lang } = usePreferences();
+  const { openProfile } = useApp();
 
   if (!subject) return null;
 
@@ -135,6 +137,20 @@ export function PointsDialog({
         <span className="text-[15px] font-extrabold tabular-nums text-primary-deep">
           {t("account.points", { n: n(total) })}
         </span>
+      </div>
+
+      <div className="mt-3.5 flex items-center justify-end">
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            openProfile(subject.handle.replace(/^@/, ""));
+          }}
+          className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
+        >
+          <Icon name="users" size={14} />
+          <span>{lang === "fa" ? "مشاهده پروفایل کاربر" : "View User Profile"}</span>
+        </button>
       </div>
 
       {subject.note && (

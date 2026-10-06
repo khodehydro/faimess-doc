@@ -37,6 +37,8 @@ export type QueueSource = {
   trackIds: string[];
 };
 
+export type RepeatMode = "off" | "all" | "one";
+
 type PlayerValue = {
   track: PlayerTrack | null;
   playing: boolean;
@@ -52,6 +54,7 @@ type PlayerValue = {
   liked: string[];
   /** true once a real <audio> element is driving the card */
   realAudio: boolean;
+  repeat: RepeatMode;
   play: (track: PlayerTrack, from?: QueueSource) => void;
   toggle: () => void;
   next: () => void;
@@ -59,6 +62,7 @@ type PlayerValue = {
   seek: (seconds: number) => void;
   stop: () => void;
   toggleLike: (id: string) => void;
+  toggleRepeat: () => void;
 };
 
 const PlayerContext = createContext<PlayerValue | null>(null);
@@ -94,8 +98,22 @@ export function PlayerProvider({
   /* which list the current run belongs to — see QueueSource above */
   const [source, setSource] = useState<QueueSource>(PAGE_SOURCE);
   const [realAudio, setRealAudio] = useState(false);
+  const [repeat, setRepeat] = useState<RepeatMode>("off");
   /* the element's own duration, once metadata is in */
   const [mediaDuration, setMediaDuration] = useState(0);
+
+  const repeatRef = useRef<RepeatMode>("off");
+  useEffect(() => {
+    repeatRef.current = repeat;
+  }, [repeat]);
+
+  const toggleRepeat = useCallback(() => {
+    setRepeat((curr) => {
+      if (curr === "off") return "all";
+      if (curr === "all") return "one";
+      return "off";
+    });
+  }, []);
 
   /* the queue the player owns right now, in the order it will play */
   const queue = useMemo<PlayerTrack[]>(() => {
@@ -147,7 +165,35 @@ export function PlayerProvider({
     setPlaying(true);
   }, []);
 
-  advance.current = step;
+  const handleEnded = useCallback(() => {
+    if (repeatRef.current === "one") {
+      const element = audio.current;
+      if (element) {
+        try {
+          element.currentTime = 0;
+        } catch {
+          // ignore
+        }
+        void element.play().catch(() => setPlaying(false));
+      }
+      setPosition(0);
+      setPlaying(true);
+      return;
+    }
+    const list = activeQueue.current;
+    const from = current.current;
+    const found = from ? list.findIndex((t) => t.id === from.id) : -1;
+    const index = found < 0 ? 0 : found;
+    const isLast = index >= list.length - 1;
+
+    if (repeatRef.current === "off" && isLast) {
+      setPlaying(false);
+      return;
+    }
+    step(1);
+  }, [step]);
+
+  advance.current = handleEnded;
 
   /* build the audio element once we are in a browser */
   useEffect(() => {
@@ -298,8 +344,8 @@ export function PlayerProvider({
   useEffect(() => {
     if (realAudio || !playing || !track || position < track.seconds || rolled.current) return;
     rolled.current = true;
-    step(1);
-  }, [realAudio, position, playing, track, step]);
+    handleEnded();
+  }, [realAudio, position, playing, track, handleEnded]);
 
   const queueIndex = track ? queue.findIndex((t) => t.id === track.id) : -1;
 
@@ -314,6 +360,7 @@ export function PlayerProvider({
       queueIndex,
       liked,
       realAudio,
+      repeat,
       play,
       toggle,
       next,
@@ -321,6 +368,7 @@ export function PlayerProvider({
       seek,
       stop,
       toggleLike,
+      toggleRepeat,
     }),
     [
       track,
@@ -331,6 +379,7 @@ export function PlayerProvider({
       queueIndex,
       liked,
       realAudio,
+      repeat,
       play,
       toggle,
       next,
@@ -338,6 +387,7 @@ export function PlayerProvider({
       seek,
       stop,
       toggleLike,
+      toggleRepeat,
     ],
   );
 

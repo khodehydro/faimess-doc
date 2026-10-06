@@ -89,7 +89,7 @@ export function FeedSection() {
     [compact],
   );
   const [active, setActive] = useState(shelves[0].id);
-  const [stripHeight, setStripHeight] = useState(CHIP_STRIP_HEIGHT);
+  const [stripHeight, setStripHeight] = useState(() => (compact ? 0 : CHIP_STRIP_HEIGHT));
   /**
    * While a chip's smooth scroll is running the scroll listener keeps
    * recomputing which shelf is "at the line" — and until the animation
@@ -102,6 +102,10 @@ export function FeedSection() {
   /* the strip is measured, not guessed: its height is what every shelf
      header sticks under, and the two must agree to the pixel */
   useEffect(() => {
+    if (compact) {
+      setStripHeight(0);
+      return;
+    }
     const node = stripRef.current;
     if (!node) return;
     const measure = () => setStripHeight(Math.round(node.getBoundingClientRect().height));
@@ -109,7 +113,7 @@ export function FeedSection() {
     const observer = new ResizeObserver(measure);
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [compact]);
 
   /* track which shelf is under the strip, whichever ancestor scrolls */
   useEffect(() => {

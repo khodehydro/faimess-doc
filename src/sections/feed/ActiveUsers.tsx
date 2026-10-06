@@ -11,6 +11,7 @@ import { PointsDialog, type PointsSubject } from "../../ui/PointsDialog";
 import { cn } from "../../lib/cn";
 import { spring } from "../../lib/motion";
 import { usePreferences } from "../../app/PreferencesContext";
+import { useApp } from "../../app/AppContext";
 
 /* ------------------------------------------------------------------ *
  *  Shelf 6 — the most active listeners: circular profile, level and the
@@ -20,6 +21,7 @@ import { usePreferences } from "../../app/PreferencesContext";
 
 export function ActiveUsers() {
   const { t, num } = usePreferences();
+  const { openProfile } = useApp();
   /** the listener whose points breakdown is open */
   const [subject, setSubject] = useState<PointsSubject | null>(null);
   /** the five columns, side by side */
@@ -60,17 +62,17 @@ export function ActiveUsers() {
               animate={{ opacity: 1, y: 0, transition: { duration: 0.45, delay: i * 0.04 } }}
               whileHover={{ y: -4 }}
               transition={spring}
-              onClick={() => inspect(user)}
+              onClick={() => openProfile(user.handle.replace(/^@/, ""))}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  inspect(user);
+                  openProfile(user.handle.replace(/^@/, ""));
                 }
               }}
               role="button"
               tabIndex={0}
-              title={t("points.open")}
-              aria-label={`${user.name} ${user.handle} — ${t("points.open")}`}
+              title={`${user.name} (${user.handle})`}
+              aria-label={`${user.name} ${user.handle}`}
               className={cn(
                 /* the card is written physically (`dir="ltr"`): a logical
                    `top-2` inset on the ribbon landed on the *other* physical
@@ -117,7 +119,23 @@ export function ActiveUsers() {
               </span>
 
               <span className="flex flex-col items-center gap-1.5">
-                <span className="flex items-center gap-1.5 rounded-full bg-flame-soft px-2 py-0.5 text-[12.5px] font-extrabold tabular-nums text-flame-deep lg:px-2.5 lg:py-1 lg:text-[13.5px]">
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    inspect(user);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      inspect(user);
+                    }
+                  }}
+                  className="flex items-center gap-1.5 rounded-full bg-flame-soft px-2 py-0.5 text-[12.5px] font-extrabold tabular-nums text-flame-deep transition hover:scale-105 lg:px-2.5 lg:py-1 lg:text-[13.5px]"
+                  title={t("points.open")}
+                >
                   <Icon name="flame" size={12.5} strokeWidth={2} />
                   {num(fanPoints(user.activity))}
                 </span>

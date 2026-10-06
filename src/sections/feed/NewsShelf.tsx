@@ -24,7 +24,7 @@ const TAG_TONE: Record<string, string> = {
 
 export function NewsShelf() {
   const { t, dir, dataLabel, text } = usePreferences();
-  const { navigate, notify } = useApp();
+  const { navigate, notify, openNews } = useApp();
 
   return (
     <Shelf
@@ -46,11 +46,11 @@ export function NewsShelf() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: i * 0.05 }}
             whileHover={{ y: -3 }}
-            onClick={() => navigate("news")}
+            onClick={() => openNews(item.id)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                navigate("news");
+                openNews(item.id);
               }
             }}
             role="button"

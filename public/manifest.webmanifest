@@ -10,9 +10,33 @@
   "background_color": "#8267f0",
   "theme_color": "#8267f0",
   "lang": "en",
+  "categories": ["music", "entertainment"],
   "icons": [
     { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Home",
+      "short_name": "Home",
+      "description": "Open home feed",
+      "url": "./#/home",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Artists",
+      "short_name": "Artists",
+      "description": "Browse artists",
+      "url": "./#/artists",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Playlists",
+      "short_name": "Playlists",
+      "description": "Your playlists and collections",
+      "url": "./#/playlists",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

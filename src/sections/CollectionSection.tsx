@@ -159,7 +159,7 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
         <span className="min-w-0 flex-1">
           <span className="font-display block truncate text-[13.5px] font-bold text-ink lg:text-[15.5px]">{artist.name}</span>
           <Meta icon="headphones" iconSize={11} className="text-[12px] lg:text-[12.5px]">
-            {dataLabel(artist.listeners)}
+            {dataLabel(artist.followers)} · {dataLabel(artist.listeners)}
           </Meta>
         </span>
         <span onClick={(e) => e.stopPropagation()} className="shrink-0 self-start">
@@ -170,10 +170,12 @@ function ArtistCard({ artist }: { artist: (typeof artists)[number] }) {
             /* following is kept in an account, so it is one of the actions
                that asks for one — the tap itself waits behind the door */
             requireAccount(following ? "gate.unfollow" : "gate.follow", () => {
-              setFollowing((v) => !v);
+              const next = !following;
+              artist.following = next;
+              setFollowing(next);
               notify(
-                t(following ? "toast.unfollowed" : "toast.following", { name: artist.name }),
-                following ? "primary" : "mint",
+                t(next ? "toast.following" : "toast.unfollowed", { name: artist.name }),
+                next ? "mint" : "primary",
               );
             })
           }

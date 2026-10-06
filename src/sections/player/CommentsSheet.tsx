@@ -13,6 +13,8 @@ import { CommentComposer, ReplyComposer } from "./CommentComposer";
 import { EASE, spring } from "../../lib/motion";
 import { cn } from "../../lib/cn";
 import { dirSign } from "../../lib/rtl";
+import { useAuth } from "../../app/AuthContext";
+import { ConfirmDialog } from "../../ui/ConfirmDialog";
 
 /* ------------------------------------------------------------------ *
  *  The full thread, in a modal above the app: sorting, replies, fires,
@@ -212,10 +214,12 @@ function CommentRow({
 }) {
   const { t, dataLabel } = usePreferences();
   const { notify } = useApp();
+  const { isAdmin } = useAuth();
   const comments = useTrackComments(trackId);
   const [menuOpen, setMenuOpen] = useState(false);
   const [replyOpen, setReplyOpen] = useState(false);
   const [showReplies, setShowReplies] = useState(true);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useClickOutside([menuRef], () => setMenuOpen(false), menuOpen);
@@ -240,6 +244,36 @@ function CommentRow({
         >
           {t("comments.undo")}
         </button>
+        {isAdmin && (
+          <button
+            onClick={() => {
+              if (comment.replies.length > 0) {
+                setDeleteConfirmOpen(true);
+              } else {
+                comments.remove(comment.id);
+                notify(t("comments.deletedToast"), "teal");
+              }
+            }}
+            className="ms-2 shrink-0 text-[12px] font-bold text-flame transition-colors hover:underline"
+          >
+            {t("comments.delete")}
+          </button>
+        )}
+        <ConfirmDialog
+          open={deleteConfirmOpen}
+          onClose={() => setDeleteConfirmOpen(false)}
+          onConfirm={() => {
+            setDeleteConfirmOpen(false);
+            comments.remove(comment.id);
+            notify(t("comments.deletedWithRepliesToast"), "teal");
+          }}
+          title={t("comments.deleteConfirmTitle")}
+          body={t("comments.deleteConfirmDesc", { n: comment.replies.length })}
+          confirmKey="comments.delete"
+          cancelKey="comments.cancel"
+          icon="close"
+          tone="flame"
+        />
       </div>
     );
   }
@@ -357,15 +391,19 @@ function CommentRow({
                         onReport({ id: comment.id, handle: comment.handle, text: comment.text });
                       }}
                     />
-                    {comment.mine && (
+                    {(comment.mine || isAdmin) && (
                       <MenuItem
                         icon="close"
-                        label={t("comments.delete")}
+                        label={isAdmin && !comment.mine ? t("comments.deleteAsAdmin") : t("comments.delete")}
                         tone="flame"
                         onClick={() => {
                           setMenuOpen(false);
-                          comments.remove(comment.id);
-                          notify(t("comments.deletedToast"), "teal");
+                          if (comment.replies.length > 0) {
+                            setDeleteConfirmOpen(true);
+                          } else {
+                            comments.remove(comment.id);
+                            notify(t("comments.deletedToast"), "teal");
+                          }
                         }}
                       />
                     )}
@@ -414,6 +452,7 @@ function CommentRow({
                     <ReplyRow
                       key={reply.id}
                       trackId={trackId}
+                      commentId={comment.id}
                       reply={reply}
                       onReport={onReport}
                     />
@@ -422,6 +461,22 @@ function CommentRow({
               </motion.div>
             )}
           </AnimatePresence>
+
+          <ConfirmDialog
+            open={deleteConfirmOpen}
+            onClose={() => setDeleteConfirmOpen(false)}
+            onConfirm={() => {
+              setDeleteConfirmOpen(false);
+              comments.remove(comment.id);
+              notify(t("comments.deletedWithRepliesToast"), "teal");
+            }}
+            title={t("comments.deleteConfirmTitle")}
+            body={t("comments.deleteConfirmDesc", { n: comment.replies.length })}
+            confirmKey="comments.delete"
+            cancelKey="comments.cancel"
+            icon="close"
+            tone="flame"
+          />
         </div>
       </header>
     </article>
@@ -430,25 +485,41 @@ function CommentRow({
 
 function ReplyRow({
   trackId,
+  commentId,
   reply,
   onReport,
 }: {
   trackId: string;
+  commentId: string;
   reply: Comment;
   onReport: (target: Target) => void;
 }) {
   const { t, dataLabel } = usePreferences();
   const { notify } = useApp();
+  const { isAdmin } = useAuth();
   const comments = useTrackComments(trackId);
   const reported = comments.reportOf(reply.id, reply.id);
 
   if (reported) {
     return (
-      <p className="text-[12px] text-ink-faint">
-        {t("comments.hidden")} <span className="font-bold">{t(`report.label.${reported}`)}</span>.{" "}
+      <p className="flex items-center gap-2 text-[12px] text-ink-faint">
+        <span>
+          {t("comments.hidden")} <span className="font-bold">{t(`report.label.${reported}`)}</span>.{" "}
+        </span>
         <button onClick={() => comments.undoReport(reply.id, reply.id)} className="font-bold text-primary-deep">
           {t("comments.undo")}
         </button>
+        {isAdmin && (
+          <button
+            onClick={() => {
+              comments.remove(commentId, reply.id);
+              notify(t("comments.deletedToast"), "teal");
+            }}
+            className="ms-2 font-bold text-flame transition-colors hover:underline"
+          >
+            {t("comments.delete")}
+          </button>
+        )}
       </p>
     );
   }
@@ -492,6 +563,17 @@ function ReplyRow({
           >
             {t("comments.report")}
           </button>
+          {(reply.mine || isAdmin) && (
+            <button
+              onClick={() => {
+                comments.remove(commentId, reply.id);
+                notify(t("comments.deletedToast"), "teal");
+              }}
+              className="rounded-full px-2.5 py-0.5 text-[12px] font-bold text-ink-faint transition-colors hover:text-flame"
+            >
+              {t("comments.delete")}
+            </button>
+          )}
         </div>
       </div>
     </div>
