@@ -81,6 +81,7 @@ export type UserProfileData = {
   displayName: string;
   bio: string;
   avatar: string;
+  banner?: string;
   favoriteGenre: string;
   joinedAt: string;
   points: number;
@@ -93,6 +94,7 @@ export type UserProfile = {
   handle: string;
   bio: string;
   avatar: string;
+  banner?: string;
   favoriteGenre: string;
   joinedAt: string;
   points: number;
@@ -572,6 +574,7 @@ export const socialApi = {
       handle: `@${raw.username}`,
       bio: raw.bio,
       avatar: raw.avatar,
+      banner: raw.banner,
       favoriteGenre: raw.favoriteGenre,
       joinedAt: raw.joinedAt,
       points: raw.points,
@@ -588,12 +591,14 @@ export const socialApi = {
     bio?: string;
     favoriteGenre?: string;
     avatar?: string;
+    banner?: string;
   }): UserProfile {
     if (updates.name) socialState.profile.displayName = updates.name;
     if (updates.handle) socialState.profile.username = updates.handle.replace(/^@/, "");
     if (updates.bio !== undefined) socialState.profile.bio = updates.bio;
     if (updates.favoriteGenre !== undefined) socialState.profile.favoriteGenre = updates.favoriteGenre;
     if (updates.avatar !== undefined) socialState.profile.avatar = updates.avatar;
+    if (updates.banner !== undefined) socialState.profile.banner = updates.banner;
 
     // Also synchronize with adminApi user list if existing
     const existing = adminApi.getUser(socialState.profile.username);
@@ -607,6 +612,15 @@ export const socialApi = {
 
     notifySocialChanges();
     return this.getProfile();
+  },
+
+  reportUser(report: {
+    targetUsername: string;
+    reason: string;
+    details?: string;
+  }): boolean {
+    adminApi.reportUser(report.targetUsername, report.reason, report.details);
+    return true;
   },
 
   getUserPlaylists(username?: string): PublicUserPlaylist[] {

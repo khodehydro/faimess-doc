@@ -1858,4 +1858,9 @@ export const adminApi = {
     }
     notifyChanges();
   },
+
+  reportUser(targetUsername: string, reason: string, details?: string) {
+    logActivity("user", "Reported User", "user", targetUsername, `Reason: ${reason}${details ? ` - ${details}` : ""}`);
+    notifyChanges();
+  },
 };
