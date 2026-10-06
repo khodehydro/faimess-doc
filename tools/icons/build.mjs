@@ -105,6 +105,7 @@ const MAP = {
   globe: "globe",
   shop: "shop-light", // the storefront, drawn as a stroke like every other menu icon
   flag: "flag",
+  gallery: "img-box-light",
 };
 
 /** Bodies keep the pack's own stroke width; the pack's default (2 on the

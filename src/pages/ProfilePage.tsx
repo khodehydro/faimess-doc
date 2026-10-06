@@ -500,10 +500,10 @@ export function ProfilePage() {
     if (profile.points < POINTS_FOR_CUSTOM_AVATAR) {
       notify(
         lang === "fa"
-          ? `برای آپلود عکس دلخواه از گالری، حداقل به ${POINTS_FOR_CUSTOM_AVATAR} امتیاز نیاز دارید`
+          ? `آپلود از گالری نیازمند ${POINTS_FOR_CUSTOM_AVATAR} امتیاز است`
           : lang === "ko"
-            ? `갤러리 아바타 업로드는 ${POINTS_FOR_CUSTOM_AVATAR}P에 해금됩니다`
-            : `Custom avatar unlocks at ${POINTS_FOR_CUSTOM_AVATAR} points`,
+            ? `갤러리 선택은 ${POINTS_FOR_CUSTOM_AVATAR}P 필요`
+            : `Gallery requires ${POINTS_FOR_CUSTOM_AVATAR} points`,
         "primary",
       );
       return;
@@ -514,10 +514,10 @@ export function ProfilePage() {
         setEditAvatar(compressedDataUrl);
         notify(
           lang === "fa"
-            ? "تصویر با موفقیت فشرده و آماده شد"
+            ? "تصویر انتخاب شد"
             : lang === "ko"
-              ? "이미지가 성공적으로 압축되었습니다"
-              : "Image compressed successfully",
+              ? "이미지 선택 완료"
+              : "Image selected",
           "mint",
         );
       },
@@ -526,9 +526,9 @@ export function ProfilePage() {
       () => {
         notify(
           lang === "fa"
-            ? "خطا در پردازش تصویر گالری"
+            ? "خطا در پردازش تصویر"
             : lang === "ko"
-              ? "이미지 처리 실패"
+              ? "이미지 오류"
               : "Failed to process image",
           "primary",
         );
@@ -540,10 +540,10 @@ export function ProfilePage() {
     if (profile.points < POINTS_FOR_CUSTOM_BANNER) {
       notify(
         lang === "fa"
-          ? `برای آپلود بنر دلخواه از گالری، حداقل به ${POINTS_FOR_CUSTOM_BANNER} امتیاز نیاز دارید`
+          ? `آپلود از گالری نیازمند ${POINTS_FOR_CUSTOM_BANNER} امتیاز است`
           : lang === "ko"
-            ? `갤러리 배너 업로드는 ${POINTS_FOR_CUSTOM_BANNER}P에 해금됩니다`
-            : `Custom banner unlocks at ${POINTS_FOR_CUSTOM_BANNER} points`,
+            ? `갤러리 선택은 ${POINTS_FOR_CUSTOM_BANNER}P 필요`
+            : `Gallery requires ${POINTS_FOR_CUSTOM_BANNER} points`,
         "primary",
       );
       return;
@@ -554,10 +554,10 @@ export function ProfilePage() {
         setEditBanner(compressedDataUrl);
         notify(
           lang === "fa"
-            ? "بنر با کیفیت بهینه فشرده شد"
+            ? "بنر انتخاب شد"
             : lang === "ko"
-              ? "배너가 성공적으로 압축되었습니다"
-              : "Banner compressed successfully",
+              ? "배너 선택 완료"
+              : "Banner selected",
           "mint",
         );
       },
@@ -566,9 +566,9 @@ export function ProfilePage() {
       () => {
         notify(
           lang === "fa"
-            ? "خطا در پردازش بنر گالری"
+            ? "خطا در پردازش بنر"
             : lang === "ko"
-              ? "배너 처리 실패"
+              ? "배너 오류"
               : "Failed to process banner",
           "primary",
         );
@@ -773,7 +773,7 @@ export function ProfilePage() {
                     className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-[12px] sm:text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
                   >
                     <Icon name="plus" size={13} strokeWidth={2.4} />
-                    <span>{lang === "fa" ? "درخواست آهنگ" : lang === "ko" ? "곡 요청" : "Request Track"}</span>
+                    <span>{lang === "fa" ? "درخواست آهنگ" : lang === "ko" ? "곡 요청" : "Request"}</span>
                   </button>
                 </>
               ) : (
@@ -791,7 +791,7 @@ export function ProfilePage() {
                     <Icon name={isFollowing ? "check" : "plus"} size={13} strokeWidth={2.4} />
                     <span>
                       {isFollowing
-                        ? lang === "fa" ? "دنبال می‌کنید" : lang === "ko" ? "팔로잉" : "Following"
+                        ? lang === "fa" ? "دنبال‌شده" : lang === "ko" ? "팔로잉" : "Following"
                         : lang === "fa" ? "دنبال کردن" : lang === "ko" ? "팔로우" : "Follow"}
                     </span>
                   </button>
@@ -840,10 +840,10 @@ export function ProfilePage() {
           <p className="mt-2.5 text-[13px] leading-relaxed text-ink-body break-words">
             {profile.bio ||
               (lang === "fa"
-                ? "همراه استودیو موسیقی فیمس و علاقه‌مند به کی‌پاپ."
+                ? "علاقه‌مند به موسیقی و کی‌پاپ."
                 : lang === "ko"
-                  ? "케이팝과 음악을 사랑하는 페이메스 리스너입니다."
-                  : "K-Pop music enthusiast on FAIMESS.")}
+                  ? "음악과 K-pop을 사랑합니다."
+                  : "Music & K-Pop enthusiast.")}
           </p>
 
           {/* Social Stats Strip (4-Column) */}
@@ -1084,17 +1084,17 @@ export function ProfilePage() {
                   <div>
                     <h3 className="text-[13.5px] sm:text-[14px] font-black text-ink">
                       {lang === "fa"
-                        ? "دعوت از دوستان و دریافت ۳ امتیاز"
+                        ? "دعوت از دوستان"
                         : lang === "ko"
-                          ? "친구 초대하고 3포인트 받기"
-                          : "Invite Friends & Earn 3 Points"}
+                          ? "친구 초대"
+                          : "Invite Friends"}
                     </h3>
                     <p className="text-[12px] font-bold text-ink-muted">
                       {lang === "fa"
-                        ? `کد اختصاصی: ${referralSummary.inviteCode} · تاکنون ${referralSummary.invitedCount} دوست عضو شده‌اند`
+                        ? `کد: ${referralSummary.inviteCode} · ${referralSummary.invitedCount} عضویت`
                         : lang === "ko"
-                          ? `전용 코드: ${referralSummary.inviteCode} · 현재까지 ${referralSummary.invitedCount}명 가입`
-                          : `Code: ${referralSummary.inviteCode} · ${referralSummary.invitedCount} friends joined`}
+                          ? `코드: ${referralSummary.inviteCode} · ${referralSummary.invitedCount}명`
+                          : `Code: ${referralSummary.inviteCode} · ${referralSummary.invitedCount} joined`}
                     </p>
                   </div>
                 </div>
@@ -1106,7 +1106,7 @@ export function ProfilePage() {
                     className="flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 text-[12px] font-bold text-white shadow-xs transition hover:bg-primary-deep"
                   >
                     <Icon name="copy" size={13} />
-                    <span>{lang === "fa" ? "کپی کد" : lang === "ko" ? "코드 복사" : "Copy"}</span>
+                    <span>{lang === "fa" ? "کپی" : lang === "ko" ? "복사" : "Copy"}</span>
                   </button>
 
                   <button
@@ -1123,7 +1123,7 @@ export function ProfilePage() {
                     onClick={() => setActiveTab("invites")}
                     className="flex items-center gap-1 rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] font-bold text-primary transition hover:bg-subtle"
                   >
-                    <span>{lang === "fa" ? "لیست دوستان" : lang === "ko" ? "친구 목록" : "List"}</span>
+                    <span>{lang === "fa" ? "لیست" : lang === "ko" ? "목록" : "List"}</span>
                     <Icon name="arrowUpRight" size={12} />
                   </button>
                 </div>
@@ -1196,37 +1196,37 @@ export function ProfilePage() {
               {[
                 {
                   id: "act-1",
-                  titleFa: "ثبت دیدگاه روی آهنگ",
+                  titleFa: "ثبت دیدگاه",
                   titleKo: "댓글 작성",
-                  titleEn: "Commented on track",
+                  titleEn: "Posted comment",
                   points: "+2",
                   time: "2h ago",
                   icon: "message" as const,
                 },
                 {
                   id: "act-2",
-                  titleFa: "دریافت لایک برای نظر",
+                  titleFa: "لایک دیدگاه",
                   titleKo: "좋아요 획득",
-                  titleEn: "Received comment like",
+                  titleEn: "Comment liked",
                   points: "+1",
                   time: "5h ago",
                   icon: "heart" as const,
                 },
                 {
                   id: "act-3",
-                  titleFa: "ارسال و تایید لیریک آهنگ",
-                  titleKo: "가사 기여 승인",
-                  titleEn: "Lyrics submission approved",
+                  titleFa: "تایید لیریک",
+                  titleKo: "가사 승인",
+                  titleEn: "Lyrics approved",
                   points: "+50",
                   time: "1d ago",
                   icon: "waveform" as const,
                 },
                 {
                   id: "act-4",
-                  titleFa: "دعوت موفق دوست به فیمس",
-                  titleKo: "친구 초대 완료",
-                  titleEn: "Invited friend to FAIMESS",
-                  points: "+20",
+                  titleFa: "دعوت دوست",
+                  titleKo: "친구 초대",
+                  titleEn: "Friend invited",
+                  points: "+3",
                   time: "3d ago",
                   icon: "users" as const,
                 },
@@ -1327,7 +1327,7 @@ export function ProfilePage() {
               <div className="flex items-center gap-2">
                 <Icon name="medal" size={17} className="text-primary" />
                 <h2 className="font-extrabold text-[15px] text-ink">
-                  {lang === "fa" ? "تالار ۱۰۰ نشان افتخار" : lang === "ko" ? "100개 명예의 전당 배지" : "100 Honors Badges"}
+                  {lang === "fa" ? "نشان‌های افتخار" : lang === "ko" ? "명예 배지" : "Honors Badges"}
                 </h2>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[12px] font-extrabold text-primary-deep">
                   {unlockedCount} / 100
@@ -1335,10 +1335,10 @@ export function ProfilePage() {
               </div>
               <p className="mt-0.5 text-[12px] text-ink-muted">
                 {lang === "fa"
-                  ? "نشان‌های سه‌بعدی و جوایز فعالیت در استودیو فیمس"
+                  ? "جوایز فعالیت و وفاداری در استودیو"
                   : lang === "ko"
-                    ? "FAIMESS 활동으로 획득하는 3D 배지 컬렉션"
-                    : "3D clay collector badges earned through platform activity"}
+                    ? "활동 및 기여도 보상 배지"
+                    : "Earned badges for studio activities"}
               </p>
             </div>
 
@@ -1349,7 +1349,7 @@ export function ProfilePage() {
                 type="text"
                 value={badgeSearch}
                 onChange={(e) => setBadgeSearch(e.target.value)}
-                placeholder={lang === "fa" ? "جستجوی نشان..." : lang === "ko" ? "배지 검색..." : "Search badges..."}
+                placeholder={lang === "fa" ? "جستجو..." : lang === "ko" ? "검색..." : "Search..."}
                 className="w-full rounded-xl border border-line bg-surface ps-9 pe-3 py-1.5 text-[12px] text-ink outline-none focus:border-primary"
               />
             </div>
@@ -1448,25 +1448,25 @@ export function ProfilePage() {
         <div className="flex w-full shrink-0 flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
             <div>
-              <h2 className="font-extrabold text-[15px] text-ink">
-                {lang === "fa" ? "درخواست‌های آهنگ من" : lang === "ko" ? "내 곡 요청" : "My Track Requests"}
+              <h2 className="font-extrabold text-[14px] sm:text-[15px] text-ink">
+                {lang === "fa" ? "درخواست‌های من" : lang === "ko" ? "내 요청" : "My Requests"}
               </h2>
               <p className="mt-0.5 text-[12px] text-ink-muted">
                 {lang === "fa"
-                  ? "پیگیری وضعیت افزودن آهنگ‌ها و لیریک‌های درخواستی شما"
+                  ? "پیگیری آهنگ‌ها و لیریک‌های درخواستی"
                   : lang === "ko"
-                    ? "요청한 곡 및 가사 처리 상태"
-                    : "Track the status of your submitted song and lyric requests"}
+                    ? "신청 곡 및 가사 처리 현황"
+                    : "Status of requested tracks and lyrics"}
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => setRequestModalOpen(true)}
-              className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-[12px] sm:text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
+              className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-[12px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
             >
               <Icon name="plus" size={13} strokeWidth={2.4} />
-              <span>{lang === "fa" ? "+ ثبت درخواست جدید" : lang === "ko" ? "+ 새 곡 요청" : "+ New Request"}</span>
+              <span>{lang === "fa" ? "+ درخواست جدید" : lang === "ko" ? "+ 새 요청" : "+ New"}</span>
             </button>
           </div>
 
@@ -1517,12 +1517,12 @@ export function ProfilePage() {
                 <div className="flex items-center gap-2">
                   {req.status === "pending" && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[12px] font-bold text-amber-600 ring-1 ring-amber-500/30">
-                      {lang === "fa" ? "در انتظار بررسی" : lang === "ko" ? "검토 대기 중" : "Pending"}
+                      {lang === "fa" ? "در انتظار" : lang === "ko" ? "대기 중" : "Pending"}
                     </span>
                   )}
                   {req.status === "fulfilled" && (
                     <span className="rounded-full bg-mint-soft px-2.5 py-0.5 text-[12px] font-extrabold text-mint-deep ring-1 ring-mint-deep/30">
-                      ✓ {lang === "fa" ? "تایید شد (+۲۵ امتیاز)" : lang === "ko" ? "✓ 승인됨 (+25P)" : "✓ Fulfilled (+25 pts)"}
+                      ✓ {lang === "fa" ? "تایید شد (+۲۵)" : lang === "ko" ? "✓ 승인됨 (+25P)" : "✓ Approved (+25)"}
                     </span>
                   )}
                   {req.status === "rejected" && (
@@ -1538,49 +1538,49 @@ export function ProfilePage() {
       )}
 
       {/* =========================================================================
-       *  TAB 4: INVITES (بخش دعوت از دوستان و دریافت امتیاز — ویژه خود کاربر)
+       *  TAB 4: INVITES (بخش دعوت از دوستان — ویژه خود کاربر)
        * ========================================================================= */}
       {activeTab === "invites" && isSelf && (
         <div className="flex w-full shrink-0 flex-col gap-4">
           {/* Main Referral Hero Card */}
-          <div className="relative overflow-hidden rounded-[24px] border border-line bg-gradient-to-br from-primary-faint/90 via-surface to-surface p-4 sm:p-6 shadow-xs">
-            <div className="relative z-10 flex flex-col gap-4">
+          <div className="relative overflow-hidden rounded-[24px] border border-line bg-gradient-to-br from-primary-faint/90 via-surface to-surface p-4 sm:p-5 shadow-xs">
+            <div className="relative z-10 flex flex-col gap-3.5">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-11 items-center justify-center rounded-2xl bg-primary text-white shadow-primary">
-                    <Icon name="users" size={22} strokeWidth={2.2} />
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-white shadow-primary">
+                    <Icon name="users" size={20} strokeWidth={2.2} />
                   </div>
                   <div>
-                    <h2 className="text-[16px] sm:text-[18px] font-black text-ink">
+                    <h2 className="text-[15px] sm:text-[17px] font-black text-ink">
                       {lang === "fa"
-                        ? "دعوت از دوستان و دریافت امتیاز"
+                        ? "دعوت از دوستان"
                         : lang === "ko"
-                          ? "친구 초대 및 포인트 보상"
-                          : "Invite Friends & Earn Points"}
+                          ? "친구 초대"
+                          : "Invite Friends"}
                     </h2>
-                    <p className="mt-0.5 text-[12px] sm:text-[12.5px] font-bold text-ink-muted">
+                    <p className="mt-0.5 text-[12px] font-bold text-ink-muted">
                       {lang === "fa"
-                        ? "به ازای هر دوستی که با کد شما عضو شود، ۳ امتیاز هواداری دریافت می‌کنید."
+                        ? "۳ امتیاز پاداش برای هر عضویت با کد شما"
                         : lang === "ko"
-                          ? "친구 1명이 내 코드로 가입할 때마다 팬 포인트 3점을 적립받습니다."
-                          : "Earn 3 Fan Points for each friend who signs up with your invite code."}
+                          ? "초대 가입 1건당 3포인트 적립"
+                          : "Earn 3 points for each friend signup"}
                     </p>
                   </div>
                 </div>
                 <span className="rounded-full bg-mint/15 px-2.5 py-1 text-[12px] font-extrabold text-mint-deep">
-                  {lang === "fa" ? "+۳ امتیاز" : lang === "ko" ? "+3P 적립" : "+3 pts"}
+                  {lang === "fa" ? "+۳ امتیاز" : lang === "ko" ? "+3P" : "+3 pts"}
                 </span>
               </div>
 
               {/* Unique Code Box & Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 rounded-2xl border border-line bg-surface/90 p-3 sm:p-3.5 backdrop-blur">
-                <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 rounded-2xl border border-line bg-surface/90 p-2.5 sm:p-3 backdrop-blur">
+                <div className="flex items-center gap-2 min-w-0">
                   <span className="text-[12px] font-extrabold text-ink-muted">
-                    {lang === "fa" ? "کد اختصاصی شما:" : lang === "ko" ? "내 초대 코드:" : "Your Code:"}
+                    {lang === "fa" ? "کد شما:" : lang === "ko" ? "내 코드:" : "Your Code:"}
                   </span>
                   <span
                     dir="ltr"
-                    className="font-mono text-[15px] sm:text-[16px] font-black tracking-wider text-primary-deep bg-primary/10 px-3 py-1 rounded-xl"
+                    className="font-mono text-[14px] sm:text-[15px] font-black tracking-wider text-primary-deep bg-primary/10 px-2.5 py-1 rounded-xl"
                   >
                     {referralSummary.inviteCode}
                   </span>
@@ -1590,16 +1590,16 @@ export function ProfilePage() {
                   <button
                     type="button"
                     onClick={handleCopyInviteCode}
-                    className="flex flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-[12px] sm:text-[12.5px] font-bold text-white shadow-xs transition hover:bg-primary-deep"
+                    className="flex flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-[12px] font-bold text-white shadow-xs transition hover:bg-primary-deep"
                   >
-                    <Icon name="copy" size={14} />
+                    <Icon name="copy" size={13} />
                     <span>{lang === "fa" ? "کپی کد" : lang === "ko" ? "코드 복사" : "Copy Code"}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleCopyInviteLink}
-                    className="flex flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-[12px] sm:text-[12.5px] font-bold text-ink transition hover:bg-subtle"
+                    className="flex flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] font-bold text-ink transition hover:bg-subtle"
                   >
                     <Icon name="arrowUpRight" size={13} />
                     <span>{lang === "fa" ? "کپی لینک" : lang === "ko" ? "링크 복사" : "Copy Link"}</span>
@@ -1608,40 +1608,40 @@ export function ProfilePage() {
                   <button
                     type="button"
                     onClick={handleShareInvite}
-                    className="flex flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-[12px] sm:text-[12.5px] font-bold text-ink transition hover:bg-subtle"
+                    className="flex flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] font-bold text-ink transition hover:bg-subtle"
                   >
-                    <Icon name="share" size={14} />
-                    <span>{lang === "fa" ? "ارسال به دیگران" : lang === "ko" ? "초대 공유" : "Share"}</span>
+                    <Icon name="share" size={13} />
+                    <span>{lang === "fa" ? "ارسال" : lang === "ko" ? "공유" : "Share"}</span>
                   </button>
                 </div>
               </div>
 
               {/* 3 Metrics Cards */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface/80 p-3 text-center">
-                  <span className="text-[16px] sm:text-[19px] font-black text-ink tabular-nums">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-col items-center justify-center rounded-xl border border-line bg-surface/80 p-2.5 text-center">
+                  <span className="text-[15px] sm:text-[17px] font-black text-ink tabular-nums">
                     {referralSummary.invitedCount}
                   </span>
                   <span className="mt-0.5 text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "دوستان عضو شده" : lang === "ko" ? "초대된 친구" : "Friends Joined"}
+                    {lang === "fa" ? "دوستان عضو" : lang === "ko" ? "가입자" : "Friends"}
                   </span>
                 </div>
 
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface/80 p-3 text-center">
-                  <span className="text-[16px] sm:text-[19px] font-black text-primary-deep tabular-nums">
+                <div className="flex flex-col items-center justify-center rounded-xl border border-line bg-surface/80 p-2.5 text-center">
+                  <span className="text-[15px] sm:text-[17px] font-black text-primary-deep tabular-nums">
                     +{referralSummary.totalPointsEarned}
                   </span>
                   <span className="mt-0.5 text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "امتیازات دریافتی" : lang === "ko" ? "획득 포인트" : "Points Earned"}
+                    {lang === "fa" ? "امتیازات" : lang === "ko" ? "포인트" : "Points"}
                   </span>
                 </div>
 
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface/80 p-3 text-center">
-                  <span className="text-[16px] sm:text-[19px] font-black text-amber-500 tabular-nums">
+                <div className="flex flex-col items-center justify-center rounded-xl border border-line bg-surface/80 p-2.5 text-center">
+                  <span className="text-[15px] sm:text-[17px] font-black text-amber-500 tabular-nums">
                     +۳
                   </span>
                   <span className="mt-0.5 text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "پاداش هر نفر" : lang === "ko" ? "1인당 보상" : "Per Referral"}
+                    {lang === "fa" ? "پاداش" : lang === "ko" ? "보상" : "Reward"}
                   </span>
                 </div>
               </div>
@@ -1649,32 +1649,32 @@ export function ProfilePage() {
           </div>
 
           {/* Test & Simulation Banner */}
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-primary/40 bg-primary-faint/50 p-3.5 sm:p-4">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <Icon name="sparkle" size={16} className="text-primary shrink-0" />
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-primary/40 bg-primary-faint/50 p-3 sm:p-3.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <Icon name="sparkle" size={15} className="text-primary shrink-0" />
               <div>
-                <p className="text-[12.5px] sm:text-[13px] font-extrabold text-ink">
+                <p className="text-[12.5px] font-extrabold text-ink">
                   {lang === "fa"
-                    ? "آزمایش شبیه‌سازی عضویت با کد شما"
+                    ? "تست شبیه‌سازی"
                     : lang === "ko"
-                      ? "초대 코드 가입 테스트 시뮬레이션"
-                      : "Simulate a Friend Joining (Test)"}
+                      ? "초대 시뮬레이션"
+                      : "Simulation Test"}
                 </p>
                 <p className="text-[12px] text-ink-muted">
                   {lang === "fa"
-                    ? "برای راستی‌آزمایی، یک عضویت تستی ایجاد کنید تا ۳ امتیاز افزوده شود."
+                    ? "شبیه‌سازی عضویت تستی و دریافت ۳ امتیاز"
                     : lang === "ko"
-                      ? "가상 친구 가입을 테스트하고 즉시 3포인트를 획득해 보세요."
-                      : "Test instant invite flow to simulate a join and earn 3 points live."}
+                      ? "가상 친구 가입 테스트 및 3포인트 적립"
+                      : "Simulate test signup to earn 3 points"}
                 </p>
               </div>
             </div>
             <button
               type="button"
               onClick={handleSimulateInvite}
-              className="shrink-0 rounded-xl bg-primary px-3 py-2 text-[12px] font-bold text-white shadow-xs transition hover:bg-primary-deep"
+              className="shrink-0 rounded-xl bg-primary px-3 py-1.5 text-[12px] font-bold text-white shadow-xs transition hover:bg-primary-deep"
             >
-              {lang === "fa" ? "تست دعوت" : lang === "ko" ? "테스트" : "Test Invite"}
+              {lang === "fa" ? "تست فوری" : lang === "ko" ? "테스트" : "Test"}
             </button>
           </div>
 
@@ -1683,16 +1683,16 @@ export function ProfilePage() {
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
                 <Icon name="users" size={15} className="text-primary" />
-                <h3 className="font-extrabold text-[13.5px] sm:text-[14px] text-ink">
+                <h3 className="font-extrabold text-[13.5px] text-ink">
                   {lang === "fa"
-                    ? `لیست کاربران دعوت‌شده (${referralSummary.invitedUsers.length})`
+                    ? `دوستان دعوت‌شده (${referralSummary.invitedUsers.length})`
                     : lang === "ko"
-                      ? `초대된 사용자 목록 (${referralSummary.invitedUsers.length})`
-                      : `Invited Users (${referralSummary.invitedUsers.length})`}
+                      ? `초대 목록 (${referralSummary.invitedUsers.length})`
+                      : `Invited Friends (${referralSummary.invitedUsers.length})`}
                 </h3>
               </div>
               <span className="text-[12px] font-bold text-ink-faint">
-                {lang === "fa" ? "فقط برای شما" : lang === "ko" ? "비공개 (본인 전용)" : "Private to you"}
+                {lang === "fa" ? "خصوصی" : lang === "ko" ? "비공개" : "Private"}
               </span>
             </div>
 
@@ -1704,13 +1704,6 @@ export function ProfilePage() {
                     : lang === "ko"
                       ? "아직 초대 코드로 가입한 친구가 없습니다."
                       : "No friends have signed up with your code yet."}
-                </p>
-                <p className="mt-1 text-[12px] text-ink-faint">
-                  {lang === "fa"
-                    ? "کد دعوت خود را برای دوستان بفرستید تا به این لیست اضافه شوند."
-                    : lang === "ko"
-                      ? "친구들에게 초대 코드를 전송하여 이 목록을 채워보세요."
-                      : "Send your invite code to friends to start filling this list."}
                 </p>
               </div>
             ) : (
@@ -1907,24 +1900,24 @@ export function ProfilePage() {
                 <div className="space-y-1.5">
                   {[
                     {
-                      fa: "محتوای نامناسب یا توهین‌آمیز",
-                      ko: "부적절하거나 불쾌한 콘텐츠",
-                      en: "Inappropriate or offensive content",
+                      fa: "محتوای نامناسب",
+                      ko: "부적절한 콘텐츠",
+                      en: "Inappropriate content",
                     },
                     {
-                      fa: "ارسال هرزنامه یا تبلیغات اسپم",
-                      ko: "스팸 또는 원치 않는 광고",
-                      en: "Spam or unwanted advertising",
+                      fa: "اسپم یا تبلیغات",
+                      ko: "스팸 또는 광고",
+                      en: "Spam or ads",
                     },
                     {
-                      fa: "بیوگرافی یا هویت جعلی",
-                      ko: "사칭 또는 가짜 프로필",
-                      en: "Fake identity or impersonation",
+                      fa: "هویت جعلی",
+                      ko: "사칭 및 가짜 계정",
+                      en: "Fake identity",
                     },
                     {
-                      fa: "نقض حق کپی‌رایت یا لیریک جعلی",
-                      ko: "저작권 침해 또는 허위 가사",
-                      en: "Copyright infringement or false lyrics",
+                      fa: "نقض کپی‌رایت",
+                      ko: "저작권 침해",
+                      en: "Copyright violation",
                     },
                   ].map((item) => {
                     const label = lang === "fa" ? item.fa : lang === "ko" ? item.ko : item.en;
@@ -2045,17 +2038,17 @@ export function ProfilePage() {
                       onClick={handleCustomAvatarPick}
                       className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-[12px] font-extrabold text-primary-deep transition hover:bg-primary/20"
                     >
-                      <Icon name="folderPlus" size={14} />
-                      <span>{lang === "fa" ? "📁 انتخاب عکس از گالری (فشرده‌سازی خودکار)" : lang === "ko" ? "📁 갤러리 아바타 업로드 (자동 압축)" : "📁 Upload Avatar (Auto-compressed)"}</span>
+                      <Icon name="gallery" size={15} />
+                      <span>{lang === "fa" ? "انتخاب از گالری" : lang === "ko" ? "갤러리에서 선택" : "Choose from gallery"}</span>
                     </button>
                   ) : (
                     <div className="flex items-center justify-between rounded-xl border border-line bg-subtle/70 px-3 py-2 text-[12px] text-ink-muted">
                       <span className="flex items-center gap-1.5 font-bold">
                         <Icon name="lock" size={13} className="text-amber-500" />
-                        <span>{lang === "fa" ? "آپلود عکس از گالری" : lang === "ko" ? "갤러리 아바타 업로드" : "Custom Avatar Upload"}</span>
+                        <span>{lang === "fa" ? "انتخاب از گالری" : lang === "ko" ? "갤러리에서 선택" : "Choose from gallery"}</span>
                       </span>
                       <span className="font-extrabold text-amber-600">
-                        {lang === "fa" ? `قفل (نیاز به ${POINTS_FOR_CUSTOM_AVATAR} امتیاز)` : lang === "ko" ? `잠김 (500P 필요)` : `Locked (${POINTS_FOR_CUSTOM_AVATAR} pts)`}
+                        {lang === "fa" ? `۵۰۰ امتیاز` : lang === "ko" ? `500P` : `500 pts`}
                       </span>
                     </div>
                   )}
@@ -2066,7 +2059,7 @@ export function ProfilePage() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "بنرهای پیش‌فرض سیستم" : lang === "ko" ? "기본 시스템 배너" : "Default System Banners"}
+                    {lang === "fa" ? "طرح‌های پیش‌فرض" : lang === "ko" ? "기본 배너" : "Default Banners"}
                   </label>
                   <span className="text-[12px] text-ink-faint">
                     {DEFAULT_SYSTEM_BANNERS.length} {lang === "fa" ? "طرح" : lang === "ko" ? "개" : "themes"}
@@ -2111,8 +2104,8 @@ export function ProfilePage() {
                         onClick={handleCustomBannerPick}
                         className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-[12px] font-extrabold text-primary-deep transition hover:bg-primary/20"
                       >
-                        <Icon name="folderPlus" size={14} />
-                        <span>{lang === "fa" ? "🖼️ انتخاب بنر از گالری (فشرده‌سازی)" : lang === "ko" ? "🖼️ 갤러리 배너 업로드 (자동 압축)" : "🖼️ Upload Banner (Auto-compressed)"}</span>
+                        <Icon name="gallery" size={15} />
+                        <span>{lang === "fa" ? "انتخاب از گالری" : lang === "ko" ? "갤러리에서 선택" : "Choose from gallery"}</span>
                       </button>
                       {editBanner && (
                         <button
@@ -2128,10 +2121,10 @@ export function ProfilePage() {
                     <div className="flex items-center justify-between rounded-xl border border-line bg-subtle/70 px-3 py-2 text-[12px] text-ink-muted">
                       <span className="flex items-center gap-1.5 font-bold">
                         <Icon name="lock" size={13} className="text-amber-500" />
-                        <span>{lang === "fa" ? "آپلود بنر دلخواه از گالری" : lang === "ko" ? "맞춤 배너 업로드" : "Custom Banner Upload"}</span>
+                        <span>{lang === "fa" ? "انتخاب از گالری" : lang === "ko" ? "갤러리에서 선택" : "Choose from gallery"}</span>
                       </span>
                       <span className="font-extrabold text-amber-600">
-                        {lang === "fa" ? `قفل (نیاز به ${POINTS_FOR_CUSTOM_BANNER.toLocaleString()} امتیاز)` : lang === "ko" ? `잠김 (500P 필요)` : `Locked (${POINTS_FOR_CUSTOM_BANNER} pts)`}
+                        {lang === "fa" ? `۵۰۰ امتیاز` : lang === "ko" ? `500P` : `500 pts`}
                       </span>
                     </div>
                   )}
@@ -2141,7 +2134,7 @@ export function ProfilePage() {
               {/* Display Name */}
               <div>
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                  {lang === "fa" ? "نام نمایشی" : lang === "ko" ? "닉네임" : "Display Name"}
+                  {lang === "fa" ? "نام" : lang === "ko" ? "이름" : "Name"}
                 </label>
                 <input
                   type="text"
@@ -2155,7 +2148,7 @@ export function ProfilePage() {
               {/* Handle */}
               <div>
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                  {lang === "fa" ? "نام کاربری (هندل)" : lang === "ko" ? "핸들" : "Username (Handle)"}
+                  {lang === "fa" ? "نام کاربری" : lang === "ko" ? "핸들" : "Username"}
                 </label>
                 <input
                   type="text"
@@ -2169,7 +2162,7 @@ export function ProfilePage() {
               {/* Favorite Genre */}
               <div>
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                  {lang === "fa" ? "سبک موسیقی مورد علاقه" : lang === "ko" ? "선호 장르" : "Favorite Genre"}
+                  {lang === "fa" ? "سبک مورد علاقه" : lang === "ko" ? "선호 장르" : "Favorite Genre"}
                 </label>
                 <input
                   type="text"
@@ -2182,7 +2175,7 @@ export function ProfilePage() {
               {/* Bio */}
               <div>
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                  {lang === "fa" ? "بیوگرافی و معرفی کوتاه" : lang === "ko" ? "소개글" : "Bio"}
+                  {lang === "fa" ? "درباره من" : lang === "ko" ? "소개" : "Bio"}
                 </label>
                 <textarea
                   value={editBio}
@@ -2204,7 +2197,7 @@ export function ProfilePage() {
                   type="submit"
                   className="rounded-xl bg-primary px-4 py-1.5 text-[12px] font-bold text-white shadow-primary hover:bg-primary-deep"
                 >
-                  {lang === "fa" ? "ذخیره تغییرات" : lang === "ko" ? "저장" : "Save Changes"}
+                  {lang === "fa" ? "ذخیره" : lang === "ko" ? "저장" : "Save"}
                 </button>
               </div>
             </form>
