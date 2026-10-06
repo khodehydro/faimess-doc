@@ -19,6 +19,7 @@ import { useCompact } from "../hooks/useCompact";
 import { AuthProvider } from "./AuthContext";
 import { AccountDoor } from "../sections/AccountDoor";
 import { Splash } from "../ui/Splash";
+import { SeoHead } from "../sections/SeoHead";
 
 /* ------------------------------------------------------------------ *
  *  Shell — the parent card and the five cards inside it.
@@ -136,22 +137,30 @@ export function Shell() {
   );
 }
 
+function InnerApp() {
+  const { deepLinkTrackId } = useApp();
+  return (
+    <PlayerProvider initialTrackId={deepLinkTrackId ?? undefined}>
+      <SeoHead />
+      <CommentsProvider>
+        <ContributionsProvider>
+          <Splash />
+          <Screen />
+          <AccountDoor />
+          <ToastHost />
+        </ContributionsProvider>
+      </CommentsProvider>
+    </PlayerProvider>
+  );
+}
+
 export default function App() {
   return (
     <AppProvider>
       <PreferencesProvider>
         <AuthProvider>
           <PlaylistsProvider>
-          <PlayerProvider>
-            <CommentsProvider>
-              <ContributionsProvider>
-                <Splash />
-                <Screen />
-                <AccountDoor />
-                <ToastHost />
-              </ContributionsProvider>
-            </CommentsProvider>
-          </PlayerProvider>
+            <InnerApp />
           </PlaylistsProvider>
         </AuthProvider>
       </PreferencesProvider>

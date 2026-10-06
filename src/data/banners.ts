@@ -74,7 +74,7 @@ export const banners: Banner[] = [
   {
     id: "midnight-seoul",
     kind: "album",
-    albumId: "al2",
+    albumId: "al-long-exposure",
     eyebrow: "Out now",
     title: "AXION — “Midnight Seoul”",
     subtitle: "The new single is out everywhere — listening party tonight, 20:00 KST.",
@@ -104,7 +104,7 @@ export const banners: Banner[] = [
   {
     id: "banner-playlist-drive",
     kind: "playlist",
-    playlistId: "p1",
+    playlistId: "pl-midnight-drive",
     eyebrow: "Curated Playlist",
     title: "Late Night Drive",
     subtitle: "Neon-lit city beats, smooth synth-wave and midnight vocals.",
@@ -117,7 +117,7 @@ export const banners: Banner[] = [
   {
     id: "banner-artist-prism9",
     kind: "artist",
-    artistId: "ar3",
+    artistId: "ar-prism9",
     eyebrow: "Featured Artist",
     title: "PRISM9 — Velvet Static",
     subtitle: "Explore the full discography, singles, and member stories.",

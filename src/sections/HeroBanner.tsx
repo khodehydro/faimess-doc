@@ -55,15 +55,15 @@ export function HeroBanner() {
       return;
     }
     if (banner.kind === "album" || banner.albumId) {
-      openDetail({ kind: "album", id: banner.albumId ?? "al2" });
+      openDetail({ kind: "album", id: banner.albumId ?? "al-long-exposure" });
       return;
     }
     if (banner.kind === "artist" || banner.artistId) {
-      openDetail({ kind: "artist", id: banner.artistId ?? "ar1" });
+      openDetail({ kind: "artist", id: banner.artistId ?? "ar-prism9" });
       return;
     }
     if (banner.kind === "playlist" || banner.playlistId) {
-      openDetail({ kind: "playlist", id: banner.playlistId ?? "p1" });
+      openDetail({ kind: "playlist", id: banner.playlistId ?? "pl-midnight-drive" });
       return;
     }
     if (banner.kind === "shop" || banner.productId) {
