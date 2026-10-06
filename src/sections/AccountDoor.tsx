@@ -9,6 +9,7 @@ import { forwardIcon } from "../lib/rtl";
 import { DEMO_ACCOUNT, MIN_NAME, MIN_PASSWORD } from "../data/auth";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
+import { socialApi } from "../api/socialApi";
 
 /* ------------------------------------------------------------------ *
  *  The account door — sign in, or make an account.
@@ -47,6 +48,17 @@ export function AccountDoor() {
   const [tab, setTab] = useState<Tab>("in");
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        return params.get("ref") || params.get("invite") || "";
+      } catch {
+        return "";
+      }
+    }
+    return "";
+  });
   const [shown, setShown] = useState(false);
   const [problem, setProblem] = useState<Problem>(null);
   /** the rule that refused the new account, not a field */
@@ -65,6 +77,18 @@ export function AccountDoor() {
     setProblem(null);
     setRefusal(null);
     setBusy(false);
+    if (typeof window !== "undefined") {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const queryRef = params.get("ref") || params.get("invite");
+        if (queryRef) {
+          setInviteCode(queryRef.toUpperCase());
+          setTab("up");
+        }
+      } catch {
+        // ignore
+      }
+    }
   }, [doorOpen]);
 
   /* Esc closes, like any dialog — the app is behind it, not gone */
@@ -118,6 +142,15 @@ export function AccountDoor() {
           setRefusal(result);
           setBusy(false);
           return;
+        }
+        if (inviteCode.trim()) {
+          const refRes = socialApi.registerReferral(inviteCode.trim(), {
+            username: name,
+            displayName: name,
+          });
+          if (refRes.success) {
+            notify(t("auth.inviteSuccess"), "mint");
+          }
         }
         if (!waiting) notify(t("auth.welcome", { name }), "mint");
       }
@@ -284,6 +317,22 @@ export function AccountDoor() {
                     </button>
                   </Field>
 
+                  {tab === "up" && (
+                    <Field
+                      icon="sparkle"
+                      label={t("auth.inviteCode")}
+                    >
+                      <input
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                        placeholder={t("auth.invitePlaceholder")}
+                        autoCapitalize="characters"
+                        spellCheck={false}
+                        className="w-full bg-transparent text-[14px] font-semibold text-ink placeholder:text-ink-faint focus:outline-none uppercase"
+                      />
+                    </Field>
+                  )}
+
                   {/* the rules for a new account, stated before the refusal */}
                   {tab === "up" && !problem && (
                     <p className="px-0.5 text-[12px] leading-relaxed text-ink-faint">
@@ -428,7 +477,7 @@ function Field({
   problem,
   children,
 }: {
-  icon: "users" | "lock";
+  icon: "users" | "lock" | "sparkle";
   label: string;
   problem?: string;
   children: ReactNode;

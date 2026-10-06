@@ -130,8 +130,102 @@ export type PublicUserPlaylist = {
   trackIds: string[];
 };
 
+export type InvitedUserRecord = {
+  id: string;
+  username: string;
+  displayName: string;
+  avatar: string;
+  joinedAt: string;
+  earnedPoints: number;
+};
+
+export type UserReferralSummary = {
+  inviteCode: string;
+  inviteLink: string;
+  rewardPerInvite: number;
+  invitedCount: number;
+  totalPointsEarned: number;
+  invitedUsers: InvitedUserRecord[];
+};
+
 const PROFILE_KEY = "faimess.user_profile.v1";
 const FOLLOWS_KEY = "faimess.social_follows.v1";
+const REFERRALS_KEY = "faimess.referrals.v2";
+
+const SEEDED_REFERRALS: InvitedUserRecord[] = [
+  {
+    id: "ref_seed_1",
+    username: "taehyun_fan",
+    displayName: "تهیون (Taehyun)",
+    avatar: taehyunPhoto,
+    joinedAt: "2025-01-18",
+    earnedPoints: 3,
+  },
+  {
+    id: "ref_seed_2",
+    username: "kairos_orbit",
+    displayName: "کایروس (Kairos Orbit)",
+    avatar: seojinPhoto,
+    joinedAt: "2025-01-22",
+    earnedPoints: 3,
+  },
+  {
+    id: "ref_seed_3",
+    username: "miso_melody",
+    displayName: "میسو (Miso Melody)",
+    avatar: misoPhoto,
+    joinedAt: "2025-01-28",
+    earnedPoints: 3,
+  },
+  {
+    id: "ref_seed_4",
+    username: "editor_chief",
+    displayName: "ادیتور ارشد (Chief Editor)",
+    avatar: yunhaPhoto,
+    joinedAt: "2025-02-02",
+    earnedPoints: 3,
+  },
+  {
+    id: "ref_seed_5",
+    username: "ari_beats",
+    displayName: "آری (Ari Beats)",
+    avatar: ariPhoto,
+    joinedAt: "2025-02-06",
+    earnedPoints: 3,
+  },
+  {
+    id: "ref_seed_6",
+    username: "night_driver",
+    displayName: "مسافر شب (Night Driver)",
+    avatar: minhoPhoto,
+    joinedAt: "2025-02-10",
+    earnedPoints: 3,
+  },
+];
+
+function getReferralsList(): InvitedUserRecord[] {
+  if (typeof window === "undefined") return SEEDED_REFERRALS;
+  try {
+    const raw = window.localStorage.getItem(REFERRALS_KEY);
+    if (!raw) return SEEDED_REFERRALS;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : SEEDED_REFERRALS;
+  } catch {
+    return SEEDED_REFERRALS;
+  }
+}
+
+function addReferralRecord(record: InvitedUserRecord) {
+  const current = getReferralsList();
+  const next = [record, ...current.filter((r) => r.username.toLowerCase() !== record.username.toLowerCase())];
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(REFERRALS_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  }
+}
 
 const DEFAULT_PROFILE: UserProfileData = {
   username: "sori",
@@ -909,6 +1003,126 @@ export const socialApi = {
         progressPercent: progress,
       };
     });
+  },
+
+  /* ---------------- Referral & Invites ---------------- */
+
+  getInviteCode(username?: string): string {
+    const raw = username || socialState.profile.username || "sori";
+    const clean = raw.toLowerCase().replace(/^@/, "").trim();
+    return `FAIMESS-${clean.toUpperCase()}`;
+  },
+
+  getReferralSummary(username?: string): UserReferralSummary {
+    const code = this.getInviteCode(username);
+    const origin =
+      typeof window !== "undefined" && window.location?.origin
+        ? window.location.origin
+        : "https://faimess.app";
+    const link = `${origin}/?ref=${code}`;
+    const invitedUsers = getReferralsList();
+    const invitedCount = Math.max(12, invitedUsers.length);
+    const totalPointsEarned = invitedCount * 3;
+
+    return {
+      inviteCode: code,
+      inviteLink: link,
+      rewardPerInvite: 3,
+      invitedCount,
+      totalPointsEarned,
+      invitedUsers,
+    };
+  },
+
+  registerReferral(
+    inviteCode: string,
+    newUser: { username: string; displayName?: string; avatar?: string },
+  ): {
+    success: boolean;
+    referrerUsername?: string;
+    pointsAwarded: number;
+  } {
+    const normalized = inviteCode.trim().toUpperCase();
+    const selfCode = this.getInviteCode();
+
+    let referrer = "";
+    if (
+      normalized === selfCode ||
+      normalized === socialState.profile.username.toUpperCase() ||
+      normalized === "FAIMESS-SORI" ||
+      normalized === "SORI"
+    ) {
+      referrer = socialState.profile.username;
+    } else if (normalized.startsWith("FAIMESS-")) {
+      referrer = normalized.replace("FAIMESS-", "").toLowerCase();
+    } else {
+      referrer = normalized.toLowerCase();
+    }
+
+    if (!referrer) {
+      return { success: false, pointsAwarded: 0 };
+    }
+
+    const cleanNewName = newUser.username.trim();
+    const newRecord: InvitedUserRecord = {
+      id: `ref_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      username: cleanNewName,
+      displayName: newUser.displayName || cleanNewName,
+      avatar:
+        newUser.avatar ||
+        AVAILABLE_AVATARS[cleanNewName.charCodeAt(0) % AVAILABLE_AVATARS.length],
+      joinedAt: new Date().toISOString().split("T")[0],
+      earnedPoints: 3,
+    };
+
+    addReferralRecord(newRecord);
+
+    if (referrer.toLowerCase() === socialState.profile.username.toLowerCase()) {
+      socialState.profile.points += 3;
+      notifySocialChanges();
+    }
+
+    return {
+      success: true,
+      referrerUsername: referrer,
+      pointsAwarded: 3,
+    };
+  },
+
+  simulateFriendInvite(): InvitedUserRecord {
+    const sampleFriends = [
+      { name: "مینا کیم (Mina Kim)", user: "mina_kpop", avatar: soraPhoto },
+      { name: "دانیال (Danial Wave)", user: "danial_wave", avatar: minhoPhoto },
+      { name: "지수 (Jisoo Vibe)", user: "jisoo_vibe", avatar: yunaPhoto },
+      { name: "روژین (Rozhin Beats)", user: "rozhin_beats", avatar: jxnniePhoto },
+      { name: "نوید (Navid Synth)", user: "navid_synth", avatar: haruPhoto },
+    ];
+    const existing = getReferralsList();
+    const unpicked = sampleFriends.filter(
+      (f) => !existing.some((e) => e.username === f.user),
+    );
+    const friend =
+      unpicked.length > 0
+        ? unpicked[0]
+        : {
+            name: `شنونده جدید ${existing.length + 1}`,
+            user: `fan_${Date.now().toString().slice(-4)}`,
+            avatar: AVAILABLE_AVATARS[existing.length % AVAILABLE_AVATARS.length],
+          };
+
+    const newRecord: InvitedUserRecord = {
+      id: `ref_${Date.now()}`,
+      username: friend.user,
+      displayName: friend.name,
+      avatar: friend.avatar,
+      joinedAt: new Date().toISOString().split("T")[0],
+      earnedPoints: 3,
+    };
+
+    addReferralRecord(newRecord);
+    socialState.profile.points += 3;
+    notifySocialChanges();
+    return newRecord;
   },
 
   /* ---------------- Content Requests ---------------- */

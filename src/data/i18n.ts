@@ -1118,6 +1118,21 @@ export const STRINGS: Record<string, Entry> = {
   },
   "auth.newUser": { en: "Choose a username", fa: "یک نام کاربری انتخاب کن", ko: "사용자 이름 정하기" },
   "auth.newPassword": { en: "Choose a password", fa: "یک گذرواژه انتخاب کن", ko: "비밀번호 정하기" },
+  "auth.inviteCode": {
+    en: "Invite code (optional)",
+    fa: "کد دعوت (اختیاری)",
+    ko: "초대 코드 (선택사항)",
+  },
+  "auth.invitePlaceholder": {
+    en: "e.g. FAIMESS-SORI",
+    fa: "مثال: FAIMESS-SORI",
+    ko: "예: FAIMESS-SORI",
+  },
+  "auth.inviteSuccess": {
+    en: "Invite code applied! +3 points sent to referrer.",
+    fa: "کد دعوت اعمال شد! ۳ امتیاز به دعوت‌کننده اهدا شد.",
+    ko: "초대 코드가 적용되었습니다! 추천인에게 3포인트가 적립되었습니다.",
+  },
   "auth.upRules": {
     en: "At least {n} characters for the name and {m} for the password.",
     fa: "دست‌کم {n} نویسه برای نام و {m} نویسه برای گذرواژه.",

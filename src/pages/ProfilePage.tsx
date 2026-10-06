@@ -10,6 +10,7 @@ import {
   AVAILABLE_AVATARS,
   type UserProfile,
   type BadgeStatusItem,
+  type UserReferralSummary,
 } from "../api/socialApi";
 import {
   BADGE_CATEGORIES,
@@ -268,11 +269,15 @@ export function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(() =>
     socialApi.isFollowing(profile.username),
   );
+  const [referralSummary, setReferralSummary] = useState<UserReferralSummary>(() =>
+    socialApi.getReferralSummary(profile.username),
+  );
 
   // Sync state whenever viewedProfileUsername changes or external updates occur
   const refreshProfileState = () => {
     const updated = socialApi.getProfile(viewedProfileUsername || undefined);
     setProfile(updated);
+    setReferralSummary(socialApi.getReferralSummary(updated.username));
     setFollowStats(socialApi.getFollowStats(updated.username));
     setIsFollowing(socialApi.isFollowing(updated.username));
     setEditName(updated.name);
@@ -318,8 +323,93 @@ export function ProfilePage() {
   const [badgeSearch, setBadgeSearch] = useState("");
   const [selectedBadge, setSelectedBadge] = useState<BadgeStatusItem | null>(null);
 
-  // Navigation Tabs: overview (clean social default), badges (100 grid), playlists, requests
-  const [activeTab, setActiveTab] = useState<"overview" | "badges" | "playlists" | "requests">("overview");
+  // Navigation Tabs: overview (clean social default), badges (100 grid), playlists, requests, invites
+  const [activeTab, setActiveTab] = useState<"overview" | "badges" | "playlists" | "requests" | "invites">("overview");
+
+  // Referral / Invite Action Handlers
+  const handleCopyInviteCode = async () => {
+    const code = referralSummary.inviteCode;
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(code);
+        notify(
+          lang === "fa"
+            ? `کد دعوت (${code}) با موفقیت کپی شد!`
+            : lang === "ko"
+              ? `초대 코드(${code})가 복사되었습니다!`
+              : `Invite code (${code}) copied!`,
+          "mint",
+        );
+        return;
+      }
+    } catch {
+      // fallback
+    }
+    notify(
+      lang === "fa" ? `کد دعوت: ${code}` : lang === "ko" ? `초대 코드: ${code}` : `Invite code: ${code}`,
+      "primary",
+    );
+  };
+
+  const handleCopyInviteLink = async () => {
+    const link = referralSummary.inviteLink;
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+        notify(
+          lang === "fa"
+            ? "لینک اختصاصی دعوت با موفقیت کپی شد!"
+            : lang === "ko"
+              ? "초대 링크가 복사되었습니다!"
+              : "Invite link copied to clipboard!",
+          "mint",
+        );
+        return;
+      }
+    } catch {
+      // fallback
+    }
+    notify(
+      lang === "fa" ? `لینک دعوت: ${link}` : lang === "ko" ? `초대 링크: ${link}` : `Invite link: ${link}`,
+      "primary",
+    );
+  };
+
+  const handleShareInvite = async () => {
+    const code = referralSummary.inviteCode;
+    const link = referralSummary.inviteLink;
+    const shareTitle =
+      lang === "fa" ? "دعوت به فیمس استودیو" : lang === "ko" ? "FAIMESS 초대" : "Join FAIMESS";
+    const shareText =
+      lang === "fa"
+        ? `با کد دعوت اختصاصی من (${code}) در فیمس ثبت‌نام کن و از استریم موسیقی، لیریک‌های همگام و جوایز لذت ببر!`
+        : lang === "ko"
+          ? `내 초대 코드(${code})로 FAIMESS에 가입하고 최고의 K-pop 음악과 가사를 즐겨보세요!`
+          : `Join FAIMESS using my invite code (${code}) and stream premium music and lyrics!`;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: shareTitle, text: shareText, url: link });
+        return;
+      } catch {
+        // user cancelled share
+      }
+    }
+    handleCopyInviteLink();
+  };
+
+  const handleSimulateInvite = () => {
+    const newFriend = socialApi.simulateFriendInvite();
+    setReferralSummary(socialApi.getReferralSummary(profile.username));
+    notify(
+      lang === "fa"
+        ? `کاربر جدید (${newFriend.displayName}) با کد شما ثبت‌نام کرد! ۳ امتیاز اضافه شد.`
+        : lang === "ko"
+          ? `새로운 친구(${newFriend.displayName})가 가입했습니다! 3포인트가 적립되었습니다.`
+          : `New friend (${newFriend.displayName}) joined with your code! +3 points credited.`,
+      "mint",
+    );
+  };
 
   // Edit Profile Modal (Only for Self)
   const [isEditing, setIsEditing] = useState(false);
@@ -878,19 +968,41 @@ export function ProfilePage() {
         </button>
 
         {isSelf && (
-          <button
-            type="button"
-            onClick={() => setActiveTab("requests")}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-[12px] sm:text-[12.5px] font-extrabold transition",
-              activeTab === "requests"
-                ? "bg-primary text-white shadow-xs"
-                : "text-ink-muted hover:text-ink hover:bg-subtle",
-            )}
-          >
-            <Icon name="plus" size={14} />
-            <span>{lang === "fa" ? "درخواست‌ها" : lang === "ko" ? "요청" : "Requests"}</span>
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => setActiveTab("requests")}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-[12px] sm:text-[12.5px] font-extrabold transition",
+                activeTab === "requests"
+                  ? "bg-primary text-white shadow-xs"
+                  : "text-ink-muted hover:text-ink hover:bg-subtle",
+              )}
+            >
+              <Icon name="plus" size={14} />
+              <span>{lang === "fa" ? "درخواست‌ها" : lang === "ko" ? "요청" : "Requests"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("invites")}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-[12px] sm:text-[12.5px] font-extrabold transition",
+                activeTab === "invites"
+                  ? "bg-primary text-white shadow-xs"
+                  : "text-ink-muted hover:text-ink hover:bg-subtle",
+              )}
+            >
+              <Icon name="users" size={14} />
+              <span>
+                {lang === "fa"
+                  ? `دعوت (${referralSummary.invitedCount})`
+                  : lang === "ko"
+                    ? `초대 (${referralSummary.invitedCount})`
+                    : `Invites (${referralSummary.invitedCount})`}
+              </span>
+            </button>
+          </>
         )}
       </div>
 
@@ -960,6 +1072,64 @@ export function ProfilePage() {
               </div>
             )}
           </div>
+
+          {/* Quick Invite & Referral Widget (Only for Self in Overview) */}
+          {isSelf && (
+            <div className="rounded-[22px] border border-primary/20 bg-gradient-to-r from-primary-faint/80 via-surface to-surface p-3.5 sm:p-5 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-white shadow-primary shrink-0">
+                    <Icon name="users" size={18} strokeWidth={2.2} />
+                  </div>
+                  <div>
+                    <h3 className="text-[13.5px] sm:text-[14px] font-black text-ink">
+                      {lang === "fa"
+                        ? "دعوت از دوستان و دریافت ۳ امتیاز"
+                        : lang === "ko"
+                          ? "친구 초대하고 3포인트 받기"
+                          : "Invite Friends & Earn 3 Points"}
+                    </h3>
+                    <p className="text-[12px] font-bold text-ink-muted">
+                      {lang === "fa"
+                        ? `کد اختصاصی: ${referralSummary.inviteCode} · تاکنون ${referralSummary.invitedCount} دوست عضو شده‌اند`
+                        : lang === "ko"
+                          ? `전용 코드: ${referralSummary.inviteCode} · 현재까지 ${referralSummary.invitedCount}명 가입`
+                          : `Code: ${referralSummary.inviteCode} · ${referralSummary.invitedCount} friends joined`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleCopyInviteCode}
+                    className="flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 text-[12px] font-bold text-white shadow-xs transition hover:bg-primary-deep"
+                  >
+                    <Icon name="copy" size={13} />
+                    <span>{lang === "fa" ? "کپی کد" : lang === "ko" ? "코드 복사" : "Copy"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleShareInvite}
+                    className="flex items-center gap-1 rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] font-bold text-ink transition hover:bg-subtle"
+                  >
+                    <Icon name="share" size={13} />
+                    <span>{lang === "fa" ? "ارسال" : lang === "ko" ? "공유" : "Share"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("invites")}
+                    className="flex items-center gap-1 rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] font-bold text-primary transition hover:bg-subtle"
+                  >
+                    <span>{lang === "fa" ? "لیست دوستان" : lang === "ko" ? "친구 목록" : "List"}</span>
+                    <Icon name="arrowUpRight" size={12} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* User Playlists Shelf */}
           <div className="rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
@@ -1363,6 +1533,220 @@ export function ProfilePage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+       *  TAB 4: INVITES (بخش دعوت از دوستان و دریافت امتیاز — ویژه خود کاربر)
+       * ========================================================================= */}
+      {activeTab === "invites" && isSelf && (
+        <div className="flex w-full shrink-0 flex-col gap-4">
+          {/* Main Referral Hero Card */}
+          <div className="relative overflow-hidden rounded-[24px] border border-line bg-gradient-to-br from-primary-faint/90 via-surface to-surface p-4 sm:p-6 shadow-xs">
+            <div className="relative z-10 flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-11 items-center justify-center rounded-2xl bg-primary text-white shadow-primary">
+                    <Icon name="users" size={22} strokeWidth={2.2} />
+                  </div>
+                  <div>
+                    <h2 className="text-[16px] sm:text-[18px] font-black text-ink">
+                      {lang === "fa"
+                        ? "دعوت از دوستان و دریافت امتیاز"
+                        : lang === "ko"
+                          ? "친구 초대 및 포인트 보상"
+                          : "Invite Friends & Earn Points"}
+                    </h2>
+                    <p className="mt-0.5 text-[12px] sm:text-[12.5px] font-bold text-ink-muted">
+                      {lang === "fa"
+                        ? "به ازای هر دوستی که با کد شما عضو شود، ۳ امتیاز هواداری دریافت می‌کنید."
+                        : lang === "ko"
+                          ? "친구 1명이 내 코드로 가입할 때마다 팬 포인트 3점을 적립받습니다."
+                          : "Earn 3 Fan Points for each friend who signs up with your invite code."}
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-mint/15 px-2.5 py-1 text-[12px] font-extrabold text-mint-deep">
+                  {lang === "fa" ? "+۳ امتیاز" : lang === "ko" ? "+3P 적립" : "+3 pts"}
+                </span>
+              </div>
+
+              {/* Unique Code Box & Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 rounded-2xl border border-line bg-surface/90 p-3 sm:p-3.5 backdrop-blur">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="text-[12px] font-extrabold text-ink-muted">
+                    {lang === "fa" ? "کد اختصاصی شما:" : lang === "ko" ? "내 초대 코드:" : "Your Code:"}
+                  </span>
+                  <span
+                    dir="ltr"
+                    className="font-mono text-[15px] sm:text-[16px] font-black tracking-wider text-primary-deep bg-primary/10 px-3 py-1 rounded-xl"
+                  >
+                    {referralSummary.inviteCode}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleCopyInviteCode}
+                    className="flex flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-[12px] sm:text-[12.5px] font-bold text-white shadow-xs transition hover:bg-primary-deep"
+                  >
+                    <Icon name="copy" size={14} />
+                    <span>{lang === "fa" ? "کپی کد" : lang === "ko" ? "코드 복사" : "Copy Code"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyInviteLink}
+                    className="flex flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-[12px] sm:text-[12.5px] font-bold text-ink transition hover:bg-subtle"
+                  >
+                    <Icon name="arrowUpRight" size={13} />
+                    <span>{lang === "fa" ? "کپی لینک" : lang === "ko" ? "링크 복사" : "Copy Link"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleShareInvite}
+                    className="flex flex-1 sm:flex-initial items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-[12px] sm:text-[12.5px] font-bold text-ink transition hover:bg-subtle"
+                  >
+                    <Icon name="share" size={14} />
+                    <span>{lang === "fa" ? "ارسال به دیگران" : lang === "ko" ? "초대 공유" : "Share"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 3 Metrics Cards */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface/80 p-3 text-center">
+                  <span className="text-[16px] sm:text-[19px] font-black text-ink tabular-nums">
+                    {referralSummary.invitedCount}
+                  </span>
+                  <span className="mt-0.5 text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "دوستان عضو شده" : lang === "ko" ? "초대된 친구" : "Friends Joined"}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface/80 p-3 text-center">
+                  <span className="text-[16px] sm:text-[19px] font-black text-primary-deep tabular-nums">
+                    +{referralSummary.totalPointsEarned}
+                  </span>
+                  <span className="mt-0.5 text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "امتیازات دریافتی" : lang === "ko" ? "획득 포인트" : "Points Earned"}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface/80 p-3 text-center">
+                  <span className="text-[16px] sm:text-[19px] font-black text-amber-500 tabular-nums">
+                    +۳
+                  </span>
+                  <span className="mt-0.5 text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "پاداش هر نفر" : lang === "ko" ? "1인당 보상" : "Per Referral"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Test & Simulation Banner */}
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-primary/40 bg-primary-faint/50 p-3.5 sm:p-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Icon name="sparkle" size={16} className="text-primary shrink-0" />
+              <div>
+                <p className="text-[12.5px] sm:text-[13px] font-extrabold text-ink">
+                  {lang === "fa"
+                    ? "آزمایش شبیه‌سازی عضویت با کد شما"
+                    : lang === "ko"
+                      ? "초대 코드 가입 테스트 시뮬레이션"
+                      : "Simulate a Friend Joining (Test)"}
+                </p>
+                <p className="text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "برای راستی‌آزمایی، یک عضویت تستی ایجاد کنید تا ۳ امتیاز افزوده شود."
+                    : lang === "ko"
+                      ? "가상 친구 가입을 테스트하고 즉시 3포인트를 획득해 보세요."
+                      : "Test instant invite flow to simulate a join and earn 3 points live."}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleSimulateInvite}
+              className="shrink-0 rounded-xl bg-primary px-3 py-2 text-[12px] font-bold text-white shadow-xs transition hover:bg-primary-deep"
+            >
+              {lang === "fa" ? "تست دعوت" : lang === "ko" ? "테스트" : "Test Invite"}
+            </button>
+          </div>
+
+          {/* Invited Friends List */}
+          <div className="rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <div className="flex items-center gap-2">
+                <Icon name="users" size={15} className="text-primary" />
+                <h3 className="font-extrabold text-[13.5px] sm:text-[14px] text-ink">
+                  {lang === "fa"
+                    ? `لیست کاربران دعوت‌شده (${referralSummary.invitedUsers.length})`
+                    : lang === "ko"
+                      ? `초대된 사용자 목록 (${referralSummary.invitedUsers.length})`
+                      : `Invited Users (${referralSummary.invitedUsers.length})`}
+                </h3>
+              </div>
+              <span className="text-[12px] font-bold text-ink-faint">
+                {lang === "fa" ? "فقط برای شما" : lang === "ko" ? "비공개 (본인 전용)" : "Private to you"}
+              </span>
+            </div>
+
+            {referralSummary.invitedUsers.length === 0 ? (
+              <div className="py-8 text-center text-ink-muted">
+                <p className="text-[13px] font-bold">
+                  {lang === "fa"
+                    ? "هنوز دوستی با کد شما ثبت‌نام نکرده است."
+                    : lang === "ko"
+                      ? "아직 초대 코드로 가입한 친구가 없습니다."
+                      : "No friends have signed up with your code yet."}
+                </p>
+                <p className="mt-1 text-[12px] text-ink-faint">
+                  {lang === "fa"
+                    ? "کد دعوت خود را برای دوستان بفرستید تا به این لیست اضافه شوند."
+                    : lang === "ko"
+                      ? "친구들에게 초대 코드를 전송하여 이 목록을 채워보세요."
+                      : "Send your invite code to friends to start filling this list."}
+                </p>
+              </div>
+            ) : (
+              <div className="mt-3 flex flex-col divide-y divide-line">
+                {referralSummary.invitedUsers.map((friend) => (
+                  <div
+                    key={friend.id}
+                    className="flex items-center justify-between py-3 transition hover:bg-subtle/50 px-2 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={friend.avatar}
+                        alt=""
+                        className="size-10 rounded-xl object-cover ring-1 ring-line shadow-2xs shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-[13px] font-extrabold text-ink">
+                          {friend.displayName}
+                        </p>
+                        <p className="truncate text-[12px] font-bold text-ink-muted">
+                          @{friend.username} · {friend.joinedAt}
+                        </p>
+                      </div>
+                    </div>
+
+                    <span className="shrink-0 rounded-full bg-mint/15 px-2.5 py-1 text-[12px] font-black text-mint-deep">
+                      {lang === "fa"
+                        ? `+${friend.earnedPoints} امتیاز`
+                        : lang === "ko"
+                          ? `+${friend.earnedPoints}P 적립`
+                          : `+${friend.earnedPoints} pts`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
