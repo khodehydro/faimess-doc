@@ -20,7 +20,7 @@ import { AuthProvider } from "./AuthContext";
 import { AccountDoor } from "../sections/AccountDoor";
 import { Splash } from "../ui/Splash";
 import { SeoHead } from "../sections/SeoHead";
-import { AdminTopNav } from "../sections/admin/AdminTopNav";
+import { AdminSidebar } from "../sections/admin/AdminSidebar";
 
 /* ------------------------------------------------------------------ *
  *  Shell — the parent card and the five cards inside it.
@@ -83,9 +83,7 @@ export function Shell() {
       {/* top row — three separate pills */}
       <div className="flex flex-wrap items-center gap-4 lg:flex-nowrap">
         <SectionSlot id="brand" params={undefined} />
-        {route === "admin" ? (
-          <AdminTopNav />
-        ) : (
+        {route !== "admin" && (
           <SectionSlot id="nav" params={undefined} />
         )}
         <div className="ms-auto flex items-center">
@@ -101,14 +99,17 @@ export function Shell() {
           column and the player the left one. Each card re-declares `dir` for
           its own text, so nothing inside depends on where it landed. */}
       {route === "admin" ? (
-        <SurfaceCard dir={dir} className="w-full flex-1 min-h-0">
-          <div
-            data-content-scroll
-            className="scroll-slim flex min-h-0 flex-1 flex-col lg:overflow-y-auto"
-          >
-            <Page />
-          </div>
-        </SurfaceCard>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-5">
+          <AdminSidebar />
+          <SurfaceCard dir={dir} className="flex-1 min-w-0 min-h-0">
+            <div
+              data-content-scroll
+              className="scroll-slim flex min-h-0 flex-1 flex-col lg:overflow-y-auto"
+            >
+              <Page />
+            </div>
+          </SurfaceCard>
+        </div>
       ) : (
         <div
           dir={dir}

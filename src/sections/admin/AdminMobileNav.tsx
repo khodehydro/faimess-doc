@@ -1,6 +1,7 @@
 /* ------------------------------------------------------------------ *
  *  FAIMESS Admin Mobile Navigation
  *  Thumb-friendly bottom bar replacing consumer navigation on phones.
+ *  Brand purple background with white text and icons.
  * ------------------------------------------------------------------ */
 
 import { usePreferences } from "../../app/PreferencesContext";
@@ -22,17 +23,17 @@ export function AdminMobileNav() {
 
   return (
     <div className="fixed inset-x-3 bottom-3 z-50">
-      <div className="mx-auto flex w-full max-w-[720px] items-center justify-between gap-1 overflow-x-auto rounded-full border border-line bg-surface/95 p-1.5 shadow-float backdrop-blur-md scroll-rail">
+      <div className="mx-auto flex w-full max-w-[720px] items-center justify-between gap-1 overflow-x-auto rounded-full bg-gradient-to-r from-[#6b4fdd] via-[#5e3ed4] to-[#4c2eba] p-1.5 shadow-float backdrop-blur-md scroll-rail text-white border border-white/20">
         <button
           type="button"
           onClick={() => navigate("home")}
-          className="flex shrink-0 flex-col items-center gap-0.5 rounded-full px-2.5 py-1 text-[12px] font-bold text-ink-muted transition hover:bg-subtle hover:text-ink"
+          className="flex shrink-0 flex-col items-center gap-0.5 rounded-full px-2.5 py-1 text-[12px] font-bold text-white/80 transition hover:bg-white/15 hover:text-white"
         >
-          <Icon name="home" size={16} />
+          <Icon name="home" size={16} className="text-white" />
           <span>{lang === "fa" ? "سایت" : "Exit"}</span>
         </button>
 
-        <div className="h-6 w-px shrink-0 bg-line" />
+        <div className="h-6 w-px shrink-0 bg-white/20" />
 
         {ADMIN_TABS.map((tab) => {
           const isActive = currentTab === tab.id;
@@ -44,12 +45,12 @@ export function AdminMobileNav() {
               className={cn(
                 "flex shrink-0 flex-col items-center gap-0.5 rounded-full px-3 py-1 text-[12px] font-bold transition",
                 isActive
-                  ? "bg-primary-deep text-white shadow-sm"
-                  : "text-ink-muted hover:bg-subtle hover:text-ink",
+                  ? "bg-white/25 text-white shadow-xs ring-1 ring-white/40"
+                  : "text-white/80 hover:bg-white/10 hover:text-white",
               )}
             >
-              <Icon name={tab.icon} size={16} />
-              <span className="truncate max-w-[60px]">{lang === "fa" ? tab.labelFa : tab.labelEn}</span>
+              <Icon name={tab.icon} size={16} className="text-white" />
+              <span className="truncate max-w-[60px] text-white">{lang === "fa" ? tab.labelFa : tab.labelEn}</span>
             </button>
           );
         })}

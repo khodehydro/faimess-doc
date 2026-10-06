@@ -9,6 +9,7 @@ import { ArtistStories } from "../sections/ArtistStories";
 import { BrowseDetailView } from "../sections/BrowseDetailView";
 import { NewsDetailView } from "../sections/news/NewsDetailView";
 import { MobileNav } from "../sections/MobileNav";
+import { AdminMobileNav } from "../sections/admin/AdminMobileNav";
 import { MiniPlayer } from "../sections/MiniPlayer";
 import { PlayerSheet } from "../sections/PlayerSheet";
 import { SurfaceCard } from "../ui/primitives";
@@ -140,7 +141,9 @@ export function CompactShell() {
       </SurfaceCard>
 
       {/* the bottom stack — mini player over the menu, both pinned */}
-      {route !== "admin" && (
+      {route === "admin" ? (
+        <AdminMobileNav />
+      ) : (
         <div className="pointer-events-none fixed inset-x-3 bottom-3 z-50">
           <div className="mx-auto flex w-full max-w-[720px] flex-col gap-2">
             <MiniPlayer onOpen={() => setPlayerOpen(true)} />
