@@ -103,6 +103,16 @@ export const PAGE_SEO: Record<string, { en: { title: string; desc: string }; fa:
       desc: "نصب آسان وب‌اپلیکیشن (PWA) فیمس روی آیفون، اندروید و ویندوز. استریم سریع، مصرف بهینه اینترنت و دسترسی آفلاین به موزیک‌ها.",
     },
   },
+  admin: {
+    en: {
+      title: "FAIMESS Studio Admin Console — Operations & Control",
+      desc: "Super administrator control panel for FAIMESS music catalog, news editorial, community moderation and users.",
+    },
+    fa: {
+      title: "پنل مدیریت کل فیمس — مرکز عملیات و فرماندهی پلتفرم",
+      desc: "پنل مدیریت ارشد برای مدیریت کاتالوگ موسیقی، مقالات تحریریه، نظارت بر کامنت‌ها و کاربران فیمس.",
+    },
+  },
 };
 
 /* ---------------------- Entity Generators -------------------------- */

@@ -17,9 +17,10 @@ export type RouteId =
   | "playlists"
   | "shop"
   | "news"
-  | "download";
+  | "download"
+  | "admin";
 
-export type EntityKind = "artist" | "album" | "playlist" | "track" | "news";
+export type EntityKind = "artist" | "album" | "playlist" | "track" | "news" | "admin";
 
 export type ParsedRoute = {
   route: RouteId;
@@ -42,6 +43,7 @@ export const routes: RouteDef[] = [
 export const contextualRoutes: RouteDef[] = [
   { id: "news", label: "News", path: "#/news" },
   { id: "download", label: "Get the app", path: "#/download" },
+  { id: "admin", label: "Admin Console", path: "#/admin" },
 ];
 
 export const allRoutes: RouteDef[] = [...routes, ...contextualRoutes];
@@ -72,6 +74,9 @@ export function parseHash(hashStr: string): ParsedRoute {
     }
     if (head === "news") {
       return { route: "news", entityKind: "news", entityId: id };
+    }
+    if (head === "admin") {
+      return { route: "admin", entityKind: "admin", entityId: id };
     }
   }
 

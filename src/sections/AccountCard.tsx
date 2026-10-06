@@ -520,8 +520,8 @@ export function ProfileMenuContent({
   onSignOut: () => void;
 }) {
   const { t, lang, setLang, theme, setTheme, locale, dir, dataLabel } = usePreferences();
-  const { notify } = useApp();
-  const { signedIn, openAccount } = useAuth();
+  const { notify, navigate } = useApp();
+  const { signedIn, isAdmin, openAccount } = useAuth();
   const { points, submissions } = useContributions();
   const { canInstall, isInstalled, isIOS, isAndroid, isSecure, install } = usePwaInstall();
   const pendingSheets = submissions.filter(
@@ -620,6 +620,26 @@ export function ProfileMenuContent({
           className={cn("shrink-0 text-primary-deep/70", pendingSheets === 0 && "ms-auto")}
         />
       </button>
+      )}
+
+      {/* admin console link for administrative staff */}
+      {isAdmin && (
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            navigate("admin");
+          }}
+          className="mx-1.5 mb-1.5 flex w-[calc(100%-12px)] items-center justify-between rounded-[13px] border border-primary/30 bg-primary/10 px-3 py-2 text-start transition-colors hover:bg-primary/20"
+        >
+          <div className="flex items-center gap-2">
+            <Icon name="crown" size={14} className="text-primary-deep" />
+            <span className="text-[12px] font-bold text-primary-deep">
+              {t("admin.console")}
+            </span>
+          </div>
+          <Icon name={forwardIcon(dir)} size={12} className="text-primary-deep/70" />
+        </button>
       )}
 
       {/* preferences — language + appearance, both kept in the browser */}
