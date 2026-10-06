@@ -19,6 +19,20 @@ export default defineConfig({
   build: {
     /* keep every bundled photo as its own cacheable file */
     assetsInlineLimit: 2048,
+    target: "es2022",
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("framer-motion")) return "vendor-motion";
+            if (id.includes("react") || id.includes("clsx")) return "vendor-react";
+            return "vendor";
+          }
+        },
+      },
+    },
   },
   plugins: [react(), tailwindcss()],
   server: {
