@@ -777,11 +777,4 @@ html {
 .scroll-rail,
 .scroll-slim {
   -webkit-overflow-scrolling: touch;
-  will-change: scroll-position;
-}
-
-.studio-backdrop,
-.glass-panel {
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }

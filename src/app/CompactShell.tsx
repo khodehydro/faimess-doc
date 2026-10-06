@@ -77,7 +77,7 @@ export function CompactShell() {
   return (
     <div dir={dir} className="flex min-h-dvh w-full flex-col gap-3 px-4 pt-3.5 pb-[10rem] lg:gap-4 lg:pt-4 lg:pb-[11rem]">
       {/* Sticky header pinned at top on mobile and tablet */}
-      <header className="sticky top-0 z-50 -mx-4 -mt-3.5 px-4 pt-3.5 pb-2 bg-backdrop/85 backdrop-blur-md transition-all">
+      <header className="sticky top-0 z-50 -mx-4 -mt-3.5 px-4 pt-3.5 pb-2 bg-canvas/85 backdrop-blur-md shadow-xs transition-all">
         {/* physical left-to-right order: notifications / centred brand / profile.
             A three-column grid — `1fr auto 1fr` — is what actually centres the
             middle column: an absolutely-positioned pill was centred on the
