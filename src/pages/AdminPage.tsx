@@ -7,6 +7,7 @@ import {
   adminApi,
   getDefaultPermissions,
   type AdminAlbum,
+  type AdminCommentRecord,
   type AdminNews,
   type AdminOverviewStats,
   type AdminPlaylist,
@@ -43,13 +44,6 @@ export function AdminPage() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  const switchTab = (tab: AdminTabId) => {
-    setActiveTab(tab);
-    if (typeof window !== "undefined") {
-      window.location.hash = tab === "dashboard" ? "#/admin" : `#/admin/${tab}`;
-    }
-  };
-
   // Synchronize with reactive updates from adminApi
   const refreshData = useCallback(() => {
     setStats(adminApi.getOverviewStats());
@@ -59,6 +53,37 @@ export function AdminPage() {
   useEffect(() => {
     return adminApi.subscribe(refreshData);
   }, [refreshData]);
+
+  /* ---------------- Comments Real-Time Auto-Refresh & State ---------------- */
+  const [commentFilter, setCommentFilter] = useState<"all" | "new" | "reported" | "reviewed">("all");
+  const [autoRefreshComments, setAutoRefreshComments] = useState(true);
+  const [refreshCountdown, setRefreshCountdown] = useState(5);
+  const [commentsRefreshNonce, setCommentsRefreshNonce] = useState(0);
+
+  // Auto-refresh timer for comments in real-time
+  useEffect(() => {
+    if (!autoRefreshComments || activeTab !== "comments") return;
+
+    const interval = window.setInterval(() => {
+      setRefreshCountdown((prev) => {
+        if (prev <= 1) {
+          setCommentsRefreshNonce((n) => n + 1);
+          setStats(adminApi.getOverviewStats());
+          return 5;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [autoRefreshComments, activeTab]);
+
+  const handleManualRefreshComments = () => {
+    setCommentsRefreshNonce((n) => n + 1);
+    setRefreshCountdown(5);
+    setStats(adminApi.getOverviewStats());
+    notify(lang === "fa" ? "فهرست دیدگاه‌ها بروزرسانی شد" : "Comments refreshed", "primary");
+  };
 
   /* ---------------- Track Modal (Create & Edit with Single Track Support) ---------------- */
   const [trackModalOpen, setTrackModalOpen] = useState(false);
@@ -479,12 +504,12 @@ export function AdminPage() {
   const [userPoints, setUserPoints] = useState(100);
   const [userAvatar, setUserAvatar] = useState("/assets/photos/account/me.webp");
 
-  const openCreateUser = () => {
+  const openCreateUser = (presetRole: AdminUserRole = "user") => {
     setEditingUsername(null);
     setUserUsername("");
     setUserDisplayName("");
-    setUserRole("user");
-    setUserPerms(getDefaultPermissions("user"));
+    setUserRole(presetRole);
+    setUserPerms(getDefaultPermissions(presetRole));
     setUserPoints(100);
     setUserAvatar("/assets/photos/account/me.webp");
     setUserModalOpen(true);
@@ -587,10 +612,13 @@ export function AdminPage() {
 
   const existingAlbums = adminApi.getAlbums();
   const existingArtists = adminApi.getArtists();
+  const staffUsers = adminApi.getStaffUsers(searchQuery);
+  const regularUsers = adminApi.getRegularUsers(searchQuery);
+  const allComments = adminApi.getComments(commentFilter, searchQuery);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col p-4 lg:p-6 space-y-6">
-      {/* Executive Header & Quick Controls */}
+      {/* Executive Header & Quick Controls (NO duplicate tab switcher) */}
       <div className="flex flex-col gap-4 rounded-[22px] border border-line bg-surface/80 p-4 shadow-sm backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -636,44 +664,6 @@ export function AdminPage() {
             <span>{lang === "fa" ? "بازنشانی دمو" : "Reset Demo"}</span>
           </button>
         </div>
-      </div>
-
-      {/* Main Tab Switcher Pills */}
-      <div className="flex items-center gap-1.5 overflow-x-auto rounded-[16px] border border-line bg-surface p-1.5 shadow-sm scroll-rail">
-        {ADMIN_TABS.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => switchTab(tab.id)}
-              className={cn(
-                "flex shrink-0 items-center gap-2 rounded-[12px] px-3 py-2 text-[12px] font-extrabold transition",
-                isActive
-                  ? "bg-primary-deep text-white shadow-sm"
-                  : "text-ink-muted hover:bg-subtle hover:text-ink",
-              )}
-            >
-              <Icon name={tab.icon} size={15} />
-              <span>{lang === "fa" ? tab.labelFa : tab.labelEn}</span>
-              {tab.id === "comments" && stats.reportedComments > 0 && (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-flame-deep text-[12px] text-white">
-                  {stats.reportedComments}
-                </span>
-              )}
-              {tab.id === "lyrics" && stats.pendingLyrics > 0 && (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-deep text-[12px] text-white">
-                  {stats.pendingLyrics}
-                </span>
-              )}
-              {tab.id === "news" && stats.pendingNews > 0 && (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-soft text-[12px] text-ink font-black">
-                  {stats.pendingNews}
-                </span>
-              )}
-            </button>
-          );
-        })}
       </div>
 
       {/* ===================== TAB 1: DASHBOARD & MASTER ANALYTICS ===================== */}
@@ -847,14 +837,14 @@ export function AdminPage() {
 
                 <button
                   type="button"
-                  onClick={openCreateUser}
+                  onClick={() => openCreateUser("super_admin")}
                   className="flex flex-col items-center justify-center rounded-[16px] border border-line bg-subtle/50 p-3 text-center transition hover:border-primary-deep hover:bg-surface"
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-subtle text-ink">
                     <Icon name="users" size={16} />
                   </div>
                   <span className="mt-2 font-bold text-[12px] text-ink">
-                    {lang === "fa" ? "+ کاربر / پرسنل" : "+ Add Staff"}
+                    {lang === "fa" ? "+ پرسنل / کاربر" : "+ Add Staff"}
                   </span>
                 </button>
               </div>
@@ -1315,71 +1305,251 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ===================== TAB 7: REPORTED COMMENTS MODERATION ===================== */}
+      {/* ===================== TAB 7: ALL COMMENTS & REAL-TIME AUTO-REFRESH ===================== */}
       {activeTab === "comments" && (
         <div className="space-y-4">
           <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
-            <div className="flex items-center justify-between">
+            {/* Header with Real-Time Auto-Refresh Controls */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="font-extrabold text-[15px] text-ink">
-                  {lang === "fa" ? "میز نظارت بر دیدگاه‌های گزارش‌شده" : "Reported Comments Queue"}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-extrabold text-[16px] text-ink">
+                    {lang === "fa" ? "فهرست تمامی دیدگاه‌ها و نظارت برخط" : "All Comments & Real-Time Moderation"}
+                  </h3>
+                  {autoRefreshComments ? (
+                    <span className="flex items-center gap-1 rounded-full bg-teal-soft px-2.5 py-0.5 text-[12px] font-bold text-teal-deep">
+                      <span className="h-2 w-2 rounded-full bg-teal-deep animate-ping" />
+                      <span>{lang === "fa" ? `بروزرسانی خودکار (${refreshCountdown} ثانیه)` : `Auto-refresh in ${refreshCountdown}s`}</span>
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-subtle px-2.5 py-0.5 text-[12px] font-bold text-ink-muted">
+                      {lang === "fa" ? "بروزرسانی خودکار متوقف" : "Auto-refresh paused"}
+                    </span>
+                  )}
+                </div>
                 <p className="mt-0.5 text-[12px] text-ink-muted">
-                  {lang === "fa" ? "بررسی گزارش‌های ثبت‌شده توسط کاربران و تصمیم‌گیری حذف یا تایید" : "Review reported content"}
+                  {lang === "fa"
+                    ? "دیدگاه‌های جدید دارای هایلایت هستند؛ پس از بررسی و تایید از هایلایت خارج می‌شوند."
+                    : "New comments are highlighted until approved & reviewed."}
                 </p>
               </div>
-              <span className="rounded-full bg-flame-soft px-3 py-1 font-extrabold text-[12px] text-flame-deep">
-                {stats.reportedComments} {lang === "fa" ? "مورد در صف" : "pending"}
-              </span>
+
+              {/* Action Buttons: Toggle Auto-Refresh, Refresh Now, Mark All Reviewed */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAutoRefreshComments((prev) => !prev)}
+                  className={cn(
+                    "rounded-xl border px-3 py-1.5 text-[12px] font-bold transition",
+                    autoRefreshComments
+                      ? "border-teal-deep/30 bg-teal-soft text-teal-deep hover:bg-teal-soft/80"
+                      : "border-line bg-surface text-ink-muted hover:text-ink",
+                  )}
+                >
+                  <Icon name="clock" size={13} className="inline me-1" />
+                  <span>{autoRefreshComments ? (lang === "fa" ? "توقف ریفرش" : "Pause Auto-Sync") : (lang === "fa" ? "فعال‌سازی ریفرش خودکار" : "Start Auto-Sync")}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleManualRefreshComments}
+                  className="flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] font-bold text-ink hover:bg-subtle"
+                >
+                  <Icon name="activity" size={13} />
+                  <span>{lang === "fa" ? "ریفرش در لحظه" : "Refresh Now"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    adminApi.markAllCommentsReviewed();
+                    notify(lang === "fa" ? "تمامی دیدگاه‌ها تایید و از هایلایت خارج شدند" : "All comments approved & unhighlighted", "primary");
+                  }}
+                  className="rounded-xl bg-primary-deep px-3.5 py-1.5 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
+                >
+                  <Icon name="check" size={13} className="inline me-1" />
+                  <span>{lang === "fa" ? "تایید همه دیدگاه‌های جدید" : "Mark All Reviewed"}</span>
+                </button>
+              </div>
             </div>
 
-            <div className="mt-4 space-y-3">
-              {adminApi.getComments("reported").map((cm) => (
-                <div
-                  key={cm.id}
-                  className="rounded-[16px] border border-flame-deep/20 bg-flame-soft/30 p-3.5"
+            {/* Filter Tabs & Search Bar */}
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-line/60 pt-4">
+              <div className="flex items-center gap-1.5 overflow-x-auto scroll-rail">
+                <button
+                  type="button"
+                  onClick={() => setCommentFilter("all")}
+                  className={cn(
+                    "rounded-xl px-3 py-1.5 text-[12px] font-bold transition shrink-0",
+                    commentFilter === "all" ? "bg-ink text-surface" : "bg-subtle text-ink-muted hover:text-ink",
+                  )}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-bold text-[13px] text-ink">{cm.author}</span>
-                      <span className="ms-2 font-mono text-[12px] text-ink-faint">{cm.handle}</span>
-                      <span className="ms-2 text-[12px] text-ink-faint">در {cm.targetTitle}</span>
-                    </div>
-                    <span className="rounded-full bg-flame-soft px-2 py-0.5 text-[12px] font-extrabold text-flame-deep">
-                      {cm.reportReason || "Flagged"}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-[13px] text-ink-body leading-relaxed">{cm.text}</p>
-                  <div className="mt-3 flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        adminApi.approveComment(cm.id);
-                        notify(lang === "fa" ? "دیدگاه تایید و برگردانده شد" : "Comment restored", "primary");
-                      }}
-                      className="rounded-lg border border-line bg-surface px-3 py-1 text-[12px] font-bold text-ink hover:bg-subtle"
-                    >
-                      {lang === "fa" ? "رد گزارش (تایید دیدگاه)" : "Dismiss Flag"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        adminApi.deleteComment(cm.id);
-                        notify(lang === "fa" ? "دیدگاه با موفقیت حذف شد" : "Comment deleted", "primary");
-                      }}
-                      className="rounded-lg bg-flame-deep px-3 py-1 text-[12px] font-bold text-white hover:bg-flame-deep/90"
-                    >
-                      {lang === "fa" ? "حذف دیدگاه و پاسخ‌ها" : "Delete"}
-                    </button>
-                  </div>
-                </div>
-              ))}
+                  {lang === "fa" ? "همه دیدگاه‌ها" : "All"} ({adminApi.getComments("all").length})
+                </button>
 
-              {adminApi.getComments("reported").length === 0 && (
-                <div className="py-8 text-center text-ink-muted">
-                  <Icon name="check" size={24} className="mx-auto text-teal-deep" />
-                  <p className="mt-2 text-[12px] font-bold">
-                    {lang === "fa" ? "صف دیدگاه‌های گزارش‌شده خالی است" : "No reported comments in queue"}
+                <button
+                  type="button"
+                  onClick={() => setCommentFilter("new")}
+                  className={cn(
+                    "rounded-xl px-3 py-1.5 text-[12px] font-bold transition shrink-0 flex items-center gap-1.5",
+                    commentFilter === "new" ? "bg-primary-deep text-white" : "bg-primary-soft/60 text-primary-deep hover:bg-primary-soft",
+                  )}
+                >
+                  <span>{lang === "fa" ? "جدید و هایلایت‌شده" : "New / Highlighted"}</span>
+                  <span className="rounded-full bg-white/20 px-1.5 text-[12px]">
+                    {adminApi.getComments("new").length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCommentFilter("reported")}
+                  className={cn(
+                    "rounded-xl px-3 py-1.5 text-[12px] font-bold transition shrink-0 flex items-center gap-1.5",
+                    commentFilter === "reported" ? "bg-flame-deep text-white" : "bg-flame-soft text-flame-deep hover:bg-flame-soft/80",
+                  )}
+                >
+                  <span>{lang === "fa" ? "صف گزارش‌ها" : "Reported Queue"}</span>
+                  <span className="rounded-full bg-white/20 px-1.5 text-[12px]">
+                    {stats.reportedComments}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCommentFilter("reviewed")}
+                  className={cn(
+                    "rounded-xl px-3 py-1.5 text-[12px] font-bold transition shrink-0",
+                    commentFilter === "reviewed" ? "bg-ink text-surface" : "bg-subtle text-ink-muted hover:text-ink",
+                  )}
+                >
+                  {lang === "fa" ? "تایید و بررسی‌شده" : "Reviewed"} ({adminApi.getComments("reviewed").length})
+                </button>
+              </div>
+
+              <div className="relative min-w-0 max-w-xs flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={lang === "fa" ? "جستجو در متن یا کاربر..." : "Search comments..."}
+                  className="w-full rounded-[12px] border border-line bg-surface py-1.5 pe-3 ps-8 text-[12px] text-ink outline-none focus:border-primary-deep"
+                />
+                <div className="pointer-events-none absolute inset-y-0 start-2.5 flex items-center text-ink-faint">
+                  <Icon name="search" size={13} />
+                </div>
+              </div>
+            </div>
+
+            {/* List of Comments with Distinct Highlighting for New Items */}
+            <div className="mt-4 space-y-3">
+              {allComments.map((cm) => {
+                const isNewAndUnreviewed = cm.isNew && !cm.isReviewed;
+                return (
+                  <div
+                    key={cm.id}
+                    className={cn(
+                      "rounded-[18px] p-4 transition-all duration-300",
+                      isNewAndUnreviewed
+                        ? "border-2 border-primary-deep/70 bg-gradient-to-r from-primary-soft/40 via-surface to-primary-soft/20 shadow-md ring-2 ring-primary-deep/20"
+                        : "border border-line/80 bg-surface/70 hover:bg-surface",
+                    )}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-[13.5px] text-ink">{cm.author}</span>
+                        <span className="font-mono text-[12px] text-ink-faint">{cm.handle}</span>
+                        <span className="rounded bg-subtle px-2 py-0.5 text-[12px] text-ink-muted">
+                          {cm.sourceType === "track" ? (lang === "fa" ? "در قطعه: " : "Track: ") : (lang === "fa" ? "در خبر: " : "Story: ")}
+                          <span className="font-bold text-ink">{cm.targetTitle}</span>
+                        </span>
+                        <span className="text-[12px] text-ink-faint">· {cm.time}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isNewAndUnreviewed && (
+                          <span className="flex items-center gap-1 rounded-full bg-primary-deep px-2.5 py-0.5 text-[12px] font-black text-white shadow-sm">
+                            <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                            <span>{lang === "fa" ? "دیدگاه تازه (نیازمند تایید)" : "New Comment"}</span>
+                          </span>
+                        )}
+
+                        {cm.isReviewed && (
+                          <span className="rounded-full bg-mint-soft px-2.5 py-0.5 text-[12px] font-bold text-teal-deep">
+                            ✓ {lang === "fa" ? "تایید و بررسی شده" : "Reviewed"}
+                          </span>
+                        )}
+
+                        {cm.status === "reported" && (
+                          <span className="rounded-full bg-flame-soft px-2.5 py-0.5 text-[12px] font-black text-flame-deep">
+                            {lang === "fa" ? `گزارش‌شده: ${cm.reportReason || "تخلف محتوا"}` : `Flagged: ${cm.reportReason}`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="mt-2 text-[13px] text-ink leading-relaxed whitespace-pre-wrap">
+                      {cm.text}
+                    </p>
+
+                    <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-line/50 pt-2.5">
+                      <span className="text-[12px] text-ink-faint">
+                        {cm.likes} {lang === "fa" ? "پسندیدن" : "likes"} · {cm.repliesCount} {lang === "fa" ? "پاسخ" : "replies"}
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        {/* Approve / Mark Reviewed Action (Removes Highlight) */}
+                        {isNewAndUnreviewed && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              adminApi.markCommentReviewed(cm.id);
+                              notify(lang === "fa" ? "دیدگاه تایید و از حالت هایلایت خارج شد" : "Approved & unhighlighted", "primary");
+                            }}
+                            className="rounded-lg bg-teal-deep px-3 py-1 text-[12px] font-bold text-white shadow-sm hover:bg-teal-deep/90"
+                          >
+                            <Icon name="check" size={13} className="inline me-1" />
+                            <span>{lang === "fa" ? "تایید و خروج از هایلایت" : "Approve & Unhighlight"}</span>
+                          </button>
+                        )}
+
+                        {cm.status === "reported" && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              adminApi.approveComment(cm.id);
+                              notify(lang === "fa" ? "گزارش رد شد و دیدگاه بازگردانده گردید" : "Flag dismissed", "primary");
+                            }}
+                            className="rounded-lg border border-line bg-surface px-3 py-1 text-[12px] font-bold text-ink hover:bg-subtle"
+                          >
+                            {lang === "fa" ? "رد گزارش (تایید دیدگاه)" : "Dismiss Flag"}
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(lang === "fa" ? "دیدگاه و تمام پاسخ‌های آن حذف شود؟" : "Delete comment and replies?")) {
+                              adminApi.deleteComment(cm.id);
+                              notify(lang === "fa" ? "دیدگاه با موفقیت حذف شد" : "Comment deleted", "primary");
+                            }
+                          }}
+                          className="rounded-lg border border-flame-deep/20 bg-flame-soft px-2.5 py-1 text-[12px] font-bold text-flame-deep hover:bg-flame-soft/80"
+                        >
+                          <Icon name="close" size={13} className="inline me-0.5" />
+                          <span>{lang === "fa" ? "حذف دیدگاه" : "Delete"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {allComments.length === 0 && (
+                <div className="py-10 text-center text-ink-muted">
+                  <Icon name="message" size={28} className="mx-auto text-ink-faint" />
+                  <p className="mt-2 text-[13px] font-bold">
+                    {lang === "fa" ? "هیچ دیدگاهی در این بخش یافت نشد" : "No comments found matching filter"}
                   </p>
                 </div>
               )}
@@ -1620,49 +1790,215 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ===================== TAB 11: USERS & GRANULAR RBAC ===================== */}
+      {/* ===================== TAB 11: USERS (STAFF BOX & ALL REGISTERED USERS BOX) ===================== */}
       {activeTab === "users" && (
-        <div className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative min-w-0 max-w-sm flex-1">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={lang === "fa" ? "جستجو در کاربران بر اساس نام یا نام کاربری..." : "Search users..."}
-                className="w-full rounded-[14px] border border-line bg-surface py-2 pe-3 ps-9 text-[12px] text-ink shadow-sm outline-none focus:border-primary-deep"
-              />
-              <div className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-faint">
-                <Icon name="search" size={14} />
+        <div className="space-y-6">
+          {/* User Metrics & Global Search */}
+          <div className="flex flex-col gap-4 rounded-[22px] border border-line bg-surface p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="rounded-xl bg-subtle px-3 py-1.5">
+                <span className="text-[12px] text-ink-muted">{lang === "fa" ? "کل کاربران ثبت‌نام‌شده" : "Total Users"}:</span>
+                <span className="ms-1.5 font-black text-ink">{staffUsers.length + regularUsers.length}</span>
+              </div>
+              <div className="rounded-xl bg-primary-soft px-3 py-1.5 text-primary-deep">
+                <span className="text-[12px] font-bold">{lang === "fa" ? "کادر نقش‌دار و پرسنل" : "Staff"}:</span>
+                <span className="ms-1.5 font-black">{staffUsers.length}</span>
+              </div>
+              <div className="rounded-xl bg-teal-soft px-3 py-1.5 text-teal-deep">
+                <span className="text-[12px] font-bold">{lang === "fa" ? "هواداران عادی" : "Regular Fans"}:</span>
+                <span className="ms-1.5 font-black">{regularUsers.length}</span>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={openCreateUser}
-              className="flex shrink-0 items-center gap-2 rounded-[14px] bg-primary-deep px-4 py-2 font-bold text-[12px] text-white shadow-sm transition hover:bg-primary-deep/90"
-            >
-              <Icon name="plus" size={15} />
-              <span>{lang === "fa" ? "+ افزودن پرسنل / کاربر" : "+ Add Staff / User"}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <div className="relative min-w-0 max-w-xs flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={lang === "fa" ? "جستجو در تمامی کاربران..." : "Search users..."}
+                  className="w-full rounded-[14px] border border-line bg-surface py-2 pe-3 ps-8 text-[12px] text-ink shadow-sm outline-none focus:border-primary-deep"
+                />
+                <div className="pointer-events-none absolute inset-y-0 start-2.5 flex items-center text-ink-faint">
+                  <Icon name="search" size={13} />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => openCreateUser("super_admin")}
+                className="flex shrink-0 items-center gap-1.5 rounded-[14px] bg-primary-deep px-3.5 py-2 font-bold text-[12px] text-white shadow-sm hover:bg-primary-deep/90"
+              >
+                <Icon name="plus" size={14} />
+                <span>{lang === "fa" ? "+ تعریف پرسنل / نقش جدید" : "+ Add Staff"}</span>
+              </button>
+            </div>
           </div>
 
-          <div className="overflow-x-auto rounded-[20px] border border-line bg-surface shadow-sm scroll-rail">
-            <table className="w-full min-w-[750px] text-start text-[13px]">
-              <thead className="border-b border-line bg-subtle/40 text-ink-muted">
-                <tr>
-                  <th className="py-3 ps-4 text-start font-bold">{lang === "fa" ? "کاربر" : "User"}</th>
-                  <th className="py-3 text-start font-bold">{lang === "fa" ? "نقش اصلی" : "Primary Role"}</th>
-                  <th className="py-3 text-start font-bold">{lang === "fa" ? "دسترسی‌های فعال" : "Permissions"}</th>
-                  <th className="py-3 text-start font-bold">{lang === "fa" ? "وضعیت حساب" : "Status"}</th>
-                  <th className="py-3 text-start font-bold">{lang === "fa" ? "امتیاز" : "Points"}</th>
-                  <th className="py-3 pe-4 text-end font-bold">{lang === "fa" ? "عملیات" : "Actions"}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line/60">
-                {adminApi.getUsers(searchQuery).map((u) => {
-                  const perms = u.permissions || getDefaultPermissions(u.role);
-                  return (
+          {/* BOX 1: STAFF & ROLE HOLDERS (کاربران دارای نقش سازمانی) */}
+          <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
+            <div className="flex items-center justify-between border-b border-line/60 pb-3">
+              <div>
+                <h3 className="font-extrabold text-[15.5px] text-ink flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-soft text-primary-deep">
+                    <Icon name="star" size={13} />
+                  </span>
+                  <span>{lang === "fa" ? "پرسنل و کاربران دارای نقش مدیریتی (Staff & Role Holders)" : "Staff & Role Holders"}</span>
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "کاربران با نقش‌های مدیر کل، مدیر اخبار، نویسنده، ناظر کامنت، مدیر موسیقی یا فروشگاه"
+                    : "Team members with administrative, curation or editorial authority"}
+                </p>
+              </div>
+
+              <span className="rounded-full bg-primary-soft px-3 py-1 font-extrabold text-[12px] text-primary-deep">
+                {staffUsers.length} {lang === "fa" ? "عضو نقش‌دار" : "staff members"}
+              </span>
+            </div>
+
+            <div className="mt-4 overflow-x-auto rounded-[16px] border border-line bg-surface scroll-rail">
+              <table className="w-full min-w-[750px] text-start text-[13px]">
+                <thead className="border-b border-line bg-subtle/40 text-ink-muted">
+                  <tr>
+                    <th className="py-2.5 ps-4 text-start font-bold">{lang === "fa" ? "پرسنل" : "Staff"}</th>
+                    <th className="py-2.5 text-start font-bold">{lang === "fa" ? "نقش سازمانی" : "Role"}</th>
+                    <th className="py-2.5 text-start font-bold">{lang === "fa" ? "دسترسی‌های فعال" : "Permissions"}</th>
+                    <th className="py-2.5 text-start font-bold">{lang === "fa" ? "وضعیت" : "Status"}</th>
+                    <th className="py-2.5 text-start font-bold">{lang === "fa" ? "امتیاز" : "Points"}</th>
+                    <th className="py-2.5 pe-4 text-end font-bold">{lang === "fa" ? "عملیات" : "Actions"}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line/60">
+                  {staffUsers.map((u) => {
+                    const perms = u.permissions || getDefaultPermissions(u.role);
+                    return (
+                      <tr key={u.id} className="transition-colors hover:bg-subtle/50">
+                        <td className="py-2.5 ps-4">
+                          <div className="flex items-center gap-3">
+                            <img src={u.avatar} alt={u.username} className="h-9 w-9 rounded-full object-cover" />
+                            <div>
+                              <p className="font-bold text-ink">{u.displayName}</p>
+                              <p className="font-mono text-[12px] text-ink-faint">@{u.username}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-2.5">
+                          <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[12px] font-bold capitalize text-primary-deep">
+                            {u.role.replace("_", " ")}
+                          </span>
+                        </td>
+                        <td className="py-2.5">
+                          <div className="flex flex-wrap gap-1 max-w-[220px]">
+                            {perms.canApproveNews && (
+                              <span className="rounded bg-teal-soft px-1.5 py-0.5 text-[12px] text-teal-deep font-bold">مدیر خبر</span>
+                            )}
+                            {perms.canWriteNews && !perms.canApproveNews && (
+                              <span className="rounded bg-mint-soft px-1.5 py-0.5 text-[12px] text-ink font-bold">نویسنده</span>
+                            )}
+                            {perms.canModerateComments && (
+                              <span className="rounded bg-purple-soft px-1.5 py-0.5 text-[12px] text-purple-deep font-bold">مدیر کامنت</span>
+                            )}
+                            {perms.canManageTracks && (
+                              <span className="rounded bg-subtle px-1.5 py-0.5 text-[12px] text-ink font-bold">موسیقی</span>
+                            )}
+                            {perms.canManageShop && (
+                              <span className="rounded bg-amber-soft px-1.5 py-0.5 text-[12px] text-ink font-bold">فروشگاه</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-2.5">
+                          <span className={cn(
+                            "rounded-full px-2 py-0.5 text-[12px] font-bold",
+                            u.status === "active" ? "bg-mint-soft text-teal-deep" : "bg-flame-soft text-flame-deep",
+                          )}>
+                            {u.status}
+                          </span>
+                        </td>
+                        <td className="py-2.5 font-bold text-ink">{u.points.toLocaleString(locale)}</td>
+                        <td className="py-2.5 pe-4 text-end">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openEditUser(u)}
+                              className="rounded-lg border border-line bg-surface px-2.5 py-1 text-[12px] font-bold text-ink transition hover:bg-primary-soft hover:text-primary-deep"
+                              title="Edit Permissions & Role"
+                            >
+                              <Icon name="edit" size={13} className="inline me-1" />
+                              <span>{lang === "fa" ? "ویرایش دسترسی‌ها" : "Edit RBAC"}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                adminApi.toggleUserStatus(u.username);
+                                notify(lang === "fa" ? "وضعیت حساب کاربری تغییر کرد" : "Status toggled", "primary");
+                              }}
+                              className="rounded-lg p-1.5 text-ink-faint hover:text-ink"
+                              title={u.status === "active" ? "Suspend" : "Activate"}
+                            >
+                              <Icon name="lock" size={13} />
+                            </button>
+                            {u.role !== "super_admin" && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (window.confirm(lang === "fa" ? `نقش کاربر @${u.username} لغو و به کاربر عادی تبدیل شود؟` : `Demote @${u.username} to regular user?`)) {
+                                    adminApi.updateUserRole(u.username, "user");
+                                    notify(lang === "fa" ? "کاربر به کاربر عادی تنزیل یافت" : "Demoted to regular fan", "primary");
+                                  }
+                                }}
+                                className="rounded-lg border border-line bg-surface px-2 py-1 text-[12px] font-bold text-ink-muted hover:text-ink"
+                                title="Demote to Regular Fan"
+                              >
+                                {lang === "fa" ? "لغو نقش" : "Demote"}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* BOX 2: ALL REGISTERED PLATFORM USERS (لیست تمام کاربران ثبت‌نام‌شده عادی سایت) */}
+          <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
+            <div className="flex items-center justify-between border-b border-line/60 pb-3">
+              <div>
+                <h3 className="font-extrabold text-[15.5px] text-ink flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-mint-soft text-teal-deep">
+                    <Icon name="users" size={13} />
+                  </span>
+                  <span>{lang === "fa" ? "فهرست تمامی کاربران ثبت‌نام‌شده در سایت (Registered Fan Users)" : "All Registered Users"}</span>
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "تمام هواداران و کاربرانی که در سایت حساب کاربری دارند (با امکان ارتقا و اعطای نقش سازمانی)"
+                    : "All registered consumers and fans with one-click promotion to staff roles"}
+                </p>
+              </div>
+
+              <span className="rounded-full bg-subtle px-3 py-1 font-extrabold text-[12px] text-ink-muted">
+                {regularUsers.length} {lang === "fa" ? "کاربر عادی" : "registered users"}
+              </span>
+            </div>
+
+            <div className="mt-4 overflow-x-auto rounded-[16px] border border-line bg-surface scroll-rail">
+              <table className="w-full min-w-[700px] text-start text-[13px]">
+                <thead className="border-b border-line bg-subtle/40 text-ink-muted">
+                  <tr>
+                    <th className="py-2.5 ps-4 text-start font-bold">{lang === "fa" ? "کاربر عضو" : "Member"}</th>
+                    <th className="py-2.5 text-start font-bold">{lang === "fa" ? "تاریخ عضویت" : "Joined"}</th>
+                    <th className="py-2.5 text-start font-bold">{lang === "fa" ? "آخرین فعالیت" : "Last Active"}</th>
+                    <th className="py-2.5 text-start font-bold">{lang === "fa" ? "امتیاز وفاداری" : "Points"}</th>
+                    <th className="py-2.5 text-start font-bold">{lang === "fa" ? "وضعیت حساب" : "Status"}</th>
+                    <th className="py-2.5 pe-4 text-end font-bold">{lang === "fa" ? "عملیات و ارتقای نقش" : "Role Promotion"}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line/60">
+                  {regularUsers.map((u) => (
                     <tr key={u.id} className="transition-colors hover:bg-subtle/50">
                       <td className="py-2.5 ps-4">
                         <div className="flex items-center gap-3">
@@ -1673,27 +2009,9 @@ export function AdminPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-2.5">
-                        <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[12px] font-bold capitalize text-primary-deep">
-                          {u.role.replace("_", " ")}
-                        </span>
-                      </td>
-                      <td className="py-2.5">
-                        <div className="flex flex-wrap gap-1 max-w-[200px]">
-                          {perms.canApproveNews && (
-                            <span className="rounded bg-teal-soft px-1.5 py-0.5 text-[12px] text-teal-deep font-bold">مدیر خبر</span>
-                          )}
-                          {perms.canWriteNews && !perms.canApproveNews && (
-                            <span className="rounded bg-mint-soft px-1.5 py-0.5 text-[12px] text-ink font-bold">نویسنده</span>
-                          )}
-                          {perms.canModerateComments && (
-                            <span className="rounded bg-purple-soft px-1.5 py-0.5 text-[12px] text-purple-deep font-bold">مدیر کامنت</span>
-                          )}
-                          {perms.canManageTracks && (
-                            <span className="rounded bg-subtle px-1.5 py-0.5 text-[12px] text-ink font-bold">موسیقی</span>
-                          )}
-                        </div>
-                      </td>
+                      <td className="py-2.5 text-[12px] text-ink-muted">{u.joinedAt || "Recently"}</td>
+                      <td className="py-2.5 text-[12px] text-ink-muted">{u.lastActive || "Recently"}</td>
+                      <td className="py-2.5 font-bold text-teal-deep">{u.points.toLocaleString(locale)}</td>
                       <td className="py-2.5">
                         <span className={cn(
                           "rounded-full px-2 py-0.5 text-[12px] font-bold",
@@ -1702,50 +2020,62 @@ export function AdminPage() {
                           {u.status}
                         </span>
                       </td>
-                      <td className="py-2.5 font-bold text-ink">{u.points.toLocaleString(locale)}</td>
                       <td className="py-2.5 pe-4 text-end">
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Assign Role / Promote button */}
                           <button
                             type="button"
                             onClick={() => openEditUser(u)}
-                            className="rounded-lg p-1.5 text-ink-faint hover:text-primary-deep"
-                            title="Edit User & Permissions"
+                            className="rounded-lg bg-primary-deep px-3 py-1 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90"
+                            title="Promote to Staff Role"
                           >
-                            <Icon name="edit" size={14} />
+                            <Icon name="plus" size={12} className="inline me-1" />
+                            <span>{lang === "fa" ? "اعطای نقش و ارتقا" : "Assign Role"}</span>
                           </button>
+
                           <button
                             type="button"
                             onClick={() => {
                               adminApi.toggleUserStatus(u.username);
-                              notify(lang === "fa" ? "وضعیت حساب کاربری تغییر کرد" : "Status toggled", "primary");
+                              notify(lang === "fa" ? "وضعیت کاربر تغییر کرد" : "Status changed", "primary");
                             }}
                             className="rounded-lg p-1.5 text-ink-faint hover:text-ink"
                             title={u.status === "active" ? "Suspend" : "Activate"}
                           >
-                            <Icon name="lock" size={14} />
+                            <Icon name="lock" size={13} />
                           </button>
-                          {u.role !== "super_admin" && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (window.confirm(lang === "fa" ? `آیا از حذف حساب @${u.username} اطمینان دارید؟` : `Delete user @${u.username}?`)) {
-                                  adminApi.deleteUser(u.username);
-                                  notify(lang === "fa" ? "کاربر حذف شد" : "User deleted", "primary");
-                                }
-                              }}
-                              className="rounded-lg p-1.5 text-ink-faint hover:text-flame-deep"
-                              title="Delete"
-                            >
-                              <Icon name="close" size={14} />
-                            </button>
-                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(lang === "fa" ? `حذف حساب کاربری @${u.username}؟` : `Delete account @${u.username}?`)) {
+                                adminApi.deleteUser(u.username);
+                                notify(lang === "fa" ? "کاربر حذف شد" : "User deleted", "primary");
+                              }
+                            }}
+                            className="rounded-lg p-1.5 text-ink-faint hover:text-flame-deep"
+                            title="Delete"
+                          >
+                            <Icon name="close" size={13} />
+                          </button>
                         </div>
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+
+                  {regularUsers.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-ink-muted">
+                        <Icon name="users" size={24} className="mx-auto text-ink-faint" />
+                        <p className="mt-2 text-[12px] font-bold">
+                          {lang === "fa" ? "کاربر عادی با این مشخصات یافت نشد" : "No users found"}
+                        </p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -2630,11 +2960,11 @@ export function AdminPage() {
               <div>
                 <h3 className="font-extrabold text-[16px] text-ink">
                   {editingUsername
-                    ? (lang === "fa" ? "ویرایش مشخصات و دسترسی‌های پرسنل" : "Edit User & Granular RBAC")
-                    : (lang === "fa" ? "تعریف پرسنل / کاربر با سطوح دسترسی" : "Add Staff / User with Permissions")}
+                    ? (lang === "fa" ? "ویرایش نقش و دسترسی‌های کاربر" : "Edit User & Granular RBAC")
+                    : (lang === "fa" ? "تعریف یا ارتقای کاربر به نقش جدید" : "Add / Promote User")}
                 </h3>
                 <p className="text-[12px] text-ink-muted">
-                  {lang === "fa" ? "تعیین نقش اصلی و اعطای دسترسی‌های بیشتر و اختصاصی" : "Set primary role and toggle granular permissions"}
+                  {lang === "fa" ? "تعیین نقش سازمانی و اعطای دسترسی‌های بیشتر و اختصاصی" : "Set role and toggle granular permissions"}
                 </p>
               </div>
               <button
@@ -2680,7 +3010,7 @@ export function AdminPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "نقش اصلی حساب" : "Primary Role"}
+                    {lang === "fa" ? "نقش سازمانی حساب" : "Role"}
                   </label>
                   <select
                     value={userRole}
@@ -2688,12 +3018,12 @@ export function AdminPage() {
                     className="mt-1 w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
                   >
                     <option value="super_admin">{lang === "fa" ? "مدیر کل ارشد (Super Admin)" : "Super Admin"}</option>
-                    <option value="news_manager">{lang === "fa" ? "مدیر اخبار (News Manager & Supervisor)" : "News Manager"}</option>
+                    <option value="news_manager">{lang === "fa" ? "مدیر اخبار (News Manager)" : "News Manager"}</option>
                     <option value="news_author">{lang === "fa" ? "نویسنده اخبار (News Author)" : "News Author"}</option>
                     <option value="comment_moderator">{lang === "fa" ? "مدیر نظارت دیدگاه‌ها (Comment Moderator)" : "Comment Moderator"}</option>
-                    <option value="music_curator">{lang === "fa" ? "مدیر کاتالوگ موسیقی و لیریک (Music Curator)" : "Music Curator"}</option>
+                    <option value="music_curator">{lang === "fa" ? "مدیر موسیقی و لیریک (Music Curator)" : "Music Curator"}</option>
                     <option value="shop_manager">{lang === "fa" ? "مدیر فروشگاه (Shop Manager)" : "Shop Manager"}</option>
-                    <option value="user">{lang === "fa" ? "کاربر هوادار (Fan User)" : "Fan User"}</option>
+                    <option value="user">{lang === "fa" ? "کاربر هوادار عادی (Fan User)" : "Fan User"}</option>
                   </select>
                 </div>
 
@@ -2846,7 +3176,7 @@ export function AdminPage() {
                 >
                   {editingUsername
                     ? (lang === "fa" ? "ذخیره تغییرات" : "Save")
-                    : (lang === "fa" ? "افزودن کاربر" : "Add User")}
+                    : (lang === "fa" ? "ذخیره و ثبت کاربر" : "Add User")}
                 </button>
               </div>
             </form>

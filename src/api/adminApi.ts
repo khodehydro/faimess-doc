@@ -200,6 +200,8 @@ export type AdminCommentRecord = {
   status: "approved" | "pending" | "reported";
   reportReason?: string;
   repliesCount: number;
+  isNew?: boolean;
+  isReviewed?: boolean;
 };
 
 export type AdminOverviewStats = {
@@ -210,6 +212,7 @@ export type AdminOverviewStats = {
   totalNews: number;
   totalComments: number;
   reportedComments: number;
+  unreviewedComments?: number;
   pendingLyrics: number;
   pendingNews: number;
   totalShopProducts: number;
@@ -348,15 +351,89 @@ const SEED_USERS: AdminUser[] = [
     bio: "Music catalogue, discography and lyrics inspector.",
   },
   {
+    id: "usr-shop-mgr",
+    username: "merch_director",
+    displayName: "Shop Manager",
+    role: "shop_manager",
+    permissions: getDefaultPermissions("shop_manager"),
+    avatar: "/assets/photos/listeners/miso.webp",
+    points: 3100,
+    joinedAt: "2025-03-01",
+    lastActive: "40 mins ago",
+    status: "active",
+    bio: "Merchandise logistics and order supervisor.",
+  },
+  // Registered Community / Fan Users (Consumer Accounts)
+  {
     id: "usr-yuna",
     username: "yuna_music",
-    displayName: "Yuna",
+    displayName: "Yuna Park",
     role: "user",
     permissions: getDefaultPermissions("user"),
     avatar: "/assets/photos/listeners/yuna.webp",
     points: 1850,
     joinedAt: "2025-04-12",
     lastActive: "2 hrs ago",
+    status: "active",
+  },
+  {
+    id: "usr-taehyun",
+    username: "taehyun_fan",
+    displayName: "Taehyun Starlight",
+    role: "user",
+    permissions: getDefaultPermissions("user"),
+    avatar: "/assets/photos/listeners/taehyun.webp",
+    points: 920,
+    joinedAt: "2025-05-02",
+    lastActive: "15 mins ago",
+    status: "active",
+  },
+  {
+    id: "usr-jxnnie",
+    username: "jxnnie_glow",
+    displayName: "Jennie K",
+    role: "user",
+    permissions: getDefaultPermissions("user"),
+    avatar: "/assets/photos/listeners/jxnnie.webp",
+    points: 3410,
+    joinedAt: "2025-03-18",
+    lastActive: "Just now",
+    status: "active",
+  },
+  {
+    id: "usr-kairos",
+    username: "kairos_orbit",
+    displayName: "Kairos Fanclub",
+    role: "user",
+    permissions: getDefaultPermissions("user"),
+    avatar: "/assets/photos/listeners/kairos.webp",
+    points: 1540,
+    joinedAt: "2025-05-19",
+    lastActive: "3 hrs ago",
+    status: "active",
+  },
+  {
+    id: "usr-ari",
+    username: "ari_beats",
+    displayName: "Ariana V",
+    role: "user",
+    permissions: getDefaultPermissions("user"),
+    avatar: "/assets/photos/listeners/ari.webp",
+    points: 620,
+    joinedAt: "2025-06-01",
+    lastActive: "1 day ago",
+    status: "active",
+  },
+  {
+    id: "usr-jun",
+    username: "jun_listener",
+    displayName: "Jun Song",
+    role: "user",
+    permissions: getDefaultPermissions("user"),
+    avatar: "/assets/photos/listeners/jun.webp",
+    points: 210,
+    joinedAt: "2025-06-10",
+    lastActive: "Yesterday",
     status: "active",
   },
 ];
@@ -366,6 +443,8 @@ function seedComments(news: NewsItem[]): AdminCommentRecord[] {
 
   for (const n of news) {
     for (const c of n.comments) {
+      const isRep = c.id === "c8";
+      const isFresh = c.id === "c1" || c.id === "c5";
       records.push({
         id: `cm-news-${c.id}`,
         sourceType: "news",
@@ -376,14 +455,46 @@ function seedComments(news: NewsItem[]): AdminCommentRecord[] {
         text: c.text,
         time: c.time,
         likes: c.likes,
-        status: c.id === "c8" ? "reported" : "approved",
-        reportReason: c.id === "c8" ? "Spam / off-topic controversy" : undefined,
+        status: isRep ? "reported" : (isFresh ? "pending" : "approved"),
+        reportReason: isRep ? "Spam / off-topic controversy" : undefined,
         repliesCount: c.replies?.length ?? 0,
+        isNew: isFresh,
+        isReviewed: !isFresh && !isRep,
       });
     }
   }
 
   records.push(
+    {
+      id: "cm-track-103",
+      sourceType: "track",
+      targetId: "tr1",
+      targetTitle: "Midnight Seoul",
+      author: "Taehyun",
+      handle: "@taehyun_v",
+      text: "صدای ووکال در این قطعه واقعاً فوق‌العاده ضبط شده، بهترین ترک امسال است!",
+      time: "Just now",
+      likes: 5,
+      status: "pending",
+      repliesCount: 0,
+      isNew: true,
+      isReviewed: false,
+    },
+    {
+      id: "cm-track-104",
+      sourceType: "track",
+      targetId: "tr3",
+      targetTitle: "Neon Bloom",
+      author: "Jennie K",
+      handle: "@jxnnie_glow",
+      text: "عاشق ریتم بیس و درام‌های لایو این آهنگم، پلی‌لیست باشگاه من شده.",
+      time: "2 min ago",
+      likes: 12,
+      status: "pending",
+      repliesCount: 1,
+      isNew: true,
+      isReviewed: false,
+    },
     {
       id: "cm-track-101",
       sourceType: "track",
@@ -396,6 +507,8 @@ function seedComments(news: NewsItem[]): AdminCommentRecord[] {
       likes: 42,
       status: "approved",
       repliesCount: 3,
+      isNew: false,
+      isReviewed: true,
     },
     {
       id: "cm-track-102",
@@ -410,6 +523,8 @@ function seedComments(news: NewsItem[]): AdminCommentRecord[] {
       status: "reported",
       reportReason: "Unsolicited promotional spam",
       repliesCount: 0,
+      isNew: false,
+      isReviewed: false,
     },
   );
 
@@ -690,6 +805,7 @@ export const adminApi = {
     const pendingLyricsCount = state.lyricsSubmissions.filter((s) => s.status === "pending").length;
     const reportedCount = state.comments.filter((c) => c.status === "reported").length;
     const pendingNewsCount = state.news.filter((n) => n.status === "pending_review").length;
+    const unreviewedCount = state.comments.filter((c) => c.isNew && !c.isReviewed).length;
 
     return {
       totalTracks: state.tracks.length,
@@ -700,6 +816,7 @@ export const adminApi = {
       pendingNews: pendingNewsCount,
       totalComments: state.comments.length,
       reportedComments: reportedCount,
+      unreviewedComments: unreviewedCount,
       pendingLyrics: pendingLyricsCount,
       totalShopProducts: state.shop.length,
       totalUsers: state.users.length,
@@ -1249,10 +1366,16 @@ export const adminApi = {
 
   /* ---------------- Comments Moderation API --------- */
 
-  getComments(filter: "all" | "reported" | "approved" = "all", query = "") {
+  getComments(filter: "all" | "reported" | "approved" | "new" | "reviewed" = "all", query = "") {
     let result = [...state.comments];
-    if (filter !== "all") {
-      result = result.filter((c) => c.status === filter);
+    if (filter === "reported") {
+      result = result.filter((c) => c.status === "reported");
+    } else if (filter === "approved") {
+      result = result.filter((c) => c.status === "approved");
+    } else if (filter === "new") {
+      result = result.filter((c) => c.isNew && !c.isReviewed);
+    } else if (filter === "reviewed") {
+      result = result.filter((c) => c.isReviewed);
     }
     const q = query.trim().toLowerCase();
     if (q) {
@@ -1267,10 +1390,34 @@ export const adminApi = {
     return result;
   },
 
+  markCommentReviewed(id: string) {
+    const c = state.comments.find((item) => item.id === id);
+    if (c) {
+      c.isReviewed = true;
+      c.isNew = false;
+      c.status = "approved";
+      c.reportReason = undefined;
+      logActivity("comment_moderator", "Reviewed & Approved Comment", "comment", id, `Marked comment by @${c.handle} as reviewed`);
+      notifyChanges();
+    }
+  },
+
+  markAllCommentsReviewed() {
+    for (const c of state.comments) {
+      c.isReviewed = true;
+      c.isNew = false;
+      if (c.status === "pending") c.status = "approved";
+    }
+    logActivity("comment_moderator", "Bulk Approved Comments", "comment", "all", "Marked all active comments as reviewed and unhighlighted");
+    notifyChanges();
+  },
+
   approveComment(id: string) {
     const c = state.comments.find((item) => item.id === id);
     if (c) {
       c.status = "approved";
+      c.isReviewed = true;
+      c.isNew = false;
       c.reportReason = undefined;
       logActivity("comment_moderator", "Approved Comment", "comment", id, `Restored comment by @${c.handle}`);
       notifyChanges();
@@ -1294,6 +1441,35 @@ export const adminApi = {
       logActivity("comment_moderator", "Deleted Comment", "comment", id, `Removed comment by @${target.handle}${cascadeReplies ? " with replies" : ""}`);
     }
     notifyChanges();
+  },
+
+  addComment(data: {
+    sourceType: "track" | "news";
+    targetId: string;
+    targetTitle: string;
+    author: string;
+    handle: string;
+    text: string;
+  }) {
+    const id = `cm-live-${Date.now().toString(36)}`;
+    const newRecord: AdminCommentRecord = {
+      id,
+      sourceType: data.sourceType,
+      targetId: data.targetId,
+      targetTitle: data.targetTitle,
+      author: data.author,
+      handle: data.handle,
+      text: data.text,
+      time: "Just now",
+      likes: 0,
+      status: "pending",
+      repliesCount: 0,
+      isNew: true,
+      isReviewed: false,
+    };
+    state.comments = [newRecord, ...state.comments];
+    notifyChanges();
+    return newRecord;
   },
 
   /* ---------------- Lyric Submissions API ----------- */
@@ -1379,7 +1555,44 @@ export const adminApi = {
 
   /* ---------------- Users & RBAC API ---------------- */
 
+  syncRegisteredAccounts() {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem("faimess.accounts");
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return;
+
+      let changed = false;
+      for (const acc of parsed) {
+        if (!acc || typeof acc.user !== "string") continue;
+        const uname = acc.user.trim().toLowerCase();
+        const exists = state.users.some((u) => u.username.toLowerCase() === uname);
+        if (!exists) {
+          state.users.push({
+            id: `usr-reg-${uname}`,
+            username: uname,
+            displayName: acc.user.trim(),
+            role: "user",
+            permissions: getDefaultPermissions("user"),
+            avatar: "/assets/photos/account/me.webp",
+            points: 100,
+            joinedAt: "Recently",
+            lastActive: "Just now",
+            status: "active",
+            bio: "Registered fan member.",
+          });
+          changed = true;
+        }
+      }
+      if (changed) notifyChanges();
+    } catch {
+      // Ignore storage reading errors
+    }
+  },
+
   getUsers(query = "", roleFilter = "all") {
+    this.syncRegisteredAccounts();
     let result = [...state.users];
     const q = query.trim().toLowerCase();
     if (q) {
@@ -1391,6 +1604,35 @@ export const adminApi = {
     }
     if (roleFilter !== "all") {
       result = result.filter((u) => u.role === roleFilter);
+    }
+    return result;
+  },
+
+  getStaffUsers(query = "") {
+    this.syncRegisteredAccounts();
+    let result = state.users.filter((u) => u.role !== "user");
+    const q = query.trim().toLowerCase();
+    if (q) {
+      result = result.filter(
+        (u) =>
+          u.username.toLowerCase().includes(q) ||
+          u.displayName.toLowerCase().includes(q) ||
+          u.role.toLowerCase().includes(q),
+      );
+    }
+    return result;
+  },
+
+  getRegularUsers(query = "") {
+    this.syncRegisteredAccounts();
+    let result = state.users.filter((u) => u.role === "user");
+    const q = query.trim().toLowerCase();
+    if (q) {
+      result = result.filter(
+        (u) =>
+          u.username.toLowerCase().includes(q) ||
+          u.displayName.toLowerCase().includes(q),
+      );
     }
     return result;
   },

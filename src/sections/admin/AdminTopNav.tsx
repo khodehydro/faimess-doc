@@ -4,9 +4,11 @@
  *  and quick new-window site launcher.
  * ------------------------------------------------------------------ */
 
+import { useEffect, useState } from "react";
 import { usePreferences } from "../../app/PreferencesContext";
 import { Icon, type IconName } from "../../ui/Icon";
 import { cn } from "../../lib/cn";
+import { adminApi, type AdminOverviewStats } from "../../api/adminApi";
 
 export type AdminTabId =
   | "dashboard"
@@ -51,6 +53,13 @@ export function getActiveAdminTab(): AdminTabId {
 export function AdminTopNav() {
   const { lang } = usePreferences();
   const currentTab = getActiveAdminTab();
+  const [stats, setStats] = useState<AdminOverviewStats>(() => adminApi.getOverviewStats());
+
+  useEffect(() => {
+    return adminApi.subscribe(() => {
+      setStats(adminApi.getOverviewStats());
+    });
+  }, []);
 
   const handleSelectTab = (tabId: AdminTabId) => {
     if (typeof window !== "undefined") {
@@ -86,6 +95,7 @@ export function AdminTopNav() {
       {/* Admin Tabs */}
       {ADMIN_TABS.map((tab) => {
         const isActive = currentTab === tab.id;
+        const unreviewedCommentsCount = stats.unreviewedComments ?? 0;
         return (
           <button
             key={tab.id}
@@ -100,6 +110,21 @@ export function AdminTopNav() {
           >
             <Icon name={tab.icon} size={14} />
             <span>{lang === "fa" ? tab.labelFa : tab.labelEn}</span>
+            {tab.id === "comments" && (unreviewedCommentsCount > 0 || stats.reportedComments > 0) && (
+              <span className="flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-flame-deep px-1 text-[12px] font-black text-white">
+                {unreviewedCommentsCount + stats.reportedComments}
+              </span>
+            )}
+            {tab.id === "lyrics" && stats.pendingLyrics > 0 && (
+              <span className="flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-primary-deep px-1 text-[12px] font-black text-white">
+                {stats.pendingLyrics}
+              </span>
+            )}
+            {tab.id === "news" && stats.pendingNews > 0 && (
+              <span className="flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-amber-soft px-1 text-[12px] font-black text-ink">
+                {stats.pendingNews}
+              </span>
+            )}
           </button>
         );
       })}
