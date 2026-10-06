@@ -23,11 +23,30 @@ import { ClayBadgeIcon } from "../ui/ClayBadgeIcon";
 import { backIcon } from "../lib/rtl";
 import { cn } from "../lib/cn";
 
+// Bundled high-res photography banners for default system choice
+import asiaTourBanner from "../assets/photos/banners/asia-leg.webp";
+import midnightSeoulBanner from "../assets/photos/banners/midnight-seoul.webp";
+import tourAfterglowBanner from "../assets/photos/banners/tour-afterglow.webp";
+import neonBloomBanner from "../assets/photos/albums/neon-bloom.webp";
+import blueHourBanner from "../assets/photos/albums/blue-hour.webp";
+
 /**
- * Points thresholds for unlocking custom gallery uploads
+ * Points thresholds for unlocking custom gallery uploads (Level 2+)
  */
 const POINTS_FOR_CUSTOM_AVATAR = 500;
-const POINTS_FOR_CUSTOM_BANNER = 1000;
+const POINTS_FOR_CUSTOM_BANNER = 500;
+
+/**
+ * Default System Banners accessible by everyone from day 1
+ */
+export const DEFAULT_SYSTEM_BANNERS = [
+  { id: "gradient", titleFa: "طیف گرادیان بنفش", titleEn: "Violet Gradient", url: "" },
+  { id: "midnight-seoul", titleFa: "شب‌های سئول", titleEn: "Midnight Seoul", url: midnightSeoulBanner },
+  { id: "tour-afterglow", titleFa: "تور موسیقی و استیج", titleEn: "Tour Stage", url: tourAfterglowBanner },
+  { id: "asia-leg", titleFa: "کنسرت آسیا", titleEn: "Asia Arena", url: asiaTourBanner },
+  { id: "neon-bloom", titleFa: "نئون بلوم کی‌پاپ", titleEn: "Neon Bloom", url: neonBloomBanner },
+  { id: "blue-hour", titleFa: "افق گرگ و میش", titleEn: "Blue Hour", url: blueHourBanner },
+];
 
 /**
  * Select image from device gallery with client-side canvas compression.
@@ -499,7 +518,7 @@ export function ProfilePage() {
        * ========================================================================= */}
       <section className="relative flex w-full shrink-0 flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-xs transition-shadow duration-300">
         {/* Generous Banner: Custom compressed image or rich atmospheric gradient */}
-        <div className="relative h-32 w-full overflow-hidden bg-gradient-to-r from-primary-deep via-primary to-indigo-600 sm:h-40 md:h-44">
+        <div className="relative h-40 min-h-[160px] w-full shrink-0 overflow-hidden bg-gradient-to-r from-primary-deep via-primary to-indigo-600 sm:h-48 sm:min-h-[192px] md:h-52 md:min-h-[208px]">
           {profile.banner ? (
             <Photo src={profile.banner} alt={profile.name} className="h-full w-full object-cover" />
           ) : (
@@ -570,12 +589,12 @@ export function ProfilePage() {
         </div>
 
         {/* Profile Specifications Body Container */}
-        <div className="relative px-4 pb-4 pt-0 sm:px-6 sm:pb-6">
+        <div className="relative flex flex-col shrink-0 px-4 pb-5 pt-0 sm:px-6 sm:pb-6">
           {/* Top Row: Floating Avatar + Actions Alignment */}
           <div className="flex items-end justify-between">
             {/* Avatar on the Seam with High-Z Ring and Level Crown */}
-            <div className="relative -mt-12 shrink-0 sm:-mt-16 md:-mt-20">
-              <div className="size-20 overflow-hidden rounded-full ring-4 ring-surface bg-surface shadow-xl sm:size-24 md:size-28">
+            <div className="relative -mt-14 shrink-0 sm:-mt-16 md:-mt-20">
+              <div className="size-24 overflow-hidden rounded-full ring-4 ring-surface bg-surface shadow-xl sm:size-28 md:size-32">
                 <Photo src={profile.avatar} alt={profile.name} />
               </div>
               {/* Level Crown Tag */}
@@ -1495,42 +1514,80 @@ export function ProfilePage() {
                 </div>
               </div>
 
-              {/* Profile Banner Selector & Custom Upload (Unlocked at 1,000 points) */}
+              {/* Profile Banner Selector: Default System Banners + Custom Upload (Unlocked at 500 points) */}
               <div>
-                <label className="block text-[12px] font-bold text-ink-muted mb-1.5">
-                  {lang === "fa" ? "بنر پس‌زمینه پروفایل" : "Profile Banner"}
-                </label>
-                {profile.points >= POINTS_FOR_CUSTOM_BANNER ? (
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "بنرهای پیش‌فرض سیستم" : "Default System Banners"}
+                  </label>
+                  <span className="text-[12px] text-ink-faint">
+                    {DEFAULT_SYSTEM_BANNERS.length} {lang === "fa" ? "طرح" : "themes"}
+                  </span>
+                </div>
+
+                {/* Default System Banners Carousel */}
+                <div className="flex items-center gap-2 overflow-x-auto scroll-rail pb-1">
+                  {DEFAULT_SYSTEM_BANNERS.map((bannerItem) => (
                     <button
+                      key={bannerItem.id}
                       type="button"
-                      onClick={handleCustomBannerPick}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-[12px] font-extrabold text-primary-deep transition hover:bg-primary/20"
+                      onClick={() => setEditBanner(bannerItem.url)}
+                      title={lang === "fa" ? bannerItem.titleFa : bannerItem.titleEn}
+                      className={cn(
+                        "group relative h-12 w-20 shrink-0 overflow-hidden rounded-xl border transition",
+                        (editBanner === bannerItem.url || (!editBanner && !bannerItem.url))
+                          ? "border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md"
+                          : "border-line opacity-75 hover:opacity-100",
+                      )}
                     >
-                      <Icon name="folderPlus" size={14} />
-                      <span>{lang === "fa" ? "🖼️ آپلود بنر از گالری" : "Upload Banner"}</span>
+                      {bannerItem.url ? (
+                        <Photo src={bannerItem.url} alt={bannerItem.titleEn} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full bg-gradient-to-r from-primary-deep via-primary to-indigo-600 flex items-center justify-center">
+                          <Icon name="sparkle" size={14} className="text-white" />
+                        </div>
+                      )}
+                      <span className="absolute inset-x-0 bottom-0 bg-black/60 py-0.5 text-[12px] font-bold text-white text-center truncate px-1 backdrop-blur-2xs">
+                        {lang === "fa" ? bannerItem.titleFa : bannerItem.titleEn}
+                      </span>
                     </button>
-                    {editBanner && (
+                  ))}
+                </div>
+
+                {/* Custom Banner Upload from Gallery (Unlocked at 500 points) */}
+                <div className="mt-2">
+                  {profile.points >= POINTS_FOR_CUSTOM_BANNER ? (
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setEditBanner("")}
-                        className="rounded-xl border border-line bg-surface px-2.5 py-2 text-[12px] font-bold text-ink-muted hover:text-rose-500"
+                        onClick={handleCustomBannerPick}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-[12px] font-extrabold text-primary-deep transition hover:bg-primary/20"
                       >
-                        {lang === "fa" ? "حذف" : "Reset"}
+                        <Icon name="folderPlus" size={14} />
+                        <span>{lang === "fa" ? "🖼️ انتخاب بنر دلخواه از گالری (فشرده‌سازی خودکار)" : "Select Custom Banner"}</span>
                       </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between rounded-xl border border-line bg-subtle/70 px-3 py-2 text-[12px] text-ink-muted">
-                    <span className="flex items-center gap-1.5 font-bold">
-                      <Icon name="lock" size={13} className="text-amber-500" />
-                      <span>{lang === "fa" ? "آپلود بنر دلخواه" : "Custom Banner Upload"}</span>
-                    </span>
-                    <span className="font-extrabold text-amber-600">
-                      {lang === "fa" ? `قفل (نیاز به ${POINTS_FOR_CUSTOM_BANNER.toLocaleString()} امتیاز)` : `Locked (${POINTS_FOR_CUSTOM_BANNER} pts)`}
-                    </span>
-                  </div>
-                )}
+                      {editBanner && (
+                        <button
+                          type="button"
+                          onClick={() => setEditBanner("")}
+                          className="rounded-xl border border-line bg-surface px-2.5 py-2 text-[12px] font-bold text-ink-muted hover:text-rose-500"
+                        >
+                          {lang === "fa" ? "حذف" : "Reset"}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between rounded-xl border border-line bg-subtle/70 px-3 py-2 text-[12px] text-ink-muted">
+                      <span className="flex items-center gap-1.5 font-bold">
+                        <Icon name="lock" size={13} className="text-amber-500" />
+                        <span>{lang === "fa" ? "آپلود بنر دلخواه از گالری" : "Custom Banner Upload"}</span>
+                      </span>
+                      <span className="font-extrabold text-amber-600">
+                        {lang === "fa" ? `قفل (نیاز به ${POINTS_FOR_CUSTOM_BANNER.toLocaleString()} امتیاز)` : `Locked (${POINTS_FOR_CUSTOM_BANNER} pts)`}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Display Name */}
