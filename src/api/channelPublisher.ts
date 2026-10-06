@@ -184,6 +184,20 @@ export function generatePostCaption(category: PublishCategory): string {
   return lines;
 }
 
+export function downloadDataUrl(dataUrl: string, filename: string) {
+  if (typeof document === "undefined" || !dataUrl) return;
+  try {
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (err) {
+    // ignore
+  }
+}
+
 // ---------------------------------------------------------------------
 // Canvas Graphic Banner Poster Generator
 // ---------------------------------------------------------------------
@@ -202,27 +216,30 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
 
   // 1. Deep luxury background
   const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1080);
-  bgGrad.addColorStop(0, "#0e1017");
-  bgGrad.addColorStop(0.5, "#151722");
+  bgGrad.addColorStop(0, "#0c0d14");
+  bgGrad.addColorStop(0.4, "#141622");
+  bgGrad.addColorStop(0.8, "#181a28");
   bgGrad.addColorStop(1, "#0a0b10");
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, 1080, 1080);
 
-  // 2. Ambient radial glow (Purple + Rose)
-  const glow1 = ctx.createRadialGradient(200, 200, 10, 200, 200, 500);
-  glow1.addColorStop(0, "rgba(107, 79, 221, 0.35)");
+  // 2. Ambient radial glow (Purple + Rose + Cyan)
+  const glow1 = ctx.createRadialGradient(180, 180, 20, 180, 180, 520);
+  glow1.addColorStop(0, "rgba(107, 79, 221, 0.45)");
+  glow1.addColorStop(0.6, "rgba(107, 79, 221, 0.1)");
   glow1.addColorStop(1, "rgba(107, 79, 221, 0)");
   ctx.fillStyle = glow1;
   ctx.fillRect(0, 0, 1080, 1080);
 
-  const glow2 = ctx.createRadialGradient(880, 880, 10, 880, 880, 520);
-  glow2.addColorStop(0, "rgba(225, 48, 108, 0.25)");
+  const glow2 = ctx.createRadialGradient(900, 900, 20, 900, 900, 550);
+  glow2.addColorStop(0, "rgba(225, 48, 108, 0.35)");
+  glow2.addColorStop(0.7, "rgba(225, 48, 108, 0.08)");
   glow2.addColorStop(1, "rgba(225, 48, 108, 0)");
   ctx.fillStyle = glow2;
   ctx.fillRect(0, 0, 1080, 1080);
 
   // 3. Grid accent pattern
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.035)";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
   ctx.lineWidth = 1;
   for (let x = 40; x < 1080; x += 40) {
     ctx.beginPath();
@@ -238,114 +255,150 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   }
 
   // 4. Header Section
+  // Top brand emblem / logo mark
+  const logoGrad = ctx.createLinearGradient(460, 40, 620, 75);
+  logoGrad.addColorStop(0, "#8267f0");
+  logoGrad.addColorStop(1, "#e1306c");
+  ctx.fillStyle = logoGrad;
+  roundRect(ctx, 510, 32, 60, 24, 12);
+  ctx.fill();
+
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 38px 'Vazirmatn', sans-serif";
+  ctx.font = "bold 13px sans-serif";
   ctx.textAlign = "center";
-  ctx.direction = "rtl";
-  ctx.fillText("FAIMESS MUSIC STUDIO", 540, 90);
+  ctx.fillText("PRO", 540, 48);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 42px 'Vazirmatn', sans-serif";
+  ctx.textAlign = "center";
+  ctx.direction = "ltr";
+  ctx.fillText("FAIMESS MUSIC STUDIO", 540, 102);
 
   ctx.fillStyle = "#ab99ff";
-  ctx.font = "bold 24px 'Vazirmatn', sans-serif";
-  ctx.fillText("گزارش و جدول رتبه‌بندی رسمی هواداران", 540, 130);
+  ctx.font = "bold 22px 'Vazirmatn', sans-serif";
+  ctx.direction = "rtl";
+  ctx.fillText("گزارش و جدول رتبه‌بندی رسمی استودیو فیمس", 540, 138);
 
   // Divider
-  const divGrad = ctx.createLinearGradient(200, 155, 880, 155);
+  const divGrad = ctx.createLinearGradient(160, 158, 920, 158);
   divGrad.addColorStop(0, "rgba(107, 79, 221, 0)");
-  divGrad.addColorStop(0.5, "rgba(107, 79, 221, 0.8)");
+  divGrad.addColorStop(0.5, "rgba(171, 153, 255, 0.85)");
   divGrad.addColorStop(1, "rgba(107, 79, 221, 0)");
   ctx.strokeStyle = divGrad;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.moveTo(200, 155);
-  ctx.lineTo(880, 155);
+  ctx.moveTo(160, 158);
+  ctx.lineTo(920, 158);
   ctx.stroke();
 
   // Category Banner Pill
-  ctx.fillStyle = "rgba(107, 79, 221, 0.22)";
-  ctx.strokeStyle = "rgba(130, 103, 240, 0.4)";
+  ctx.fillStyle = "rgba(107, 79, 221, 0.28)";
+  ctx.strokeStyle = "rgba(171, 153, 255, 0.5)";
   ctx.lineWidth = 1.5;
-  roundRect(ctx, 140, 175, 800, 55, 27);
+  roundRect(ctx, 120, 176, 840, 56, 28);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 22px 'Vazirmatn', sans-serif";
-  ctx.fillText(title, 540, 210);
+  ctx.font = "bold 23px 'Vazirmatn', sans-serif";
+  ctx.direction = "rtl";
+  ctx.textAlign = "center";
+  ctx.fillText(title, 540, 212);
 
   // 5. Items Rows (1 to 5)
-  const startY = 270;
-  const rowHeight = 125;
+  const startY = 265;
+  const rowHeight = 126;
   const gap = 16;
 
   items.forEach((item, i) => {
     const y = startY + i * (rowHeight + gap);
+    const isFirst = item.rank === 1;
+    const isSecond = item.rank === 2;
+    const isThird = item.rank === 3;
 
     // Glass Card Background
-    const isFirst = item.rank === 1;
-    ctx.fillStyle = isFirst ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.04)";
-    ctx.strokeStyle = isFirst
-      ? "rgba(242, 116, 61, 0.6)"
-      : "rgba(255, 255, 255, 0.1)";
-    ctx.lineWidth = isFirst ? 2 : 1;
-    roundRect(ctx, 80, y, 920, rowHeight, 22);
+    if (isFirst) {
+      const grad1 = ctx.createLinearGradient(70, y, 1010, y + rowHeight);
+      grad1.addColorStop(0, "rgba(245, 158, 11, 0.16)");
+      grad1.addColorStop(1, "rgba(220, 39, 67, 0.12)");
+      ctx.fillStyle = grad1;
+      ctx.strokeStyle = "rgba(245, 158, 11, 0.65)";
+      ctx.lineWidth = 2;
+    } else if (isSecond) {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.07)";
+      ctx.strokeStyle = "rgba(203, 213, 225, 0.45)";
+      ctx.lineWidth = 1.5;
+    } else if (isThird) {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.055)";
+      ctx.strokeStyle = "rgba(217, 119, 6, 0.45)";
+      ctx.lineWidth = 1.5;
+    } else {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+      ctx.lineWidth = 1;
+    }
+
+    roundRect(ctx, 70, y, 940, rowHeight, 22);
     ctx.fill();
     ctx.stroke();
 
-    // Rank Circle Badge
-    const rankX = 145;
+    // Rank Medal / Circle on left
+    const rankX = 140;
     const rankY = y + rowHeight / 2;
     ctx.fillStyle = isFirst
-      ? "#f2743d"
-      : item.rank === 2
-        ? "#79bfb3"
-        : item.rank === 3
-          ? "#ab99ff"
+      ? "#f59e0b"
+      : isSecond
+        ? "#94a3b8"
+        : isThird
+          ? "#d97706"
           : "#2b2f38";
     ctx.beginPath();
     ctx.arc(rankX, rankY, 28, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 24px 'Vazirmatn', sans-serif";
+    ctx.font = "900 24px 'Vazirmatn', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(`${item.rank}`, rankX, rankY + 8);
+    ctx.direction = "ltr";
+    const medalSymbol = isFirst ? "🥇" : isSecond ? "🥈" : isThird ? "🥉" : `${item.rank}`;
+    ctx.fillText(medalSymbol, rankX, rankY + (isFirst || isSecond || isThird ? 7 : 8));
 
     // Title & Subtitle (RTL text)
     ctx.direction = "rtl";
     ctx.textAlign = "right";
 
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = isFirst ? "#ffd978" : "#ffffff";
     ctx.font = "bold 26px 'Vazirmatn', sans-serif";
-    ctx.fillText(item.title, 820, y + 48);
+    ctx.fillText(item.title, 950, y + 50);
 
     ctx.fillStyle = "#98a0ae";
     ctx.font = "normal 20px 'Vazirmatn', sans-serif";
-    ctx.fillText(item.subtitle, 820, y + 84);
+    ctx.fillText(item.subtitle, 950, y + 86);
 
     // Metric and badge on left side
     ctx.direction = "ltr";
     ctx.textAlign = "left";
-    ctx.fillStyle = isFirst ? "#f2743d" : "#ab99ff";
-    ctx.font = "bold 22px 'Vazirmatn', sans-serif";
-    ctx.fillText(String(item.metricValue), 200, y + 54);
+    ctx.fillStyle = isFirst ? "#ffd978" : "#ab99ff";
+    ctx.font = "bold 23px 'Vazirmatn', sans-serif";
+    ctx.fillText(String(item.metricValue), 200, y + 55);
 
     ctx.fillStyle = "#6d7482";
     ctx.font = "normal 18px 'Vazirmatn', sans-serif";
-    ctx.fillText(item.metricLabel, 200, y + 84);
+    ctx.fillText(item.metricLabel, 200, y + 86);
 
     if (item.badge) {
-      ctx.fillStyle = "rgba(107, 79, 221, 0.35)";
-      ctx.strokeStyle = "rgba(171, 153, 255, 0.5)";
+      ctx.fillStyle = isFirst ? "rgba(245, 158, 11, 0.25)" : "rgba(107, 79, 221, 0.35)";
+      ctx.strokeStyle = isFirst ? "rgba(245, 158, 11, 0.6)" : "rgba(171, 153, 255, 0.5)";
       ctx.lineWidth = 1;
-      roundRect(ctx, 420, y + 42, 140, 32, 16);
+      roundRect(ctx, 430, y + 44, 150, 34, 17);
       ctx.fill();
       ctx.stroke();
 
       ctx.direction = "rtl";
       ctx.textAlign = "center";
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = isFirst ? "#ffd978" : "#ffffff";
       ctx.font = "bold 15px 'Vazirmatn', sans-serif";
-      ctx.fillText(item.badge, 490, y + 64);
+      ctx.fillText(item.badge, 505, y + 67);
     }
   });
 
@@ -358,7 +411,7 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
 
   ctx.fillStyle = "#6d7482";
   ctx.font = "normal 16px 'Vazirmatn', sans-serif";
-  ctx.fillText("کانال رسمی تلگرام و بله: @faimess_app • توسعه‌دهنده: HYDRO Team", 540, 1040);
+  ctx.fillText("کانال رسمی تلگرام و پیام‌رسان بله: @faimess_app • توسعه‌دهنده: HYDRO Team", 540, 1040);
 
   return canvas.toDataURL("image/png");
 }

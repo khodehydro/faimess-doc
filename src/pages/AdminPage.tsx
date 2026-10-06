@@ -34,6 +34,7 @@ import {
   publishToTelegram,
   testSmsGateway,
   checkAndRunWeeklyAutoPublish,
+  downloadDataUrl,
   type PublishCategory,
   type PublishLogEntry,
 } from "../api/channelPublisher";
@@ -722,12 +723,33 @@ export function AdminPage() {
     try {
       const res = await executeCategoryPublish(cat);
       setPublishLogs(getAuditLogs());
+      if (res.imageBanner) {
+        downloadDataUrl(res.imageBanner, `faimess-${cat}-${Date.now()}.png`);
+      }
       notify(
         lang === "fa"
-          ? `انتشار با موفقیت انجام شد: تلگرام (${res.telegram.success ? "موفق" : "خطا"}) | بله (${res.bale.success ? "موفق" : "خطا"})`
-          : "Published successfully",
-        res.telegram.success || res.bale.success ? "mint" : "primary",
+          ? "تصویر گرافیکی پوستر با موفقیت دانلود شد و در صف انتشار کانال‌ها قرار گرفت."
+          : "Graphic banner image downloaded and queued for publication.",
+        "mint",
       );
+    } finally {
+      setPublishingCat(null);
+    }
+  };
+
+  const handleDownloadOnlyBanner = async (cat: PublishCategory) => {
+    setPublishingCat(cat);
+    try {
+      const img = await generateGraphicBanner(cat);
+      if (img) {
+        downloadDataUrl(img, `faimess-${cat}-${Date.now()}.png`);
+        notify(
+          lang === "fa"
+            ? "تصویر پوستر گرافیکی با کیفیت بالا (PNG) با موفقیت دانلود شد."
+            : "High-resolution banner image downloaded.",
+          "mint",
+        );
+      }
     } finally {
       setPublishingCat(null);
     }
@@ -2972,15 +2994,26 @@ export function AdminPage() {
                         </div>
                       </div>
 
-                      {/* Action Buttons: Preview Graphic & Publish Now */}
-                      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-line/50">
+                      {/* Action Buttons: Download Graphic PNG, Preview Graphic & Publish Now */}
+                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-line/50">
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadOnlyBanner(ev.id)}
+                          disabled={isPublishing}
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-[12px] font-bold text-ink hover:border-primary/40 hover:bg-subtle transition shadow-2xs"
+                          title="دانلود مستقیم تصویر بنر گرافیکی با رزولوشن بالا"
+                        >
+                          <Icon name="download" size={13} />
+                          <span>{lang === "fa" ? "دانلود تصویر بنر" : "Download PNG"}</span>
+                        </button>
+
                         <button
                           type="button"
                           onClick={() => handleOpenPublishPreview(ev.id)}
-                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-[12px] font-bold text-ink hover:bg-subtle transition"
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-[12px] font-bold text-ink hover:bg-subtle transition shadow-2xs"
                         >
                           <Icon name="sparkle" size={13} />
-                          <span>{lang === "fa" ? "پیش‌نمایش گرافیکی" : "Preview Graphic"}</span>
+                          <span>{lang === "fa" ? "پیش‌نمایش" : "Preview"}</span>
                         </button>
 
                         <button
@@ -2988,9 +3021,10 @@ export function AdminPage() {
                           onClick={() => handleExecutePublish(ev.id)}
                           disabled={isPublishing}
                           className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-primary-deep px-3 py-2 text-[12px] font-bold text-white shadow-xs hover:bg-primary-deep/90 disabled:opacity-50 transition"
+                          title="دانلود خودکار بنر و ارسال به کانال‌های تلگرام و بله"
                         >
                           <Icon name="send" size={13} />
-                          <span>{isPublishing ? (lang === "fa" ? "در حال ارسال..." : "Publishing...") : (lang === "fa" ? "انتشار فوری و تست" : "Publish & Test")}</span>
+                          <span>{isPublishing ? (lang === "fa" ? "در حال ارسال..." : "Publishing...") : (lang === "fa" ? "انتشار و دانلود بنر" : "Publish & Download")}</span>
                         </button>
                       </div>
                     </div>
