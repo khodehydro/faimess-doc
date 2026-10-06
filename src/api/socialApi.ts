@@ -738,6 +738,68 @@ export const socialApi = {
     ];
   },
 
+  getPlaylistById(id: string): { id: string; name: string; curator: string; cover: string; trackIds: string[] } | null {
+    // Check all community users
+    for (const [username, user] of Object.entries(COMMUNITY_USERS_SEED)) {
+      const pl = user.playlists.find((p) => p.id === id);
+      if (pl) {
+        return {
+          id: pl.id,
+          name: pl.name,
+          curator: user.displayName || `@${username}`,
+          cover: pl.cover,
+          trackIds: pl.trackIds,
+        };
+      }
+    }
+
+    // Check dynamic pattern pl_${cleanUser}_favorites
+    const match = id.match(/^pl_([^_]+)_favorites$/);
+    if (match) {
+      const cleanUser = match[1];
+      return {
+        id,
+        name: `${cleanUser}’s Favorite Selection`,
+        curator: `@${cleanUser}`,
+        cover: "/assets/photos/playlists/golden-hour.webp",
+        trackIds: ["tr1", "tr2"],
+      };
+    }
+
+    return null;
+  },
+
+  getUserFavorites(username?: string): { trackIds: string[]; albumIds: string[]; playlistIds: string[] } {
+    const cleanUser = (username || socialState.profile.username).toLowerCase().replace(/^@/, "");
+    // Stable per-user favorites seed
+    if (cleanUser === "yuna" || cleanUser === "yuna_music") {
+      return {
+        trackIds: ["nt1", "tr1", "tr3"],
+        albumIds: ["al-afterglow", "al-paper-boats"],
+        playlistIds: ["pl-midnight-drive", "p1"],
+      };
+    }
+    if (cleanUser === "taehyun" || cleanUser === "taehyun_fan") {
+      return {
+        trackIds: ["nt2", "tr2", "tr4"],
+        albumIds: ["al-blue-hour", "al-slow-motion"],
+        playlistIds: ["pl-deep-focus", "p2"],
+      };
+    }
+    if (cleanUser === "jennie" || cleanUser === "jxnnie" || cleanUser === "jxnnie_glow") {
+      return {
+        trackIds: ["nt3", "tr1", "tr5"],
+        albumIds: ["al-velvet-static", "al-afterglow"],
+        playlistIds: ["pl-comeback", "p3"],
+      };
+    }
+    return {
+      trackIds: ["nt1", "tr2", "tr5"],
+      albumIds: ["al-nightbloom", "al-blue-hour"],
+      playlistIds: ["pl-golden-hour", "p1"],
+    };
+  },
+
   /* ---------------- Follow System ---------------- */
 
   isFollowing(idOrUsername: string): boolean {

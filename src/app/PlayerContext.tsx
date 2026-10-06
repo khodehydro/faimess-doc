@@ -52,6 +52,8 @@ type PlayerValue = {
   queueIndex: number;
   /** ids the listener hearted — the rail's "Liked songs" panel reads this */
   liked: string[];
+  likedAlbums: string[];
+  likedPlaylists: string[];
   /** true once a real <audio> element is driving the card */
   realAudio: boolean;
   repeat: RepeatMode;
@@ -62,6 +64,11 @@ type PlayerValue = {
   seek: (seconds: number) => void;
   stop: () => void;
   toggleLike: (id: string) => void;
+  toggleLikeAlbum: (id: string) => void;
+  toggleLikePlaylist: (id: string) => void;
+  isAlbumLiked: (id: string) => boolean;
+  isPlaylistLiked: (id: string) => boolean;
+  isTrackLiked: (id: string) => boolean;
   toggleRepeat: () => void;
 };
 
@@ -76,6 +83,20 @@ const PAGE_SOURCE: QueueSource = {
 
 /** a demo starts with a couple of favourites so the panel isn't empty */
 const SEED_LIKES = ["nt1", "tr3", "tr5"];
+const SEED_LIKED_ALBUMS = ["al-afterglow", "al-cherry-static", "al-blue-hour"];
+const SEED_LIKED_PLAYLISTS = ["pl-midnight-drive", "p1"];
+
+function readLikedStorage(key: string, fallback: string[]): string[] {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 const clamp = (value: number, max: number) => Math.min(Math.max(0, value), Math.max(0, max));
 
@@ -94,13 +115,39 @@ export function PlayerProvider({
   const [track, setTrack] = useState<PlayerTrack | null>(initial);
   const [playing, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
-  const [liked, setLiked] = useState<string[]>(SEED_LIKES);
+  const [liked, setLiked] = useState<string[]>(() => readLikedStorage("faimess.liked_tracks", SEED_LIKES));
+  const [likedAlbums, setLikedAlbums] = useState<string[]>(() => readLikedStorage("faimess.liked_albums", SEED_LIKED_ALBUMS));
+  const [likedPlaylists, setLikedPlaylists] = useState<string[]>(() => readLikedStorage("faimess.liked_playlists", SEED_LIKED_PLAYLISTS));
   /* which list the current run belongs to — see QueueSource above */
   const [source, setSource] = useState<QueueSource>(PAGE_SOURCE);
   const [realAudio, setRealAudio] = useState(false);
   const [repeat, setRepeat] = useState<RepeatMode>("off");
   /* the element's own duration, once metadata is in */
   const [mediaDuration, setMediaDuration] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("faimess.liked_tracks", JSON.stringify(liked));
+      } catch {}
+    }
+  }, [liked]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("faimess.liked_albums", JSON.stringify(likedAlbums));
+      } catch {}
+    }
+  }, [likedAlbums]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("faimess.liked_playlists", JSON.stringify(likedPlaylists));
+      } catch {}
+    }
+  }, [likedPlaylists]);
 
   const repeatRef = useRef<RepeatMode>("off");
   useEffect(() => {
@@ -331,6 +378,18 @@ export function PlayerProvider({
     setLiked((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
   }, []);
 
+  const toggleLikeAlbum = useCallback((id: string) => {
+    setLikedAlbums((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
+  }, []);
+
+  const toggleLikePlaylist = useCallback((id: string) => {
+    setLikedPlaylists((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
+  }, []);
+
+  const isAlbumLiked = useCallback((id: string) => likedAlbums.includes(id), [likedAlbums]);
+  const isPlaylistLiked = useCallback((id: string) => likedPlaylists.includes(id), [likedPlaylists]);
+  const isTrackLiked = useCallback((id: string) => liked.includes(id), [liked]);
+
   /* the fallback clock — only when there is no audio element to follow */
   useEffect(() => {
     if (realAudio || !playing || !track) return;
@@ -359,6 +418,8 @@ export function PlayerProvider({
       queue,
       queueIndex,
       liked,
+      likedAlbums,
+      likedPlaylists,
       realAudio,
       repeat,
       play,
@@ -368,6 +429,11 @@ export function PlayerProvider({
       seek,
       stop,
       toggleLike,
+      toggleLikeAlbum,
+      toggleLikePlaylist,
+      isAlbumLiked,
+      isPlaylistLiked,
+      isTrackLiked,
       toggleRepeat,
     }),
     [
@@ -378,6 +444,8 @@ export function PlayerProvider({
       queue,
       queueIndex,
       liked,
+      likedAlbums,
+      likedPlaylists,
       realAudio,
       repeat,
       play,
@@ -387,6 +455,11 @@ export function PlayerProvider({
       seek,
       stop,
       toggleLike,
+      toggleLikeAlbum,
+      toggleLikePlaylist,
+      isAlbumLiked,
+      isPlaylistLiked,
+      isTrackLiked,
       toggleRepeat,
     ],
   );

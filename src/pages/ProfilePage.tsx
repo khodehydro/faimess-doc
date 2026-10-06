@@ -2,8 +2,10 @@ import { useState, useMemo, useEffect } from "react";
 import { Icon } from "../ui/Icon";
 import { usePreferences } from "../app/PreferencesContext";
 import { useApp } from "../app/AppContext";
+import { usePlayer } from "../app/PlayerContext";
 import { usePlaylists } from "../app/PlaylistsContext";
 import { Photo } from "../ui/Cover";
+import { albums, playlists } from "../data/library";
 import {
   socialApi,
   calculateTierProgress,
@@ -19,7 +21,7 @@ import {
   getBadgeDesc,
 } from "../data/allBadges";
 import { coverPhoto } from "../data/playlists";
-import { trackById } from "../data/player";
+import { trackById, type PlayerTrack, mmss } from "../data/player";
 import { CreatePlaylistDialog } from "../ui/PlaylistDialogs";
 import { FollowListModal } from "../ui/FollowListModal";
 import { ContentRequestModal } from "../ui/ContentRequestModal";
@@ -255,7 +257,8 @@ function CompactClayBadgeCard({
 
 export function ProfilePage() {
   const { lang, dir } = usePreferences();
-  const { notify, viewedProfileUsername, openProfile } = useApp();
+  const { notify, viewedProfileUsername, openProfile, openDetail } = useApp();
+  const player = usePlayer();
   const { mine: myPlaylists } = usePlaylists();
 
   // Load profile for viewed user or self
@@ -323,8 +326,9 @@ export function ProfilePage() {
   const [badgeSearch, setBadgeSearch] = useState("");
   const [selectedBadge, setSelectedBadge] = useState<BadgeStatusItem | null>(null);
 
-  // Navigation Tabs: overview (clean social default), badges (100 grid), playlists, requests, invites
-  const [activeTab, setActiveTab] = useState<"overview" | "badges" | "playlists" | "requests" | "invites">("overview");
+  // Navigation Tabs: overview, favorites, playlists, badges, requests, invites
+  const [activeTab, setActiveTab] = useState<"overview" | "favorites" | "playlists" | "badges" | "requests" | "invites">("overview");
+  const [favFilter, setFavFilter] = useState<"all" | "tracks" | "albums" | "playlists">("all");
 
   // Referral / Invite Action Handlers
   const handleCopyInviteCode = async () => {
@@ -617,6 +621,35 @@ export function ProfilePage() {
       };
     });
   }, [isSelf, myPlaylists, profile.username]);
+
+  // Favorites computation for this profile
+  const likedTracksList = useMemo(() => {
+    const ids = isSelf ? player.liked : socialApi.getUserFavorites(profile.username).trackIds;
+    return ids.map((id) => trackById(id)).filter((t): t is PlayerTrack => !!t);
+  }, [isSelf, player.liked, profile.username]);
+
+  const likedAlbumsList = useMemo(() => {
+    const ids = isSelf ? player.likedAlbums : socialApi.getUserFavorites(profile.username).albumIds;
+    return ids.map((id) => albums.find((a) => a.id === id)).filter((a): a is (typeof albums)[number] => !!a);
+  }, [isSelf, player.likedAlbums, profile.username]);
+
+  const likedPlaylistsList = useMemo(() => {
+    const ids = isSelf ? player.likedPlaylists : socialApi.getUserFavorites(profile.username).playlistIds;
+    return ids.map((id) => {
+      const curated = playlists.find((p) => p.id === id);
+      if (curated) return { id: curated.id, name: curated.name, cover: curated.photo, count: curated.tracks };
+      const own = myPlaylists.find((p) => p.id === id);
+      if (own) {
+        const lead = own.trackIds[0] ? trackById(own.trackIds[0]) : null;
+        return { id: own.id, name: own.name, cover: lead?.photo ?? coverPhoto(own.cover), count: own.trackIds.length };
+      }
+      const userPl = socialApi.getPlaylistById(id);
+      if (userPl) return { id: userPl.id, name: userPl.name, cover: userPl.cover, count: userPl.trackIds.length };
+      return null;
+    }).filter((p): p is { id: string; name: string; cover: string; count: number } => !!p);
+  }, [isSelf, player.likedPlaylists, profile.username, myPlaylists]);
+
+  const totalFavoritesCount = likedTracksList.length + likedAlbumsList.length + likedPlaylistsList.length;
 
   // Filtered 100 Badges
   const filteredBadges = useMemo(() => {
@@ -929,6 +962,26 @@ export function ProfilePage() {
 
         <button
           type="button"
+          onClick={() => setActiveTab("favorites")}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-[12px] sm:text-[12.5px] font-extrabold transition",
+            activeTab === "favorites"
+              ? "bg-primary text-white shadow-xs"
+              : "text-ink-muted hover:text-ink hover:bg-subtle",
+          )}
+        >
+          <Icon name="heart" size={14} className={activeTab === "favorites" ? "fill-white text-white" : "text-rose-500"} />
+          <span>
+            {lang === "fa"
+              ? `علاقه‌مندی‌ها (${totalFavoritesCount})`
+              : lang === "ko"
+                ? `즐겨찾기 (${totalFavoritesCount})`
+                : `Favorites (${totalFavoritesCount})`}
+          </span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab("playlists")}
           className={cn(
             "flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-[12px] sm:text-[12.5px] font-extrabold transition",
@@ -1131,6 +1184,101 @@ export function ProfilePage() {
             </div>
           )}
 
+          {/* Favorites Quick Shelf */}
+          {totalFavoritesCount > 0 && (
+            <div className="rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
+              <div className="flex items-center justify-between border-b border-line pb-3">
+                <div className="flex items-center gap-2">
+                  <Icon name="heart" size={15} className="fill-rose-500 text-rose-500" />
+                  <h2 className="font-extrabold text-[13.5px] sm:text-[14px] text-ink">
+                    {lang === "fa" ? "علاقه‌مندی‌ها" : lang === "ko" ? "즐겨찾기" : "Favorites"}
+                  </h2>
+                  <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-[12px] font-extrabold text-rose-500">
+                    {totalFavoritesCount}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("favorites")}
+                  className="text-[12px] sm:text-[12.5px] font-bold text-primary transition hover:text-primary-deep"
+                >
+                  {lang === "fa" ? "همه ←" : lang === "ko" ? "전체보기 →" : "All →"}
+                </button>
+              </div>
+
+              <div className="mt-3 flex items-center gap-3 overflow-x-auto scroll-rail py-2">
+                {likedTracksList.slice(0, 4).map((tr) => (
+                  <button
+                    key={`fav-tr-${tr.id}`}
+                    type="button"
+                    onClick={() => player.play(tr)}
+                    className="group flex w-[140px] shrink-0 flex-col text-start overflow-hidden rounded-2xl border border-line bg-subtle/50 p-2.5 transition hover:border-primary/40 hover:bg-surface sm:w-[150px] cursor-pointer"
+                  >
+                    <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
+                      <Photo src={tr.photo} alt={tr.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                      <span className="absolute bottom-2 end-2 flex size-7 items-center justify-center rounded-full bg-primary text-white shadow-sm opacity-0 group-hover:opacity-100 transition">
+                        <Icon name="play" size={12} strokeWidth={2.4} />
+                      </span>
+                      <span className="absolute top-2 start-2 rounded-full bg-surface/85 px-1.5 py-0.5 text-[12px] font-bold text-rose-500 shadow-2xs">
+                        <Icon name="heart" size={10} className="inline fill-rose-500 me-0.5" />
+                      </span>
+                    </div>
+                    <h3 className="mt-2 truncate text-[12.5px] font-extrabold text-ink group-hover:text-primary transition">
+                      {tr.title}
+                    </h3>
+                    <p className="truncate text-[12px] font-semibold text-ink-muted">
+                      {tr.artist}
+                    </p>
+                  </button>
+                ))}
+
+                {likedAlbumsList.slice(0, 3).map((alb) => (
+                  <button
+                    key={`fav-alb-${alb.id}`}
+                    type="button"
+                    onClick={() => openDetail({ kind: "album", id: alb.id })}
+                    className="group flex w-[140px] shrink-0 flex-col text-start overflow-hidden rounded-2xl border border-line bg-subtle/50 p-2.5 transition hover:border-primary/40 hover:bg-surface sm:w-[150px] cursor-pointer"
+                  >
+                    <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
+                      <Photo src={alb.photo} alt={alb.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                      <span className="absolute top-2 start-2 rounded-full bg-surface/85 px-1.5 py-0.5 text-[12px] font-bold text-ink">
+                        {lang === "fa" ? "آلبوم" : "Album"}
+                      </span>
+                    </div>
+                    <h3 className="mt-2 truncate text-[12.5px] font-extrabold text-ink group-hover:text-primary transition">
+                      {alb.title}
+                    </h3>
+                    <p className="truncate text-[12px] font-semibold text-ink-muted">
+                      {alb.artist}
+                    </p>
+                  </button>
+                ))}
+
+                {likedPlaylistsList.slice(0, 3).map((pl) => (
+                  <button
+                    key={`fav-pl-${pl.id}`}
+                    type="button"
+                    onClick={() => openDetail({ kind: "playlist", id: pl.id })}
+                    className="group flex w-[140px] shrink-0 flex-col text-start overflow-hidden rounded-2xl border border-line bg-subtle/50 p-2.5 transition hover:border-primary/40 hover:bg-surface sm:w-[150px] cursor-pointer"
+                  >
+                    <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
+                      <Photo src={pl.cover} alt={pl.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                      <span className="absolute top-2 start-2 rounded-full bg-primary/85 px-1.5 py-0.5 text-[12px] font-bold text-white">
+                        {lang === "fa" ? "پلی‌لیست" : "List"}
+                      </span>
+                    </div>
+                    <h3 className="mt-2 truncate text-[12.5px] font-extrabold text-ink group-hover:text-primary transition">
+                      {pl.name}
+                    </h3>
+                    <p className="truncate text-[12px] font-semibold text-ink-muted">
+                      {pl.count} {lang === "fa" ? "آهنگ" : "tracks"}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* User Playlists Shelf */}
           <div className="rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
             <div className="flex items-center justify-between border-b border-line pb-3">
@@ -1164,20 +1312,25 @@ export function ProfilePage() {
             ) : (
               <div className="mt-3 flex items-center gap-3 overflow-x-auto scroll-rail py-2">
                 {displayPlaylists.map((pl) => (
-                  <div
+                  <button
                     key={pl.id}
-                    className="group flex w-[140px] shrink-0 flex-col overflow-hidden rounded-2xl border border-line bg-subtle/50 p-2.5 transition hover:border-primary/40 hover:bg-surface sm:w-[150px]"
+                    type="button"
+                    onClick={() => openDetail({ kind: "playlist", id: pl.id })}
+                    className="group flex w-[140px] shrink-0 flex-col text-start overflow-hidden rounded-2xl border border-line bg-subtle/50 p-2.5 transition hover:border-primary/40 hover:bg-surface sm:w-[150px] cursor-pointer"
                   >
                     <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
                       <Photo src={pl.cover} alt={pl.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                      <span className="absolute bottom-2 end-2 flex size-7 items-center justify-center rounded-full bg-primary text-white shadow-sm opacity-0 group-hover:opacity-100 transition">
+                        <Icon name="play" size={12} strokeWidth={2.4} />
+                      </span>
                     </div>
                     <h3 className="mt-2 truncate text-[12.5px] font-extrabold text-ink group-hover:text-primary transition">
                       {pl.name}
                     </h3>
                     <p className="truncate text-[12px] font-semibold text-ink-muted">
-                      {lang === "fa" ? `${pl.trackIds.length} آهنگ` : lang === "ko" ? `${pl.trackIds.length}곡` : `${pl.trackIds.length} tracks`}
+                      {pl.trackIds.length} {lang === "fa" ? "آهنگ" : "tracks"}
                     </p>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -1254,6 +1407,258 @@ export function ProfilePage() {
       )}
 
       {/* =========================================================================
+       *  TAB: FAVORITES (علاقه‌مندی‌ها - آهنگ‌ها، آلبوم‌ها و پلی‌لیست‌ها)
+       * ========================================================================= */}
+      {activeTab === "favorites" && (
+        <div className="flex w-full shrink-0 flex-col gap-4">
+          {/* Header Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <Icon name="heart" size={17} className="fill-rose-500 text-rose-500" />
+                <h2 className="font-extrabold text-[15px] text-ink">
+                  {lang === "fa" ? "علاقه‌مندی‌ها" : lang === "ko" ? "즐겨찾기" : "Favorites"}
+                </h2>
+                <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-[12px] font-extrabold text-rose-500">
+                  {totalFavoritesCount}
+                </span>
+              </div>
+              <p className="mt-0.5 text-[12px] text-ink-muted">
+                {lang === "fa"
+                  ? "مجموعه آهنگ‌ها، آلبوم‌ها و پلی‌لیست‌های نشان‌شده"
+                  : lang === "ko"
+                    ? "즐겨찾기에 저장된 곡, 앨범 및 플레이리스트"
+                    : "Saved tracks, albums, and playlists"}
+              </p>
+            </div>
+
+            {/* Sub-filter pills */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(
+                [
+                  { id: "all", labelFa: `همه (${totalFavoritesCount})`, labelKo: `전체 (${totalFavoritesCount})`, labelEn: `All (${totalFavoritesCount})` },
+                  { id: "tracks", labelFa: `آهنگ‌ها (${likedTracksList.length})`, labelKo: `곡 (${likedTracksList.length})`, labelEn: `Tracks (${likedTracksList.length})` },
+                  { id: "albums", labelFa: `آلبوم‌ها (${likedAlbumsList.length})`, labelKo: `앨범 (${likedAlbumsList.length})`, labelEn: `Albums (${likedAlbumsList.length})` },
+                  { id: "playlists", labelFa: `پلی‌لیست‌ها (${likedPlaylistsList.length})`, labelKo: `리스트 (${likedPlaylistsList.length})`, labelEn: `Playlists (${likedPlaylistsList.length})` },
+                ] as const
+              ).map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFavFilter(f.id)}
+                  className={cn(
+                    "rounded-xl px-3 py-1.5 text-[12px] font-bold transition cursor-pointer",
+                    favFilter === f.id
+                      ? "bg-primary text-white shadow-xs"
+                      : "border border-line bg-surface text-ink-muted hover:text-ink hover:bg-subtle",
+                  )}
+                >
+                  {lang === "fa" ? f.labelFa : lang === "ko" ? f.labelKo : f.labelEn}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {totalFavoritesCount === 0 ? (
+            <div className="rounded-[22px] border border-line bg-surface py-12 text-center text-ink-muted">
+              <Icon name="heart" size={32} className="mx-auto text-rose-300" />
+              <p className="mt-2 text-[12.5px] font-bold">
+                {lang === "fa"
+                  ? "هنوز هیچ موردی به علاقه‌مندی‌ها اضافه نشده است."
+                  : lang === "ko"
+                    ? "즐겨찾기 항목이 아직 없습니다."
+                    : "No favorite items added yet."}
+              </p>
+              <p className="mt-1 text-[12px] text-ink-muted">
+                {lang === "fa"
+                  ? "با فشردن آیکون قلب در صفحات آهنگ، آلبوم و پلی‌لیست آن‌ها را ذخیره کنید."
+                  : lang === "ko"
+                    ? "곡, 앨범, 플레이리스트에서 하트 아이콘을 눌러 추가하세요."
+                    : "Click the heart icon on any track, album, or playlist to save it."}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-5">
+              {/* Tracks Section */}
+              {(favFilter === "all" || favFilter === "tracks") && likedTracksList.length > 0 && (
+                <div className="rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-line pb-3">
+                    <div className="flex items-center gap-2">
+                      <Icon name="music" size={15} className="text-primary" />
+                      <h3 className="font-extrabold text-[13.5px] sm:text-[14px] text-ink">
+                        {lang === "fa" ? "آهنگ‌های منتخب" : lang === "ko" ? "즐겨찾는 곡" : "Favorite Tracks"}
+                      </h3>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[12px] font-extrabold text-primary-deep">
+                        {likedTracksList.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 divide-y divide-line/60">
+                    {likedTracksList.map((tr) => (
+                      <div
+                        key={`fav-t-${tr.id}`}
+                        onClick={() => player.play(tr)}
+                        className="group flex cursor-pointer items-center justify-between py-2.5 transition hover:bg-subtle/50 px-2 rounded-xl"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="relative size-11 overflow-hidden rounded-xl shadow-xs shrink-0">
+                            <Photo src={tr.photo} alt={tr.title} className="h-full w-full object-cover" />
+                            <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition">
+                              <Icon name="play" size={14} strokeWidth={2.4} />
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-[12.5px] font-extrabold text-ink group-hover:text-primary transition">
+                              {tr.title}
+                            </p>
+                            <span className="truncate text-[12px] font-semibold text-ink-muted">
+                              {tr.artist}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[12px] font-medium text-ink-muted">
+                            {mmss(tr.seconds)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              player.toggleLike(tr.id);
+                              notify(
+                                player.liked.includes(tr.id)
+                                  ? (lang === "fa" ? `«${tr.title}» از علاقه‌مندی‌ها حذف شد` : `Removed "${tr.title}" from favorites`)
+                                  : (lang === "fa" ? `«${tr.title}» به علاقه‌مندی‌ها اضافه شد` : `Added "${tr.title}" to favorites`),
+                                "primary",
+                              );
+                            }}
+                            title={lang === "fa" ? "حذف از علاقه‌مندی‌ها" : "Remove from favorites"}
+                            className="flex size-8 items-center justify-center rounded-full text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+                          >
+                            <Icon name="heart" size={16} className="fill-rose-500 text-rose-500" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Albums Section */}
+              {(favFilter === "all" || favFilter === "albums") && likedAlbumsList.length > 0 && (
+                <div className="rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-line pb-3">
+                    <div className="flex items-center gap-2">
+                      <Icon name="disc" size={15} className="text-primary" />
+                      <h3 className="font-extrabold text-[13.5px] sm:text-[14px] text-ink">
+                        {lang === "fa" ? "آلبوم‌های منتخب" : lang === "ko" ? "즐겨찾는 앨범" : "Favorite Albums"}
+                      </h3>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[12px] font-extrabold text-primary-deep">
+                        {likedAlbumsList.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    {likedAlbumsList.map((alb) => (
+                      <div
+                        key={`fav-a-${alb.id}`}
+                        onClick={() => openDetail({ kind: "album", id: alb.id })}
+                        className="group relative flex flex-col text-start overflow-hidden rounded-2xl border border-line bg-subtle/40 p-2.5 transition hover:border-primary/40 hover:bg-surface cursor-pointer"
+                      >
+                        <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
+                          <Photo src={alb.photo} alt={alb.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              player.toggleLikeAlbum(alb.id);
+                              notify(
+                                player.isAlbumLiked(alb.id)
+                                  ? (lang === "fa" ? `آلبوم «${alb.title}» از علاقه‌مندی‌ها حذف شد` : `Removed "${alb.title}" from favorites`)
+                                  : (lang === "fa" ? `آلبوم «${alb.title}» به علاقه‌مندی‌ها اضافه شد` : `Added "${alb.title}" to favorites`),
+                                "primary",
+                              );
+                            }}
+                            title={lang === "fa" ? "حذف از علاقه‌مندی‌ها" : "Remove from favorites"}
+                            className="absolute top-2 end-2 flex size-7 items-center justify-center rounded-full bg-surface/90 text-rose-500 shadow-xs hover:scale-110 transition cursor-pointer"
+                          >
+                            <Icon name="heart" size={14} className="fill-rose-500 text-rose-500" />
+                          </button>
+                        </div>
+                        <h4 className="mt-2 truncate text-[12.5px] font-extrabold text-ink group-hover:text-primary transition">
+                          {alb.title}
+                        </h4>
+                        <p className="truncate text-[12px] font-semibold text-ink-muted">
+                          {alb.artist} · {alb.tracks} {lang === "fa" ? "آهنگ" : "tracks"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Playlists Section */}
+              {(favFilter === "all" || favFilter === "playlists") && likedPlaylistsList.length > 0 && (
+                <div className="rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-line pb-3">
+                    <div className="flex items-center gap-2">
+                      <Icon name="disc" size={15} className="text-primary" />
+                      <h3 className="font-extrabold text-[13.5px] sm:text-[14px] text-ink">
+                        {lang === "fa" ? "پلی‌لیست‌های منتخب" : lang === "ko" ? "즐겨찾는 플레이리스트" : "Favorite Playlists"}
+                      </h3>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[12px] font-extrabold text-primary-deep">
+                        {likedPlaylistsList.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    {likedPlaylistsList.map((pl) => (
+                      <div
+                        key={`fav-p-${pl.id}`}
+                        onClick={() => openDetail({ kind: "playlist", id: pl.id })}
+                        className="group relative flex flex-col text-start overflow-hidden rounded-2xl border border-line bg-subtle/40 p-2.5 transition hover:border-primary/40 hover:bg-surface cursor-pointer"
+                      >
+                        <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
+                          <Photo src={pl.cover} alt={pl.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              player.toggleLikePlaylist(pl.id);
+                              notify(
+                                player.isPlaylistLiked(pl.id)
+                                  ? (lang === "fa" ? `پلی‌لیست «${pl.name}» از علاقه‌مندی‌ها حذف شد` : `Removed "${pl.name}" from favorites`)
+                                  : (lang === "fa" ? `پلی‌لیست «${pl.name}» به علاقه‌مندی‌ها اضافه شد` : `Added "${pl.name}" to favorites`),
+                                "primary",
+                              );
+                            }}
+                            title={lang === "fa" ? "حذف از علاقه‌مندی‌ها" : "Remove from favorites"}
+                            className="absolute top-2 end-2 flex size-7 items-center justify-center rounded-full bg-surface/90 text-rose-500 shadow-xs hover:scale-110 transition cursor-pointer"
+                          >
+                            <Icon name="heart" size={14} className="fill-rose-500 text-rose-500" />
+                          </button>
+                        </div>
+                        <h4 className="mt-2 truncate text-[12.5px] font-extrabold text-ink group-hover:text-primary transition">
+                          {pl.name}
+                        </h4>
+                        <p className="truncate text-[12px] font-semibold text-ink-muted">
+                          {pl.count} {lang === "fa" ? "آهنگ" : "tracks"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* =========================================================================
        *  TAB 1: PLAYLISTS (مدیریت پلی‌لیست‌ها با کاور آهنگ اول)
        * ========================================================================= */}
       {activeTab === "playlists" && (
@@ -1296,12 +1701,17 @@ export function ProfilePage() {
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {displayPlaylists.map((pl) => (
-                <div
+                <button
                   key={pl.id}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface p-3 shadow-xs transition hover:border-primary/40 hover:shadow-sm"
+                  type="button"
+                  onClick={() => openDetail({ kind: "playlist", id: pl.id })}
+                  className="group flex flex-col text-start overflow-hidden rounded-2xl border border-line bg-surface p-3 shadow-xs transition hover:border-primary/40 hover:shadow-sm cursor-pointer"
                 >
                   <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
                     <Photo src={pl.cover} alt={pl.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                    <span className="absolute bottom-2 end-2 flex size-8 items-center justify-center rounded-full bg-primary text-white shadow-md opacity-0 group-hover:opacity-100 transition">
+                      <Icon name="play" size={14} strokeWidth={2.4} />
+                    </span>
                   </div>
                   <h3 className="mt-2.5 truncate text-[13px] font-black text-ink group-hover:text-primary transition">
                     {pl.name}
@@ -1309,7 +1719,7 @@ export function ProfilePage() {
                   <p className="truncate text-[12px] font-semibold text-ink-muted">
                     {lang === "fa" ? `${pl.trackIds.length} آهنگ` : lang === "ko" ? `${pl.trackIds.length}곡` : `${pl.trackIds.length} tracks`}
                   </p>
-                </div>
+                </button>
               ))}
             </div>
           )}

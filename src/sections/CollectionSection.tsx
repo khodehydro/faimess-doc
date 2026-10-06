@@ -221,7 +221,21 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
           </Meta>
         </span>
         <span onClick={(e) => e.stopPropagation()} className="shrink-0">
-          <CircleButton icon="heart" size="sm" tone="ghost" label={t("page.saveAlbum")} onClick={() => notify(t("toast.saved", { name: album.title }), "mint")} />
+          <CircleButton
+            icon="heart"
+            size="sm"
+            tone={player.isAlbumLiked(album.id) ? "primary" : "ghost"}
+            label={t("page.saveAlbum")}
+            onClick={() => {
+              player.toggleLikeAlbum(album.id);
+              notify(
+                player.isAlbumLiked(album.id)
+                  ? t("toast.removedFromFavorites", { name: album.title })
+                  : t("toast.addedToFavorites", { name: album.title }),
+                "mint",
+              );
+            }}
+          />
         </span>
       </div>
     </CardShell>
@@ -230,7 +244,8 @@ function AlbumCard({ album }: { album: (typeof albums)[number] }) {
 
 function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
   const { t, dataLabel } = usePreferences();
-  const { openDetail } = useApp();
+  const { openDetail, notify } = useApp();
+  const player = usePlayer();
   return (
     <motion.button
       variants={popChild}
@@ -255,6 +270,26 @@ function PlaylistRow({ playlist }: { playlist: (typeof playlists)[number] }) {
             {t("playlist.trackCount", { count: playlist.tracks })} · {dataLabel(playlist.duration)}
           </Meta>
         </span>
+      </span>
+      <span
+        onClick={(e) => {
+          e.stopPropagation();
+          player.toggleLikePlaylist(playlist.id);
+          notify(
+            player.isPlaylistLiked(playlist.id)
+              ? t("toast.removedFromFavorites", { name: playlist.name })
+              : t("toast.addedToFavorites", { name: playlist.name }),
+            "mint",
+          );
+        }}
+        className="shrink-0"
+      >
+        <CircleButton
+          icon="heart"
+          size="sm"
+          tone={player.isPlaylistLiked(playlist.id) ? "primary" : "ghost"}
+          label={t("page.savePlaylist")}
+        />
       </span>
       <span className="me-1 hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100 lg:block">
         <span className="flex size-9 items-center justify-center rounded-full bg-primary text-white shadow-primary">

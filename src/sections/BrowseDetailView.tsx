@@ -13,6 +13,7 @@ import { Icon } from "../ui/Icon";
 import { CircleButton, ExpandPill, PillButton } from "../ui/primitives";
 import { CreatePlaylistDialog } from "../ui/PlaylistDialogs";
 import { ShareDialog } from "../ui/ShareDialog";
+import { socialApi } from "../api/socialApi";
 import { librarySubject, type LibraryKind } from "../data/share";
 import { spring } from "../lib/motion";
 import { backIcon } from "../lib/rtl";
@@ -178,6 +179,24 @@ export function BrowseDetailView() {
           seed: curated.seed,
           tracks,
         };
+      } else {
+        const userPl = socialApi.getPlaylistById(detail.id);
+        if (userPl) {
+          const tracks = userPl.trackIds
+            .map((id) => trackById(id))
+            .filter((track): track is PlayerTrack => !!track);
+          const resolvedTracks = tracks.length > 0 ? tracks : QUEUE.slice(0, 3);
+          heading = {
+            kind: "playlist",
+            id: userPl.id,
+            title: userPl.name,
+            byline: userPl.curator,
+            facts: `${countOf(resolvedTracks, t)} · ${t("detail.minutes", { n: minutesOf(resolvedTracks) })}`,
+            cover: resolvedTracks[0]?.photo ?? userPl.cover,
+            seed: 0,
+            tracks: resolvedTracks,
+          };
+        }
       }
     }
   }
@@ -366,9 +385,57 @@ export function BrowseDetailView() {
 
         {/* the name, and the details straight under it */}
         <div className="min-w-0 flex-1">
-          <h2 className="font-display truncate text-[19px] font-bold leading-tight tracking-[-0.016em] text-ink lg:text-[23px]">
-            {heading.title}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-display truncate text-[19px] font-bold leading-tight tracking-[-0.016em] text-ink lg:text-[23px]">
+              {heading.title}
+            </h2>
+            {(heading.kind === "album" || heading.kind === "playlist") && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (heading.kind === "album") {
+                    player.toggleLikeAlbum(heading.id);
+                    notify(
+                      player.isAlbumLiked(heading.id)
+                        ? t("toast.removedFromFavorites", { name: heading.title })
+                        : t("toast.addedToFavorites", { name: heading.title }),
+                      "primary",
+                    );
+                  } else {
+                    player.toggleLikePlaylist(heading.id);
+                    notify(
+                      player.isPlaylistLiked(heading.id)
+                        ? t("toast.removedFromFavorites", { name: heading.title })
+                        : t("toast.addedToFavorites", { name: heading.title }),
+                      "primary",
+                    );
+                  }
+                }}
+                aria-label={
+                  (heading.kind === "album" ? player.isAlbumLiked(heading.id) : player.isPlaylistLiked(heading.id))
+                    ? t("toast.removedFromFavorites", { name: heading.title })
+                    : t("toast.addedToFavorites", { name: heading.title })
+                }
+                title={
+                  (heading.kind === "album" ? player.isAlbumLiked(heading.id) : player.isPlaylistLiked(heading.id))
+                    ? t("toast.removedFromFavorites", { name: heading.title })
+                    : t("toast.addedToFavorites", { name: heading.title })
+                }
+                className={cn(
+                  "flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
+                  (heading.kind === "album" ? player.isAlbumLiked(heading.id) : player.isPlaylistLiked(heading.id))
+                    ? "bg-rose-500/15 text-rose-500"
+                    : "text-ink-faint hover:bg-subtle hover:text-rose-500",
+                )}
+              >
+                <Icon
+                  name="heart"
+                  size={17}
+                  className={(heading.kind === "album" ? player.isAlbumLiked(heading.id) : player.isPlaylistLiked(heading.id)) ? "fill-rose-500 text-rose-500" : ""}
+                />
+              </button>
+            )}
+          </div>
           {/* `truncate` is a desktop luxury: on a phone both lines are
               allowed to wrap rather than end in an ellipsis */}
           <p className="mt-0.5 text-[12.5px] font-bold text-ink-muted lg:mt-1 lg:text-[13.5px] lg:truncate">{heading.byline}</p>
