@@ -12,6 +12,9 @@ import { banners } from "../data/banners";
 import { cn } from "../lib/cn";
 import { EASE, spring } from "../lib/motion";
 import { usePreferences } from "../app/PreferencesContext";
+import { useApp } from "../app/AppContext";
+import { usePlayer } from "../app/PlayerContext";
+import { trackById } from "../data/player";
 import { dirSign } from "../lib/rtl";
 
 const AUTOPLAY_MS = 7000;
@@ -26,12 +29,48 @@ const AUTOPLAY_MS = 7000;
 
 export function HeroBanner() {
   const { t, dir: writing, text } = usePreferences();
+  const { navigate, openDetail, openNews, notify } = useApp();
+  const { play } = usePlayer();
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState(1);
   const [paused, setPaused] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
 
   const banner = banners[index];
+
+  const handleBannerClick = () => {
+    if (isDragging.current) return;
+
+    if (banner.kind === "news" || banner.newsId) {
+      openNews(banner.newsId ?? "nw1");
+      return;
+    }
+    if (banner.kind === "song" || banner.trackId) {
+      const tr = trackById(banner.trackId ?? "tr1");
+      if (tr) {
+        play(tr);
+        notify(text(`banner.${banner.id}.title`, banner.title), "mint");
+      }
+      return;
+    }
+    if (banner.kind === "album" || banner.albumId) {
+      openDetail({ kind: "album", id: banner.albumId ?? "al2" });
+      return;
+    }
+    if (banner.kind === "artist" || banner.artistId) {
+      openDetail({ kind: "artist", id: banner.artistId ?? "ar1" });
+      return;
+    }
+    if (banner.kind === "playlist" || banner.playlistId) {
+      openDetail({ kind: "playlist", id: banner.playlistId ?? "p1" });
+      return;
+    }
+    if (banner.kind === "shop" || banner.productId) {
+      navigate("shop");
+      return;
+    }
+  };
 
   const go = useCallback((step: number) => {
     setDir(step);
@@ -113,14 +152,21 @@ export function HeroBanner() {
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.12}
           dragMomentum={false}
+          onDragStart={() => {
+            isDragging.current = true;
+          }}
           onDragEnd={(_, info) => {
+            setTimeout(() => {
+              isDragging.current = false;
+            }, 60);
             /* dragging towards the inline end goes forward, whichever way
                that is on screen */
             const travel = info.offset.x * dirSign(writing);
             if (travel < -70) go(1);
             else if (travel > 70) go(-1);
           }}
-          className="absolute inset-0 cursor-grab active:cursor-grabbing"
+          onClick={handleBannerClick}
+          className="absolute inset-0 cursor-pointer active:cursor-grabbing"
         >
           {/* the parallax layer is composited on its own (`will-change`) so the
               moving photo never forces the text above it to re-rasterise —
@@ -147,6 +193,9 @@ export function HeroBanner() {
             dir="auto"
             className="pointer-events-none absolute bottom-[3.6rem] start-4 max-w-[84%] min-[480px]:bottom-14 sm:bottom-7 sm:start-7 sm:max-w-[46%]"
           >
+            <span className="mb-1.5 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[12px] font-bold text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
+              {text(`banner.${banner.id}.eyebrow`, banner.eyebrow)}
+            </span>
             <h2 className="font-display text-[19px] font-bold leading-[1.2] tracking-[-0.018em] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] min-[480px]:text-[22px] sm:text-[24px] lg:text-[27px] lg:leading-[1.15]">
               {text(`banner.${banner.id}.title`, banner.title)}
             </h2>

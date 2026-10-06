@@ -880,6 +880,66 @@ export const STRINGS: Record<string, Entry> = {
     fa: "سینگل تازه همه‌جا منتشر شد — امشب ساعت ۲۰:۰۰ به وقت کره مهمانی شنیدن داریم.",
     ko: "신곡이 전 세계에 공개됐어요 — 오늘 밤 20:00 (KST) 리스닝 파티.",
   },
+  "banner.banner-shop-hoodie.title": {
+    en: "On Stage Tour Hoodie",
+    fa: "هودی تور On Stage",
+    ko: "온 스테이지 투어 후디",
+  },
+  "banner.banner-shop-hoodie.subtitle": {
+    en: "Heavyweight oversized fleece with tour embroidery — limited stock.",
+    fa: "هودی اورسایز گرم با گلدوزی اختصاصی تور — موجودی محدود.",
+    ko: "투어 자수가 들어간 헤비웨이트 오버핏 플리스 — 한정 수량.",
+  },
+  "banner.banner-playlist-drive.title": {
+    en: "Late Night Drive",
+    fa: "پلی‌لیست رانندگی شبانه",
+    ko: "레이트 나이트 드라이브",
+  },
+  "banner.banner-playlist-drive.subtitle": {
+    en: "Neon-lit city beats, smooth synth-wave and midnight vocals.",
+    fa: "بیت‌های نئونی شهری، سینث‌ویو نرم و وکال‌های نیمه‌شب.",
+    ko: "네온사인 도시의 비트, 감각적인 신스웨이브와 미드나잇 보컬.",
+  },
+  "banner.banner-artist-prism9.title": {
+    en: "PRISM9 — Velvet Static",
+    fa: "PRISM9 — Velvet Static",
+    ko: "PRISM9 — Velvet Static",
+  },
+  "banner.banner-artist-prism9.subtitle": {
+    en: "Explore the full discography, singles, and member stories.",
+    fa: "کشف دیسکوگرافی کامل، تک‌آهنگ‌ها و داستان اعضا.",
+    ko: "전체 디스코그래피, 싱글, 멤버 스토리 만나보기.",
+  },
+  "banner.afterglow-tour.eyebrow": {
+    en: "World tour",
+    fa: "تور جهانی",
+    ko: "월드 투어",
+  },
+  "banner.prism9-asia.eyebrow": {
+    en: "New dates",
+    fa: "تاریخ‌های جدید",
+    ko: "새 일정",
+  },
+  "banner.midnight-seoul.eyebrow": {
+    en: "Out now",
+    fa: "منتشر شد",
+    ko: "신규 발매",
+  },
+  "banner.banner-shop-hoodie.eyebrow": {
+    en: "Official Merch",
+    fa: "مرچ رسمی",
+    ko: "공식 굿즈",
+  },
+  "banner.banner-playlist-drive.eyebrow": {
+    en: "Curated Playlist",
+    fa: "پلی‌لیست منتخب",
+    ko: "추천 플레이리스트",
+  },
+  "banner.banner-artist-prism9.eyebrow": {
+    en: "Featured Artist",
+    fa: "هنرمند منتخب",
+    ko: "추천 아티스트",
+  },
 
   /* --------------------------- news copy ------------------------------- *
    *  Headlines and standfirsts from the K-pop desk: the same rule as the

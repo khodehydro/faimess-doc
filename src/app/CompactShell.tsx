@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "./AppContext";
 import { usePreferences } from "./PreferencesContext";
@@ -7,6 +7,7 @@ import { BrandCard } from "../sections/BrandCard";
 import { AccountCard } from "../sections/AccountCard";
 import { ArtistStories } from "../sections/ArtistStories";
 import { BrowseDetailView } from "../sections/BrowseDetailView";
+import { NewsDetailView } from "../sections/news/NewsDetailView";
 import { MobileNav } from "../sections/MobileNav";
 import { MiniPlayer } from "../sections/MiniPlayer";
 import { PlayerSheet } from "../sections/PlayerSheet";
@@ -43,10 +44,22 @@ import { EASE } from "../lib/motion";
  * ------------------------------------------------------------------ */
 
 export function CompactShell() {
-  const { route, detail } = useApp();
+  const { route, detail, selectedNewsId } = useApp();
   const { dir } = usePreferences();
   const [playerOpen, setPlayerOpen] = useState(false);
   const Page = PAGES[route];
+
+  // If a top-level route navigation occurs while player is open (e.g. user clicked a shop banner),
+  // collapse the player so the user immediately sees the destination page!
+  const prevRouteRef = useRef(route);
+  useEffect(() => {
+    if (playerOpen && route !== prevRouteRef.current) {
+      if (!selectedNewsId && !detail) {
+        setPlayerOpen(false);
+      }
+    }
+    prevRouteRef.current = route;
+  }, [route, playerOpen, selectedNewsId, detail]);
 
   return (
     <div dir={dir} className="flex min-h-dvh w-full flex-col gap-3 px-4 pt-3.5 pb-[10rem] lg:gap-4 lg:pt-4 lg:pb-[11rem]">
@@ -122,6 +135,45 @@ export function CompactShell() {
       </div>
 
       <PlayerSheet open={playerOpen} onClose={() => setPlayerOpen(false)} />
+
+      {/* Over-player overlay: when the full player is open on mobile, any
+          view that opens (detail sheet, news reader) floats on top of the
+          player (z-[65]), so the user never has to close the player first to see it. */}
+      <AnimatePresence>
+        {playerOpen && detail && (
+          <motion.div
+            key={`overlay-detail:${detail.kind}:${detail.id}`}
+            initial={{ opacity: 0, y: 28 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.26, ease: EASE }}
+            className="studio-backdrop scroll-slim fixed inset-0 z-[65] flex flex-col p-2.5 overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="mx-auto flex min-h-0 w-full max-w-[620px] flex-1 flex-col overflow-hidden rounded-card bg-surface p-4 shadow-float">
+              <BrowseDetailView />
+            </div>
+          </motion.div>
+        )}
+
+        {playerOpen && selectedNewsId && !detail && (
+          <motion.div
+            key={`overlay-news:${selectedNewsId}`}
+            initial={{ opacity: 0, y: 28 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.26, ease: EASE }}
+            className="studio-backdrop scroll-slim fixed inset-0 z-[65] flex flex-col p-2.5 overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="mx-auto flex min-h-0 w-full max-w-[620px] flex-1 flex-col overflow-hidden rounded-card bg-surface p-4 shadow-float">
+              <NewsDetailView newsId={selectedNewsId} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
