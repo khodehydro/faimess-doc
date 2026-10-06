@@ -309,7 +309,7 @@ function PlayerDrawer({ panel, onClose }: { panel: PanelId; onClose: () => void 
                   className="group flex items-center gap-3 rounded-[12px] px-2.5 py-2 text-start transition-colors hover:bg-primary-faint"
                 >
                   <span className="size-[34px] shrink-0 overflow-hidden rounded-[10px] shadow-xs">
-                    <Photo src={coverPhoto(list.cover)} alt="" />
+                    <Photo src={lead?.photo ?? coverPhoto(list.cover)} alt="" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] font-bold text-ink">{list.name}</span>

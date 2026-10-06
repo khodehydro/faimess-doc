@@ -362,7 +362,7 @@ export function AddToPlaylistDialog({
                 className="flex items-center gap-3 rounded-[14px] p-2 pe-2.5 text-start transition-colors hover:bg-subtle"
               >
                 <span className="size-[40px] shrink-0 overflow-hidden rounded-[12px] shadow-xs">
-                  <Photo src={coverPhoto(list.cover)} alt="" />
+                  <Photo src={trackById(list.trackIds[0])?.photo ?? coverPhoto(list.cover)} alt="" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13.5px] font-bold text-ink">{list.name}</span>

@@ -43,6 +43,7 @@ export type UserLevelInfo = {
   tierKey: string;
   tierNameFa: string;
   tierNameEn: string;
+  tierNameKo: string;
   minPoints: number;
   nextLevelPoints: number;
   progressPercent: number;
@@ -832,8 +833,9 @@ export const socialApi = {
       return {
         level: 5,
         tierKey: "diamond",
-        tierNameFa: "اسطوره الماس فیمس",
+        tierNameFa: "اسطوره الماس",
         tierNameEn: "Diamond Legend",
+        tierNameKo: "다이아몬드 레전드",
         minPoints: 7000,
         nextLevelPoints: 10000,
         progressPercent: Math.min(100, Math.round(((points - 7000) / 3000) * 100)),
@@ -844,8 +846,9 @@ export const socialApi = {
       return {
         level: 4,
         tierKey: "platinum",
-        tierNameFa: "همراه ویژه پلاتینیوم",
+        tierNameFa: "پلاتینیوم VIP",
         tierNameEn: "Platinum VIP",
+        tierNameKo: "플래티넘 VIP",
         minPoints: 3500,
         nextLevelPoints: 7000,
         progressPercent: Math.min(100, Math.round(((points - 3500) / 3500) * 100)),
@@ -856,8 +859,9 @@ export const socialApi = {
       return {
         level: 3,
         tierKey: "gold",
-        tierNameFa: "شنونده طلایی ممتاز",
+        tierNameFa: "شنونده طلایی",
         tierNameEn: "Gold Listener",
+        tierNameKo: "골드 리스너",
         minPoints: 1500,
         nextLevelPoints: 3500,
         progressPercent: Math.min(100, Math.round(((points - 1500) / 2000) * 100)),
@@ -868,8 +872,9 @@ export const socialApi = {
       return {
         level: 2,
         tierKey: "silver",
-        tierNameFa: "هوادار وفادار نقره‌ای",
+        tierNameFa: "هوادار نقره‌ای",
         tierNameEn: "Silver Fan",
+        tierNameKo: "실버 팬",
         minPoints: 500,
         nextLevelPoints: 1500,
         progressPercent: Math.min(100, Math.round(((points - 500) / 1000) * 100)),
@@ -881,6 +886,7 @@ export const socialApi = {
       tierKey: "bronze",
       tierNameFa: "شنونده نوآموز",
       tierNameEn: "Bronze Rookie",
+      tierNameKo: "브론즈 루키",
       minPoints: 0,
       nextLevelPoints: 500,
       progressPercent: Math.min(100, Math.round((points / 500) * 100)),
@@ -948,12 +954,14 @@ export function calculateTierProgress(points: number) {
       level: levelInfo.level,
       nameFa: levelInfo.tierNameFa,
       nameEn: levelInfo.tierNameEn,
+      nameKo: levelInfo.tierNameKo,
     },
     nextTier: nextTier
       ? {
           level: nextTier.level,
           nameFa: nextTier.tierNameFa,
           nameEn: nextTier.tierNameEn,
+          nameKo: nextTier.tierNameKo,
         }
       : null,
     pointsToNext: remaining,

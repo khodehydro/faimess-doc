@@ -14,8 +14,11 @@ import {
 import {
   BADGE_CATEGORIES,
   type BadgeCategory,
+  getBadgeTitle,
+  getBadgeDesc,
 } from "../data/allBadges";
 import { coverPhoto } from "../data/playlists";
+import { trackById } from "../data/player";
 import { CreatePlaylistDialog } from "../ui/PlaylistDialogs";
 import { FollowListModal } from "../ui/FollowListModal";
 import { ContentRequestModal } from "../ui/ContentRequestModal";
@@ -40,12 +43,12 @@ const POINTS_FOR_CUSTOM_BANNER = 500;
  * Default System Banners accessible by everyone from day 1
  */
 export const DEFAULT_SYSTEM_BANNERS = [
-  { id: "gradient", titleFa: "طیف گرادیان بنفش", titleEn: "Violet Gradient", url: "" },
-  { id: "midnight-seoul", titleFa: "شب‌های سئول", titleEn: "Midnight Seoul", url: midnightSeoulBanner },
-  { id: "tour-afterglow", titleFa: "تور موسیقی و استیج", titleEn: "Tour Stage", url: tourAfterglowBanner },
-  { id: "asia-leg", titleFa: "کنسرت آسیا", titleEn: "Asia Arena", url: asiaTourBanner },
-  { id: "neon-bloom", titleFa: "نئون بلوم کی‌پاپ", titleEn: "Neon Bloom", url: neonBloomBanner },
-  { id: "blue-hour", titleFa: "افق گرگ و میش", titleEn: "Blue Hour", url: blueHourBanner },
+  { id: "gradient", titleFa: "طیف بنفش", titleEn: "Violet Gradient", titleKo: "바이올렛", url: "" },
+  { id: "midnight-seoul", titleFa: "شب‌های سئول", titleEn: "Midnight Seoul", titleKo: "미드나잇 서울", url: midnightSeoulBanner },
+  { id: "tour-afterglow", titleFa: "استیج و تور", titleEn: "Tour Stage", titleKo: "투어 스테이지", url: tourAfterglowBanner },
+  { id: "asia-leg", titleFa: "کنسرت آسیا", titleEn: "Asia Arena", titleKo: "아시아 아레나", url: asiaTourBanner },
+  { id: "neon-bloom", titleFa: "نئون بلوم", titleEn: "Neon Bloom", titleKo: "네온 블룸", url: neonBloomBanner },
+  { id: "blue-hour", titleFa: "افق گرگ و میش", titleEn: "Blue Hour", titleKo: "블루 아워", url: blueHourBanner },
 ];
 
 /**
@@ -119,46 +122,53 @@ function pickCompressedImage(
 function CompactClayBadgeCard({
   badge,
   lang,
-  dataLabel,
   onSelect,
 }: {
   badge: BadgeStatusItem;
   lang: string;
-  dataLabel: (s: string) => string;
   onSelect: (b: BadgeStatusItem) => void;
 }) {
   const rarityConfig = {
     common: {
       labelFa: "عادی",
       labelEn: "Common",
+      labelKo: "일반",
       pill: "bg-slate-500/15 text-slate-700 dark:text-slate-300 ring-1 ring-slate-400/25",
       border: "border-line/70 hover:border-line",
     },
     rare: {
       labelFa: "کمیاب",
       labelEn: "Rare",
+      labelKo: "희귀",
       pill: "bg-sky-500/15 text-sky-600 dark:text-sky-400 ring-1 ring-sky-500/30",
       border: "border-sky-300/40 dark:border-sky-500/20 hover:border-sky-400",
     },
     epic: {
       labelFa: "حماسی",
       labelEn: "Epic",
+      labelKo: "에픽",
       pill: "bg-purple-500/15 text-purple-600 dark:text-purple-400 ring-1 ring-purple-500/30",
       border: "border-purple-300/40 dark:border-purple-500/20 hover:border-purple-400",
     },
     legendary: {
       labelFa: "افسانه‌ای",
       labelEn: "Legendary",
+      labelKo: "전설",
       pill: "bg-amber-500/15 text-amber-700 dark:text-amber-400 ring-1 ring-amber-500/30 shadow-xs",
       border: "border-amber-300/50 dark:border-amber-500/30 hover:border-amber-400",
     },
     mythic: {
       labelFa: "اسطوره‌ای",
       labelEn: "Mythic",
+      labelKo: "신화",
       pill: "bg-gradient-to-r from-rose-500/20 to-amber-500/20 text-rose-600 dark:text-rose-400 ring-1 ring-rose-500/30 shadow-xs",
       border: "border-rose-300/50 dark:border-rose-500/30 hover:border-rose-400",
     },
   }[badge.rarity];
+
+  const title = getBadgeTitle(badge, lang);
+  const rarityLabel =
+    lang === "fa" ? rarityConfig.labelFa : lang === "ko" ? rarityConfig.labelKo : rarityConfig.labelEn;
 
   return (
     <div
@@ -182,13 +192,13 @@ function CompactClayBadgeCard({
             rarityConfig.pill,
           )}
         >
-          {lang === "fa" ? rarityConfig.labelFa : rarityConfig.labelEn}
+          {rarityLabel}
         </span>
       </div>
 
       {/* Central 3D Icon on Compact Pedestal */}
       <div className="my-2 flex flex-col items-center">
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-b from-white/95 to-white/40 dark:from-white/10 dark:to-white/5 shadow-xs ring-1 ring-black/[0.04] dark:ring-white/[0.08]">
+        <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-gradient-to-b from-white/95 to-white/40 dark:from-white/10 dark:to-white/5 shadow-xs ring-1 ring-black/[0.04] dark:ring-white/[0.08]">
           <ClayBadgeIcon
             glyph={badge.clayGlyph}
             tone={badge.clayTone}
@@ -197,31 +207,33 @@ function CompactClayBadgeCard({
           />
         </div>
 
-        <h3 className="mt-2 truncate text-center text-[13px] font-black text-ink group-hover:text-primary-deep transition">
-          {dataLabel(badge.titleFa)}
+        <h3 className="mt-2 truncate text-center text-[12.5px] font-black text-ink group-hover:text-primary-deep transition">
+          {title}
         </h3>
-        <p className="truncate text-center text-[12px] text-ink-faint">
-          {badge.titleEn}
-        </p>
+        {lang !== "en" && (
+          <p className="truncate text-center text-[12px] text-ink-faint">
+            {badge.titleEn}
+          </p>
+        )}
       </div>
 
-      {/* Bottom Status: Purple background and white text when unlocked */}
+      {/* Bottom Status */}
       <div className="mt-1 border-t border-line/60 pt-2">
         {badge.unlocked ? (
-          <div className="flex items-center justify-between rounded-lg bg-primary px-2.5 py-1 text-[12px] text-white shadow-2xs">
+          <div className="flex items-center justify-between rounded-lg bg-primary px-2 py-1 text-[12px] text-white shadow-2xs">
             <span className="flex items-center gap-1 font-black text-white">
               <Icon name="check" size={13} strokeWidth={2.8} className="text-white" />
-              <span className="text-white">{lang === "fa" ? "دریافت شده" : "Unlocked"}</span>
+              <span className="text-white">{lang === "fa" ? "دریافت شد" : lang === "ko" ? "획득" : "Unlocked"}</span>
             </span>
             <span className="font-extrabold text-white">
-              +{badge.requiredPoints.toLocaleString()} {lang === "fa" ? "امتیاز" : "pts"}
+              +{badge.requiredPoints.toLocaleString()} {lang === "fa" ? "امتیاز" : lang === "ko" ? "P" : "pts"}
             </span>
           </div>
         ) : (
           <div className="space-y-1">
             <div className="flex items-center justify-between text-[12px]">
               <span className="font-bold text-ink-muted">
-                {badge.remainingPoints.toLocaleString()} {lang === "fa" ? "امتیاز مانده" : "needed"}
+                {badge.remainingPoints.toLocaleString()} {lang === "fa" ? "مانده" : lang === "ko" ? "P 남음" : "needed"}
               </span>
               <span className="font-extrabold text-primary-deep">
                 {badge.progressPercent}%
@@ -241,8 +253,8 @@ function CompactClayBadgeCard({
 }
 
 export function ProfilePage() {
-  const { lang, dir, dataLabel } = usePreferences();
-  const { notify, openDetail, viewedProfileUsername, openProfile } = useApp();
+  const { lang, dir } = usePreferences();
+  const { notify, viewedProfileUsername, openProfile } = useApp();
   const { mine: myPlaylists } = usePlaylists();
 
   // Load profile for viewed user or self
@@ -342,10 +354,14 @@ export function ProfilePage() {
       nowFollowing
         ? lang === "fa"
           ? `شما @${profile.username} را دنبال کردید`
-          : `You followed @${profile.username}`
+          : lang === "ko"
+            ? `@${profile.username}님을 팔로우했습니다`
+            : `You followed @${profile.username}`
         : lang === "fa"
           ? `دنبال کردن @${profile.username} لغو شد`
-          : `Unfollowed @${profile.username}`,
+          : lang === "ko"
+            ? `@${profile.username}님 언팔로우 완료`
+            : `Unfollowed @${profile.username}`,
       nowFollowing ? "mint" : "primary",
     );
   };
@@ -357,19 +373,9 @@ export function ProfilePage() {
       notify(
         lang === "fa"
           ? `لینک پروفایل @${profile.username} در کلیپ‌بورد کپی شد`
-          : `Profile link of @${profile.username} copied to clipboard`,
-        "mint",
-      );
-    }
-  };
-
-  const handleCopyHandle = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard?.writeText?.(profile.handle);
-      notify(
-        lang === "fa"
-          ? `شناسه ${profile.handle} در کلیپ‌بورد کپی شد`
-          : `Handle ${profile.handle} copied`,
+          : lang === "ko"
+            ? `@${profile.username} 프로필 링크가 복사되었습니다`
+            : `Profile link of @${profile.username} copied to clipboard`,
         "mint",
       );
     }
@@ -391,7 +397,11 @@ export function ProfilePage() {
     setProfile(updated);
     setIsEditing(false);
     notify(
-      lang === "fa" ? "اطلاعات حساب کاربری با موفقیت به‌روزرسانی شد" : "Profile updated successfully",
+      lang === "fa"
+        ? "اطلاعات حساب کاربری با موفقیت به‌روزرسانی شد"
+        : lang === "ko"
+          ? "프로필이 성공적으로 업데이트되었습니다"
+          : "Profile updated successfully",
       "mint",
     );
   };
@@ -400,8 +410,10 @@ export function ProfilePage() {
     if (profile.points < POINTS_FOR_CUSTOM_AVATAR) {
       notify(
         lang === "fa"
-          ? `برای آپلود عکس دلخواه از گالری، حداقل به ${POINTS_FOR_CUSTOM_AVATAR} امتیاز هواداری نیاز دارید (امتیاز شما: ${profile.points.toLocaleString()})`
-          : `Custom avatar unlocks at ${POINTS_FOR_CUSTOM_AVATAR} points`,
+          ? `برای آپلود عکس دلخواه از گالری، حداقل به ${POINTS_FOR_CUSTOM_AVATAR} امتیاز نیاز دارید`
+          : lang === "ko"
+            ? `갤러리 아바타 업로드는 ${POINTS_FOR_CUSTOM_AVATAR}P에 해금됩니다`
+            : `Custom avatar unlocks at ${POINTS_FOR_CUSTOM_AVATAR} points`,
         "primary",
       );
       return;
@@ -412,8 +424,10 @@ export function ProfilePage() {
         setEditAvatar(compressedDataUrl);
         notify(
           lang === "fa"
-            ? "تصویر با موفقیت فشرده و برای بارگذاری آماده شد"
-            : "Image optimized successfully",
+            ? "تصویر با موفقیت فشرده و آماده شد"
+            : lang === "ko"
+              ? "이미지가 성공적으로 압축되었습니다"
+              : "Image compressed successfully",
           "mint",
         );
       },
@@ -421,7 +435,11 @@ export function ProfilePage() {
       256,
       () => {
         notify(
-          lang === "fa" ? "خطا در پردازش تصویر گالری" : "Failed to process image",
+          lang === "fa"
+            ? "خطا در پردازش تصویر گالری"
+            : lang === "ko"
+              ? "이미지 처리 실패"
+              : "Failed to process image",
           "primary",
         );
       },
@@ -432,8 +450,10 @@ export function ProfilePage() {
     if (profile.points < POINTS_FOR_CUSTOM_BANNER) {
       notify(
         lang === "fa"
-          ? `برای آپلود بنر دلخواه از گالری، حداقل به ${POINTS_FOR_CUSTOM_BANNER} امتیاز هواداری نیاز دارید (امتیاز شما: ${profile.points.toLocaleString()})`
-          : `Custom banner unlocks at ${POINTS_FOR_CUSTOM_BANNER} points`,
+          ? `برای آپلود بنر دلخواه از گالری، حداقل به ${POINTS_FOR_CUSTOM_BANNER} امتیاز نیاز دارید`
+          : lang === "ko"
+            ? `갤러리 배너 업로드는 ${POINTS_FOR_CUSTOM_BANNER}P에 해금됩니다`
+            : `Custom banner unlocks at ${POINTS_FOR_CUSTOM_BANNER} points`,
         "primary",
       );
       return;
@@ -445,7 +465,9 @@ export function ProfilePage() {
         notify(
           lang === "fa"
             ? "بنر با کیفیت بهینه فشرده شد"
-            : "Banner optimized successfully",
+            : lang === "ko"
+              ? "배너가 성공적으로 압축되었습니다"
+              : "Banner compressed successfully",
           "mint",
         );
       },
@@ -453,7 +475,11 @@ export function ProfilePage() {
       320,
       () => {
         notify(
-          lang === "fa" ? "خطا در پردازش بنر گالری" : "Failed to process banner",
+          lang === "fa"
+            ? "خطا در پردازش بنر گالری"
+            : lang === "ko"
+              ? "배너 처리 실패"
+              : "Failed to process banner",
           "primary",
         );
       },
@@ -471,23 +497,35 @@ export function ProfilePage() {
     setReportDetails("");
     notify(
       lang === "fa"
-        ? `گزارش تخلف کاربر @${profile.username} با موفقیت برای تیم نظارت فیمس ارسال شد.`
-        : `Report against @${profile.username} submitted.`,
+        ? `گزارش کاربر @${profile.username} با موفقیت ثبت شد.`
+        : lang === "ko"
+          ? `@${profile.username} 사용자 신고가 접수되었습니다.`
+          : `Report against @${profile.username} submitted.`,
       "mint",
     );
   };
 
-  // Playlists to show
+  // Playlists to show — cover is always the first track's album cover
   const displayPlaylists = useMemo(() => {
     if (isSelf) {
-      return myPlaylists.map((pl) => ({
-        id: pl.id,
-        name: pl.name,
-        cover: coverPhoto(pl.cover),
-        trackIds: pl.trackIds,
-      }));
+      return myPlaylists.map((pl) => {
+        const lead = pl.trackIds[0] ? trackById(pl.trackIds[0]) : null;
+        return {
+          id: pl.id,
+          name: pl.name,
+          cover: lead?.photo ?? coverPhoto(pl.cover),
+          trackIds: pl.trackIds,
+        };
+      });
     }
-    return socialApi.getUserPlaylists(profile.username);
+    const publicLists = socialApi.getUserPlaylists(profile.username);
+    return publicLists.map((pl) => {
+      const lead = pl.trackIds[0] ? trackById(pl.trackIds[0]) : null;
+      return {
+        ...pl,
+        cover: lead?.photo ?? pl.cover,
+      };
+    });
   }, [isSelf, myPlaylists, profile.username]);
 
   // Filtered 100 Badges
@@ -500,9 +538,9 @@ export function ProfilePage() {
         const query = badgeSearch.toLowerCase().trim();
         const matchTitleFa = b.titleFa.toLowerCase().includes(query);
         const matchTitleEn = b.titleEn.toLowerCase().includes(query);
+        const matchTitleKo = (b.titleKo || "").toLowerCase().includes(query);
         const matchDescFa = b.descriptionFa.toLowerCase().includes(query);
-        const matchRarity = b.rarity.toLowerCase().includes(query);
-        if (!matchTitleFa && !matchTitleEn && !matchDescFa && !matchRarity) return false;
+        if (!matchTitleFa && !matchTitleEn && !matchTitleKo && !matchDescFa) return false;
       }
       return true;
     });
@@ -510,15 +548,28 @@ export function ProfilePage() {
 
   const unlockedCount = unlockedBadges.length;
 
+  const tierName =
+    lang === "fa"
+      ? tierProgress.currentTier.nameFa
+      : lang === "ko"
+        ? tierProgress.currentTier.nameKo
+        : tierProgress.currentTier.nameEn;
+
+  const roleLabel = profile.role
+    ? profile.role.toLowerCase().includes("premium")
+      ? lang === "fa" ? "شنونده ویژه" : lang === "ko" ? "프리미엄 리스너" : "Listener · Premium"
+      : lang === "fa" ? "شنونده" : lang === "ko" ? "리스너" : "Listener"
+    : null;
+
   return (
-    <div dir={dir} className="flex w-full flex-col gap-4 p-3 sm:p-5 lg:p-6 pb-12">
+    <div dir={dir} className="mx-auto flex w-full max-w-[880px] flex-col gap-4 sm:gap-5 px-3 py-3.5 sm:px-5 sm:py-5 lg:p-6 pb-32 sm:pb-36">
       {/* =========================================================================
-       *  PROFESSIONAL SOCIAL PROFILE SPECIFICATIONS CARD (کارت مشخصات کامل کاربر)
-       *  Equipped with shrink-0 to prevent collapsing in any tab!
+       *  PROFILE SPECIFICATIONS CARD (کارت مشخصات کاربر)
+       *  Equipped with shrink-0 and explicit minimum height to prevent any collapsing!
        * ========================================================================= */}
       <section className="relative flex w-full shrink-0 flex-col overflow-hidden rounded-[24px] border border-line bg-surface shadow-xs transition-shadow duration-300">
         {/* Generous Banner: Custom compressed image or rich atmospheric gradient */}
-        <div className="relative h-40 min-h-[160px] w-full shrink-0 overflow-hidden bg-gradient-to-r from-primary-deep via-primary to-indigo-600 sm:h-48 sm:min-h-[192px] md:h-52 md:min-h-[208px]">
+        <div className="relative h-36 min-h-[144px] w-full shrink-0 overflow-hidden bg-gradient-to-r from-primary-deep via-primary to-indigo-600 sm:h-44 sm:min-h-[176px] md:h-48 md:min-h-[192px]">
           {profile.banner ? (
             <Photo src={profile.banner} alt={profile.name} className="h-full w-full object-cover" />
           ) : (
@@ -548,38 +599,31 @@ export function ProfilePage() {
                 className="flex items-center gap-1.5 rounded-full bg-surface/90 px-3 py-1.5 text-[12px] font-bold text-ink backdrop-blur-md shadow-2xs transition hover:bg-surface hover:shadow-xs"
               >
                 <Icon name={backIcon(dir)} size={13} />
-                <span>{lang === "fa" ? "پروفایل من" : "My Profile"}</span>
+                <span>{lang === "fa" ? "پروفایل من" : lang === "ko" ? "내 프로필" : "My Profile"}</span>
               </button>
             ) : (
               <div className="flex items-center gap-1.5 rounded-full bg-black/35 px-3 py-1 text-[12px] font-bold text-white backdrop-blur-md">
                 <Icon name="verified" size={13} className="text-white" />
-                <span>{lang === "fa" ? "حساب کاربری شما" : "Your Account"}</span>
+                <span>{lang === "fa" ? "حساب کاربری شما" : lang === "ko" ? "내 계정" : "Your Account"}</span>
               </div>
             )}
 
             <div className="flex items-center gap-2">
+              {/* Report button — strictly visible only for other users */}
               {!isSelf && (
                 <button
                   type="button"
                   onClick={() => setReportModalOpen(true)}
-                  title={lang === "fa" ? "گزارش کاربر" : "Report user"}
+                  title={lang === "fa" ? "گزارش کاربر" : lang === "ko" ? "사용자 신고" : "Report user"}
                   className="flex size-8 items-center justify-center rounded-full bg-rose-500/90 text-white backdrop-blur-md shadow-2xs transition hover:bg-rose-600"
                 >
-                  <Icon name="message" size={13} strokeWidth={2.2} />
+                  <Icon name="flag" size={13.5} strokeWidth={2.2} />
                 </button>
               )}
               <button
                 type="button"
-                onClick={handleCopyHandle}
-                title={lang === "fa" ? "کپی نام کاربری" : "Copy handle"}
-                className="flex size-8 items-center justify-center rounded-full bg-surface/90 text-ink backdrop-blur-md shadow-2xs transition hover:bg-surface"
-              >
-                <Icon name="copy" size={13} />
-              </button>
-              <button
-                type="button"
                 onClick={handleShareProfile}
-                title={lang === "fa" ? "اشتراک‌گذاری پروفایل" : "Share profile"}
+                title={lang === "fa" ? "اشتراک‌گذاری پروفایل" : lang === "ko" ? "프로필 공유" : "Share profile"}
                 className="flex size-8 items-center justify-center rounded-full bg-surface/90 text-ink backdrop-blur-md shadow-2xs transition hover:bg-surface"
               >
                 <Icon name="share" size={13} />
@@ -589,17 +633,17 @@ export function ProfilePage() {
         </div>
 
         {/* Profile Specifications Body Container */}
-        <div className="relative flex flex-col shrink-0 px-4 pb-5 pt-0 sm:px-6 sm:pb-6">
+        <div className="relative flex flex-col shrink-0 px-4 pb-4 pt-1 sm:px-6 sm:pb-6">
           {/* Top Row: Floating Avatar + Actions Alignment */}
-          <div className="flex items-end justify-between">
+          <div className="flex flex-wrap items-end justify-between gap-3">
             {/* Avatar on the Seam with High-Z Ring and Level Crown */}
-            <div className="relative -mt-14 shrink-0 sm:-mt-16 md:-mt-20">
-              <div className="size-24 overflow-hidden rounded-full ring-4 ring-surface bg-surface shadow-xl sm:size-28 md:size-32">
+            <div className="relative -mt-10 shrink-0 sm:-mt-12 md:-mt-14">
+              <div className="size-20 overflow-hidden rounded-full ring-4 ring-surface bg-surface shadow-xl sm:size-24 md:size-28">
                 <Photo src={profile.avatar} alt={profile.name} />
               </div>
               {/* Level Crown Tag */}
               <span
-                title={`${lang === "fa" ? "سطح کاربری:" : "Level"} ${tierProgress.currentTier.level}`}
+                title={`${lang === "fa" ? "سطح:" : lang === "ko" ? "레벨:" : "Level:"} ${tierProgress.currentTier.level}`}
                 className="absolute -bottom-1 -end-1 flex items-center gap-0.5 rounded-full bg-primary-deep px-2 py-0.5 text-[12px] font-black text-white shadow-md ring-2 ring-surface"
               >
                 <Icon name="crown" size={12} strokeWidth={2.4} />
@@ -607,12 +651,12 @@ export function ProfilePage() {
               </span>
               {/* Active Dot */}
               <span
-                title={lang === "fa" ? "کاربر آنلاین در سامانه" : "Online"}
+                title={lang === "fa" ? "آنلاین" : lang === "ko" ? "온라인" : "Online"}
                 className="absolute top-1 start-1 size-3.5 rounded-full bg-mint ring-2 ring-surface shadow-xs"
               />
             </div>
 
-            {/* Action Buttons: Adapt gracefully across mobile & desktop */}
+            {/* Action Buttons */}
             <div className="flex items-center gap-2 pb-1">
               {isSelf ? (
                 <>
@@ -627,19 +671,19 @@ export function ProfilePage() {
                       setEditBanner(profile.banner || "");
                       setIsEditing(true);
                     }}
-                    className="flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3.5 py-1.5 text-[12.5px] font-bold text-ink shadow-2xs transition hover:border-primary/40 hover:bg-subtle"
+                    className="flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] sm:text-[12.5px] font-bold text-ink shadow-2xs transition hover:border-primary/40 hover:bg-subtle"
                   >
-                    <Icon name="edit" size={13.5} strokeWidth={2} />
-                    <span>{lang === "fa" ? "ویرایش مشخصات" : "Edit Profile"}</span>
+                    <Icon name="edit" size={13} strokeWidth={2} />
+                    <span>{lang === "fa" ? "ویرایش" : lang === "ko" ? "편집" : "Edit"}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setRequestModalOpen(true)}
-                    className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-1.5 text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
+                    className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-[12px] sm:text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
                   >
-                    <Icon name="plus" size={13.5} strokeWidth={2.4} />
-                    <span>{lang === "fa" ? "درخواست آهنگ" : "Request Track"}</span>
+                    <Icon name="plus" size={13} strokeWidth={2.4} />
+                    <span>{lang === "fa" ? "درخواست آهنگ" : lang === "ko" ? "곡 요청" : "Request Track"}</span>
                   </button>
                 </>
               ) : (
@@ -648,27 +692,28 @@ export function ProfilePage() {
                     type="button"
                     onClick={handleToggleFollow}
                     className={cn(
-                      "flex items-center gap-1.5 rounded-xl px-4 py-1.5 text-[12.5px] font-bold transition shadow-xs",
+                      "flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[12px] sm:text-[12.5px] font-bold transition shadow-xs",
                       isFollowing
                         ? "border border-line bg-surface text-ink hover:border-rose-400 hover:text-rose-500"
                         : "bg-primary text-white hover:bg-primary-deep shadow-primary",
                     )}
                   >
-                    <Icon name={isFollowing ? "check" : "plus"} size={13.5} strokeWidth={2.4} />
+                    <Icon name={isFollowing ? "check" : "plus"} size={13} strokeWidth={2.4} />
                     <span>
                       {isFollowing
-                        ? lang === "fa" ? "دنبال می‌کنید" : "Following"
-                        : lang === "fa" ? "دنبال کردن" : "Follow"}
+                        ? lang === "fa" ? "دنبال می‌کنید" : lang === "ko" ? "팔로잉" : "Following"
+                        : lang === "fa" ? "دنبال کردن" : lang === "ko" ? "팔로우" : "Follow"}
                     </span>
                   </button>
 
+                  {/* Report button — only for other users */}
                   <button
                     type="button"
                     onClick={() => setReportModalOpen(true)}
                     className="flex items-center gap-1.5 rounded-xl border border-rose-300/40 bg-rose-500/10 px-3 py-1.5 text-[12px] font-bold text-rose-600 transition hover:bg-rose-500/20"
                   >
-                    <Icon name="message" size={13} strokeWidth={2.2} />
-                    <span>{lang === "fa" ? "گزارش تخلف" : "Report"}</span>
+                    <Icon name="flag" size={13} strokeWidth={2.2} />
+                    <span>{lang === "fa" ? "گزارش" : lang === "ko" ? "신고" : "Report"}</span>
                   </button>
                 </div>
               )}
@@ -677,95 +722,49 @@ export function ProfilePage() {
 
           {/* User Name, Handle, Tier and Role Row */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <h1 className="text-[20px] font-black tracking-tight text-ink sm:text-[24px]">
+            <h1 className="text-[19px] font-black tracking-tight text-ink sm:text-[23px]">
               {profile.name}
             </h1>
 
             {/* Tier Pill */}
             <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[12px] font-extrabold text-primary-deep">
               <Icon name="sparkle" size={12} className="text-primary-deep" />
-              <span>{dataLabel(tierProgress.currentTier.nameFa)}</span>
+              <span>{tierName}</span>
             </span>
 
             {/* Role Tag if present */}
-            {profile.role && (
+            {roleLabel && (
               <span className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[12px] font-extrabold text-amber-600 dark:text-amber-400">
                 <Icon name="star" size={12} className="text-amber-500" />
-                <span>{profile.role}</span>
+                <span>{roleLabel}</span>
               </span>
             )}
           </div>
 
-          {/* Handle & Quick Copy */}
-          <button
-            type="button"
-            onClick={handleCopyHandle}
-            className="group mt-0.5 flex items-center gap-1 text-[12.5px] font-semibold text-ink-muted transition hover:text-primary"
-          >
-            <span>{profile.handle}</span>
-            <Icon name="copy" size={11} className="opacity-0 transition-opacity group-hover:opacity-100" />
-          </button>
-
-          {/* Full Bio — clearly visible without aggressive clipping */}
-          <p className="mt-3 text-[13px] leading-relaxed text-ink-body">
-            {profile.bio || (lang === "fa" ? "همراه وفادار استودیو موسیقی فیمس و علاقه‌مند به دنیای کی‌پاپ." : "K-Pop music enthusiast on FAIMESS.")}
+          {/* Handle */}
+          <p className="mt-0.5 text-[12.5px] font-semibold text-ink-muted">
+            {profile.handle}
           </p>
 
-          {/* Comprehensive Metadata Specifications Chips */}
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px]">
-            <span className="flex items-center gap-1.5 rounded-xl border border-line/70 bg-subtle/60 px-2.5 py-1 font-semibold text-ink-muted">
-              <Icon name="music" size={12} className="text-primary" />
-              <span className="font-bold text-ink">{lang === "fa" ? "سبک محبوب:" : "Favorite:"}</span>
-              <span>{profile.favoriteGenre}</span>
-            </span>
+          {/* User Bio */}
+          <p className="mt-2.5 text-[13px] leading-relaxed text-ink-body break-words">
+            {profile.bio ||
+              (lang === "fa"
+                ? "همراه استودیو موسیقی فیمس و علاقه‌مند به کی‌پاپ."
+                : lang === "ko"
+                  ? "케이팝과 음악을 사랑하는 페이메스 리스너입니다."
+                  : "K-Pop music enthusiast on FAIMESS.")}
+          </p>
 
-            <span className="flex items-center gap-1.5 rounded-xl border border-line/70 bg-subtle/60 px-2.5 py-1 font-semibold text-ink-muted">
-              <Icon name="calendar" size={12} className="text-primary" />
-              <span className="font-bold text-ink">{lang === "fa" ? "تاریخ عضویت:" : "Joined:"}</span>
-              <span>{profile.joinedAt}</span>
-            </span>
-
-            <span className="flex items-center gap-1.5 rounded-xl border border-line/70 bg-subtle/60 px-2.5 py-1 font-semibold text-ink-muted">
-              <Icon name="bolt" size={12} className="text-amber-500" />
-              <span className="font-bold text-ink">{lang === "fa" ? "شناسه:" : "ID:"}</span>
-              <span className="font-mono">{profile.username}#8420</span>
-            </span>
-          </div>
-
-          {/* Integrated Tier Progress (XP Bar) — Always visible on specifications card */}
-          <div className="mt-4 rounded-2xl border border-line/80 bg-subtle/40 p-3 shadow-2xs">
-            <div className="flex items-center justify-between text-[12px]">
-              <div className="flex items-center gap-1.5">
-                <Icon name="crown" size={13} className="text-primary-deep" strokeWidth={2.4} />
-                <span className="font-bold text-ink">
-                  {tierProgress.nextTier
-                    ? lang === "fa"
-                      ? `${tierProgress.pointsToNext.toLocaleString()} امتیاز تا سطح بعدی («${tierProgress.nextTier.nameFa}»)`
-                      : `${tierProgress.pointsToNext.toLocaleString()} pts needed to reach ${tierProgress.nextTier.nameEn}`
-                    : lang === "fa" ? "بالاترین سطح هواداری استودیو فیمس" : "Maximum Fan Rank Achieved"}
-                </span>
-              </div>
-              <span className="font-black text-primary-deep tabular-nums">
-                {tierProgress.progressPercent}%
-              </span>
-            </div>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-subtle">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-primary to-indigo-500 transition-all duration-500"
-                style={{ width: `${tierProgress.progressPercent}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Social Stats Strip (Instagram/Spotify Style) */}
-          <div className="mt-4 grid grid-cols-4 gap-2 rounded-2xl border border-line/80 bg-subtle/50 p-2.5 text-center">
+          {/* Social Stats Strip (4-Column) */}
+          <div className="mt-4 grid grid-cols-4 gap-1.5 sm:gap-2 rounded-2xl border border-line/80 bg-subtle/50 p-2 sm:p-2.5 text-center">
             {/* 1. Fan Points */}
             <div className="flex flex-col items-center justify-center py-1">
-              <span className="text-[15px] font-black text-ink tabular-nums sm:text-[17px]">
+              <span className="text-[14px] font-black text-ink tabular-nums sm:text-[16px]">
                 {profile.points.toLocaleString()}
               </span>
               <span className="text-[12px] font-bold text-ink-muted">
-                {lang === "fa" ? "امتیاز هواداری" : "Points"}
+                {lang === "fa" ? "امتیاز" : lang === "ko" ? "포인트" : "Points"}
               </span>
             </div>
 
@@ -778,11 +777,11 @@ export function ProfilePage() {
               }}
               className="flex flex-col items-center justify-center rounded-xl py-1 transition hover:bg-surface/80"
             >
-              <span className="text-[15px] font-black text-ink tabular-nums sm:text-[17px]">
+              <span className="text-[14px] font-black text-ink tabular-nums sm:text-[16px]">
                 {followStats.followersCount}
               </span>
               <span className="text-[12px] font-bold text-ink-muted">
-                {lang === "fa" ? "دنبال‌کننده" : "Followers"}
+                {lang === "fa" ? "دنبال‌کننده" : lang === "ko" ? "팔로워" : "Followers"}
               </span>
             </button>
 
@@ -795,11 +794,11 @@ export function ProfilePage() {
               }}
               className="flex flex-col items-center justify-center rounded-xl py-1 transition hover:bg-surface/80"
             >
-              <span className="text-[15px] font-black text-ink tabular-nums sm:text-[17px]">
+              <span className="text-[14px] font-black text-ink tabular-nums sm:text-[16px]">
                 {followStats.followingCount}
               </span>
               <span className="text-[12px] font-bold text-ink-muted">
-                {lang === "fa" ? "دنبال‌شده" : "Following"}
+                {lang === "fa" ? "دنبال‌شده" : lang === "ko" ? "팔로잉" : "Following"}
               </span>
             </button>
 
@@ -809,11 +808,11 @@ export function ProfilePage() {
               onClick={() => setActiveTab("badges")}
               className="flex flex-col items-center justify-center rounded-xl py-1 transition hover:bg-surface/80"
             >
-              <span className="text-[15px] font-black text-primary-deep tabular-nums sm:text-[17px]">
+              <span className="text-[14px] font-black text-primary-deep tabular-nums sm:text-[16px]">
                 {unlockedCount} / 100
               </span>
               <span className="text-[12px] font-bold text-ink-muted">
-                {lang === "fa" ? "نشان‌های افتخار" : "Badges"}
+                {lang === "fa" ? "نشان‌ها" : lang === "ko" ? "배지" : "Badges"}
               </span>
             </button>
           </div>
@@ -821,50 +820,61 @@ export function ProfilePage() {
       </section>
 
       {/* =========================================================================
-       *  COMPACT SEGMENTED NAVIGATION TABS (کنترل تب‌های مدرن)
-       *  Equipped with shrink-0 so it never gets squeezed!
+       *  COMPACT SEGMENTED NAVIGATION TABS (کنترل تب‌ها)
        * ========================================================================= */}
-      <div className="flex w-full shrink-0 items-center gap-1 rounded-2xl bg-surface border border-line p-1 shadow-2xs">
+      <div className="flex w-full shrink-0 items-center gap-1 overflow-x-auto scroll-rail rounded-2xl bg-surface border border-line p-1 shadow-2xs">
         <button
           type="button"
           onClick={() => setActiveTab("overview")}
           className={cn(
-            "flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[12.5px] font-extrabold transition",
+            "flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-[12px] sm:text-[12.5px] font-extrabold transition",
             activeTab === "overview"
               ? "bg-primary text-white shadow-xs"
               : "text-ink-muted hover:text-ink hover:bg-subtle",
           )}
         >
           <Icon name="compass" size={14} />
-          <span>{lang === "fa" ? "نمای کلی" : "Overview"}</span>
+          <span>{lang === "fa" ? "نمای کلی" : lang === "ko" ? "개요" : "Overview"}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("playlists")}
           className={cn(
-            "flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[12.5px] font-extrabold transition",
+            "flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-[12px] sm:text-[12.5px] font-extrabold transition",
             activeTab === "playlists"
               ? "bg-primary text-white shadow-xs"
               : "text-ink-muted hover:text-ink hover:bg-subtle",
           )}
         >
           <Icon name="disc" size={14} />
-          <span>{lang === "fa" ? `پلی‌لیست‌ها (${displayPlaylists.length})` : `Playlists (${displayPlaylists.length})`}</span>
+          <span>
+            {lang === "fa"
+              ? `پلی‌لیست‌ها (${displayPlaylists.length})`
+              : lang === "ko"
+                ? `플레이리스트 (${displayPlaylists.length})`
+                : `Playlists (${displayPlaylists.length})`}
+          </span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("badges")}
           className={cn(
-            "flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[12.5px] font-extrabold transition",
+            "flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-[12px] sm:text-[12.5px] font-extrabold transition",
             activeTab === "badges"
               ? "bg-primary text-white shadow-xs"
               : "text-ink-muted hover:text-ink hover:bg-subtle",
           )}
         >
           <Icon name="medal" size={14} />
-          <span>{lang === "fa" ? `۱۰۰ نشان (${unlockedCount})` : `100 Badges (${unlockedCount})`}</span>
+          <span>
+            {lang === "fa"
+              ? `نشان‌ها (${unlockedCount})`
+              : lang === "ko"
+                ? `배지 (${unlockedCount})`
+                : `Badges (${unlockedCount})`}
+          </span>
         </button>
 
         {isSelf && (
@@ -872,30 +882,30 @@ export function ProfilePage() {
             type="button"
             onClick={() => setActiveTab("requests")}
             className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[12.5px] font-extrabold transition",
+              "flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-[12px] sm:text-[12.5px] font-extrabold transition",
               activeTab === "requests"
                 ? "bg-primary text-white shadow-xs"
                 : "text-ink-muted hover:text-ink hover:bg-subtle",
             )}
           >
             <Icon name="plus" size={14} />
-            <span>{lang === "fa" ? "درخواست‌ها" : "Requests"}</span>
+            <span>{lang === "fa" ? "درخواست‌ها" : lang === "ko" ? "요청" : "Requests"}</span>
           </button>
         )}
       </div>
 
       {/* =========================================================================
-       *  TAB 0: OVERVIEW (نمای کلی و ویترین مینیمال نشان‌ها)
+       *  TAB 0: OVERVIEW (نمای کلی و ویترین مینیمال)
        * ========================================================================= */}
       {activeTab === "overview" && (
         <div className="flex w-full shrink-0 flex-col gap-4">
-          {/* Minimal 3D Badges Shelf: Shows ONLY the unlocked badge logos in a clean, minimal row */}
-          <div className="rounded-[22px] border border-line bg-surface p-4 shadow-xs">
+          {/* Minimal Honors Badges Shelf */}
+          <div className="rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
-                <Icon name="sparkle" size={16} className="text-amber-500" />
-                <h2 className="font-extrabold text-[14px] text-ink">
-                  {lang === "fa" ? "نشان‌های افتخار دریافت‌شده" : "Unlocked Honors Badges"}
+                <Icon name="sparkle" size={15} className="text-amber-500" />
+                <h2 className="font-extrabold text-[13.5px] sm:text-[14px] text-ink">
+                  {lang === "fa" ? "نشان‌های افتخار" : lang === "ko" ? "획득한 배지" : "Badges"}
                 </h2>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[12px] font-extrabold text-primary-deep">
                   {unlockedBadges.length} / 100
@@ -904,9 +914,9 @@ export function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("badges")}
-                className="text-[12.5px] font-bold text-primary transition hover:text-primary-deep"
+                className="text-[12px] sm:text-[12.5px] font-bold text-primary transition hover:text-primary-deep"
               >
-                {lang === "fa" ? "مشاهده تالار ۱۰۰ نشان ←" : "View all 100 badges →"}
+                {lang === "fa" ? "همه ←" : lang === "ko" ? "전체보기 →" : "All →"}
               </button>
             </div>
 
@@ -914,8 +924,10 @@ export function ProfilePage() {
               <div className="py-6 text-center text-ink-muted">
                 <p className="text-[12.5px] font-bold">
                   {lang === "fa"
-                    ? "هنوز نشانی باز نشده است. با گوش دادن به موسیقی اولین نشان خود را کسب کنید!"
-                    : "No badges unlocked yet. Start listening to earn your first badge!"}
+                    ? "هنوز نشانی کسب نشده است."
+                    : lang === "ko"
+                      ? "아직 획득한 배지가 없습니다."
+                      : "No badges earned yet."}
                 </p>
               </div>
             ) : (
@@ -926,7 +938,7 @@ export function ProfilePage() {
                     key={badge.id}
                     type="button"
                     onClick={() => setSelectedBadge(badge)}
-                    title={`${dataLabel(badge.titleFa)} (#${badge.number})`}
+                    title={`${getBadgeTitle(badge, lang)} (#${badge.number})`}
                     className="group relative flex flex-col items-center gap-1.5 shrink-0 transition-transform hover:-translate-y-1"
                   >
                     <div className="relative flex size-14 items-center justify-center rounded-2xl bg-gradient-to-b from-white/95 to-white/40 dark:from-white/10 dark:to-white/5 shadow-xs ring-1 ring-black/[0.06] dark:ring-white/[0.08] transition group-hover:ring-primary/40 group-hover:shadow-sm sm:size-16">
@@ -941,7 +953,7 @@ export function ProfilePage() {
                       </span>
                     </div>
                     <span className="max-w-[70px] truncate text-center text-[12px] font-bold text-ink-muted group-hover:text-primary-deep">
-                      {dataLabel(badge.titleFa)}
+                      {getBadgeTitle(badge, lang)}
                     </span>
                   </button>
                 ))}
@@ -950,188 +962,145 @@ export function ProfilePage() {
           </div>
 
           {/* User Playlists Shelf */}
-          <div className="rounded-[22px] border border-line bg-surface p-4 shadow-xs">
+          <div className="rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
-                <Icon name="disc" size={16} className="text-primary" />
-                <h2 className="font-extrabold text-[14px] text-ink">
+                <Icon name="disc" size={15} className="text-primary" />
+                <h2 className="font-extrabold text-[13.5px] sm:text-[14px] text-ink">
                   {isSelf
-                    ? lang === "fa" ? "پلی‌لیست‌های اختصاصی من" : "My Created Playlists"
-                    : lang === "fa" ? `پلی‌لیست‌های ${profile.name}` : `${profile.name}’s Playlists`}
+                    ? lang === "fa" ? "پلی‌لیست‌های من" : lang === "ko" ? "내 플레이리스트" : "My Playlists"
+                    : lang === "fa" ? `پلی‌لیست‌های ${profile.name}` : lang === "ko" ? `${profile.name}의 플레이리스트` : `${profile.name}’s Playlists`}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveTab("playlists")}
-                className="text-[12.5px] font-bold text-primary transition hover:text-primary-deep"
+                className="text-[12px] sm:text-[12.5px] font-bold text-primary transition hover:text-primary-deep"
               >
-                {lang === "fa" ? "مشاهده همه ←" : "View all →"}
+                {lang === "fa" ? "همه ←" : lang === "ko" ? "전체보기 →" : "All →"}
               </button>
             </div>
 
-            <div className="mt-3.5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {displayPlaylists.slice(0, 3).map((pl) => (
-                <div
-                  key={pl.id}
-                  onClick={() => openDetail({ kind: "playlist", id: pl.id })}
-                  className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-line/70 bg-surface p-2.5 transition hover:border-primary/40 hover:shadow-xs"
-                >
-                  <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-subtle">
-                    <Photo src={pl.cover} alt={pl.name} />
+            {displayPlaylists.length === 0 ? (
+              <div className="py-6 text-center text-ink-muted">
+                <p className="text-[12.5px] font-bold">
+                  {lang === "fa"
+                    ? "هنوز پلی‌لیستی ساخته نشده است."
+                    : lang === "ko"
+                      ? "생성된 플레이리스트가 없습니다."
+                      : "No playlists created yet."}
+                </p>
+              </div>
+            ) : (
+              <div className="mt-3 flex items-center gap-3 overflow-x-auto scroll-rail py-2">
+                {displayPlaylists.map((pl) => (
+                  <div
+                    key={pl.id}
+                    className="group flex w-[140px] shrink-0 flex-col overflow-hidden rounded-2xl border border-line bg-subtle/50 p-2.5 transition hover:border-primary/40 hover:bg-surface sm:w-[150px]"
+                  >
+                    <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
+                      <Photo src={pl.cover} alt={pl.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                    </div>
+                    <h3 className="mt-2 truncate text-[12.5px] font-extrabold text-ink group-hover:text-primary transition">
+                      {pl.name}
+                    </h3>
+                    <p className="truncate text-[12px] font-semibold text-ink-muted">
+                      {lang === "fa" ? `${pl.trackIds.length} آهنگ` : lang === "ko" ? `${pl.trackIds.length}곡` : `${pl.trackIds.length} tracks`}
+                    </p>
                   </div>
-                  <h3 className="mt-2 truncate font-bold text-[13px] text-ink group-hover:text-primary-deep">
-                    {pl.name}
-                  </h3>
-                  <p className="text-[12px] text-ink-muted">
-                    {pl.trackIds.length} {lang === "fa" ? "قطعه موسیقی" : "tracks"}
-                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Recent Community Activity Shelf */}
+          <div className="rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
+            <div className="flex items-center gap-2 border-b border-line pb-3">
+              <Icon name="activity" size={15} className="text-teal" />
+              <h2 className="font-extrabold text-[13.5px] sm:text-[14px] text-ink">
+                {lang === "fa" ? "فعالیت‌های اخیر" : lang === "ko" ? "최근 활동" : "Recent Activity"}
+              </h2>
+            </div>
+
+            <div className="mt-3 divide-y divide-line/60">
+              {[
+                {
+                  id: "act-1",
+                  titleFa: "ثبت دیدگاه روی آهنگ",
+                  titleKo: "댓글 작성",
+                  titleEn: "Commented on track",
+                  points: "+2",
+                  time: "2h ago",
+                  icon: "message" as const,
+                },
+                {
+                  id: "act-2",
+                  titleFa: "دریافت لایک برای نظر",
+                  titleKo: "좋아요 획득",
+                  titleEn: "Received comment like",
+                  points: "+1",
+                  time: "5h ago",
+                  icon: "heart" as const,
+                },
+                {
+                  id: "act-3",
+                  titleFa: "ارسال و تایید لیریک آهنگ",
+                  titleKo: "가사 기여 승인",
+                  titleEn: "Lyrics submission approved",
+                  points: "+50",
+                  time: "1d ago",
+                  icon: "waveform" as const,
+                },
+                {
+                  id: "act-4",
+                  titleFa: "دعوت موفق دوست به فیمس",
+                  titleKo: "친구 초대 완료",
+                  titleEn: "Invited friend to FAIMESS",
+                  points: "+20",
+                  time: "3d ago",
+                  icon: "users" as const,
+                },
+              ].map((act) => (
+                <div key={act.id} className="flex items-center justify-between py-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary-deep">
+                      <Icon name={act.icon} size={13} />
+                    </span>
+                    <div>
+                      <p className="text-[12.5px] font-bold text-ink">
+                        {lang === "fa" ? act.titleFa : lang === "ko" ? act.titleKo : act.titleEn}
+                      </p>
+                      <span className="text-[12px] text-ink-muted">{act.time}</span>
+                    </div>
+                  </div>
+                  <span className="font-mono text-[12px] font-extrabold text-mint">
+                    {act.points} {lang === "fa" ? "امتیاز" : lang === "ko" ? "P" : "pts"}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Quick Fan Community Guide */}
-          <div className="rounded-[22px] border border-line/80 bg-gradient-to-r from-primary-faint/60 via-surface to-surface p-4 shadow-2xs">
-            <div className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-white shadow-2xs">
-                <Icon name="bolt" size={16} strokeWidth={2.4} />
-              </span>
-              <div>
-                <h3 className="font-extrabold text-[13.5px] text-ink">
-                  {lang === "fa" ? "راهنمای ارتقای سطح و دریافت نشان‌ها" : "Level & Badge Guide"}
-                </h3>
-                <p className="text-[12px] leading-relaxed text-ink-muted">
-                  {lang === "fa"
-                    ? "با گوش دادن به موزیک‌ها، ثبت نظرات، مشارکت در ترجمه لیریک و دنبال کردن آرتیست‌ها امتیاز کسب کنید و ۱۰۰ نشان ۳بعدی را باز نمایید."
-                    : "Earn points by streaming, commenting, contributing lyrics and unlocking all 100 collector 3D clay badges."}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
       {/* =========================================================================
-       *  TAB 1: 100 3D CLAYMORPHIC BADGES (۱۰۰ نشان افتخار ۳بعدی)
-       * ========================================================================= */}
-      {activeTab === "badges" && (
-        <div className="flex w-full shrink-0 flex-col gap-3.5">
-          {/* Filter Bar: Category Scroll Rail + Status & Search */}
-          <div className="flex flex-col gap-2.5 rounded-[22px] border border-line bg-surface p-3 shadow-2xs">
-            {/* Category horizontal scroll rail */}
-            <div className="scroll-rail flex items-center gap-1.5 overflow-x-auto pb-1">
-              <button
-                type="button"
-                onClick={() => setBadgeCategory("all")}
-                className={cn(
-                  "shrink-0 rounded-xl px-3 py-1.5 text-[12px] font-bold transition",
-                  badgeCategory === "all"
-                    ? "bg-ink text-surface shadow-xs"
-                    : "bg-subtle text-ink-muted hover:text-ink",
-                )}
-              >
-                {lang === "fa" ? "همه دسته‌ها (۱۰۰)" : "All Categories (100)"}
-              </button>
-              {BADGE_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setBadgeCategory(cat.id)}
-                  className={cn(
-                    "flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-bold transition",
-                    badgeCategory === cat.id
-                      ? "bg-primary text-white shadow-xs"
-                      : "bg-subtle text-ink-muted hover:text-ink",
-                  )}
-                >
-                  <Icon name={cat.icon} size={12.5} />
-                  <span>{dataLabel(cat.labelFa)}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Sub-Filters: Status & Search Box */}
-            <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-line/60 pt-2.5">
-              <div className="flex items-center gap-1">
-                {(["all", "unlocked", "locked"] as const).map((st) => (
-                  <button
-                    key={st}
-                    type="button"
-                    onClick={() => setBadgeStatusFilter(st)}
-                    className={cn(
-                      "rounded-lg px-2.5 py-1 text-[12px] font-bold transition",
-                      badgeStatusFilter === st
-                        ? "bg-primary-soft text-primary-deep font-black"
-                        : "text-ink-muted hover:text-ink",
-                    )}
-                  >
-                    {st === "all"
-                      ? lang === "fa" ? "همه" : "All"
-                      : st === "unlocked"
-                        ? lang === "fa" ? "دریافت‌شده" : "Unlocked"
-                        : lang === "fa" ? "قفل" : "Locked"}
-                  </button>
-                ))}
-              </div>
-
-              {/* Compact Search Input */}
-              <div className="relative w-full sm:w-[200px]">
-                <Icon
-                  name="search"
-                  size={13}
-                  className="pointer-events-none absolute start-2.5 top-2.5 text-ink-faint"
-                />
-                <input
-                  type="text"
-                  value={badgeSearch}
-                  onChange={(e) => setBadgeSearch(e.target.value)}
-                  placeholder={lang === "fa" ? "جستجوی نشان افتخار..." : "Search badges..."}
-                  className="w-full rounded-xl border border-line bg-subtle/50 py-1.5 pe-2.5 ps-7 text-[12px] text-ink outline-none focus:border-primary focus:bg-surface"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Badges Grid */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {filteredBadges.map((badge) => (
-              <CompactClayBadgeCard
-                key={badge.id}
-                badge={badge}
-                lang={lang}
-                dataLabel={dataLabel}
-                onSelect={setSelectedBadge}
-              />
-            ))}
-          </div>
-
-          {filteredBadges.length === 0 && (
-            <div className="rounded-[22px] border border-line bg-surface py-12 text-center text-ink-muted">
-              <Icon name="search" size={24} className="mx-auto text-ink-faint" />
-              <p className="mt-2 text-[13px] font-bold">
-                {lang === "fa" ? "هیچ نشانی با این فیلتر یا نام یافت نشد." : "No badges match your criteria."}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* =========================================================================
-       *  TAB 2: PUBLIC USER PLAYLISTS (پلی‌لیست‌ها)
+       *  TAB 1: PLAYLISTS (مدیریت پلی‌لیست‌ها با کاور آهنگ اول)
        * ========================================================================= */}
       {activeTab === "playlists" && (
-        <div className="rounded-[22px] border border-line bg-surface p-4 shadow-xs space-y-4 w-full shrink-0">
-          <div className="flex items-center justify-between border-b border-line pb-3">
+        <div className="flex w-full shrink-0 flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
             <div>
-              <h2 className="font-extrabold text-[14px] text-ink">
+              <h2 className="font-extrabold text-[15px] text-ink">
                 {isSelf
-                  ? lang === "fa" ? "پلی‌لیست‌های اختصاصی من" : "My Playlists"
-                  : lang === "fa" ? `پلی‌لیست‌های عمومی ${profile.name}` : `${profile.name}’s Playlists`}
+                  ? lang === "fa" ? "پلی‌لیست‌های من" : lang === "ko" ? "내 플레이리스트" : "My Playlists"
+                  : lang === "fa" ? `پلی‌لیست‌های ${profile.name}` : lang === "ko" ? `${profile.name}의 플레이리스트` : `${profile.name}’s Playlists`}
               </h2>
-              <p className="text-[12px] text-ink-muted">
+              <p className="mt-0.5 text-[12px] text-ink-muted">
                 {lang === "fa"
-                  ? "پلی‌لیست‌های ساخته‌شده با کاورهای رسمی استودیو فیمس."
-                  : "Curated playlists strictly with studio bundled artwork"}
+                  ? "پلی‌لیست‌های شخصی با کاور خودکار اولین آهنگ"
+                  : lang === "ko"
+                    ? "첫 번째 곡 앨범 커버가 자동 적용되는 플레이리스트"
+                    : "Personal playlists with automatic lead track artwork"}
               </p>
             </div>
 
@@ -1139,37 +1108,36 @@ export function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setCreatePlaylistOpen(true)}
-                className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-1.5 text-[12px] font-bold text-white shadow-2xs hover:bg-primary-deep"
+                className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-[12px] sm:text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
               >
                 <Icon name="plus" size={13} strokeWidth={2.4} />
-                <span>{lang === "fa" ? "ساخت پلی‌لیست" : "New Playlist"}</span>
+                <span>{lang === "fa" ? "+ پلی‌لیست جدید" : lang === "ko" ? "+ 새 플레이리스트" : "+ New Playlist"}</span>
               </button>
             )}
           </div>
 
           {displayPlaylists.length === 0 ? (
-            <div className="py-12 text-center text-ink-muted">
+            <div className="rounded-[22px] border border-line bg-surface py-12 text-center text-ink-muted">
               <Icon name="disc" size={32} className="mx-auto text-ink-faint" />
-              <p className="mt-2 font-bold text-[13px]">
-                {lang === "fa" ? "هنوز هیچ پلی‌لیستی ایجاد نشده است." : "No playlists yet."}
+              <p className="mt-2 text-[12.5px] font-bold">
+                {lang === "fa" ? "هیچ پلی‌لیستی یافت نشد." : lang === "ko" ? "플레이리스트가 없습니다." : "No playlists found."}
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {displayPlaylists.map((pl) => (
                 <div
                   key={pl.id}
-                  onClick={() => openDetail({ kind: "playlist", id: pl.id })}
-                  className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-line/70 bg-surface p-2.5 transition hover:border-primary/40 hover:shadow-xs"
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface p-3 shadow-xs transition hover:border-primary/40 hover:shadow-sm"
                 >
-                  <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-subtle">
-                    <Photo src={pl.cover} alt={pl.name} />
+                  <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
+                    <Photo src={pl.cover} alt={pl.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
                   </div>
-                  <h3 className="mt-2 truncate font-bold text-[13px] text-ink group-hover:text-primary-deep">
+                  <h3 className="mt-2.5 truncate text-[13px] font-black text-ink group-hover:text-primary transition">
                     {pl.name}
                   </h3>
-                  <p className="text-[12px] text-ink-muted">
-                    {pl.trackIds.length} {lang === "fa" ? "قطعه موسیقی" : "tracks"}
+                  <p className="truncate text-[12px] font-semibold text-ink-muted">
+                    {lang === "fa" ? `${pl.trackIds.length} آهنگ` : lang === "ko" ? `${pl.trackIds.length}곡` : `${pl.trackIds.length} tracks`}
                   </p>
                 </div>
               ))}
@@ -1179,43 +1147,192 @@ export function ProfilePage() {
       )}
 
       {/* =========================================================================
-       *  TAB 3: CONTENT REQUESTS (درخواست‌های اختصاصی)
+       *  TAB 2: 100 BADGES (تالار کامل ۱۰۰ نشان ۳بعدی با فیلترها و پشتیبانی ۳ زبانه)
+       * ========================================================================= */}
+      {activeTab === "badges" && (
+        <div className="flex w-full shrink-0 flex-col gap-4">
+          {/* Header Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <Icon name="medal" size={17} className="text-primary" />
+                <h2 className="font-extrabold text-[15px] text-ink">
+                  {lang === "fa" ? "تالار ۱۰۰ نشان افتخار" : lang === "ko" ? "100개 명예의 전당 배지" : "100 Honors Badges"}
+                </h2>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[12px] font-extrabold text-primary-deep">
+                  {unlockedCount} / 100
+                </span>
+              </div>
+              <p className="mt-0.5 text-[12px] text-ink-muted">
+                {lang === "fa"
+                  ? "نشان‌های سه‌بعدی و جوایز فعالیت در استودیو فیمس"
+                  : lang === "ko"
+                    ? "FAIMESS 활동으로 획득하는 3D 배지 컬렉션"
+                    : "3D clay collector badges earned through platform activity"}
+              </p>
+            </div>
+
+            {/* Badges Search */}
+            <div className="relative w-full sm:w-56">
+              <Icon name="search" size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-ink-muted" />
+              <input
+                type="text"
+                value={badgeSearch}
+                onChange={(e) => setBadgeSearch(e.target.value)}
+                placeholder={lang === "fa" ? "جستجوی نشان..." : lang === "ko" ? "배지 검색..." : "Search badges..."}
+                className="w-full rounded-xl border border-line bg-surface ps-9 pe-3 py-1.5 text-[12px] text-ink outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex flex-col gap-2 rounded-[22px] border border-line bg-surface p-3 shadow-2xs">
+            {/* Status Filter */}
+            <div className="flex items-center gap-1.5 overflow-x-auto scroll-rail py-1">
+              {[
+                { id: "all", labelFa: "همه", labelKo: "전체", labelEn: "All" },
+                { id: "unlocked", labelFa: "دریافت‌شده", labelKo: "획득함", labelEn: "Unlocked" },
+                { id: "locked", labelFa: "قفل", labelKo: "잠김", labelEn: "Locked" },
+              ].map((st) => (
+                <button
+                  key={st.id}
+                  type="button"
+                  onClick={() => setBadgeStatusFilter(st.id as any)}
+                  className={cn(
+                    "whitespace-nowrap rounded-xl px-3 py-1 text-[12px] font-extrabold transition",
+                    badgeStatusFilter === st.id
+                      ? "bg-primary text-white shadow-2xs"
+                      : "bg-subtle text-ink-muted hover:bg-subtle/80 hover:text-ink",
+                  )}
+                >
+                  {lang === "fa" ? st.labelFa : lang === "ko" ? st.labelKo : st.labelEn}
+                </button>
+              ))}
+            </div>
+
+            {/* Category Filter */}
+            <div className="flex items-center gap-1.5 overflow-x-auto scroll-rail border-t border-line/60 pt-2 pb-1">
+              <button
+                type="button"
+                onClick={() => setBadgeCategory("all")}
+                className={cn(
+                  "whitespace-nowrap rounded-xl px-2.5 py-1 text-[12px] font-bold transition",
+                  badgeCategory === "all"
+                    ? "bg-ink text-white"
+                    : "bg-subtle text-ink-muted hover:text-ink",
+                )}
+              >
+                {lang === "fa" ? "همه دسته‌ها" : lang === "ko" ? "모든 카테고리" : "All Categories"}
+              </button>
+
+              {BADGE_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setBadgeCategory(cat.id)}
+                  className={cn(
+                    "flex items-center gap-1 whitespace-nowrap rounded-xl px-2.5 py-1 text-[12px] font-bold transition",
+                    badgeCategory === cat.id
+                      ? "bg-primary-deep text-white shadow-2xs"
+                      : "bg-subtle text-ink-muted hover:text-ink",
+                  )}
+                >
+                  <Icon name={cat.icon} size={12} />
+                  <span>{lang === "fa" ? cat.labelFa : lang === "ko" ? cat.labelKo : cat.labelEn}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 100 Badges Responsive Grid */}
+          {filteredBadges.length === 0 ? (
+            <div className="rounded-[22px] border border-line bg-surface py-12 text-center text-ink-muted">
+              <Icon name="search" size={24} className="mx-auto text-ink-faint" />
+              <p className="mt-2 text-[12.5px] font-bold">
+                {lang === "fa"
+                  ? "نشانی با این مشخصات یافت نشد."
+                  : lang === "ko"
+                    ? "해당하는 배지가 없습니다."
+                    : "No badges match your search."}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4">
+              {filteredBadges.map((badge) => (
+                <CompactClayBadgeCard
+                  key={badge.id}
+                  badge={badge}
+                  lang={lang}
+                  onSelect={setSelectedBadge}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* =========================================================================
+       *  TAB 3: REQUESTS (پیگیری درخواست‌ها — ویژه خود کاربر)
        * ========================================================================= */}
       {activeTab === "requests" && isSelf && (
-        <div className="rounded-[22px] border border-line bg-surface p-4 shadow-xs space-y-3.5 w-full shrink-0">
-          <div className="flex items-center justify-between border-b border-line pb-3">
+        <div className="flex w-full shrink-0 flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs">
             <div>
-              <h2 className="font-extrabold text-[14px] text-ink">
-                {lang === "fa" ? "درخواست‌های افزودن موزیک و آلبوم" : "Track Requests"}
+              <h2 className="font-extrabold text-[15px] text-ink">
+                {lang === "fa" ? "درخواست‌های آهنگ من" : lang === "ko" ? "내 곡 요청" : "My Track Requests"}
               </h2>
-              <p className="text-[12px] text-ink-muted">
+              <p className="mt-0.5 text-[12px] text-ink-muted">
                 {lang === "fa"
-                  ? "وضعیت بررسی قطعات ارسالی توسط ادمین‌های استودیو فیمس."
-                  : "Track submission status"}
+                  ? "پیگیری وضعیت افزودن آهنگ‌ها و لیریک‌های درخواستی شما"
+                  : lang === "ko"
+                    ? "요청한 곡 및 가사 처리 상태"
+                    : "Track the status of your submitted song and lyric requests"}
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => setRequestModalOpen(true)}
-              className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-1.5 text-[12px] font-bold text-white shadow-2xs hover:bg-primary-deep"
+              className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-[12px] sm:text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep"
             >
               <Icon name="plus" size={13} strokeWidth={2.4} />
-              <span>{lang === "fa" ? "درخواست جدید" : "New Request"}</span>
+              <span>{lang === "fa" ? "+ ثبت درخواست جدید" : lang === "ko" ? "+ 새 곡 요청" : "+ New Request"}</span>
             </button>
           </div>
 
-          <div className="space-y-2.5">
-            {socialApi.getUserRequests().map((req) => (
-              <div
-                key={req.id}
-                className="flex flex-col gap-2 rounded-2xl border border-line/70 bg-subtle/40 p-3 sm:flex-row sm:items-center sm:justify-between"
-              >
+          <div className="rounded-[22px] border border-line bg-surface p-3.5 sm:p-5 shadow-xs divide-y divide-line/60">
+            {[
+              {
+                id: "req-1",
+                trackTitle: "Seven",
+                artistName: "Jung Kook",
+                status: "fulfilled",
+                time: "2025-02-10",
+                notes: "Track and synced lyrics live on platform.",
+              },
+              {
+                id: "req-2",
+                trackTitle: "Super Shy",
+                artistName: "NewJeans",
+                status: "fulfilled",
+                time: "2025-02-14",
+                notes: "Added with bilingual Persian/English synchronisation.",
+              },
+              {
+                id: "req-3",
+                trackTitle: "Magnetic",
+                artistName: "ILLIT",
+                status: "pending",
+                time: "2025-02-18",
+                notes: "Pending review by editor chief.",
+              },
+            ].map((req) => (
+              <div key={req.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-extrabold text-[13px] text-ink">
-                      {req.title}
-                    </h3>
+                    <span className="font-black text-[13px] text-ink">
+                      {req.trackTitle}
+                    </span>
                     <span className="text-[12px] text-ink-muted">
                       ({req.artistName})
                     </span>
@@ -1230,17 +1347,17 @@ export function ProfilePage() {
                 <div className="flex items-center gap-2">
                   {req.status === "pending" && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[12px] font-bold text-amber-600 ring-1 ring-amber-500/30">
-                      {lang === "fa" ? "در انتظار بررسی" : "Pending"}
+                      {lang === "fa" ? "در انتظار بررسی" : lang === "ko" ? "검토 대기 중" : "Pending"}
                     </span>
                   )}
                   {req.status === "fulfilled" && (
                     <span className="rounded-full bg-mint-soft px-2.5 py-0.5 text-[12px] font-extrabold text-mint-deep ring-1 ring-mint-deep/30">
-                      ✓ {lang === "fa" ? "تایید شد (+۲۵ امتیاز)" : "Fulfilled"}
+                      ✓ {lang === "fa" ? "تایید شد (+۲۵ امتیاز)" : lang === "ko" ? "✓ 승인됨 (+25P)" : "✓ Fulfilled (+25 pts)"}
                     </span>
                   )}
                   {req.status === "rejected" && (
                     <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-[12px] font-bold text-rose-500 ring-1 ring-rose-500/30">
-                      {lang === "fa" ? "رد شد" : "Rejected"}
+                      {lang === "fa" ? "رد شد" : lang === "ko" ? "반려됨" : "Rejected"}
                     </span>
                   )}
                 </div>
@@ -1251,7 +1368,7 @@ export function ProfilePage() {
       )}
 
       {/* =========================================================================
-       *  3D CLAY BADGE DETAIL MODAL (دیالوگ بازرسی نشان ۳بعدی)
+       *  3D CLAY BADGE DETAIL MODAL (دیالوگ نشان ۳بعدی)
        * ========================================================================= */}
       {selectedBadge && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -1262,7 +1379,10 @@ export function ProfilePage() {
                   #{selectedBadge.number}
                 </span>
                 <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[12px] font-bold text-primary-deep">
-                  {selectedBadge.category}
+                  {(() => {
+                    const c = BADGE_CATEGORIES.find((cat) => cat.id === selectedBadge.category);
+                    return lang === "fa" ? c?.labelFa : lang === "ko" ? c?.labelKo : c?.labelEn;
+                  })()}
                 </span>
               </div>
               <button
@@ -1286,11 +1406,13 @@ export function ProfilePage() {
               </div>
 
               <h3 className="mt-3 font-black text-[17px] text-ink">
-                {dataLabel(selectedBadge.titleFa)}
+                {getBadgeTitle(selectedBadge, lang)}
               </h3>
-              <p className="text-[12px] font-bold text-ink-muted">
-                {selectedBadge.titleEn}
-              </p>
+              {lang !== "en" && (
+                <p className="text-[12px] font-bold text-ink-muted">
+                  {selectedBadge.titleEn}
+                </p>
+              )}
 
               <div className="mt-2 flex items-center gap-1.5">
                 <span
@@ -1304,44 +1426,46 @@ export function ProfilePage() {
                   )}
                 >
                   {selectedBadge.rarity === "common"
-                    ? lang === "fa" ? "درجه: عادی" : "Common"
+                    ? lang === "fa" ? "درجه: عادی" : lang === "ko" ? "일반" : "Common"
                     : selectedBadge.rarity === "rare"
-                      ? lang === "fa" ? "درجه: کمیاب" : "Rare"
+                      ? lang === "fa" ? "درجه: کمیاب" : lang === "ko" ? "희귀" : "Rare"
                       : selectedBadge.rarity === "epic"
-                        ? lang === "fa" ? "درجه: حماسی" : "Epic"
+                        ? lang === "fa" ? "درجه: حماسی" : lang === "ko" ? "에픽" : "Epic"
                         : selectedBadge.rarity === "legendary"
-                          ? lang === "fa" ? "درجه: افسانه‌ای" : "Legendary"
-                          : lang === "fa" ? "درجه: اسطوره‌ای" : "Mythic"}
+                          ? lang === "fa" ? "درجه: افسانه‌ای" : lang === "ko" ? "전설" : "Legendary"
+                          : lang === "fa" ? "درجه: اسطوره‌ای" : lang === "ko" ? "신화" : "Mythic"}
                 </span>
 
                 <span className="rounded-full border border-line bg-subtle px-2.5 py-0.5 text-[12px] font-bold text-ink-muted">
-                  {selectedBadge.requiredPoints.toLocaleString()} {lang === "fa" ? "امتیاز" : "pts"}
+                  {selectedBadge.requiredPoints.toLocaleString()} {lang === "fa" ? "امتیاز" : lang === "ko" ? "P" : "pts"}
                 </span>
               </div>
 
               <p className="mt-2.5 max-w-[320px] text-[12.5px] leading-relaxed text-ink-body">
-                {selectedBadge.descriptionFa}
+                {getBadgeDesc(selectedBadge, lang)}
               </p>
 
               <div className="mt-4 w-full rounded-2xl border border-line/70 bg-subtle/50 p-3">
                 {selectedBadge.unlocked ? (
                   <div className="flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-white font-extrabold text-[12px] shadow-xs">
                     <Icon name="check" size={14} className="text-white" strokeWidth={2.6} />
-                    <span className="text-white">{lang === "fa" ? "شما این نشان ۳بعدی را دریافت کرده‌اید!" : "Badge Unlocked!"}</span>
+                    <span className="text-white">
+                      {lang === "fa" ? "شما این نشان ۳بعدی را دریافت کرده‌اید!" : lang === "ko" ? "이 3D 배지를 획득하셨습니다!" : "Badge Unlocked!"}
+                    </span>
                   </div>
                 ) : (
                   <div>
                     <div className="flex items-center justify-between text-[12px]">
                       <span className="font-bold text-ink-muted">
-                        {lang === "fa" ? "کسر امتیاز تا باز شدن:" : "Points needed:"}
+                        {lang === "fa" ? "کسر امتیاز تا باز شدن:" : lang === "ko" ? "획득까지 남은 포인트:" : "Points needed:"}
                       </span>
                       <span className="font-extrabold text-primary-deep">
-                        {selectedBadge.remainingPoints.toLocaleString()} {lang === "fa" ? "امتیاز" : "pts"}
+                        {selectedBadge.remainingPoints.toLocaleString()} {lang === "fa" ? "امتیاز" : lang === "ko" ? "P" : "pts"}
                       </span>
                     </div>
-                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-line">
+                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-subtle">
                       <div
-                        className="h-full rounded-full bg-primary"
+                        className="h-full rounded-full bg-gradient-to-r from-primary to-indigo-500"
                         style={{ width: `${selectedBadge.progressPercent}%` }}
                       />
                     </div>
@@ -1349,12 +1473,22 @@ export function ProfilePage() {
                 )}
               </div>
             </div>
+
+            <div className="pt-2 border-t border-line text-center">
+              <button
+                type="button"
+                onClick={() => setSelectedBadge(null)}
+                className="w-full rounded-xl bg-subtle py-2 text-[12px] font-bold text-ink hover:bg-subtle/80"
+              >
+                {lang === "fa" ? "بستن" : lang === "ko" ? "닫기" : "Close"}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* =========================================================================
-       *  REPORT USER MODAL (گزارش تخلف کاربر)
+       *  REPORT USER MODAL (گزارش تخلف — فقط برای سایر کاربران)
        * ========================================================================= */}
       {reportModalOpen && !isSelf && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -1362,10 +1496,14 @@ export function ProfilePage() {
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
                 <span className="flex size-7 items-center justify-center rounded-full bg-rose-500/10 text-rose-600">
-                  <Icon name="message" size={14} strokeWidth={2.4} />
+                  <Icon name="flag" size={14} strokeWidth={2.2} />
                 </span>
-                <h3 className="font-extrabold text-[14.5px] text-ink">
-                  {lang === "fa" ? `گزارش تخلف @${profile.username}` : `Report @${profile.username}`}
+                <h3 className="font-extrabold text-[14px] text-ink">
+                  {lang === "fa"
+                    ? `گزارش کاربر @${profile.username}`
+                    : lang === "ko"
+                      ? `@${profile.username} 신고`
+                      : `Report @${profile.username}`}
                 </h3>
               </div>
               <button
@@ -1380,45 +1518,71 @@ export function ProfilePage() {
             <form onSubmit={handleSubmitReport} className="mt-3 space-y-3.5">
               <div>
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                  {lang === "fa" ? "دلیل گزارش" : "Reason"}
+                  {lang === "fa" ? "دلیل گزارش" : lang === "ko" ? "신고 사유" : "Reason"}
                 </label>
                 <div className="space-y-1.5">
                   {[
-                    "محتوای نامناسب یا توهین‌آمیز",
-                    "ارسال هرزنامه یا تبلیغات اسپم",
-                    "بیوگرافی یا هویت جعلی",
-                    "نقض حق کپی‌رایت یا لیریک جعلی",
-                  ].map((reason) => (
-                    <label
-                      key={reason}
-                      className={cn(
-                        "flex cursor-pointer items-center justify-between rounded-xl border p-2.5 text-[12px] font-bold transition",
-                        reportReason === reason
-                          ? "border-primary bg-primary/10 text-primary-deep"
-                          : "border-line bg-surface text-ink hover:bg-subtle",
-                      )}
-                    >
-                      <span>{reason}</span>
-                      <input
-                        type="radio"
-                        checked={reportReason === reason}
-                        onChange={() => setReportReason(reason)}
-                        className="accent-primary"
-                      />
-                    </label>
-                  ))}
+                    {
+                      fa: "محتوای نامناسب یا توهین‌آمیز",
+                      ko: "부적절하거나 불쾌한 콘텐츠",
+                      en: "Inappropriate or offensive content",
+                    },
+                    {
+                      fa: "ارسال هرزنامه یا تبلیغات اسپم",
+                      ko: "스팸 또는 원치 않는 광고",
+                      en: "Spam or unwanted advertising",
+                    },
+                    {
+                      fa: "بیوگرافی یا هویت جعلی",
+                      ko: "사칭 또는 가짜 프로필",
+                      en: "Fake identity or impersonation",
+                    },
+                    {
+                      fa: "نقض حق کپی‌رایت یا لیریک جعلی",
+                      ko: "저작권 침해 또는 허위 가사",
+                      en: "Copyright infringement or false lyrics",
+                    },
+                  ].map((item) => {
+                    const label = lang === "fa" ? item.fa : lang === "ko" ? item.ko : item.en;
+                    return (
+                      <label
+                        key={item.en}
+                        className={cn(
+                          "flex cursor-pointer items-center justify-between rounded-xl border p-2.5 text-[12px] font-bold transition",
+                          reportReason === item.fa
+                            ? "border-primary bg-primary/10 text-primary-deep"
+                            : "border-line bg-surface text-ink hover:bg-subtle",
+                        )}
+                      >
+                        <span>{label}</span>
+                        <input
+                          type="radio"
+                          name="report-reason"
+                          checked={reportReason === item.fa}
+                          onChange={() => setReportReason(item.fa)}
+                          className="accent-primary"
+                        />
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
               <div>
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                  {lang === "fa" ? "توضیحات تکمیلی (اختیاری)" : "Additional Details"}
+                  {lang === "fa" ? "توضیحات تکمیلی (اختیاری)" : lang === "ko" ? "추가 설명 (선택 사항)" : "Additional Details"}
                 </label>
                 <textarea
                   value={reportDetails}
                   onChange={(e) => setReportDetails(e.target.value)}
                   rows={3}
-                  placeholder={lang === "fa" ? "توضیح مختصری در رابطه با گزارش خود بنویسید..." : "Explain details..."}
+                  placeholder={
+                    lang === "fa"
+                      ? "توضیح مختصری بنویسید..."
+                      : lang === "ko"
+                        ? "자세한 설명을 입력하세요..."
+                        : "Explain details..."
+                  }
                   className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary resize-none"
                 />
               </div>
@@ -1429,13 +1593,13 @@ export function ProfilePage() {
                   onClick={() => setReportModalOpen(false)}
                   className="rounded-xl px-3.5 py-1.5 text-[12px] font-bold text-ink-muted hover:bg-subtle"
                 >
-                  {lang === "fa" ? "انصراف" : "Cancel"}
+                  {lang === "fa" ? "انصراف" : lang === "ko" ? "취소" : "Cancel"}
                 </button>
                 <button
                   type="submit"
                   className="rounded-xl bg-rose-600 px-4 py-1.5 text-[12px] font-bold text-white shadow-sm hover:bg-rose-700"
                 >
-                  {lang === "fa" ? "ارسال گزارش" : "Submit Report"}
+                  {lang === "fa" ? "ارسال گزارش" : lang === "ko" ? "신고 제출" : "Submit Report"}
                 </button>
               </div>
             </form>
@@ -1451,7 +1615,7 @@ export function ProfilePage() {
           <div className="flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface p-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <h3 className="font-extrabold text-[15px] text-ink">
-                {lang === "fa" ? "ویرایش مشخصات کاربری" : "Edit Profile"}
+                {lang === "fa" ? "ویرایش مشخصات" : lang === "ko" ? "프로필 편집" : "Edit Profile"}
               </h3>
               <button
                 type="button"
@@ -1467,10 +1631,10 @@ export function ProfilePage() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "آواتارهای عروسکی پیش‌فرض" : "Default Doll Avatars"}
+                    {lang === "fa" ? "آواتارهای عروسکی پیش‌فرض" : lang === "ko" ? "기본 인형 아바타" : "Default Doll Avatars"}
                   </label>
                   <span className="text-[12px] text-ink-faint">
-                    {AVAILABLE_AVATARS.length} {lang === "fa" ? "آواتار" : "avatars"}
+                    {AVAILABLE_AVATARS.length} {lang === "fa" ? "آواتار" : lang === "ko" ? "개" : "avatars"}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto scroll-rail pb-1">
@@ -1498,16 +1662,16 @@ export function ProfilePage() {
                       className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-[12px] font-extrabold text-primary-deep transition hover:bg-primary/20"
                     >
                       <Icon name="folderPlus" size={14} />
-                      <span>{lang === "fa" ? "📁 انتخاب تصویر پروفایل از گالری (فشرده‌سازی خودکار)" : "Select Custom Avatar"}</span>
+                      <span>{lang === "fa" ? "📁 انتخاب عکس از گالری (فشرده‌سازی خودکار)" : lang === "ko" ? "📁 갤러리 아바타 업로드 (자동 압축)" : "📁 Upload Avatar (Auto-compressed)"}</span>
                     </button>
                   ) : (
                     <div className="flex items-center justify-between rounded-xl border border-line bg-subtle/70 px-3 py-2 text-[12px] text-ink-muted">
                       <span className="flex items-center gap-1.5 font-bold">
                         <Icon name="lock" size={13} className="text-amber-500" />
-                        <span>{lang === "fa" ? "آپلود عکس از گالری" : "Custom Avatar Upload"}</span>
+                        <span>{lang === "fa" ? "آپلود عکس از گالری" : lang === "ko" ? "갤러리 아바타 업로드" : "Custom Avatar Upload"}</span>
                       </span>
                       <span className="font-extrabold text-amber-600">
-                        {lang === "fa" ? `قفل (نیاز به ${POINTS_FOR_CUSTOM_AVATAR} امتیاز)` : `Locked (${POINTS_FOR_CUSTOM_AVATAR} pts)`}
+                        {lang === "fa" ? `قفل (نیاز به ${POINTS_FOR_CUSTOM_AVATAR} امتیاز)` : lang === "ko" ? `잠김 (500P 필요)` : `Locked (${POINTS_FOR_CUSTOM_AVATAR} pts)`}
                       </span>
                     </div>
                   )}
@@ -1518,10 +1682,10 @@ export function ProfilePage() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[12px] font-bold text-ink-muted">
-                    {lang === "fa" ? "بنرهای پیش‌فرض سیستم" : "Default System Banners"}
+                    {lang === "fa" ? "بنرهای پیش‌فرض سیستم" : lang === "ko" ? "기본 시스템 배너" : "Default System Banners"}
                   </label>
                   <span className="text-[12px] text-ink-faint">
-                    {DEFAULT_SYSTEM_BANNERS.length} {lang === "fa" ? "طرح" : "themes"}
+                    {DEFAULT_SYSTEM_BANNERS.length} {lang === "fa" ? "طرح" : lang === "ko" ? "개" : "themes"}
                   </span>
                 </div>
 
@@ -1532,7 +1696,7 @@ export function ProfilePage() {
                       key={bannerItem.id}
                       type="button"
                       onClick={() => setEditBanner(bannerItem.url)}
-                      title={lang === "fa" ? bannerItem.titleFa : bannerItem.titleEn}
+                      title={lang === "fa" ? bannerItem.titleFa : lang === "ko" ? bannerItem.titleKo : bannerItem.titleEn}
                       className={cn(
                         "group relative h-12 w-20 shrink-0 overflow-hidden rounded-xl border transition",
                         (editBanner === bannerItem.url || (!editBanner && !bannerItem.url))
@@ -1548,7 +1712,7 @@ export function ProfilePage() {
                         </div>
                       )}
                       <span className="absolute inset-x-0 bottom-0 bg-black/60 py-0.5 text-[12px] font-bold text-white text-center truncate px-1 backdrop-blur-2xs">
-                        {lang === "fa" ? bannerItem.titleFa : bannerItem.titleEn}
+                        {lang === "fa" ? bannerItem.titleFa : lang === "ko" ? bannerItem.titleKo : bannerItem.titleEn}
                       </span>
                     </button>
                   ))}
@@ -1564,7 +1728,7 @@ export function ProfilePage() {
                         className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-[12px] font-extrabold text-primary-deep transition hover:bg-primary/20"
                       >
                         <Icon name="folderPlus" size={14} />
-                        <span>{lang === "fa" ? "🖼️ انتخاب بنر دلخواه از گالری (فشرده‌سازی خودکار)" : "Select Custom Banner"}</span>
+                        <span>{lang === "fa" ? "🖼️ انتخاب بنر از گالری (فشرده‌سازی)" : lang === "ko" ? "🖼️ 갤러리 배너 업로드 (자동 압축)" : "🖼️ Upload Banner (Auto-compressed)"}</span>
                       </button>
                       {editBanner && (
                         <button
@@ -1572,7 +1736,7 @@ export function ProfilePage() {
                           onClick={() => setEditBanner("")}
                           className="rounded-xl border border-line bg-surface px-2.5 py-2 text-[12px] font-bold text-ink-muted hover:text-rose-500"
                         >
-                          {lang === "fa" ? "حذف" : "Reset"}
+                          {lang === "fa" ? "حذف" : lang === "ko" ? "초기화" : "Reset"}
                         </button>
                       )}
                     </div>
@@ -1580,10 +1744,10 @@ export function ProfilePage() {
                     <div className="flex items-center justify-between rounded-xl border border-line bg-subtle/70 px-3 py-2 text-[12px] text-ink-muted">
                       <span className="flex items-center gap-1.5 font-bold">
                         <Icon name="lock" size={13} className="text-amber-500" />
-                        <span>{lang === "fa" ? "آپلود بنر دلخواه از گالری" : "Custom Banner Upload"}</span>
+                        <span>{lang === "fa" ? "آپلود بنر دلخواه از گالری" : lang === "ko" ? "맞춤 배너 업로드" : "Custom Banner Upload"}</span>
                       </span>
                       <span className="font-extrabold text-amber-600">
-                        {lang === "fa" ? `قفل (نیاز به ${POINTS_FOR_CUSTOM_BANNER.toLocaleString()} امتیاز)` : `Locked (${POINTS_FOR_CUSTOM_BANNER} pts)`}
+                        {lang === "fa" ? `قفل (نیاز به ${POINTS_FOR_CUSTOM_BANNER.toLocaleString()} امتیاز)` : lang === "ko" ? `잠김 (500P 필요)` : `Locked (${POINTS_FOR_CUSTOM_BANNER} pts)`}
                       </span>
                     </div>
                   )}
@@ -1593,7 +1757,7 @@ export function ProfilePage() {
               {/* Display Name */}
               <div>
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                  {lang === "fa" ? "نام نمایشی" : "Display Name"}
+                  {lang === "fa" ? "نام نمایشی" : lang === "ko" ? "닉네임" : "Display Name"}
                 </label>
                 <input
                   type="text"
@@ -1607,7 +1771,7 @@ export function ProfilePage() {
               {/* Handle */}
               <div>
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                  {lang === "fa" ? "نام کاربری (هندل)" : "Username (Handle)"}
+                  {lang === "fa" ? "نام کاربری (هندل)" : lang === "ko" ? "핸들" : "Username (Handle)"}
                 </label>
                 <input
                   type="text"
@@ -1621,7 +1785,7 @@ export function ProfilePage() {
               {/* Favorite Genre */}
               <div>
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                  {lang === "fa" ? "سبک موسیقی مورد علاقه" : "Favorite Genre"}
+                  {lang === "fa" ? "سبک موسیقی مورد علاقه" : lang === "ko" ? "선호 장르" : "Favorite Genre"}
                 </label>
                 <input
                   type="text"
@@ -1634,7 +1798,7 @@ export function ProfilePage() {
               {/* Bio */}
               <div>
                 <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                  {lang === "fa" ? "بیوگرافی و معرفی کوتاه" : "Bio"}
+                  {lang === "fa" ? "بیوگرافی و معرفی کوتاه" : lang === "ko" ? "소개글" : "Bio"}
                 </label>
                 <textarea
                   value={editBio}
@@ -1650,13 +1814,13 @@ export function ProfilePage() {
                   onClick={() => setIsEditing(false)}
                   className="rounded-xl px-3.5 py-1.5 text-[12px] font-bold text-ink-muted hover:bg-subtle"
                 >
-                  {lang === "fa" ? "انصراف" : "Cancel"}
+                  {lang === "fa" ? "انصراف" : lang === "ko" ? "취소" : "Cancel"}
                 </button>
                 <button
                   type="submit"
                   className="rounded-xl bg-primary px-4 py-1.5 text-[12px] font-bold text-white shadow-primary hover:bg-primary-deep"
                 >
-                  {lang === "fa" ? "ذخیره تغییرات" : "Save Changes"}
+                  {lang === "fa" ? "ذخیره تغییرات" : lang === "ko" ? "저장" : "Save Changes"}
                 </button>
               </div>
             </form>
@@ -1664,20 +1828,18 @@ export function ProfilePage() {
         </div>
       )}
 
-      {/* Playlist Dialog */}
+      {/* Dialogs */}
       <CreatePlaylistDialog
         open={createPlaylistOpen}
         onClose={() => setCreatePlaylistOpen(false)}
       />
 
-      {/* Followers / Following List Modal */}
       <FollowListModal
         open={followModalOpen}
         onClose={() => setFollowModalOpen(false)}
         initialTab={followModalTab}
       />
 
-      {/* Track Request Modal */}
       <ContentRequestModal
         open={requestModalOpen}
         onClose={() => setRequestModalOpen(false)}

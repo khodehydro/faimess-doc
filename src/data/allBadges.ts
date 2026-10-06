@@ -17,21 +17,160 @@ export type PlatformBadge = {
   category: BadgeCategory;
   titleFa: string;
   titleEn: string;
+  titleKo?: string;
   descriptionFa: string;
+  descriptionEn?: string;
+  descriptionKo?: string;
   requiredPoints: number;
   clayGlyph: ClayIconGlyph;
   clayTone: ClayTone;
   rarity: BadgeRarity;
 };
 
-export const BADGE_CATEGORIES: { id: BadgeCategory; labelFa: string; labelEn: string; icon: IconName }[] = [
-  { id: "streaming", labelFa: "استریم و موسیقی", labelEn: "Streaming", icon: "music" },
-  { id: "lyrics", labelFa: "لیریک و شعر", labelEn: "Lyrics", icon: "waveform" },
-  { id: "playlists", labelFa: "پلی‌لیست و گلچین", labelEn: "Playlists", icon: "disc" },
-  { id: "community", labelFa: "جامعه و هواداری", labelEn: "Community", icon: "users" },
-  { id: "loyalty", labelFa: "وفاداری و زنجیره", labelEn: "Loyalty", icon: "bolt" },
-  { id: "mythic", labelFa: "اسطوره‌ای و VIP", labelEn: "Mythic & VIP", icon: "crown" },
+export const BADGE_CATEGORIES: { id: BadgeCategory; labelFa: string; labelEn: string; labelKo: string; icon: IconName }[] = [
+  { id: "streaming", labelFa: "استریم", labelEn: "Streaming", labelKo: "스트리밍", icon: "music" },
+  { id: "lyrics", labelFa: "لیریک", labelEn: "Lyrics", labelKo: "가사", icon: "waveform" },
+  { id: "playlists", labelFa: "پلی‌لیست", labelEn: "Playlists", labelKo: "플레이리스트", icon: "disc" },
+  { id: "community", labelFa: "جامعه", labelEn: "Community", labelKo: "커뮤니티", icon: "users" },
+  { id: "loyalty", labelFa: "وفاداری", labelEn: "Loyalty", labelKo: "로열티", icon: "bolt" },
+  { id: "mythic", labelFa: "اسطوره‌ای", labelEn: "Mythic", labelKo: "신화", icon: "crown" },
 ];
+
+/**
+ * Trilingual badge title helper
+ */
+export function getBadgeTitle(
+  badge: { titleFa: string; titleEn: string; titleKo?: string },
+  lang: string,
+): string {
+  if (lang === "fa") {
+    return badge.titleFa.replace(/\s*\([^)]*\)/g, "").trim() || badge.titleFa;
+  }
+  if (lang === "ko") {
+    if (badge.titleKo) return badge.titleKo;
+    // Standard Korean romanized translation fallback for common K-pop studio terms
+    return (
+      KO_BADGE_TITLES[badge.titleEn] ||
+      badge.titleEn
+        .replace(/Star/gi, "스타")
+        .replace(/Diamond/gi, "다이아몬드")
+        .replace(/Gold/gi, "골드")
+        .replace(/Master/gi, "마스터")
+        .replace(/Stage/gi, "스테이지")
+        .replace(/Wave/gi, "웨이브")
+        .replace(/King/gi, "킹")
+        .replace(/Queen/gi, "퀸")
+        .replace(/Legend/gi, "레전드")
+        .replace(/VIP/gi, "VIP")
+        .replace(/Night/gi, "나이트")
+        .replace(/Club/gi, "클럽")
+        .replace(/Beat/gi, "비트")
+        .replace(/Hunter/gi, "헌터")
+    );
+  }
+  return badge.titleEn;
+}
+
+/**
+ * Trilingual badge description helper
+ */
+export function getBadgeDesc(
+  badge: {
+    titleFa: string;
+    titleEn: string;
+    titleKo?: string;
+    descriptionFa: string;
+    descriptionEn?: string;
+    descriptionKo?: string;
+    requiredPoints: number;
+  },
+  lang: string,
+): string {
+  if (lang === "fa") return badge.descriptionFa;
+  if (lang === "ko") {
+    return (
+      badge.descriptionKo ||
+      `${getBadgeTitle(badge, "ko")} - ${badge.requiredPoints.toLocaleString()} 포인트를 달성하면 획득하는 명예 배지입니다.`
+    );
+  }
+  return (
+    badge.descriptionEn ||
+    `${badge.titleEn} - Platform honor badge unlocked at ${badge.requiredPoints.toLocaleString()} fan points.`
+  );
+}
+
+const KO_BADGE_TITLES: Record<string, string> = {
+  "Top Star": "탑 스타",
+  "Triple Diamond": "트리플 다이아몬드",
+  "Stage Spotlight": "스테이지 스포트라이트",
+  "Chart Buster": "차트 버스터",
+  "Encore King": "앙코르 킹",
+  "Melody Hunter": "멜로디 헌터",
+  "Golden Record": "골든 레코드",
+  "Sound Wave": "사운드 웨이브",
+  "Rhythm Master": "리듬 마스터",
+  "Night Drive": "나이트 드라이브",
+  "Acoustic Session": "어쿠스틱 세션",
+  "Bass Booster": "베이스 부스터",
+  "Vocal Power": "보컬 파워",
+  "Studio Master": "스튜디오 마스터",
+  "Concert Hall": "콘서트 홀",
+  "Festival Fever": "페스티벌 피버",
+  "Live Session": "라이브 세션",
+  "Neon Stage": "네온 스테이지",
+  "Harmonic Flow": "하모닉 플로우",
+  "Echo Horizon": "에코 호라이즌",
+  "Lyricist": "작사가",
+  "Poetic Beat": "포에틱 비트",
+  "Rhyme Weaver": "라임 위버",
+  "Sync Master": "싱크 마스터",
+  "Karaoke Star": "가라오케 스타",
+  "Lyrical Soul": "서정적 소울",
+  "Translation Ace": "번역 에이스",
+  "Bilingual Voice": "이중언어 보이스",
+  "Subtitles Pro": "자막 프로",
+  "Wordsmith": "워드스미스",
+  "Collector": "컬렉터",
+  "Playlist Architect": "플레이리스트 설계자",
+  "Curator VIP": "큐레이터 VIP",
+  "Mixtape Legend": "믹스테이프 레전드",
+  "Mood Maker": "무드 메이커",
+  "Sonic Library": "소닉 라이브러리",
+  "Track Archivist": "트랙 아카이비스트",
+  "Crate Digger": "크레이트 디거",
+  "Audio Vault": "오디오 볼트",
+  "Anthem Builder": "앤섬 빌더",
+  "Top Fan": "탑 팬",
+  "Active Listener": "열혈 리스너",
+  "Community Star": "커뮤니티 스타",
+  "Supporter": "서포터",
+  "Discussion Lead": "토론 리더",
+  "Feedback Champ": "피드백 챔피언",
+  "Friendly Critic": "친절한 비평가",
+  "Squad Leader": "스쿼드 리더",
+  "Fandom Pioneer": "팬덤 개척자",
+  "Heart Keeper": "하트 키퍼",
+  "Streak Master": "스트릭 마스터",
+  "Daily Flame": "데일리 플레임",
+  "Loyal Pulse": "충성스런 펄스",
+  "Midnight Owl": "자정의 올빼미",
+  "Weekend Hero": "주말의 영웅",
+  "Centurion": "센추리온",
+  "Devoted Fan": "헌신적인 팬",
+  "Everlasting": "에버라스팅",
+  "Unbroken Rhythm": "끊임없는 리듬",
+  "Infinite Vibe": "무한한 바이브",
+  "Mythic Crown": "신화의 크라운",
+  "Immortal Melody": "불멸의 멜로디",
+  "Diamond Phoenix": "다이아몬드 피닉스",
+  "Starlight Empress": "별빛 황후",
+  "Apex Titan": "에이펙스 타이탄",
+  "Ethereal Idol": "이더리얼 아이돌",
+  "Celestia": "셀레스티아",
+  "Cosmic Sovereign": "우주의 군주",
+  "Grand Maestro": "그랜드 마에스트로",
+  "Universe Legend": "유니버스 레전드",
+};
 
 export const ALL_100_BADGES: PlatformBadge[] = [
   /* ---------------- CATEGORY 1: STREAMING (1 - 20) ---------------- */

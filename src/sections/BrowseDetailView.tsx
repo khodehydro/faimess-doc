@@ -156,7 +156,7 @@ export function BrowseDetailView() {
         title: own.name,
         byline: t("playlist.yours"),
         facts: `${countOf(tracks, t)} · ${t("detail.minutes", { n: minutesOf(tracks) })}`,
-        cover: coverPhoto(own.cover),
+        cover: tracks[0]?.photo ?? coverPhoto(own.cover),
         seed: 0,
         tracks,
         editableId: own.id,

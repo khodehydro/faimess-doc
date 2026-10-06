@@ -354,7 +354,7 @@ function MineStrip({ onNew }: { onNew: () => void }) {
                   here — the standard pair, and neither one hides the other */}
               <span className="relative block h-[84px] w-full overflow-hidden rounded-[14px] lg:h-[96px]">
                 <Photo
-                  src={coverPhoto(list.cover)}
+                  src={lead?.photo ?? coverPhoto(list.cover)}
                   alt=""
                   className="transition-transform duration-500 group-hover:scale-[1.06]"
                 />
