@@ -45,6 +45,24 @@ export function Modal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // Prevent background scrolling while modal is active
+  useEffect(() => {
+    if (!open || typeof document === "undefined") return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const contentScroll = document.querySelector("[data-content-scroll]") as HTMLElement | null;
+    const origContentOverflow = contentScroll ? contentScroll.style.overflow : undefined;
+    if (contentScroll) {
+      contentScroll.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      if (contentScroll && origContentOverflow !== undefined) {
+        contentScroll.style.overflow = origContentOverflow;
+      }
+    };
+  }, [open]);
+
   if (!mounted) return null;
 
   return createPortal(
@@ -55,7 +73,7 @@ export function Modal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18, ease: EASE }}
-          className="fixed inset-0 z-[70] flex items-center justify-center p-6"
+          className="fixed inset-0 z-[70] flex items-center justify-center p-6 overscroll-contain"
         >
           <div className="absolute inset-0 bg-ink/35 backdrop-blur-[3px]" onClick={onClose} aria-hidden="true" />
 

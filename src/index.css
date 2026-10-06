@@ -763,3 +763,25 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ------------------------------------------------------------------ *
+ *  Performance Enhancements: GPU Acceleration & Smooth Scrolling
+ * ------------------------------------------------------------------ */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.scroll-rail,
+.scroll-slim {
+  -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
+}
+
+.studio-backdrop,
+.glass-panel {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "../ui/Icon";
 import { usePreferences } from "../app/PreferencesContext";
 import { useApp } from "../app/AppContext";
@@ -428,6 +429,24 @@ export function ProfilePage() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("محتوای نامناسب یا توهین‌آمیز");
   const [reportDetails, setReportDetails] = useState("");
+
+  // Prevent background scrolling while profile edit or report modal is open
+  useEffect(() => {
+    if ((!isEditing && !reportModalOpen) || typeof document === "undefined") return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const contentScroll = document.querySelector("[data-content-scroll]") as HTMLElement | null;
+    const origContentOverflow = contentScroll ? contentScroll.style.overflow : undefined;
+    if (contentScroll) {
+      contentScroll.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      if (contentScroll && origContentOverflow !== undefined) {
+        contentScroll.style.overflow = origContentOverflow;
+      }
+    };
+  }, [isEditing, reportModalOpen]);
 
   // Dialogs
   const [createPlaylistOpen, setCreatePlaylistOpen] = useState(false);
@@ -1316,13 +1335,35 @@ export function ProfilePage() {
                     key={pl.id}
                     type="button"
                     onClick={() => openDetail({ kind: "playlist", id: pl.id })}
-                    className="group flex w-[140px] shrink-0 flex-col text-start overflow-hidden rounded-2xl border border-line bg-subtle/50 p-2.5 transition hover:border-primary/40 hover:bg-surface sm:w-[150px] cursor-pointer"
+                    className="group relative flex w-[140px] shrink-0 flex-col text-start overflow-hidden rounded-2xl border border-line bg-subtle/50 p-2.5 transition hover:border-primary/40 hover:bg-surface sm:w-[150px] cursor-pointer"
                   >
                     <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
                       <Photo src={pl.cover} alt={pl.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
                       <span className="absolute bottom-2 end-2 flex size-7 items-center justify-center rounded-full bg-primary text-white shadow-sm opacity-0 group-hover:opacity-100 transition">
                         <Icon name="play" size={12} strokeWidth={2.4} />
                       </span>
+                      {!isSelf && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            player.toggleLikePlaylist(pl.id);
+                            notify(
+                              player.isPlaylistLiked(pl.id)
+                                ? (lang === "fa" ? `پلی‌لیست «${pl.name}» از علاقه‌مندی‌ها حذف شد` : `Removed "${pl.name}" from favorites`)
+                                : (lang === "fa" ? `پلی‌لیست «${pl.name}» به علاقه‌مندی‌های شما اضافه شد` : `Added "${pl.name}" to favorites`),
+                              "primary",
+                            );
+                          }}
+                          className="absolute top-2 end-2 flex size-7 items-center justify-center rounded-full bg-surface/90 text-rose-500 shadow-xs hover:scale-110 transition cursor-pointer"
+                        >
+                          <Icon
+                            name="heart"
+                            size={14}
+                            className={player.isPlaylistLiked(pl.id) ? "fill-rose-500 text-rose-500" : "text-ink-muted"}
+                          />
+                        </button>
+                      )}
                     </div>
                     <h3 className="mt-2 truncate text-[12.5px] font-extrabold text-ink group-hover:text-primary transition">
                       {pl.name}
@@ -1705,13 +1746,35 @@ export function ProfilePage() {
                   key={pl.id}
                   type="button"
                   onClick={() => openDetail({ kind: "playlist", id: pl.id })}
-                  className="group flex flex-col text-start overflow-hidden rounded-2xl border border-line bg-surface p-3 shadow-xs transition hover:border-primary/40 hover:shadow-sm cursor-pointer"
+                  className="group relative flex flex-col text-start overflow-hidden rounded-2xl border border-line bg-surface p-3 shadow-xs transition hover:border-primary/40 hover:shadow-sm cursor-pointer"
                 >
                   <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-xs">
                     <Photo src={pl.cover} alt={pl.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
                     <span className="absolute bottom-2 end-2 flex size-8 items-center justify-center rounded-full bg-primary text-white shadow-md opacity-0 group-hover:opacity-100 transition">
                       <Icon name="play" size={14} strokeWidth={2.4} />
                     </span>
+                    {!isSelf && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          player.toggleLikePlaylist(pl.id);
+                          notify(
+                            player.isPlaylistLiked(pl.id)
+                              ? (lang === "fa" ? `پلی‌لیست «${pl.name}» از علاقه‌مندی‌ها حذف شد` : `Removed "${pl.name}" from favorites`)
+                              : (lang === "fa" ? `پلی‌لیست «${pl.name}» به علاقه‌مندی‌های شما اضافه شد` : `Added "${pl.name}" to favorites`),
+                            "primary",
+                          );
+                        }}
+                        className="absolute top-2 end-2 flex size-8 items-center justify-center rounded-full bg-surface/90 text-rose-500 shadow-sm hover:scale-110 transition cursor-pointer"
+                      >
+                        <Icon
+                          name="heart"
+                          size={15}
+                          className={player.isPlaylistLiked(pl.id) ? "fill-rose-500 text-rose-500" : "text-ink-muted"}
+                        />
+                      </button>
+                    )}
                   </div>
                   <h3 className="mt-2.5 truncate text-[13px] font-black text-ink group-hover:text-primary transition">
                     {pl.name}
@@ -2277,8 +2340,8 @@ export function ProfilePage() {
       {/* =========================================================================
        *  REPORT USER MODAL (گزارش تخلف — فقط برای سایر کاربران)
        * ========================================================================= */}
-      {reportModalOpen && !isSelf && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      {reportModalOpen && !isSelf && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overscroll-contain">
           <div className="flex max-h-[90vh] w-full max-w-[420px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface p-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
@@ -2391,14 +2454,15 @@ export function ProfilePage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* =========================================================================
        *  EDIT PROFILE MODAL (دیالوگ ویرایش مشخصات با آپلود عکس و بنر فشرده)
        * ========================================================================= */}
-      {isEditing && isSelf && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      {isEditing && isSelf && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overscroll-contain">
           <div className="flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[24px] border border-line bg-surface p-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <h3 className="font-extrabold text-[15px] text-ink">
@@ -2612,7 +2676,8 @@ export function ProfilePage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* Dialogs */}

@@ -30,6 +30,30 @@ export function PlayerSheet({ open, onClose }: { open: boolean; onClose: () => v
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // Lock underlying background and content container from scrolling while player sheet is open
+  useEffect(() => {
+    if (!open || typeof document === "undefined") return;
+
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+
+    const contentScroll = document.querySelector("[data-content-scroll]") as HTMLElement | null;
+    const origContentOverflow = contentScroll ? contentScroll.style.overflow : undefined;
+    if (contentScroll) {
+      contentScroll.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+      if (contentScroll && origContentOverflow !== undefined) {
+        contentScroll.style.overflow = origContentOverflow;
+      }
+    };
+  }, [open]);
+
   return (
     <AnimatePresence>
       {open && (
@@ -38,7 +62,7 @@ export function PlayerSheet({ open, onClose }: { open: boolean; onClose: () => v
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: EASE }}
-          className="studio-backdrop fixed inset-0 z-[60] flex flex-col p-2.5"
+          className="studio-backdrop fixed inset-0 z-[60] flex flex-col p-2.5 overscroll-contain"
           role="dialog"
           aria-modal="true"
           aria-label={t("player.openFull")}

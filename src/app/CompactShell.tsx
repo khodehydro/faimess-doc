@@ -76,22 +76,25 @@ export function CompactShell() {
 
   return (
     <div dir={dir} className="flex min-h-dvh w-full flex-col gap-3 px-4 pt-3.5 pb-[10rem] lg:gap-4 lg:pt-4 lg:pb-[11rem]">
-      {/* physical left-to-right order: notifications / centred brand / profile.
-          A three-column grid — `1fr auto 1fr` — is what actually centres the
-          middle column: an absolutely-positioned pill was centred on the
-          *row*, and the two controls do not have equal widths, so the
-          wordmark sat off-centre by half their difference and the controls
-          themselves were pushed off by the same amount. */}
-      <div
-        dir="ltr"
-        /* `z-40` keeps this row (and the bell/profile popovers inside it)
-           above the search capsule, which sits one layer below it */
-        className="relative z-40 mx-auto grid w-full max-w-[720px] shrink-0 grid-cols-[1fr_auto_1fr] items-center"
-      >
-        <AccountCard part="notification" className="relative z-20 justify-self-start" />
-        <BrandCard compact />
-        <AccountCard part="profile" className="relative z-20 justify-self-end" />
-      </div>
+      {/* Sticky header pinned at top on mobile and tablet */}
+      <header className="sticky top-0 z-50 -mx-4 -mt-3.5 px-4 pt-3.5 pb-2 bg-backdrop/85 backdrop-blur-md transition-all">
+        {/* physical left-to-right order: notifications / centred brand / profile.
+            A three-column grid — `1fr auto 1fr` — is what actually centres the
+            middle column: an absolutely-positioned pill was centred on the
+            *row*, and the two controls do not have equal widths, so the
+            wordmark sat off-centre by half their difference and the controls
+            themselves were pushed off by the same amount. */}
+        <div
+          dir="ltr"
+          /* `z-40` keeps this row (and the bell/profile popovers inside it)
+             above the search capsule, which sits one layer below it */
+          className="relative z-40 mx-auto grid w-full max-w-[720px] shrink-0 grid-cols-[1fr_auto_1fr] items-center"
+        >
+          <AccountCard part="notification" className="relative z-20 justify-self-start" />
+          <BrandCard compact />
+          <AccountCard part="profile" className="relative z-20 justify-self-end" />
+        </div>
+      </header>
 
       {/* search — its own full-width capsule, under the top row.
           `relative z-30` is what puts its panel of results in a layer above
