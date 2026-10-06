@@ -332,11 +332,11 @@ export type SiteFeatureSettings = {
 
 const DEFAULT_SETTINGS: SiteFeatureSettings = {
   siteName: "FAIMESS",
-  siteSubtitle: "استودیو و جامعه موسیقی کی‌پاپ",
-  browserTitle: "FAIMESS — استودیو موسیقی، رادیو و جامعه هواداری",
+  siteSubtitle: "پلتفرم استریم کی‌پاپ و جامعه هواداری",
+  browserTitle: "FAIMESS — پلتفرم استریم کی‌پاپ و جامعه هواداری",
   siteLogo: "/assets/photos/faimess-logo.png",
   siteFavicon: "/favicon.ico",
-  footerText: "© 2026 استودیو فیمس — کلیه حقوق محفوظ است.",
+  footerText: "© 2026 فیمس — کلیه حقوق محفوظ است.",
 
   primaryColor: "#6b4fdd",
   accentColor: "#8267f0",
@@ -348,13 +348,13 @@ const DEFAULT_SETTINGS: SiteFeatureSettings = {
   metaDescription: "پلتفرم اختصاصی شنیدن موسیقی، ترجمه همزمان لیریک کره‌ای و فارسی، دیسکوگرافی هنرمندان و جامعه تعاملی هواداران",
   metaKeywords: "کیپاپ, دانلود آهنگ کیپاپ, استریم کیپاپ, لیریک کیپاپ, ترجمه آهنگ های کره ای",
   ogImage: "https://faimess.app/assets/photos/banners/midnight-seoul.webp",
-  twitterHandle: "@faimess_app",
+  twitterHandle: "@faimessofficial",
   robotsIndexing: true,
   canonicalUrl: "https://faimess.app",
   googleAnalyticsId: "",
 
-  heroTitle: "آهنگ‌های تازه و اختصاصی استودیو فیمس",
-  heroSubtitle: "منتخب برترین قطعات و دیسکوگرافی هنرمندان مطرح با کیفیت استودیو",
+  heroTitle: "آهنگ‌های تازه و اختصاصی در پلتفرم فیمس",
+  heroSubtitle: "منتخب برترین قطعات و دیسکوگرافی هنرمندان مطرح در پلتفرم استریم کی‌پاپ",
   merchShelfTitle: "استایل و یادگاری‌ها",
   fanClubWelcomeMessage: "به جمع شنوندگان و هواداران رسمی فیمس خوش آمدید!",
   supportContactEmail: "support@faimess.app",
@@ -374,12 +374,12 @@ const DEFAULT_SETTINGS: SiteFeatureSettings = {
   smsOtpPattern: "faimess-auth",
 
   telegramBotToken: "",
-  telegramChannelId: "@faimess_app",
+  telegramChannelId: "@faimessofficial",
   telegramAdminChatId: "",
   telegramAutoPublish: true,
 
   baleBotToken: "",
-  baleChannelId: "@faimess_music",
+  baleChannelId: "@faimessofficial",
   baleAutoPublish: true,
 
   autoPublishSaturdayUsers: true,

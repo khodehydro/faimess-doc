@@ -169,8 +169,8 @@ export function getCategoryTitle(category: PublishCategory, lang: "fa" | "en" = 
       en: "Top Streamed Tracks of the Week",
     },
     tuesday_top_artists: {
-      fa: "پرطرفدارترین و پرفالوترین آرتیست‌های استودیو",
-      en: "Most Followed Studio Artists",
+      fa: "پرطرفدارترین و پرفالوترین آرتیست‌های پلتفرم",
+      en: "Most Followed Platform Artists",
     },
   };
   return titles[category][lang];
@@ -201,9 +201,9 @@ export function generatePostCaption(category: PublishCategory): string {
   });
 
   lines += `──────────────────\n`;
-  lines += `🌐 استودیو موسیقی، رادیو و لیریک آنلاین: https://faimess.ir\n`;
-  lines += `📲 ربات تلگرام و پیام‌رسان بله: @faimess_app\n\n`;
-  lines += `#FAIMESS #کیپاپ #موسیقی #جدول_هفتگی #هواداران #استودیو #رتبه‌بندی`;
+  lines += `🌐 پلتفرم استریم کی‌پاپ فیمس: https://faimess.ir\n`;
+  lines += `📢 کانال رسمی: @faimessofficial\n\n`;
+  lines += `#FAIMESS #کیپاپ #موسیقی #جدول_هفتگی #هواداران #پلتفرم #رتبه‌بندی`;
 
   return lines;
 }
@@ -417,7 +417,7 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
 
   ctx.fillStyle = WHITE_SUBTLE;
   ctx.font = "bold 14px 'Vazirmatn', sans-serif";
-  ctx.fillText("MUSIC STUDIO", 194, 118);
+  ctx.fillText("K-POP STREAMING", 194, 118);
 
   // Top Right: Leaderboard Pill
   ctx.fillStyle = WHITE_GLASS_LIGHT;
@@ -437,7 +437,7 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   ctx.textAlign = "center";
   ctx.fillStyle = WHITE;
   ctx.font = "900 40px 'Vazirmatn', sans-serif";
-  ctx.fillText("جدول رتبه‌بندی استودیو", 540, 182);
+  ctx.fillText("جدول رتبه‌بندی پلتفرم", 540, 182);
 
   // Category Subtitle Pill
   ctx.fillStyle = WHITE_GLASS_LIGHT;
@@ -785,7 +785,7 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   ctx.direction = "rtl";
   ctx.textAlign = "center";
   ctx.fillText(
-    "استودیو رسمی موسیقی، رادیو و لیریک آنلاین • ربات: @faimess_app",
+    "پلتفرم استریم کی‌پاپ • کانال رسمی: @faimessofficial",
     540,
     1835,
   );
@@ -831,7 +831,7 @@ export const SAMPLE_RELEASE_ITEMS: Record<ItemPublishType, PublishItemPayload> =
     type: "album",
     title: "Afterglow Vol. 1",
     subtitle: "NOVAE",
-    details: "۱۰ قطعه اختصاصی استودیو • سال انتشار ۲۰۲۶",
+    details: "۱۰ قطعه اختصاصی پلتفرم • سال انتشار ۲۰۲۶",
     tag: "FULL ALBUM",
     photo: "/assets/photos/albums/afterglow.webp",
     link: "https://faimess.ir/#albums",
@@ -874,16 +874,16 @@ export const SAMPLE_RELEASE_ITEMS: Record<ItemPublishType, PublishItemPayload> =
   },
   news: {
     type: "news",
-    title: "آغاز رسمی تور جهانی استودیو در ۵ کلان‌شهر آسیا",
-    subtitle: "فروش بلیت‌های کنسرت مشترک آرتیست‌های استودیو فیمس در توکیو، سئول و سنگاپور رکورد شکست.",
-    details: "تحریریه استودیو فیمس",
+    title: "آغاز رسمی تور جهانی در ۵ کلان‌شهر آسیا",
+    subtitle: "فروش بلیت‌های کنسرت مشترک آرتیست‌های پلتفرم فیمس در توکیو، سئول و سنگاپور رکورد شکست.",
+    details: "تحریریه پلتفرم فیمس",
     tag: "Comeback",
     photo: "/assets/photos/banners/asia-leg.webp",
     link: "https://faimess.ir/#news",
     metaCol1Label: "دسته‌بندی",
     metaCol1Value: "World Tour",
     metaCol2Label: "نویسنده",
-    metaCol2Value: "تحریریه فیمس",
+    metaCol2Value: "تحریریه پلتفرم",
     metaCol3Label: "وضعیت",
     metaCol3Value: "فوری و موثق ✓",
   },
@@ -894,68 +894,68 @@ export function generateItemCaption(payload: PublishItemPayload): string {
   switch (payload.type) {
     case "track":
       return (
-        `🎵 **انتشار آهنگ جدید در استودیو فیمس**\n` +
+        `🎵 **انتشار آهنگ جدید در پلتفرم فیمس**\n` +
         `🔥 نام قطعه: **${payload.title}**\n` +
         `👤 هنرمند: **${payload.subtitle}**\n` +
         (payload.details ? `💿 آلبوم / مشخصات: ${payload.details}\n` : "") +
         `──────────────────\n` +
         `🎧 هم‌اکنون با بالاترین کیفیت همراه با ترجمه همزمان لیریک بشنوید:\n` +
         `🌐 لینک پخش آنلاین در سایت: ${link}\n` +
-        `📲 ربات تلگرام و پیام‌رسان بله: @faimess_app\n\n` +
-        `#آهنگ_جدید #موسیقی #کیپاپ #FAIMESS`
+        `📢 کانال رسمی: @faimessofficial\n\n` +
+        `#آهنگ_جدید #موسیقی #کیپاپ #پلتفرم #FAIMESS`
       );
 
     case "album":
       return (
-        `💿 **انتشار آلبوم رسمی در استودیو فیمس**\n` +
+        `💿 **انتشار آلبوم رسمی در پلتفرم فیمس**\n` +
         `🌟 نام آلبوم: **${payload.title}**\n` +
         `👤 هنرمند: **${payload.subtitle}**\n` +
         (payload.details ? `🎶 مشخصات: ${payload.details}\n` : "") +
         `──────────────────\n` +
-        `🎧 پخش اختصاصی و بررسی تک‌تک قطعات آلبوم در استودیو:\n` +
+        `🎧 پخش اختصاصی و بررسی تک‌تک قطعات آلبوم در پلتفرم استریم کی‌پاپ:\n` +
         `🌐 لینک شنیدن آلبوم کامل: ${link}\n` +
-        `📲 ربات تلگرام و پیام‌رسان بله: @faimess_app\n\n` +
-        `#آلبوم_جدید #دیسکوگرافی #کیپاپ #FAIMESS`
+        `📢 کانال رسمی: @faimessofficial\n\n` +
+        `#آلبوم_جدید #دیسکوگرافی #کیپاپ #پلتفرم #FAIMESS`
       );
 
     case "artist":
       return (
-        `⭐ **پیوستن و معرفی آرتیست جدید به استودیو**\n` +
+        `⭐ **پیوستن و معرفی آرتیست جدید به پلتفرم فیمس**\n` +
         `✨ نام هنرمند: **${payload.title}**\n` +
         `🎭 نوع فعالیت و سبک: ${payload.subtitle}\n` +
         (payload.details ? `👥 هواداران: ${payload.details}\n` : "") +
         `──────────────────\n` +
         `💫 پروفایل اختصاصی، فول دیسکوگرافی و رتبه‌بندی هواداری:\n` +
         `🌐 صفحه اختصاصی آرتیست در سایت: ${link}\n` +
-        `📲 ربات تلگرام و پیام‌رسان بله: @faimess_app\n\n` +
-        `#آرتیست #هنرمند #کیپاپ #FAIMESS`
+        `📢 کانال رسمی: @faimessofficial\n\n` +
+        `#آرتیست #هنرمند #کیپاپ #پلتفرم #FAIMESS`
       );
 
     case "playlist":
       return (
-        `📋 **پلی‌لیست منتخب جدید در استودیو فیمس**\n` +
+        `📋 **پلی‌لیست منتخب جدید در پلتفرم فیمس**\n` +
         `🎧 عنوان لیست: **${payload.title}**\n` +
         `🎨 حال و هوا: ${payload.subtitle}\n` +
         (payload.details ? `👤 گردآورنده: ${payload.details}\n` : "") +
         `──────────────────\n` +
         `🎶 همین حالا این مجموعه دست‌چین را با یک کلیک استریم کنید:\n` +
         `🌐 لینک پخش پلی‌لیست در سایت: ${link}\n` +
-        `📲 ربات تلگرام و پیام‌رسان بله: @faimess_app\n\n` +
-        `#پلی_لیست #موسیقی #کیپاپ #FAIMESS`
+        `📢 کانال رسمی: @faimessofficial\n\n` +
+        `#پلی_لیست #موسیقی #کیپاپ #پلتفرم #FAIMESS`
       );
 
     case "news":
     default:
       return (
-        `📰 **خبر فوری — FAIMESS STUDIO NEWS**\n` +
+        `📰 **خبر فوری — FAIMESS K-POP NEWS**\n` +
         `📌 **${payload.title}**\n` +
         `──────────────────\n` +
         `📝 خلاصه خبر:\n${payload.subtitle}\n\n` +
         (payload.details ? `🏷️ دسته‌بندی: #${payload.tag || "News"} • نویسنده: ${payload.details}\n` : "") +
         `──────────────────\n` +
-        `🌐 مطالعه متن کامل خبر در وب‌سایت:\n${link}\n` +
-        `📲 کانال رسمی تلگرام و بله: @faimess_app\n\n` +
-        `#اخبار_موسیقی #خبر_فوری #کیپاپ #FAIMESS`
+        `🌐 مطالعه متن کامل خبر در پلتفرم استریم کی‌پاپ:\n${link}\n` +
+        `📢 کانال رسمی: @faimessofficial\n\n` +
+        `#اخبار_موسیقی #خبر_فوری #کیپاپ #پلتفرم #FAIMESS`
       );
   }
 }
@@ -1023,7 +1023,7 @@ export async function generateItemSquareBanner(payload: PublishItemPayload): Pro
 
   ctx.fillStyle = WHITE_SUBTLE;
   ctx.font = "bold 14px 'Vazirmatn', sans-serif";
-  ctx.fillText("MUSIC STUDIO", 182, 108);
+  ctx.fillText("K-POP STREAMING", 182, 108);
 
   // Right: Type Badge Pill
   const typePillLabels: Record<ItemPublishType, string> = {
@@ -1123,7 +1123,7 @@ export async function generateItemSquareBanner(payload: PublishItemPayload): Pro
     ctx.fillStyle = "rgba(107, 79, 221, 0.75)";
     ctx.font = "normal 16px 'Vazirmatn', sans-serif";
     ctx.fillText(
-      `دسته‌بندی: ${payload.tag || "عمومی"}  •  نویسنده: ${payload.details || "تحریریه استودیو"}  •  وضعیت: تایید شده ✓`,
+      `دسته‌بندی: ${payload.tag || "عمومی"}  •  نویسنده: ${payload.details || "تحریریه پلتفرم"}  •  وضعیت: تایید شده ✓`,
       540,
       cardY + 102,
     );
@@ -1147,7 +1147,7 @@ export async function generateItemSquareBanner(payload: PublishItemPayload): Pro
 
     ctx.fillStyle = BRAND_PURPLE_DEEP;
     ctx.font = "900 24px 'Vazirmatn', sans-serif";
-    ctx.fillText(payload.metaCol2Value || "استودیو", cardX + 460, cardY + 98);
+    ctx.fillText(payload.metaCol2Value || "پلتفرم", cardX + 460, cardY + 98);
 
     // Column 3 (Left): Status / Quality
     ctx.fillStyle = "rgba(107, 79, 221, 0.72)";
@@ -1185,7 +1185,7 @@ export async function generateItemSquareBanner(payload: PublishItemPayload): Pro
   ctx.font = "bold 15px 'Vazirmatn', sans-serif";
   ctx.direction = "rtl";
   ctx.textAlign = "center";
-  ctx.fillText("استودیو رسمی موسیقی، رادیو و لیریک آنلاین • ربات: @faimess_app", 540, 1030);
+  ctx.fillText("پلتفرم استریم کی‌پاپ • کانال رسمی: @faimessofficial", 540, 1030);
 
   return canvas.toDataURL("image/png");
 }

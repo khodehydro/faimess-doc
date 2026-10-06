@@ -147,7 +147,7 @@ export function AdminPage() {
   const [requestTypeFilter, setRequestTypeFilter] = useState<"all" | "track" | "album" | "lyrics" | "artist">("all");
 
   const handleFulfillRequest = (id: string, title: string) => {
-    adminApi.fulfillContentRequest(id, "تایید و در آرشیو استودیو منتشر شد");
+    adminApi.fulfillContentRequest(id, "تایید و در آرشیو پلتفرم منتشر شد");
     setStats(adminApi.getOverviewStats());
     notify(
       lang === "fa"
@@ -796,7 +796,7 @@ export function AdminPage() {
     setTgTestMsg(null);
     const res = await publishToTelegram(
       "saturday_top_users",
-      "🔔 پیام آزمایشی تست اتصال ربات تلگرام به کانال استودیو فیمس با موفقیت برقرار شد.",
+      "🔔 پیام آزمایشی تست اتصال تلگرام به کانال رسمی پلتفرم استریم کی‌پاپ فیمس (@faimessofficial) با موفقیت برقرار شد.",
     );
     setTgTesting(false);
     setTgTestMsg(res.message);
@@ -808,7 +808,7 @@ export function AdminPage() {
     setBaleTestMsg(null);
     const res = await publishToBale(
       "saturday_top_users",
-      "🔔 پیام آزمایشی تست اتصال ربات بله به کانال استودیو فیمس با موفقیت برقرار شد.",
+      "🔔 پیام آزمایشی تست اتصال بله به کانال رسمی پلتفرم استریم کی‌پاپ فیمس (@faimessofficial) با موفقیت برقرار شد.",
     );
     setBaleTesting(false);
     setBaleTestMsg(res.message);
@@ -2523,7 +2523,7 @@ export function AdminPage() {
 
                 <div>
                   <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                    {lang === "fa" ? "ایمیل رسمی پشتیبانی استودیو" : "Official Support Email"}
+                    {lang === "fa" ? "ایمیل رسمی پشتیبانی پلتفرم" : "Official Support Email"}
                   </label>
                   <input
                     type="email"
@@ -2604,7 +2604,7 @@ export function AdminPage() {
                   {
                     key: "showArtists" as const,
                     titleFa: "هنرمندان و خوانندگان (Artists)",
-                    descFa: "شلف آرتیست‌های استودیو فیمس",
+                    descFa: "شلف آرتیست‌های پلتفرم فیمس",
                   },
                   {
                     key: "showAlbums" as const,
@@ -2859,7 +2859,7 @@ export function AdminPage() {
                       type="text"
                       value={settingsDraft.telegramChannelId}
                       onChange={(e) => setSettingsDraft({ ...settingsDraft, telegramChannelId: e.target.value })}
-                      placeholder="@faimess_app"
+                      placeholder="@faimessofficial"
                       className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink focus:border-primary-deep focus:outline-none font-mono"
                     />
                   </div>
@@ -2955,7 +2955,7 @@ export function AdminPage() {
                       type="text"
                       value={settingsDraft.baleChannelId}
                       onChange={(e) => setSettingsDraft({ ...settingsDraft, baleChannelId: e.target.value })}
-                      placeholder="@faimess_music"
+                      placeholder="@faimessofficial"
                       className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-ink font-mono focus:border-primary-deep focus:outline-none"
                     />
                   </div>
@@ -3041,7 +3041,7 @@ export function AdminPage() {
                   </div>
                   <div className="flex items-center gap-2 rounded-lg bg-surface/70 px-3 py-1.5 border border-line/60">
                     <span className="font-black text-primary-deep shrink-0">سه‌شنبه‌ها:</span>
-                    <span>پرفالوترین آرتیست‌های استودیو (Most Followed Artists)</span>
+                    <span>پرفالوترین آرتیست‌های پلتفرم (Most Followed Artists)</span>
                   </div>
                 </div>
               </div>
@@ -3074,7 +3074,7 @@ export function AdminPage() {
                     day: "دوشنبه‌ها",
                     dayEn: "Monday",
                     title: "پرشنیده‌شده‌ترین آهنگ‌ها",
-                    desc: "آهنگ‌های صدرنشین با بالاترین تعداد پخش استودیو و لایک کاربران",
+                    desc: "آهنگ‌های صدرنشین با بالاترین تعداد پخش در پلتفرم و لایک کاربران",
                     toggleKey: "autoPublishMondayTracks" as const,
                     color: "border-flame-400/40 bg-flame-500/5",
                     iconColor: "text-flame bg-flame-soft",
@@ -3084,7 +3084,7 @@ export function AdminPage() {
                     day: "سه‌شنبه‌ها",
                     dayEn: "Tuesday",
                     title: "پرفالوترین آرتیست‌ها",
-                    desc: "هنرمندان استودیو با بالاترین آمار هواداران فعال و دنبال‌کنندگان",
+                    desc: "هنرمندان پلتفرم با بالاترین آمار هواداران فعال و دنبال‌کنندگان",
                     toggleKey: "autoPublishTuesdayArtists" as const,
                     color: "border-primary-400/40 bg-primary-500/5",
                     iconColor: "text-primary-deep bg-primary-soft",
@@ -3441,7 +3441,7 @@ export function AdminPage() {
                   </h4>
                   <p className="text-[12px] text-ink-muted">
                     {lang === "fa"
-                      ? "تمامی داده‌های آزمایشی، اخبار، محصولات و تنظیمات به دیتابیس اولیه استودیو فیمس بازمی‌گردد."
+                      ? "تمامی داده‌های آزمایشی، اخبار، محصولات و تنظیمات به دیتابیس اولیه پلتفرم فیمس بازمی‌گردد."
                       : "Irreversibly restore initial catalogue, artists, news and sample records."}
                   </p>
                 </div>
