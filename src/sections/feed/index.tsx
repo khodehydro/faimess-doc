@@ -13,6 +13,7 @@ import { NewestTracks } from "./NewestTracks";
 import { TrendingTracks } from "./TrendingTracks";
 import { NewsShelf } from "./NewsShelf";
 import { NewAlbums } from "./NewAlbums";
+import { MerchShelf } from "./MerchShelf";
 import { ActiveUsers } from "./ActiveUsers";
 import { SHELF_STICKY_VAR } from "./Shelf";
 import { cn } from "../../lib/cn";
@@ -61,6 +62,7 @@ export const FEED_SHELVES: ShelfEntry[] = [
   { id: "feed-trending", label: "feed.trending", icon: "flame", Component: TrendingTracks },
   { id: "feed-news", label: "feed.news", icon: "news", Component: NewsShelf },
   { id: "feed-albums", label: "feed.albums", icon: "disc", Component: NewAlbums },
+  { id: "feed-merch", label: "feed.merch", icon: "shop", Component: MerchShelf },
   { id: "feed-users", label: "feed.fans", icon: "activity", Component: ActiveUsers },
 ];
 

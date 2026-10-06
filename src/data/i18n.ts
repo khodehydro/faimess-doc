@@ -202,6 +202,7 @@ export const STRINGS: Record<string, Entry> = {
   "feed.trending": { en: "Trending", fa: "پرطرفدار", ko: "인기" },
   "feed.news": { en: "News", fa: "اخبار", ko: "뉴스" },
   "feed.albums": { en: "Albums", fa: "آلبوم‌ها", ko: "앨범" },
+  "feed.merch": { en: "Merch", fa: "مرچ", ko: "굿즈" },
   "feed.fans": { en: "Fans", fa: "هواداران", ko: "팬" },
 
   /* ------------------------------ shelves ----------------------------- */
@@ -211,6 +212,10 @@ export const STRINGS: Record<string, Entry> = {
   "shelf.latestNews": { en: "Latest news", fa: "آخرین اخبار", ko: "최신 뉴스" },
   "shelf.freshAlbums": { en: "Fresh albums", fa: "آلبوم‌های تازه", ko: "새 앨범" },
   "shelf.activeListeners": { en: "Active listeners", fa: "شنونده‌های فعال", ko: "활동 중인 리스너" },
+  "shelf.spotlightMerch": { en: "Spotlight Merch", fa: "استایل و یادگاری‌ها", ko: "추천 굿즈 컬렉션" },
+  "shelf.hintMerch": { en: "official studio goods", fa: "کالاهای رسمی استودیو", ko: "공식 스튜디오 굿즈" },
+  "shelf.shuffleMerch": { en: "Shuffle products", fa: "کالاهای دیگر", ko: "다른 상품 보기" },
+  "shelf.allProducts": { en: "All products", fa: "همه کالاها", ko: "모든 상품" },
   "shelf.playAll": { en: "Play all", fa: "پخش همه", ko: "전체 재생" },
   "shelf.play": { en: "Play", fa: "پخش", ko: "재생" },
   "shelf.seeAll": { en: "See all", fa: "دیدن همه", ko: "전체 보기" },
