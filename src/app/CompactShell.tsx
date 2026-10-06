@@ -142,7 +142,7 @@ export function CompactShell() {
       </SurfaceCard>
 
       {/* Footer on grey studio-backdrop */}
-      <Footer className="mx-auto w-full max-w-[720px] py-4" />
+      <Footer className="mx-auto w-full max-w-[720px] py-1.5" />
 
       {/* the bottom stack — mini player over the menu, both pinned */}
       {route === "admin" ? (

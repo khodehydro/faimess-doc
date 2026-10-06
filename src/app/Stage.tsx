@@ -58,7 +58,7 @@ export function Stage({ children }: { children: ReactNode }) {
           </MotionConfig>
         </div>
       </div>
-      <Footer className="absolute bottom-1.5 inset-x-0 z-20" />
+      <Footer className="absolute bottom-1 inset-x-0 z-20" />
     </div>
   );
 }
