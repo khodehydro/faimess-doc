@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { usePreferences } from "../../app/PreferencesContext";
 import { useRoute } from "../../app/router";
+import { useApp } from "../../app/AppContext";
 import { Icon } from "../../ui/Icon";
 import { cn } from "../../lib/cn";
 import { adminApi, type AdminOverviewStats } from "../../api/adminApi";
@@ -9,11 +10,13 @@ import { ADMIN_TABS, getActiveAdminTab, type AdminTabId } from "./AdminTopNav";
 /* ------------------------------------------------------------------ *
  *  FAIMESS Admin Sidebar
  *  Brand purple sidebar with crisp white typography and icons.
+ *  Includes fast database backup/restore and reset controls.
  * ------------------------------------------------------------------ */
 
 export function AdminSidebar() {
   const { lang, dir } = usePreferences();
   const { navigate } = useRoute();
+  const { notify } = useApp();
   const currentTab = getActiveAdminTab();
   const [stats, setStats] = useState<AdminOverviewStats>(() => adminApi.getOverviewStats());
 
@@ -33,6 +36,33 @@ export function AdminSidebar() {
     if (typeof window !== "undefined") {
       const siteUrl = `${window.location.origin}${window.location.pathname}#/`;
       window.open(siteUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const handleQuickBackupDownload = () => {
+    if (typeof document === "undefined") return;
+    try {
+      const json = adminApi.exportDatabaseJson();
+      const encoded = encodeURIComponent(json);
+      const a = document.createElement("a");
+      a.href = "data:application/json;charset=utf-8," + encoded;
+      a.download = `faimess-db-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      notify(lang === "fa" ? "فایل پشتیبان JSON دانلود شد" : "Backup JSON downloaded", "primary");
+    } catch {
+      notify(lang === "fa" ? "خطا در خروجی پشتیبان" : "Failed to export backup", "primary");
+    }
+  };
+
+  const handleQuickResetDemo = () => {
+    const msg = lang === "fa"
+      ? "آیا از بازنشانی داده‌ها به حالت اولیه اطمینان دارید؟ تمامی تغییرات آزمایشی به پیش‌فرض استودیو فیمس بازمی‌گردند."
+      : "Reset database to initial demo state? All experimental edits will return to defaults.";
+    if (typeof window !== "undefined" && window.confirm(msg)) {
+      adminApi.resetDatabase();
+      notify(lang === "fa" ? "پایگاه داده بازنشانی شد" : "Database reset to defaults", "primary");
     }
   };
 
@@ -134,8 +164,37 @@ export function AdminSidebar() {
         })}
       </nav>
 
+      {/* Database Tools Box */}
+      <div className="py-2.5 my-1 border-t border-b border-white/15 space-y-1.5">
+        <button
+          type="button"
+          onClick={handleQuickBackupDownload}
+          className="flex w-full items-center justify-between rounded-xl bg-white/10 hover:bg-white/20 px-2.5 py-1.5 text-[12px] font-bold text-white transition"
+          title={lang === "fa" ? "دانلود فایل پشتیبان کامل دیتابیس JSON" : "Export full database backup"}
+        >
+          <span className="flex items-center gap-1.5">
+            <Icon name="folder" size={14} className="text-white" />
+            <span>{lang === "fa" ? "دانلود بک‌آپ JSON" : "Export Backup"}</span>
+          </span>
+          <span className="text-[12px] text-white/70">.json</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleQuickResetDemo}
+          className="flex w-full items-center justify-between rounded-xl bg-white/10 hover:bg-rose-500/30 px-2.5 py-1.5 text-[12px] font-bold text-white transition"
+          title={lang === "fa" ? "بازنشانی دیتابیس به دمو اولیه" : "Reset demo state"}
+        >
+          <span className="flex items-center gap-1.5">
+            <Icon name="close" size={14} className="text-white" />
+            <span>{lang === "fa" ? "بازنشانی دمو" : "Reset Demo"}</span>
+          </span>
+          <span className="size-2 rounded-full bg-rose-400" />
+        </button>
+      </div>
+
       {/* Footer: Exit to Site */}
-      <div className="pt-3 border-t border-white/15 flex items-center justify-between">
+      <div className="pt-2 flex items-center justify-between">
         <button
           type="button"
           onClick={() => navigate("home")}

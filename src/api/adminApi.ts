@@ -260,6 +260,39 @@ export type AdminActivityLog = {
 };
 
 export type SiteFeatureSettings = {
+  // Identity & Branding
+  siteName: string;
+  siteSubtitle: string;
+  browserTitle: string;
+  siteLogo: string;
+  siteFavicon: string;
+  footerText: string;
+
+  // Colors & Theme
+  primaryColor: string;
+  accentColor: string;
+  defaultTheme: "dark" | "light" | "system";
+  glassMorphism: boolean;
+  customCss: string;
+
+  // SEO & Social Tags
+  metaTitle: string;
+  metaDescription: string;
+  metaKeywords: string;
+  ogImage: string;
+  twitterHandle: string;
+  robotsIndexing: boolean;
+  canonicalUrl: string;
+  googleAnalyticsId: string;
+
+  // Custom Site Texts (0 to 100)
+  heroTitle: string;
+  heroSubtitle: string;
+  merchShelfTitle: string;
+  fanClubWelcomeMessage: string;
+  supportContactEmail: string;
+
+  // Feature Toggles & Modules
   showShop: boolean;
   showNews: boolean;
   showPlaylists: boolean;
@@ -267,9 +300,42 @@ export type SiteFeatureSettings = {
   showAlbums: boolean;
   showLyricsSubmissions: boolean;
   showCommentsSection: boolean;
+  showReferralSystem: boolean;
+
+  // Maintenance & System
+  maintenanceMode: boolean;
+  maintenanceNotice: string;
 };
 
 const DEFAULT_SETTINGS: SiteFeatureSettings = {
+  siteName: "FAIMESS",
+  siteSubtitle: "استودیو و جامعه موسیقی کی‌پاپ",
+  browserTitle: "FAIMESS — استودیو موسیقی، رادیو و جامعه هواداری",
+  siteLogo: "/assets/photos/faimess-logo.png",
+  siteFavicon: "/favicon.ico",
+  footerText: "© 2026 استودیو فیمس — کلیه حقوق محفوظ است.",
+
+  primaryColor: "#6b4fdd",
+  accentColor: "#8267f0",
+  defaultTheme: "dark",
+  glassMorphism: true,
+  customCss: "",
+
+  metaTitle: "FAIMESS — پلتفرم استریم و جامعه موسیقی کی‌پاپ",
+  metaDescription: "پلتفرم اختصاصی شنیدن موسیقی، ترجمه همزمان لیریک کره‌ای و فارسی، دیسکوگرافی هنرمندان و جامعه تعاملی هواداران",
+  metaKeywords: "کیپاپ, دانلود آهنگ کیپاپ, استریم کیپاپ, لیریک کیپاپ, ترجمه آهنگ های کره ای",
+  ogImage: "https://faimess.app/assets/photos/banners/midnight-seoul.webp",
+  twitterHandle: "@faimess_app",
+  robotsIndexing: true,
+  canonicalUrl: "https://faimess.app",
+  googleAnalyticsId: "",
+
+  heroTitle: "آهنگ‌های تازه و اختصاصی استودیو فیمس",
+  heroSubtitle: "منتخب برترین قطعات و دیسکوگرافی هنرمندان مطرح با کیفیت استودیو",
+  merchShelfTitle: "استایل و یادگاری‌ها",
+  fanClubWelcomeMessage: "به جمع شنوندگان و هواداران رسمی فیمس خوش آمدید!",
+  supportContactEmail: "support@faimess.app",
+
   showShop: true,
   showNews: true,
   showPlaylists: true,
@@ -277,6 +343,10 @@ const DEFAULT_SETTINGS: SiteFeatureSettings = {
   showAlbums: true,
   showLyricsSubmissions: true,
   showCommentsSection: true,
+  showReferralSystem: true,
+
+  maintenanceMode: false,
+  maintenanceNotice: "سیستم در حال ارتقا و به‌روزرسانی زیرساخت است. به‌زودی بازمی‌گردیم.",
 };
 
 const DB_KEY = "faimess.admin_db.v4";
@@ -849,13 +919,25 @@ export const adminApi = {
   /* ---------------- Site Visibility Settings -------- */
 
   getSiteSettings(): SiteFeatureSettings {
-    return state.settings || DEFAULT_SETTINGS;
+    return { ...DEFAULT_SETTINGS, ...(state.settings || {}) };
   },
 
   updateSiteSettings(updates: Partial<SiteFeatureSettings>) {
-    state.settings = { ...state.settings, ...updates };
-    logActivity("super_admin", "Updated Site Visibility", "settings", "site_config", "Modified site feature toggles");
+    state.settings = { ...DEFAULT_SETTINGS, ...(state.settings || {}), ...updates };
+    logActivity("super_admin", "Updated Site Configuration", "settings", "site_config", "Modified site 0-to-100 configuration");
     notifyChanges();
+
+    if (typeof document !== "undefined") {
+      if (state.settings.browserTitle) {
+        document.title = state.settings.browserTitle;
+      }
+      if (state.settings.primaryColor) {
+        document.documentElement.style.setProperty("--color-primary", state.settings.primaryColor);
+      }
+      if (state.settings.accentColor) {
+        document.documentElement.style.setProperty("--color-primary-deep", state.settings.accentColor);
+      }
+    }
     return state.settings;
   },
 

@@ -32,6 +32,9 @@ export function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTabId>(() => getActiveAdminTab());
   const [stats, setStats] = useState<AdminOverviewStats>(() => adminApi.getOverviewStats());
   const [siteSettings, setSiteSettings] = useState<SiteFeatureSettings>(() => adminApi.getSiteSettings());
+  const [settingsDraft, setSettingsDraft] = useState<SiteFeatureSettings>(() => adminApi.getSiteSettings());
+  const [settingsSubTab, setSettingsSubTab] = useState<"branding" | "colors" | "seo" | "texts" | "modules" | "database">("branding");
+  const [importJsonInput, setImportJsonInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statsPeriod, setStatsPeriod] = useState<"today" | "week" | "all">("today");
 
@@ -47,7 +50,9 @@ export function AdminPage() {
   // Synchronize with reactive updates from adminApi
   const refreshData = useCallback(() => {
     setStats(adminApi.getOverviewStats());
-    setSiteSettings(adminApi.getSiteSettings());
+    const updated = adminApi.getSiteSettings();
+    setSiteSettings(updated);
+    setSettingsDraft(updated);
   }, []);
 
   useEffect(() => {
@@ -615,8 +620,58 @@ export function AdminPage() {
     if (ok) {
       notify(lang === "fa" ? "دیتابیس با موفقیت بازیابی شد" : "Database restored from JSON", "primary");
       setBackupModalOpen(false);
+      refreshData();
     } else {
       notify(lang === "fa" ? "خطا در قالب فایل پشتیبان JSON" : "Invalid backup JSON format", "primary");
+    }
+  };
+
+  const handleSaveAllSettings = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    adminApi.updateSiteSettings(settingsDraft);
+    notify(lang === "fa" ? "تنظیمات ۰ تا ۱۰۰ سایت با موفقیت ذخیره شد" : "All site settings updated", "primary");
+  };
+
+  const handleDownloadBackup = () => {
+    if (typeof document === "undefined") return;
+    try {
+      const json = adminApi.exportDatabaseJson();
+      const encoded = encodeURIComponent(json);
+      const a = document.createElement("a");
+      a.href = "data:application/json;charset=utf-8," + encoded;
+      a.download = `faimess-db-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      notify(lang === "fa" ? "فایل پشتیبان کامل JSON دانلود شد" : "Backup exported", "primary");
+    } catch {
+      notify(lang === "fa" ? "خطا در خروجی دیتابیس" : "Failed to export", "primary");
+    }
+  };
+
+  const handleApplyRestoreJson = () => {
+    if (!importJsonInput.trim()) {
+      notify(lang === "fa" ? "لطفاً محتوای JSON بک‌آپ را وارد کنید" : "Paste JSON first", "primary");
+      return;
+    }
+    const ok = adminApi.importDatabaseJson(importJsonInput.trim());
+    if (ok) {
+      notify(lang === "fa" ? "پایگاه داده با موفقیت بازیابی شد" : "Database restored", "primary");
+      setImportJsonInput("");
+      refreshData();
+    } else {
+      notify(lang === "fa" ? "فرمت JSON وارد شده نامعتبر است" : "Invalid JSON", "primary");
+    }
+  };
+
+  const handleFactoryReset = () => {
+    const msg = lang === "fa"
+      ? "آیا از بازنشانی کلیه داده‌ها به حالت اولیه کارخانه اطمینان دارید؟ تمامی اطلاعات به نسخه اولیه دمو بازمی‌گردد."
+      : "Reset database to factory demo defaults?";
+    if (typeof window !== "undefined" && window.confirm(msg)) {
+      adminApi.resetDatabase();
+      notify(lang === "fa" ? "پایگاه داده بازنشانی شد" : "Database reset", "primary");
+      refreshData();
     }
   };
 
@@ -667,54 +722,6 @@ export function AdminPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col p-4 lg:p-6 space-y-6">
-      {/* Executive Header & Quick Controls (NO duplicate tab switcher) */}
-      <div className="flex flex-col gap-4 rounded-[22px] border border-line bg-surface/80 p-4 shadow-sm backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-6 items-center rounded-full bg-primary-deep px-2.5 font-black text-[12px] uppercase tracking-wider text-white">
-              FAIMESS Core
-            </span>
-            <span className="font-bold text-[12px] text-teal-deep">● Live Persistence</span>
-            <span className="font-mono text-[12px] text-ink-faint">v4.0.0</span>
-          </div>
-          <h1 className="mt-1 font-black text-[22px] tracking-tight text-ink sm:text-[26px]">
-            {lang === "fa" ? "مرکز مدیریت کل استودیو فیمس" : "FAIMESS Studio Control Center"}
-          </h1>
-          <p className="text-[12px] text-ink-muted">
-            {lang === "fa"
-              ? "مدیریت جامع کاتالوگ دیسکوگرافی، آرتیست‌ها، پخش صوت، تحریریه و نظارت جامعه"
-              : "Enterprise management for catalog, artists, audio streaming, editorial and moderation"}
-          </p>
-        </div>
-
-        {/* Global Admin Tools: Backup, Reset */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleOpenBackupModal}
-            className="flex items-center gap-1.5 rounded-[12px] border border-line bg-surface px-3 py-1.5 text-[12px] font-bold text-ink shadow-sm transition hover:bg-subtle"
-            title="Database JSON Backup & Restore"
-          >
-            <Icon name="folder" size={14} />
-            <span>{lang === "fa" ? "پشتیبان‌گیری / بازیابی دیتابیس" : "Backup / Restore"}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (window.confirm(lang === "fa" ? "آیا از بازنشانی داده‌ها به حالت اولیه اطمینان دارید؟" : "Reset database to initial demo state?")) {
-                adminApi.resetDatabase();
-                notify(lang === "fa" ? "پایگاه داده بازنشانی شد" : "Database reset to defaults", "primary");
-              }
-            }}
-            className="flex items-center gap-1.5 rounded-[12px] border border-flame-deep/20 bg-flame-soft px-3 py-1.5 text-[12px] font-bold text-flame-deep shadow-sm transition hover:bg-flame-soft/80"
-          >
-            <Icon name="close" size={14} />
-            <span>{lang === "fa" ? "بازنشانی دمو" : "Reset Demo"}</span>
-          </button>
-        </div>
-      </div>
-
       {/* ===================== TAB 1: DASHBOARD & MASTER ANALYTICS ===================== */}
       {activeTab === "dashboard" && (
         <div className="space-y-6">
@@ -1743,99 +1750,746 @@ export function AdminPage() {
         </div>
       )}
 
-      {/* ===================== TAB 10: SITE VISIBILITY & FEATURE TOGGLES ===================== */}
+      {/* ===================== TAB 10: 360° COMPREHENSIVE SITE CONFIGURATION ===================== */}
       {activeTab === "settings" && (
-        <div className="space-y-4">
-          <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm">
-            <h3 className="font-extrabold text-[16px] text-ink">
-              {lang === "fa" ? "مدیریت نمایش بخش‌ها و آیکون‌های سایت" : "Site Sections & Feature Visibility"}
-            </h3>
-            <p className="mt-1 text-[12px] text-ink-muted">
-              {lang === "fa"
-                ? "می‌توانید بخش‌های مختلف سایت نظیر فروشگاه، اخبار، پلی‌لیست‌ها و... را به صورت موقت فعال یا پنهان کنید."
-                : "Control which sections and navigation icons appear on the consumer site"}
-            </p>
-
-            <div className="mt-6 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
-                <div>
-                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "بخش و منوی فروشگاه (Shop)" : "Shop Section"}</span>
-                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "نمایش آیکون فروشگاه در منوی بالا و پایین" : "Show shop route & items"}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={siteSettings.showShop}
-                  onChange={(e) => adminApi.updateSiteSettings({ showShop: e.target.checked })}
-                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
-                />
-              </label>
-
-              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
-                <div>
-                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "بخش و شلف اخبار (News)" : "News Editorial"}</span>
-                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "نمایش شلف اخبار تحریریه در صفحه اصلی" : "Show news desk shelf"}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={siteSettings.showNews}
-                  onChange={(e) => adminApi.updateSiteSettings({ showNews: e.target.checked })}
-                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
-                />
-              </label>
-
-              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
-                <div>
-                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "پلی‌لیست‌ها (Playlists)" : "Playlists Shelf"}</span>
-                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "نمایش پلی‌لیست‌های اختصاصی و منتخب" : "Show curated playlists"}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={siteSettings.showPlaylists}
-                  onChange={(e) => adminApi.updateSiteSettings({ showPlaylists: e.target.checked })}
-                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
-                />
-              </label>
-
-              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
-                <div>
-                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "بخش آلبوم‌ها (Albums)" : "Albums"}</span>
-                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "نمایش شلف آلبوم‌های تازه" : "Show fresh albums shelf"}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={siteSettings.showAlbums}
-                  onChange={(e) => adminApi.updateSiteSettings({ showAlbums: e.target.checked })}
-                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
-                />
-              </label>
-
-              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
-                <div>
-                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "امکان ارسال لیریک توسط هواداران" : "Fan Lyrics Submissions"}</span>
-                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "فعال بودن فرم ارسال لیریک در پلیر" : "Allow fan sheet submissions"}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={siteSettings.showLyricsSubmissions}
-                  onChange={(e) => adminApi.updateSiteSettings({ showLyricsSubmissions: e.target.checked })}
-                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
-                />
-              </label>
-
-              <label className="flex items-center justify-between rounded-[16px] border border-line bg-subtle/30 p-3.5 cursor-pointer">
-                <div>
-                  <span className="font-bold text-[13px] text-ink">{lang === "fa" ? "بخش دیدگاه‌ها و گفتگو (Comments)" : "Comments Section"}</span>
-                  <p className="text-[12px] text-ink-muted">{lang === "fa" ? "امکان ارسال دیدگاه ذیل آهنگ‌ها و اخبار" : "Allow public comments"}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={siteSettings.showCommentsSection}
-                  onChange={(e) => adminApi.updateSiteSettings({ showCommentsSection: e.target.checked })}
-                  className="h-5 w-5 rounded accent-primary-deep cursor-pointer"
-                />
-              </label>
+        <div className="space-y-6">
+          {/* Executive Header of Settings */}
+          <div className="flex flex-col gap-3 rounded-[22px] border border-line bg-surface p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="flex size-2 rounded-full bg-mint" />
+                <h2 className="font-black text-[18px] text-ink">
+                  {lang === "fa" ? "تنظیمات جامع و پیکربندی ۰ تا ۱۰۰ پلتفرم" : "Platform Master Configuration (0 to 100)"}
+                </h2>
+              </div>
+              <p className="mt-0.5 text-[12px] text-ink-muted">
+                {lang === "fa"
+                  ? "کنترل کامل بر برندینگ، لوگو، رنگ‌ها، سئو، متاتگ‌ها، متون سایت، ماژول‌ها و پایگاه داده"
+                  : "Comprehensive control over branding, logos, colors, SEO, copywriting, features and backup"}
+              </p>
             </div>
+
+            <button
+              type="button"
+              onClick={() => handleSaveAllSettings()}
+              className="flex items-center justify-center gap-2 rounded-xl bg-primary-deep px-5 py-2.5 text-[12.5px] font-bold text-white shadow-primary transition hover:bg-primary-deep/90 active:scale-[0.98]"
+            >
+              <Icon name="check" size={15} strokeWidth={2.4} />
+              <span>{lang === "fa" ? "ذخیره تمامی تنظیمات" : "Save All Settings"}</span>
+            </button>
           </div>
+
+          {/* Sub-tab Navigation Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scroll-rail">
+            {[
+              { id: "branding", labelFa: "هویت و برندینگ", labelEn: "Branding", icon: "sparkle" },
+              { id: "colors", labelFa: "رنگ‌ها و تم", labelEn: "Colors & Theme", icon: "sun" },
+              { id: "seo", labelFa: "سئو و متاتگ‌ها", labelEn: "SEO & Social", icon: "globe" },
+              { id: "texts", labelFa: "متن‌های سایت", labelEn: "Copywriting", icon: "message" },
+              { id: "modules", labelFa: "بخش‌ها و ماژول‌ها", labelEn: "Modules", icon: "grid" },
+              { id: "database", labelFa: "پشتیبان‌گیری و دیتابیس", labelEn: "Database & Backup", icon: "folder" },
+            ].map((sub) => {
+              const isSubActive = settingsSubTab === sub.id;
+              return (
+                <button
+                  key={sub.id}
+                  type="button"
+                  onClick={() => setSettingsSubTab(sub.id as any)}
+                  className={cn(
+                    "flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-[12.5px] font-bold transition",
+                    isSubActive
+                      ? "bg-primary-deep text-white shadow-xs"
+                      : "bg-surface border border-line text-ink-muted hover:bg-subtle hover:text-ink",
+                  )}
+                >
+                  <Icon name={sub.icon as any} size={14} />
+                  <span>{lang === "fa" ? sub.labelFa : sub.labelEn}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 1. BRANDING & IDENTITY */}
+          {settingsSubTab === "branding" && (
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-5">
+              <div className="border-b border-line pb-3">
+                <h3 className="font-extrabold text-[16px] text-ink">
+                  {lang === "fa" ? "هویت بصری، نام و نشانک‌های سایت" : "Brand Identity & Visuals"}
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "نام تجاری، شعار، لوگوی رسمی، عنوان در تب مرورگر و متن کپی‌رایت فوتر"
+                    : "Site brand name, tagline, official logo, browser tab title and footer notice"}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "نام رسمی سایت" : "Site Official Name"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.siteName}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, siteName: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "شعار و زیرعنوان سایت" : "Site Subtitle & Tagline"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.siteSubtitle}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, siteSubtitle: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "متن در تب مرورگر (Document Title)" : "Browser Tab Title"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.browserTitle}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, browserTitle: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "آدرس لوگوی سایت" : "Site Logo Path / URL"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.siteLogo}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, siteLogo: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "آدرس فاوآیکون و نشانک مرورگر" : "Favicon Path / URL"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.siteFavicon}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, siteFavicon: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <FeaturedImagePicker
+                    value={settingsDraft.siteLogo}
+                    onChange={(val) => setSettingsDraft({ ...settingsDraft, siteLogo: val })}
+                    label={lang === "fa" ? "انتخاب لوگوی سایت از گالری دارایی‌های سیستم" : "Pick Site Logo from Gallery"}
+                    defaultCategory="all"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "متن حق کپی‌رایت پاورقی" : "Footer Copyright Text"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.footerText}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, footerText: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleSaveAllSettings()}
+                  className="rounded-xl bg-primary-deep px-4 py-2 text-[12px] font-bold text-white hover:bg-primary-deep/90"
+                >
+                  {lang === "fa" ? "ذخیره هویت و برندینگ" : "Save Branding"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 2. COLORS & APPEARANCE */}
+          {settingsSubTab === "colors" && (
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-5">
+              <div className="border-b border-line pb-3">
+                <h3 className="font-extrabold text-[16px] text-ink">
+                  {lang === "fa" ? "رنگ‌های برند، تم پیش‌فرض و استایل" : "Brand Colors & Appearance"}
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "شخصی‌سازی پالت رنگ اصلی، رنگ ثانویه، حالت تم پیش‌فرض و اعمال استایل‌های اختصاصی"
+                    : "Tune primary brand color, accent tone, default appearance theme and custom CSS"}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {/* Primary Color Picker */}
+                <div className="rounded-xl border border-line bg-subtle/30 p-3.5 space-y-2">
+                  <label className="block text-[12px] font-bold text-ink">
+                    {lang === "fa" ? "رنگ اصلی برند (Primary Brand Color)" : "Primary Brand Color"}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={settingsDraft.primaryColor}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, primaryColor: e.target.value })}
+                      className="size-10 cursor-pointer rounded-lg border border-line bg-transparent p-0.5"
+                    />
+                    <input
+                      type="text"
+                      value={settingsDraft.primaryColor}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, primaryColor: e.target.value })}
+                      className="flex-1 rounded-xl border border-line bg-surface px-3 py-1.5 font-mono text-[12.5px] text-ink outline-none uppercase"
+                    />
+                  </div>
+                  {/* Presets */}
+                  <div className="flex items-center gap-1.5 pt-1">
+                    {["#6b4fdd", "#8267f0", "#3b82f6", "#ec4899", "#10b981", "#f59e0b"].map((clr) => (
+                      <button
+                        key={clr}
+                        type="button"
+                        onClick={() => setSettingsDraft({ ...settingsDraft, primaryColor: clr })}
+                        style={{ backgroundColor: clr }}
+                        className="size-5 rounded-full ring-1 ring-black/10 transition hover:scale-110"
+                        title={clr}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Accent Color Picker */}
+                <div className="rounded-xl border border-line bg-subtle/30 p-3.5 space-y-2">
+                  <label className="block text-[12px] font-bold text-ink">
+                    {lang === "fa" ? "رنگ ثانویه و تاکیدی (Accent Color)" : "Accent Tone Color"}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={settingsDraft.accentColor}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, accentColor: e.target.value })}
+                      className="size-10 cursor-pointer rounded-lg border border-line bg-transparent p-0.5"
+                    />
+                    <input
+                      type="text"
+                      value={settingsDraft.accentColor}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, accentColor: e.target.value })}
+                      className="flex-1 rounded-xl border border-line bg-surface px-3 py-1.5 font-mono text-[12.5px] text-ink outline-none uppercase"
+                    />
+                  </div>
+                  {/* Presets */}
+                  <div className="flex items-center gap-1.5 pt-1">
+                    {["#8267f0", "#a78bfa", "#60a5fa", "#f472b6", "#34d399", "#fbbf24"].map((clr) => (
+                      <button
+                        key={clr}
+                        type="button"
+                        onClick={() => setSettingsDraft({ ...settingsDraft, accentColor: clr })}
+                        style={{ backgroundColor: clr }}
+                        className="size-5 rounded-full ring-1 ring-black/10 transition hover:scale-110"
+                        title={clr}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Default Theme Selector */}
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "تم پیش‌فرض برای بازدیدکنندگان جدید" : "Default Theme for Visitors"}
+                  </label>
+                  <select
+                    value={settingsDraft.defaultTheme}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, defaultTheme: e.target.value as any })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  >
+                    <option value="dark">{lang === "fa" ? "تم تاریک (Dark Mode)" : "Dark Mode"}</option>
+                    <option value="light">{lang === "fa" ? "تم روشن (Light Mode)" : "Light Mode"}</option>
+                    <option value="system">{lang === "fa" ? "هماهنگ با تنظیمات سیستم کاربر (System)" : "System Match"}</option>
+                  </select>
+                </div>
+
+                {/* Glassmorphism Toggle */}
+                <div className="flex items-center justify-between rounded-xl border border-line bg-subtle/30 p-3.5">
+                  <div>
+                    <span className="font-bold text-[13px] text-ink">
+                      {lang === "fa" ? "جلوه شیشه‌ای بلور (Glassmorphism)" : "Glassmorphism Blur"}
+                    </span>
+                    <p className="text-[12px] text-ink-muted">
+                      {lang === "fa" ? "فعال‌سازی افکت مات و شفاف در پشت کارت‌ها" : "Enable translucent blurred surfaces"}
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={settingsDraft.glassMorphism}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, glassMorphism: e.target.checked })}
+                    className="size-5 rounded accent-primary-deep cursor-pointer"
+                  />
+                </div>
+
+                {/* Custom CSS */}
+                <div className="sm:col-span-2">
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "استایل‌های سفارشی CSS (تزریق مستقیم)" : "Custom CSS Overrides"}
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={settingsDraft.customCss}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, customCss: e.target.value })}
+                    placeholder="/* Custom CSS rules e.g. .brand-glow { ... } */"
+                    className="w-full rounded-xl border border-line bg-subtle/50 p-3 font-mono text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleSaveAllSettings()}
+                  className="rounded-xl bg-primary-deep px-4 py-2 text-[12px] font-bold text-white hover:bg-primary-deep/90"
+                >
+                  {lang === "fa" ? "ذخیره رنگ‌ها و ظاهر" : "Save Colors"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 3. SEO & META TAGS */}
+          {settingsSubTab === "seo" && (
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-5">
+              <div className="border-b border-line pb-3">
+                <h3 className="font-extrabold text-[16px] text-ink">
+                  {lang === "fa" ? "سئو، متاتگ‌ها و پیش‌نمایش شبکه‌های اجتماعی" : "SEO & Social Sharing Meta Tags"}
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "بهینه‌سازی برای رتبه اول در گوگل، کلمات کلیدی، اشتراک‌گذاری در تلگرام/واتساپ و نمایه کانونیکال"
+                    : "Tune Google snippets, keywords, OpenGraph previews and search indexing"}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "عنوان متای سئو در گوگل (Meta Title)" : "SEO Meta Title"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.metaTitle}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, metaTitle: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "توضیحات متای سئو (Meta Description)" : "SEO Meta Description"}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={settingsDraft.metaDescription}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, metaDescription: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 p-3 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "کلمات کلیدی سئو (Meta Keywords - جداشده با ویرگول)" : "SEO Keywords (comma separated)"}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={settingsDraft.metaKeywords}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, metaKeywords: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 p-3 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "آدرس کانونیکال سایت (Canonical URL)" : "Canonical URL"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.canonicalUrl}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, canonicalUrl: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "شناسه Google Analytics" : "Google Analytics Measurement ID"}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="G-XXXXXXXXXX"
+                    value={settingsDraft.googleAnalyticsId}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, googleAnalyticsId: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "هندل توییتر / شبکه‌های اجتماعی" : "Social Media / Twitter Handle"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.twitterHandle}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, twitterHandle: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between rounded-xl border border-line bg-subtle/30 p-3.5">
+                  <div>
+                    <span className="font-bold text-[13px] text-ink">
+                      {lang === "fa" ? "ایندکس موتورهای جستجو (Robots Index)" : "Search Engine Indexing"}
+                    </span>
+                    <p className="text-[12px] text-ink-muted">
+                      {lang === "fa" ? "اجازه ثبت صفحات در گوگل و سایر موتورهای جستجو" : "Allow web crawlers to index"}
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={settingsDraft.robotsIndexing}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, robotsIndexing: e.target.checked })}
+                    className="size-5 rounded accent-primary-deep cursor-pointer"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <FeaturedImagePicker
+                    value={settingsDraft.ogImage}
+                    onChange={(val) => setSettingsDraft({ ...settingsDraft, ogImage: val })}
+                    label={lang === "fa" ? "تصویر شاخص شبکه‌های اجتماعی (OpenGraph Image)" : "Social Preview Image"}
+                    defaultCategory="news"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleSaveAllSettings()}
+                  className="rounded-xl bg-primary-deep px-4 py-2 text-[12px] font-bold text-white hover:bg-primary-deep/90"
+                >
+                  {lang === "fa" ? "ذخیره تنظیمات سئو" : "Save SEO Settings"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 4. SITE COPYWRITING (0 to 100 TEXTS) */}
+          {settingsSubTab === "texts" && (
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-5">
+              <div className="border-b border-line pb-3">
+                <h3 className="font-extrabold text-[16px] text-ink">
+                  {lang === "fa" ? "متن‌های ۰ تا ۱۰۰ بخش‌های مختلف سایت" : "Complete Site Copywriting"}
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "تغییر مستقیم متن عناوین بنر اصلی، شلف‌ها، پیام کلوپ هواداران و راه‌های پشتیبانی"
+                    : "Directly customize all site headlines, banners, welcoming copy and support info"}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "عنوان اصلی بنر صفحه نخست" : "Home Banner Main Title"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.heroTitle}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, heroTitle: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "زیرعنوان بنر صفحه نخست" : "Home Banner Subtitle"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.heroSubtitle}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, heroSubtitle: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "عنوان قفسه مرچ و محصولات" : "Merch Shelf Header Title"}
+                  </label>
+                  <input
+                    type="text"
+                    value={settingsDraft.merchShelfTitle}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, merchShelfTitle: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "ایمیل رسمی پشتیبانی استودیو" : "Official Support Email"}
+                  </label>
+                  <input
+                    type="email"
+                    value={settingsDraft.supportContactEmail}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, supportContactEmail: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "پیام خوش‌آمدگویی هواداران در بخش حساب" : "Fan Club Welcome Banner Message"}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={settingsDraft.fanClubWelcomeMessage}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, fanClubWelcomeMessage: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 p-3 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "متن اعلان حالت تعمیرات و نگهداری" : "Maintenance Notice Message"}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={settingsDraft.maintenanceNotice}
+                    onChange={(e) => setSettingsDraft({ ...settingsDraft, maintenanceNotice: e.target.value })}
+                    className="w-full rounded-xl border border-line bg-subtle/50 p-3 text-[12.5px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleSaveAllSettings()}
+                  className="rounded-xl bg-primary-deep px-4 py-2 text-[12px] font-bold text-white hover:bg-primary-deep/90"
+                >
+                  {lang === "fa" ? "ذخیره متن‌های سایت" : "Save Copywriting"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 5. MODULES & FEATURES */}
+          {settingsSubTab === "modules" && (
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-5">
+              <div className="border-b border-line pb-3">
+                <h3 className="font-extrabold text-[16px] text-ink">
+                  {lang === "fa" ? "ماژول‌ها و بخش‌های فعال پلتفرم" : "Platform Modules & Features"}
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "امکان فعال یا غیرفعال‌سازی سریع هر بخش از سایت بدون دستکاری در کد"
+                    : "Toggle platform modules and public sections with one click"}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                {[
+                  {
+                    key: "showShop" as const,
+                    titleFa: "بخش و منوی فروشگاه (Shop)",
+                    descFa: "نمایش مسیر فروشگاه و کالاهای رسمی",
+                  },
+                  {
+                    key: "showNews" as const,
+                    titleFa: "بخش تحریریه اخبار (News)",
+                    descFa: "نمایش شلف و مجله خبری موسیقی",
+                  },
+                  {
+                    key: "showPlaylists" as const,
+                    titleFa: "پلی‌لیست‌ها (Playlists)",
+                    descFa: "نمایش پلی‌لیست‌های اختصاصی و منتخب",
+                  },
+                  {
+                    key: "showArtists" as const,
+                    titleFa: "هنرمندان و خوانندگان (Artists)",
+                    descFa: "شلف آرتیست‌های استودیو فیمس",
+                  },
+                  {
+                    key: "showAlbums" as const,
+                    titleFa: "آلبوم‌ها (Fresh Albums)",
+                    descFa: "شلف آلبوم‌های منتشر شده تازه",
+                  },
+                  {
+                    key: "showLyricsSubmissions" as const,
+                    titleFa: "ارسال لیریک توسط هواداران (Lyrics)",
+                    descFa: "فرم مشارکت و ثبت لیریک در پلیر",
+                  },
+                  {
+                    key: "showCommentsSection" as const,
+                    titleFa: "دیدگاه‌ها و گفتگوها (Comments)",
+                    descFa: "امکان ثبت نظر ذیل آهنگ‌ها و اخبار",
+                  },
+                  {
+                    key: "showReferralSystem" as const,
+                    titleFa: "سیستم دعوت و امتیاز رفرال (Referral)",
+                    descFa: "اهدای امتیاز بابت دعوت دوستان",
+                  },
+                  {
+                    key: "maintenanceMode" as const,
+                    titleFa: "حالت تعمیرات و نگهداری (Maintenance Mode)",
+                    descFa: "نمایش نوار اخطار ارتقای زیرساخت در سایت",
+                  },
+                ].map((item) => (
+                  <label
+                    key={item.key}
+                    className="flex items-center justify-between rounded-2xl border border-line bg-subtle/30 p-3.5 cursor-pointer transition hover:bg-subtle/60"
+                  >
+                    <div>
+                      <span className="font-bold text-[13px] text-ink">{item.titleFa}</span>
+                      <p className="text-[12px] text-ink-muted">{item.descFa}</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(settingsDraft[item.key])}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, [item.key]: e.target.checked })}
+                      className="size-5 rounded accent-primary-deep cursor-pointer"
+                    />
+                  </label>
+                ))}
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleSaveAllSettings()}
+                  className="rounded-xl bg-primary-deep px-4 py-2 text-[12px] font-bold text-white hover:bg-primary-deep/90"
+                >
+                  {lang === "fa" ? "ذخیره وضعیت ماژول‌ها" : "Save Modules"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 6. DATABASE, BACKUP & RESTORE */}
+          {settingsSubTab === "database" && (
+            <div className="rounded-[22px] border border-line bg-surface p-5 shadow-sm space-y-6">
+              <div className="border-b border-line pb-3">
+                <h3 className="font-extrabold text-[16px] text-ink">
+                  {lang === "fa" ? "پشتیبان‌گیری، بازیابی و نگهداری پایگاه داده" : "Database Maintenance & Backup Center"}
+                </h3>
+                <p className="mt-0.5 text-[12px] text-ink-muted">
+                  {lang === "fa"
+                    ? "استخراج خروجی کامل پایگاه داده در قالب فایل JSON، بازیابی اطلاعات و بازنشانی دمو"
+                    : "Export JSON backup, restore existing database snapshot, or factory reset defaults"}
+                </p>
+              </div>
+
+              {/* Database Live Stats Grid */}
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {[
+                  { label: "آهنگ‌ها", count: stats.totalTracks, icon: "music" },
+                  { label: "آلبوم‌ها", count: stats.totalAlbums, icon: "disc" },
+                  { label: "هنرمندان", count: stats.totalArtists, icon: "users" },
+                  { label: "اخبار", count: stats.totalNews, icon: "news" },
+                  { label: "دیدگاه‌ها", count: stats.totalComments, icon: "message" },
+                  { label: "محصولات", count: stats.totalShopProducts, icon: "shop" },
+                  { label: "پرسنل و کاربران", count: stats.totalUsers, icon: "users" },
+                  { label: "درخواست‌ها", count: stats.pendingRequests, icon: "sparkle" },
+                ].map((s, idx) => (
+                  <div key={idx} className="rounded-xl border border-line/70 bg-subtle/40 p-2.5 text-center">
+                    <span className="text-[12px] font-bold text-ink-muted">{s.label}</span>
+                    <p className="text-[16px] font-black text-ink mt-0.5">{s.count}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action 1: Export Backup */}
+              <div className="rounded-2xl border border-line bg-subtle/20 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="font-extrabold text-[14px] text-ink">
+                    {lang === "fa" ? "دانلود فایل پشتیبان کامل دیتابیس (JSON)" : "Export Full Database (JSON)"}
+                  </h4>
+                  <p className="text-[12px] text-ink-muted">
+                    {lang === "fa"
+                      ? "شامل تمام آهنگ‌ها، متادیتا، پلی‌لیست‌ها، اخبار، کامنت‌ها و تنظیمات فعلی"
+                      : "Complete JSON export containing all entities, catalog and configurations"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDownloadBackup}
+                  className="flex items-center gap-1.5 rounded-xl bg-primary-deep px-4 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-primary-deep/90 shrink-0"
+                >
+                  <Icon name="folder" size={14} />
+                  <span>{lang === "fa" ? "دانلود فایل پشتیبان .json" : "Download Backup"}</span>
+                </button>
+              </div>
+
+              {/* Action 2: Import & Restore Database */}
+              <div className="rounded-2xl border border-line bg-subtle/20 p-4 space-y-3">
+                <div>
+                  <h4 className="font-extrabold text-[14px] text-ink">
+                    {lang === "fa" ? "بازیابی اطلاعات از متن یا فایل پشتیبان" : "Restore Database from JSON"}
+                  </h4>
+                  <p className="text-[12px] text-ink-muted">
+                    {lang === "fa"
+                      ? "محتوای فایل پشتیبان JSON را در کادر زیر قرار داده و دکمه بازیابی را بزنید."
+                      : "Paste exported database JSON content into the area below to restore state."}
+                  </p>
+                </div>
+                <textarea
+                  rows={4}
+                  value={importJsonInput}
+                  onChange={(e) => setImportJsonInput(e.target.value)}
+                  placeholder='{"artists": [...], "albums": [...], "tracks": [...]}'
+                  className="w-full rounded-xl border border-line bg-surface p-3 font-mono text-[12px] text-ink outline-none focus:border-primary-deep"
+                />
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleApplyRestoreJson}
+                    className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-emerald-700"
+                  >
+                    <Icon name="check" size={14} />
+                    <span>{lang === "fa" ? "اعمال و بازیابی دیتابیس" : "Apply Restore"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Action 3: Factory Reset */}
+              <div className="rounded-2xl border border-rose-300/40 bg-rose-500/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="font-extrabold text-[14px] text-rose-700 dark:text-rose-400">
+                    {lang === "fa" ? "بازنشانی کارخانه‌ای به مقادیر اولیه دمو" : "Factory Reset to Initial Demo"}
+                  </h4>
+                  <p className="text-[12px] text-ink-muted">
+                    {lang === "fa"
+                      ? "تمامی داده‌های آزمایشی، اخبار، محصولات و تنظیمات به دیتابیس اولیه استودیو فیمس بازمی‌گردد."
+                      : "Irreversibly restore initial catalogue, artists, news and sample records."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleFactoryReset}
+                  className="flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-rose-700 shrink-0"
+                >
+                  <Icon name="close" size={14} />
+                  <span>{lang === "fa" ? "بازنشانی کامل دمو" : "Factory Reset"}</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
