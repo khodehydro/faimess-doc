@@ -49,8 +49,13 @@ import {
   saveAcademyAd,
   loadAllLyricEducation,
   saveLyricEducationItem,
+  deleteLyricEducationItem,
+  loadEducationSettings,
+  saveEducationSettings,
+  romanizeHangul,
   type AcademyAd,
   type LyricEducation,
+  type EducationSettings,
 } from "../data/lyricLearning";
 import {
   loadAllStoryBackgrounds,
@@ -90,6 +95,8 @@ export function AdminPage() {
   const [newBgPattern, setNewBgPattern] = useState<StoryBackground["pattern"]>("cosmic_stars");
 
   // Track Lyric Educational Notes State
+  const [eduSettings, setEduSettings] = useState<EducationSettings>(() => loadEducationSettings());
+  const [allLyricEdus, setAllLyricEdus] = useState<Record<string, LyricEducation[]>>(() => loadAllLyricEducation());
   const [eduTrackId, setEduTrackId] = useState<string>("nt1");
   const [eduLineIndex, setEduLineIndex] = useState<number>(0);
   const [eduKoreanLine, setEduKoreanLine] = useState("빛나는 밤하늘 아래서");
@@ -97,6 +104,7 @@ export function AdminPage() {
   const [eduTranslationFa, setEduTranslationFa] = useState("زیر آسمان درخشان شب");
   const [eduWordKorean, setEduWordKorean] = useState("빛나다");
   const [eduWordPronounce, setEduWordPronounce] = useState("بین‌نادا");
+  const [eduWordPronounceEn, setEduWordPronounceEn] = useState("bit-na-da");
   const [eduWordMeaning, setEduWordMeaning] = useState("درخشیدن، تابیدن");
   const [eduGrammarRule, setEduGrammarRule] = useState("پسوند صفت‌ساز فاعلی ~는");
   const [eduGrammarExpl, setEduGrammarExpl] = useState("به ریشه فعل حال اضافه شده و اسم بعدی را توصیف می‌کند.");
@@ -231,6 +239,7 @@ export function AdminPage() {
   const [trackPlays, setTrackPlays] = useState(120);
   const [trackLyricsOriginal, setTrackLyricsOriginal] = useState("");
   const [trackLyricsTranslation, setTrackLyricsTranslation] = useState("");
+  const [trackLyricsRomanization, setTrackLyricsRomanization] = useState("");
 
   const openCreateTrack = () => {
     setEditingTrackId(null);
@@ -244,6 +253,7 @@ export function AdminPage() {
     setTrackPlays(120);
     setTrackLyricsOriginal("");
     setTrackLyricsTranslation("");
+    setTrackLyricsRomanization("");
     setTrackModalOpen(true);
   };
 
@@ -264,6 +274,7 @@ export function AdminPage() {
     const existingLyrics = adminApi.getTrackLyrics(tr.id);
     setTrackLyricsOriginal(existingLyrics?.original ?? "");
     setTrackLyricsTranslation(existingLyrics?.translation ?? "");
+    setTrackLyricsRomanization(existingLyrics?.romanization ?? "");
     setTrackModalOpen(true);
   };
 
@@ -283,6 +294,7 @@ export function AdminPage() {
         plays: trackPlays,
         lyricsOriginal: trackLyricsOriginal.trim() || undefined,
         lyricsTranslation: trackLyricsTranslation.trim() || undefined,
+        lyricsRomanization: trackLyricsRomanization.trim() || undefined,
       });
       notify(lang === "fa" ? "مشخصات آهنگ با موفقیت به‌روزرسانی شد" : "Track updated successfully", "primary");
     } else {
@@ -297,6 +309,7 @@ export function AdminPage() {
         plays: trackPlays,
         lyricsOriginal: trackLyricsOriginal.trim() || undefined,
         lyricsTranslation: trackLyricsTranslation.trim() || undefined,
+        lyricsRomanization: trackLyricsRomanization.trim() || undefined,
       });
 
       // Auto-publish to channels
@@ -2050,15 +2063,28 @@ export function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-[12px] font-bold text-ink-muted mb-1">
-                  {lang === "fa" ? "تلفظ و رومی‌سازی (Romanization)" : "Romanization"}
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[12px] font-bold text-ink-muted">
+                    {lang === "fa" ? "تلفظ انگلیسی سطر (Romanization)" : "English Romanization"}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (eduKoreanLine.trim()) {
+                        setEduRomanization(romanizeHangul(eduKoreanLine));
+                      }
+                    }}
+                    className="text-[12px] font-extrabold text-primary-deep hover:underline"
+                  >
+                    {lang === "fa" ? "تولید خودکار تلفظ" : "Auto Romanize"}
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={eduRomanization}
                   onChange={(e) => setEduRomanization(e.target.value)}
-                  placeholder="e.g. Binnaneun bamhaneul"
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep font-mono"
+                  placeholder="e.g. Binnaneun bamhaneul araeseo"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep font-mono font-bold"
                 />
               </div>
 
@@ -2069,7 +2095,12 @@ export function AdminPage() {
                 <input
                   type="text"
                   value={eduKoreanLine}
-                  onChange={(e) => setEduKoreanLine(e.target.value)}
+                  onChange={(e) => {
+                    setEduKoreanLine(e.target.value);
+                    if (!eduRomanization || eduRomanization === romanizeHangul(eduKoreanLine)) {
+                      setEduRomanization(romanizeHangul(e.target.value));
+                    }
+                  }}
                   placeholder="e.g. 빛나는 밤하늘 아래서"
                   className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep font-bold"
                 />
@@ -2090,24 +2121,39 @@ export function AdminPage() {
             </div>
 
             {/* Word & Grammar Inputs */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-xl border border-line/70 bg-subtle/40 p-3">
-              <div className="sm:col-span-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 rounded-xl border border-line/70 bg-subtle/40 p-3">
+              <div className="sm:col-span-2 md:col-span-4">
                 <span className="text-[12px] font-extrabold text-primary-deep block">
                   {lang === "fa" ? "واژهٔ کلیدی این خط:" : "Key Word in Line:"}
                 </span>
               </div>
               <div>
-                <label className="block text-[12px] font-bold text-ink-muted mb-1">کلمه کره‌ای</label>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">کلمه کره‌ای (Hangul)</label>
                 <input
                   type="text"
                   value={eduWordKorean}
-                  onChange={(e) => setEduWordKorean(e.target.value)}
+                  onChange={(e) => {
+                    setEduWordKorean(e.target.value);
+                    if (!eduWordPronounceEn) {
+                      setEduWordPronounceEn(romanizeHangul(e.target.value));
+                    }
+                  }}
                   placeholder="빛나다"
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] text-ink"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] text-ink font-bold"
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-bold text-ink-muted mb-1">تلفظ فارسی</label>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">تلفظ انگلیسی (English Phonetic)</label>
+                <input
+                  type="text"
+                  value={eduWordPronounceEn}
+                  onChange={(e) => setEduWordPronounceEn(e.target.value)}
+                  placeholder="bit-na-da"
+                  className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-[12px] text-ink font-mono font-bold"
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-ink-muted mb-1">تلفظ فارسی (اختیاری)</label>
                 <input
                   type="text"
                   value={eduWordPronounce}
@@ -2177,18 +2223,21 @@ export function AdminPage() {
                     notify(lang === "fa" ? "لطفاً متن کره‌ای سطر را وارد کنید" : "Enter Korean line", "primary");
                     return;
                   }
+                  const finalRoman = eduRomanization.trim() || romanizeHangul(eduKoreanLine.trim());
+                  const finalWordRom = eduWordPronounceEn.trim() || romanizeHangul(eduWordKorean.trim());
                   const noteItem: LyricEducation = {
                     id: `${eduTrackId}_${eduLineIndex}`,
                     trackId: eduTrackId,
                     lineIndex: eduLineIndex,
                     koreanLine: eduKoreanLine.trim(),
-                    romanization: eduRomanization.trim() || undefined,
+                    romanization: finalRoman,
                     translationFa: eduTranslationFa.trim(),
                     words: eduWordKorean.trim()
                       ? [
                           {
                             korean: eduWordKorean.trim(),
-                            pronunciation: eduWordPronounce.trim(),
+                            pronunciation: eduWordPronounce.trim() || finalWordRom,
+                            pronunciationEn: finalWordRom,
                             meaning: eduWordMeaning.trim(),
                             partOfSpeech: "واژه",
                           },
@@ -2206,18 +2255,163 @@ export function AdminPage() {
                   };
 
                   saveLyricEducationItem(noteItem);
+                  setAllLyricEdus(loadAllLyricEducation());
                   notify(
                     lang === "fa"
-                      ? `محتوای آموزشی خط ${eduLineIndex + 1} با موفقیت ذخیره شد.`
-                      : "Saved educational note.",
+                      ? `محتوای آموزشی خط ${eduLineIndex + 1} با تلفظ انگلیسی و واژگان ذخیره شد.`
+                      : "Saved educational note with English pronunciation.",
                     "mint",
                   );
                 }}
-                className="flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-[12px] font-bold text-white shadow-primary hover:bg-primary-deep"
+                className="flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-[12px] font-bold text-white shadow-primary hover:bg-primary-deep transition"
               >
                 <Icon name="check" size={14} strokeWidth={2.4} />
                 <span>{lang === "fa" ? "ذخیره محتوای آموزشی این سطر" : "Save Lesson Note"}</span>
               </button>
+            </div>
+
+            {/* List of existing educational lines for current track */}
+            {allLyricEdus[eduTrackId] && allLyricEdus[eduTrackId].length > 0 && (
+              <div className="pt-4 border-t border-line/70">
+                <h4 className="text-[13px] font-extrabold text-ink mb-2">
+                  {lang === "fa" ? `خطوط آموزشی ثبت‌شده برای این آهنگ (${allLyricEdus[eduTrackId].length} سطر):` : `Saved Lyric Lines (${allLyricEdus[eduTrackId].length}):`}
+                </h4>
+
+                <div className="space-y-2">
+                  {allLyricEdus[eduTrackId]
+                    .sort((a, b) => a.lineIndex - b.lineIndex)
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl border border-line bg-subtle/30 p-3 hover:border-primary/40 transition"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-md bg-primary-soft px-2 py-0.5 text-[12px] font-black text-primary-deep">
+                              {lang === "fa" ? `سطر ${item.lineIndex + 1}` : `Line ${item.lineIndex + 1}`}
+                            </span>
+                            <span className="font-bold text-[13px] text-ink truncate">
+                              {item.koreanLine}
+                            </span>
+                          </div>
+
+                          {item.romanization && (
+                            <p className="font-mono text-[12px] font-bold text-primary-deep mt-0.5 truncate">
+                              🗣️ {item.romanization}
+                            </p>
+                          )}
+                          <p className="text-[12px] text-ink-muted truncate mt-0.5">
+                            {item.translationFa}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEduLineIndex(item.lineIndex);
+                              setEduKoreanLine(item.koreanLine);
+                              setEduRomanization(item.romanization || "");
+                              setEduTranslationFa(item.translationFa);
+                              if (item.words[0]) {
+                                setEduWordKorean(item.words[0].korean);
+                                setEduWordPronounce(item.words[0].pronunciation || "");
+                                setEduWordPronounceEn(item.words[0].pronunciationEn || "");
+                                setEduWordMeaning(item.words[0].meaning);
+                              }
+                              if (item.grammar[0]) {
+                                setEduGrammarRule(item.grammar[0].rule);
+                                setEduGrammarExpl(item.grammar[0].explanation);
+                              }
+                              setEduNotes(item.culturalNotes || "");
+                              notify(lang === "fa" ? `اطلاعات خط ${item.lineIndex + 1} در فرم بارگذاری شد.` : "Loaded line to form.", "primary");
+                            }}
+                            className="rounded-lg border border-line bg-surface px-2.5 py-1 text-[12px] font-bold text-ink hover:border-primary/40"
+                          >
+                            {lang === "fa" ? "ویرایش" : "Edit"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              deleteLyricEducationItem(eduTrackId, item.lineIndex);
+                              setAllLyricEdus(loadAllLyricEducation());
+                              notify(lang === "fa" ? "سطر آموزشی با موفقیت حذف شد." : "Deleted lesson line.", "primary");
+                            }}
+                            className="rounded-lg border border-rose-500/30 bg-surface px-2.5 py-1 text-[12px] font-bold text-rose-600 hover:bg-rose-500/10"
+                          >
+                            {lang === "fa" ? "حذف" : "Delete"}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Educational Points Lock Settings */}
+            <div className="mt-4 rounded-2xl border border-line/80 bg-subtle/50 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400">
+                  <Icon name="lock" size={14} />
+                </span>
+                <div>
+                  <h4 className="text-[13px] font-extrabold text-ink">
+                    {lang === "fa" ? "تنظیمات قفل امتیازی آموزش لیریک" : "Lyric Education Access Rules"}
+                  </h4>
+                  <p className="text-[12px] text-ink-muted">
+                    {lang === "fa" ? "تعیین تعداد خطوط رایگان و حد نصاب امتیاز هواداری برای بازگشایی خطوط بعدی" : "Configure free preview lines & fan points threshold"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "تعداد خطوط رایگان پیش‌نمایش" : "Free Preview Lines Count"}
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={eduSettings.freeLinesCount}
+                    onChange={(e) => setEduSettings({ ...eduSettings, freeLinesCount: Math.max(1, Number(e.target.value)) })}
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                  <span className="text-[12px] text-ink-faint mt-0.5 block">
+                    {lang === "fa" ? "مثلاً ۳ خط اول برای همه رایگان باشد" : "e.g. First 3 lines free"}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-ink-muted mb-1">
+                    {lang === "fa" ? "امتیاز لازم برای بازگشایی خطوط پیشرفته" : "Required Fan Points to Unlock"}
+                  </label>
+                  <input
+                    type="number"
+                    min="10"
+                    step="10"
+                    value={eduSettings.requiredPoints}
+                    onChange={(e) => setEduSettings({ ...eduSettings, requiredPoints: Math.max(10, Number(e.target.value)) })}
+                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                  <span className="text-[12px] text-ink-faint mt-0.5 block">
+                    {lang === "fa" ? "کاربر با کسب این حد نصاب، آموزش را کامل می‌بیند" : "Points needed for lines after preview"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    saveEducationSettings(eduSettings);
+                    notify(lang === "fa" ? "تنظیمات قفل امتیازی آموزش ذخیره شد." : "Saved education settings.", "mint");
+                  }}
+                  className="rounded-xl bg-primary px-4 py-1.5 text-[12px] font-bold text-white shadow-primary hover:bg-primary-deep transition"
+                >
+                  {lang === "fa" ? "ذخیره تنظیمات قفل امتیازی" : "Save Lock Settings"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -4872,6 +5066,49 @@ export function AdminPage() {
                     className="mt-1 w-full rounded-[12px] border border-line bg-surface p-2.5 font-mono text-[12px] text-ink outline-none focus:border-primary-deep"
                   />
                 </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[12px] font-bold text-ink-muted">
+                      {lang === "fa" ? "تلفظ انگلیسی لیریک (Romanization Lines)" : "English Pronunciation Lines"}
+                    </span>
+                    <span className="text-[12px] font-extrabold text-primary-deep">
+                      {lang === "fa" ? "برای کاربران بدون دانش کره‌ای" : "Phonetic guide"}
+                    </span>
+                  </div>
+                  <textarea
+                    rows={3}
+                    value={trackLyricsRomanization}
+                    onChange={(e) => setTrackLyricsRomanization(e.target.value)}
+                    placeholder="[00:12.4] Binnaneun bamhaneul araeseo&#10;[00:16.8] Uri dulmane noraereul bulleo"
+                    className="mt-1 w-full rounded-[12px] border border-line bg-surface p-2.5 font-mono text-[12px] text-ink outline-none focus:border-primary-deep"
+                  />
+                </div>
+
+                {editingTrackId && (
+                  <div className="rounded-xl border border-primary/30 bg-primary-faint/30 p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-[12.5px] font-black text-ink">
+                        {lang === "fa" ? "محتوای آموزشی زبان کره‌ای (لغات و گرامر)" : "Korean Lyric Learning Notes"}
+                      </p>
+                      <p className="text-[12px] text-ink-muted">
+                        {lang === "fa" ? "برای این قطعه می‌توانید خط‌به‌خط واژگان و تلفظ انگلیسی تعریف کنید." : "Add line-by-line vocabulary & grammar for this track."}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEduTrackId(editingTrackId);
+                        setTrackModalOpen(false);
+                        setActiveTab("tracks");
+                        notify(lang === "fa" ? "به ویرایشگر آموزش خط‌به‌خط لیریک منتقل شدید." : "Opened lyric lesson editor.", "primary");
+                      }}
+                      className="rounded-xl bg-primary px-3 py-1.5 text-[12px] font-bold text-white shadow-primary hover:bg-primary-deep transition shrink-0"
+                    >
+                      {lang === "fa" ? "تدوین آموزش" : "Edit Lessons"}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-3 border-t border-line pt-4">

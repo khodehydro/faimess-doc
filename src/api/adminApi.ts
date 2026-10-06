@@ -402,7 +402,7 @@ type AdminDbState = {
   comments: AdminCommentRecord[];
   contentRequests: ContentRequest[];
   lyricsSubmissions: LyricSubmission[];
-  lyricsByTrack: Record<string, { original: string; translation?: string }>;
+  lyricsByTrack: Record<string, { original: string; translation?: string; romanization?: string }>;
   shop: ShopProduct[];
   users: AdminUser[];
   activities: AdminActivityLog[];
@@ -1067,6 +1067,7 @@ export const adminApi = {
     audio?: string;
     lyricsOriginal?: string;
     lyricsTranslation?: string;
+    lyricsRomanization?: string;
     plays?: number;
     isSingle?: boolean;
   }) {
@@ -1090,6 +1091,7 @@ export const adminApi = {
       state.lyricsByTrack[id] = {
         original: data.lyricsOriginal,
         translation: data.lyricsTranslation,
+        romanization: data.lyricsRomanization,
       };
     }
 
@@ -1115,6 +1117,7 @@ export const adminApi = {
       duration?: string;
       lyricsOriginal?: string;
       lyricsTranslation?: string;
+      lyricsRomanization?: string;
       isSingle?: boolean;
     },
   ) {
@@ -1147,6 +1150,7 @@ export const adminApi = {
       state.lyricsByTrack[id] = {
         original: updates.lyricsOriginal,
         translation: updates.lyricsTranslation,
+        romanization: updates.lyricsRomanization,
       };
     }
 
@@ -1201,8 +1205,8 @@ export const adminApi = {
     return state.lyricsByTrack[trackId] ?? null;
   },
 
-  saveTrackLyrics(trackId: string, original: string, translation?: string) {
-    state.lyricsByTrack[trackId] = { original, translation };
+  saveTrackLyrics(trackId: string, original: string, translation?: string, romanization?: string) {
+    state.lyricsByTrack[trackId] = { original, translation, romanization };
     logActivity("music_curator", "Updated Lyrics", "lyrics", trackId, `Saved updated lyric sheet for track "${trackId}"`);
     notifyChanges();
   },
