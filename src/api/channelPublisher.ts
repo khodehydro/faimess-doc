@@ -329,7 +329,7 @@ function drawCircularAvatar(
     ctx.fillStyle = "#ffffff";
     ctx.fill();
 
-    ctx.fillStyle = "#5833e6";
+    ctx.fillStyle = "#8267f0";
     ctx.font = `bold ${Math.round(r * 0.7)}px 'Vazirmatn', sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -341,8 +341,8 @@ function drawCircularAvatar(
 
 // ---------------------------------------------------------------------
 // 16:9 Vertical Canvas Graphic Banner Poster Generator (1080 x 1920)
-// Minimalist Two-Color Design: Brand Purple (#5833e6) and White (#ffffff)
-// NO Gradients • Clean Podium Layout matching Reference Image
+// Minimalist Two-Color Design: Site Primary Purple (#8267f0) and White (#ffffff)
+// NO Gradients • Slender Vertical Pillars matching Reference Image
 // ---------------------------------------------------------------------
 
 export async function generateGraphicBanner(category: PublishCategory): Promise<string> {
@@ -364,98 +364,102 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
     ...items.map((it) => loadImage(it.photo)),
   ]);
 
-  // Brand Palette Constants (Strictly Two Colors: Purple & White)
-  const BRAND_PURPLE = "#5833e6";
+  // Brand Palette Constants (Strictly Two Colors: Primary Purple & White)
+  const BRAND_PURPLE = "#8267f0"; // Site's official --color-primary
+  const BRAND_PURPLE_DEEP = "#6b4fdd"; // Site's official --color-primary-deep for text on white
   const WHITE = "#ffffff";
-  const WHITE_SUBTLE = "rgba(255, 255, 255, 0.82)";
+  const WHITE_SUBTLE = "rgba(255, 255, 255, 0.85)";
   const WHITE_FAINT = "rgba(255, 255, 255, 0.65)";
-  const WHITE_GLASS_LIGHT = "rgba(255, 255, 255, 0.14)";
-  const WHITE_GLASS_MED = "rgba(255, 255, 255, 0.20)";
-  const WHITE_GLASS_SOLID = "rgba(255, 255, 255, 0.28)";
-  const WHITE_BORDER_FAINT = "rgba(255, 255, 255, 0.22)";
-  const WHITE_BORDER_MED = "rgba(255, 255, 255, 0.40)";
+  const WHITE_GLASS_LIGHT = "rgba(255, 255, 255, 0.16)";
+  const WHITE_GLASS_MED = "rgba(255, 255, 255, 0.24)";
+  const WHITE_GLASS_SOLID = "rgba(255, 255, 255, 0.32)";
+  const WHITE_BORDER_FAINT = "rgba(255, 255, 255, 0.25)";
+  const WHITE_BORDER_MED = "rgba(255, 255, 255, 0.45)";
 
   // ===================================================================
-  // 1. Pure Flat Brand Purple Background (NO GRADIENTS)
+  // 1. Pure Flat Site Primary Purple Background (NO GRADIENTS)
   // ===================================================================
   ctx.fillStyle = BRAND_PURPLE;
   ctx.fillRect(0, 0, 1080, 1920);
 
   // ===================================================================
-  // 2. Top Header & Brand Bar
+  // 2. Top Header & Brand Bar (Ends at Y = 260)
   // ===================================================================
   // Left: Minimal back arrow symbol & Brand Logo
   ctx.fillStyle = WHITE;
   ctx.font = "bold 34px 'Vazirmatn', sans-serif";
   ctx.direction = "ltr";
   ctx.textAlign = "left";
-  ctx.fillText("‹", 75, 102);
+  ctx.fillText("‹", 80, 104);
 
   // Brand Logo (White Cat Mark)
   ctx.save();
-  roundRect(ctx, 115, 64, 62, 62, 18);
+  roundRect(ctx, 120, 68, 56, 56, 16);
   ctx.clip();
   if (logoImg) {
-    ctx.drawImage(logoImg, 115, 64, 62, 62);
+    ctx.drawImage(logoImg, 120, 68, 56, 56);
   } else {
     ctx.fillStyle = WHITE;
-    ctx.fillRect(115, 64, 62, 62);
+    ctx.fillRect(120, 68, 56, 56);
   }
   ctx.restore();
 
   // White Logo Border
   ctx.strokeStyle = WHITE_BORDER_MED;
   ctx.lineWidth = 1.5;
-  roundRect(ctx, 115, 64, 62, 62, 18);
+  roundRect(ctx, 120, 68, 56, 56, 16);
   ctx.stroke();
 
   // Brand Name in Pure White Text
   ctx.fillStyle = WHITE;
-  ctx.font = "900 36px 'Vazirmatn', sans-serif";
-  ctx.fillText("FAIMESS", 195, 96);
+  ctx.font = "900 34px 'Vazirmatn', sans-serif";
+  ctx.fillText("FAIMESS", 192, 98);
 
   ctx.fillStyle = WHITE_SUBTLE;
-  ctx.font = "bold 15px 'Vazirmatn', sans-serif";
-  ctx.fillText("MUSIC STUDIO", 197, 118);
+  ctx.font = "bold 14px 'Vazirmatn', sans-serif";
+  ctx.fillText("MUSIC STUDIO", 194, 118);
 
   // Top Right: Leaderboard Pill
   ctx.fillStyle = WHITE_GLASS_LIGHT;
   ctx.strokeStyle = WHITE_BORDER_MED;
   ctx.lineWidth = 1.5;
-  roundRect(ctx, 770, 70, 235, 46, 23);
+  roundRect(ctx, 765, 72, 235, 46, 23);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = WHITE;
   ctx.font = "900 17px 'Vazirmatn', sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("LEADERBOARD", 887, 99);
+  ctx.fillText("LEADERBOARD", 882, 101);
 
   // Main Category Header Title
   ctx.direction = "rtl";
   ctx.textAlign = "center";
   ctx.fillStyle = WHITE;
-  ctx.font = "900 42px 'Vazirmatn', sans-serif";
-  ctx.fillText("جدول رتبه‌بندی استودیو", 540, 185);
+  ctx.font = "900 40px 'Vazirmatn', sans-serif";
+  ctx.fillText("جدول رتبه‌بندی استودیو", 540, 182);
 
   // Category Subtitle Pill
   ctx.fillStyle = WHITE_GLASS_LIGHT;
   ctx.strokeStyle = WHITE_BORDER_FAINT;
   ctx.lineWidth = 1.5;
-  roundRect(ctx, 110, 210, 860, 48, 24);
+  roundRect(ctx, 130, 208, 820, 48, 24);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = WHITE;
-  ctx.font = "bold 21px 'Vazirmatn', sans-serif";
-  ctx.fillText(title, 540, 242);
+  ctx.font = "bold 20px 'Vazirmatn', sans-serif";
+  ctx.fillText(title, 540, 240);
 
   // ===================================================================
-  // 3. Top 3 Podium (Directly Matching Reference Image Layout)
-  //    Baseline: Y = 970
-  //    Left: Rank 3 (Shortest) | Middle: Rank 2 (Medium) | Right: Rank 1 (Tallest)
+  // 3. Top 3 Podium (Slender Vertical Pillars, Proportionate Heights)
+  //    Baseline: Y = 1000
+  //    Left: Rank 3 (160px H, 200px W)
+  //    Middle: Rank 2 (240px H, 200px W)
+  //    Right: Rank 1 (330px H, 200px W) — Crown at Y = 380, cleanly below header!
   // ===================================================================
-  const podiumBaselineY = 970;
+  const podiumBaselineY = 1000;
+  const pWidth = 200;
   const item1 = items[0];
   const item2 = items[1];
   const item3 = items[2];
@@ -463,30 +467,29 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   // -------------------------------------------------------------------
   // Pedestal 3 (Left Column — Rank 3, Shortest)
   // -------------------------------------------------------------------
-  const p3X = 75;
-  const p3W = 280;
-  const p3Center = p3X + p3W / 2; // 215
-  const p3H = 320;
-  const p3Top = podiumBaselineY - p3H; // 650
+  const p3X = 160;
+  const p3Center = p3X + pWidth / 2; // 260
+  const p3H = 160;
+  const p3Top = podiumBaselineY - p3H; // 840
 
   // Pillar Body
   ctx.fillStyle = WHITE_GLASS_LIGHT;
   ctx.strokeStyle = WHITE_BORDER_MED;
   ctx.lineWidth = 2;
-  roundRect(ctx, p3X, p3Top, p3W, p3H, 28);
+  roundRect(ctx, p3X, p3Top, pWidth, p3H, 26);
   ctx.fill();
   ctx.stroke();
 
-  // Large Number "3" Inside Pillar
+  // Number "3" Inside Pillar
   ctx.direction = "ltr";
   ctx.textAlign = "center";
   ctx.fillStyle = WHITE;
-  ctx.font = "900 88px 'Vazirmatn', sans-serif";
-  ctx.fillText("3", p3Center, p3Top + 180);
+  ctx.font = "900 78px 'Vazirmatn', sans-serif";
+  ctx.fillText("3", p3Center, p3Top + 108);
 
   // Rank 3 Avatar & Information
-  const p3AvatarY = 490;
-  const p3AvatarR = 56;
+  const p3AvatarY = 690;
+  const p3AvatarR = 54;
   drawCircularAvatar(
     ctx,
     itemImgs[2] || null,
@@ -501,41 +504,40 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   // Name & Points
   ctx.direction = "rtl";
   ctx.fillStyle = WHITE;
-  ctx.font = "bold 23px 'Vazirmatn', sans-serif";
-  ctx.fillText(item3?.title || "کاربر سوم", p3Center, p3Top - 48);
+  ctx.font = "bold 21px 'Vazirmatn', sans-serif";
+  ctx.fillText(item3?.title || "کاربر سوم", p3Center, p3Top - 44);
 
   ctx.fillStyle = WHITE_SUBTLE;
-  ctx.font = "normal 19px 'Vazirmatn', sans-serif";
+  ctx.font = "normal 18px 'Vazirmatn', sans-serif";
   ctx.direction = "ltr";
-  ctx.fillText(String(item3?.metricValue || ""), p3Center, p3Top - 20);
+  ctx.fillText(String(item3?.metricValue || ""), p3Center, p3Top - 18);
 
   // -------------------------------------------------------------------
   // Pedestal 2 (Middle Column — Rank 2, Medium)
   // -------------------------------------------------------------------
-  const p2X = 400;
-  const p2W = 280;
-  const p2Center = p2X + p2W / 2; // 540
-  const p2H = 430;
-  const p2Top = podiumBaselineY - p2H; // 540
+  const p2X = 440;
+  const p2Center = p2X + pWidth / 2; // 540
+  const p2H = 240;
+  const p2Top = podiumBaselineY - p2H; // 760
 
   // Pillar Body
   ctx.fillStyle = WHITE_GLASS_MED;
   ctx.strokeStyle = WHITE_BORDER_MED;
   ctx.lineWidth = 2;
-  roundRect(ctx, p2X, p2Top, p2W, p2H, 28);
+  roundRect(ctx, p2X, p2Top, pWidth, p2H, 26);
   ctx.fill();
   ctx.stroke();
 
-  // Large Number "2" Inside Pillar
+  // Number "2" Inside Pillar
   ctx.direction = "ltr";
   ctx.textAlign = "center";
   ctx.fillStyle = WHITE;
-  ctx.font = "900 98px 'Vazirmatn', sans-serif";
-  ctx.fillText("2", p2Center, p2Top + 225);
+  ctx.font = "900 86px 'Vazirmatn', sans-serif";
+  ctx.fillText("2", p2Center, p2Top + 148);
 
   // Rank 2 Avatar & Information
-  const p2AvatarY = 370;
-  const p2AvatarR = 64;
+  const p2AvatarY = 600;
+  const p2AvatarR = 58;
   drawCircularAvatar(
     ctx,
     itemImgs[1] || null,
@@ -550,44 +552,43 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   // Name & Points
   ctx.direction = "rtl";
   ctx.fillStyle = WHITE;
-  ctx.font = "bold 25px 'Vazirmatn', sans-serif";
-  ctx.fillText(item2?.title || "کاربر دوم", p2Center, p2Top - 52);
+  ctx.font = "bold 23px 'Vazirmatn', sans-serif";
+  ctx.fillText(item2?.title || "کاربر دوم", p2Center, p2Top - 46);
 
   ctx.fillStyle = WHITE_SUBTLE;
-  ctx.font = "normal 20px 'Vazirmatn', sans-serif";
+  ctx.font = "normal 19px 'Vazirmatn', sans-serif";
   ctx.direction = "ltr";
-  ctx.fillText(String(item2?.metricValue || ""), p2Center, p2Top - 22);
+  ctx.fillText(String(item2?.metricValue || ""), p2Center, p2Top - 18);
 
   // -------------------------------------------------------------------
   // Pedestal 1 (Right Column — Rank 1, Tallest Champion)
   // -------------------------------------------------------------------
-  const p1X = 725;
-  const p1W = 280;
-  const p1Center = p1X + p1W / 2; // 865
-  const p1H = 550;
-  const p1Top = podiumBaselineY - p1H; // 420
+  const p1X = 720;
+  const p1Center = p1X + pWidth / 2; // 820
+  const p1H = 330;
+  const p1Top = podiumBaselineY - p1H; // 670
 
   // Pillar Body
   ctx.fillStyle = WHITE_GLASS_SOLID;
   ctx.strokeStyle = WHITE;
   ctx.lineWidth = 2.5;
-  roundRect(ctx, p1X, p1Top, p1W, p1H, 28);
+  roundRect(ctx, p1X, p1Top, pWidth, p1H, 26);
   ctx.fill();
   ctx.stroke();
 
-  // Large Number "1" Inside Pillar
+  // Number "1" Inside Pillar
   ctx.direction = "ltr";
   ctx.textAlign = "center";
   ctx.fillStyle = WHITE;
-  ctx.font = "900 115px 'Vazirmatn', sans-serif";
-  ctx.fillText("1", p1Center, p1Top + 285);
+  ctx.font = "900 96px 'Vazirmatn', sans-serif";
+  ctx.fillText("1", p1Center, p1Top + 195);
 
-  // Minimalist White Crown on top of Rank 1
-  drawMinimalCrown(ctx, p1Center, 125, 46, WHITE);
+  // Minimalist White Crown on top of Rank 1 (Plenty of headroom below header!)
+  drawMinimalCrown(ctx, p1Center, 385, 42, WHITE);
 
   // Rank 1 Avatar with double white ring
-  const p1AvatarY = 225;
-  const p1AvatarR = 72;
+  const p1AvatarY = 490;
+  const p1AvatarR = 62;
 
   // Outer ring
   ctx.strokeStyle = WHITE_BORDER_MED;
@@ -610,20 +611,19 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   // Name & Points
   ctx.direction = "rtl";
   ctx.fillStyle = WHITE;
-  ctx.font = "900 27px 'Vazirmatn', sans-serif";
-  ctx.fillText(item1?.title || "صدرنشین", p1Center, p1Top - 54);
+  ctx.font = "900 25px 'Vazirmatn', sans-serif";
+  ctx.fillText(item1?.title || "صدرنشین", p1Center, p1Top - 48);
 
   ctx.fillStyle = WHITE;
-  ctx.font = "bold 22px 'Vazirmatn', sans-serif";
+  ctx.font = "bold 20px 'Vazirmatn', sans-serif";
   ctx.direction = "ltr";
-  ctx.fillText(String(item1?.metricValue || ""), p1Center, p1Top - 24);
+  ctx.fillText(String(item1?.metricValue || ""), p1Center, p1Top - 18);
 
   // ===================================================================
   // 4. Highlight Banner Card (High-Contrast Solid White Card)
-  //    Directly inspired by the prominent card in reference image
   // ===================================================================
   const cardX = 75;
-  const cardY = 1005;
+  const cardY = 1045;
   const cardW = 930;
   const cardH = 175;
   const item4 = items[3] || items[0];
@@ -643,45 +643,45 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
     cAvatarX,
     cAvatarY,
     46,
-    BRAND_PURPLE,
+    BRAND_PURPLE_DEEP,
     3.5,
   );
 
-  ctx.fillStyle = BRAND_PURPLE;
+  ctx.fillStyle = BRAND_PURPLE_DEEP;
   ctx.font = "900 18px 'Vazirmatn', sans-serif";
   ctx.direction = "rtl";
   ctx.textAlign = "center";
   ctx.fillText(item4?.title || "کاربر منتخب", cAvatarX, cardY + 148);
 
-  // Three Clean Columns in Brand Purple
+  // Three Clean Columns in Deep Brand Purple
   // Column 1: Activity Points
   ctx.direction = "rtl";
   ctx.textAlign = "center";
-  ctx.fillStyle = "rgba(88, 51, 230, 0.72)";
+  ctx.fillStyle = "rgba(107, 79, 221, 0.72)";
   ctx.font = "16px 'Vazirmatn', sans-serif";
   ctx.fillText("امتیاز فعالیت", cardX + 350, cardY + 65);
 
-  ctx.fillStyle = BRAND_PURPLE;
+  ctx.fillStyle = BRAND_PURPLE_DEEP;
   ctx.font = "900 29px 'Vazirmatn', sans-serif";
   ctx.direction = "ltr";
   ctx.fillText(String(item4?.metricValue || "2,450 XP"), cardX + 350, cardY + 115);
 
   // Column 2: Level & Badge
   ctx.direction = "rtl";
-  ctx.fillStyle = "rgba(88, 51, 230, 0.72)";
+  ctx.fillStyle = "rgba(107, 79, 221, 0.72)";
   ctx.font = "16px 'Vazirmatn', sans-serif";
   ctx.fillText("سطح و نشان", cardX + 600, cardY + 65);
 
-  ctx.fillStyle = BRAND_PURPLE;
+  ctx.fillStyle = BRAND_PURPLE_DEEP;
   ctx.font = "900 27px 'Vazirmatn', sans-serif";
   ctx.fillText(item4?.badge || `سطح ${item4?.level || 34}`, cardX + 600, cardY + 115);
 
   // Column 3: Leaderboard Position
-  ctx.fillStyle = "rgba(88, 51, 230, 0.72)";
+  ctx.fillStyle = "rgba(107, 79, 221, 0.72)";
   ctx.font = "16px 'Vazirmatn', sans-serif";
   ctx.fillText("جایگاه جدول", cardX + 830, cardY + 65);
 
-  ctx.fillStyle = BRAND_PURPLE;
+  ctx.fillStyle = BRAND_PURPLE_DEEP;
   ctx.font = "900 36px 'Vazirmatn', sans-serif";
   ctx.direction = "ltr";
   ctx.fillText("#04", cardX + 830, cardY + 115);
@@ -689,9 +689,9 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   // ===================================================================
   // 5. Remaining Leaderboard Rows (Ranks 05, 06, 07)
   // ===================================================================
-  const listStartY = 1210;
+  const listStartY = 1255;
   const rowHeight = 115;
-  const rowGap = 16;
+  const rowGap = 15;
   const listItems = items.slice(4, 7);
 
   listItems.forEach((item, idx) => {
@@ -761,15 +761,15 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   ctx.strokeStyle = WHITE_BORDER_FAINT;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(120, 1720);
-  ctx.lineTo(960, 1720);
+  ctx.moveTo(120, 1690);
+  ctx.lineTo(960, 1690);
   ctx.stroke();
 
   // Website Capsule Pill (faimess.ir)
   ctx.fillStyle = WHITE_GLASS_LIGHT;
   ctx.strokeStyle = WHITE_BORDER_MED;
   ctx.lineWidth = 2;
-  roundRect(ctx, 310, 1755, 460, 68, 34);
+  roundRect(ctx, 340, 1725, 400, 68, 34);
   ctx.fill();
   ctx.stroke();
 
@@ -777,7 +777,7 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   ctx.font = "900 36px 'Vazirmatn', sans-serif";
   ctx.textAlign = "center";
   ctx.direction = "ltr";
-  ctx.fillText("faimess.ir", 540, 1802);
+  ctx.fillText("faimess.ir", 540, 1772);
 
   // Bottom Subtitle
   ctx.fillStyle = WHITE_SUBTLE;
@@ -787,7 +787,7 @@ export async function generateGraphicBanner(category: PublishCategory): Promise<
   ctx.fillText(
     "استودیو رسمی موسیقی، رادیو و لیریک آنلاین • ربات: @faimess_app",
     540,
-    1865,
+    1835,
   );
 
   return canvas.toDataURL("image/png");
@@ -981,12 +981,13 @@ export async function generateItemSquareBanner(payload: PublishItemPayload): Pro
     loadImage(payload.photo),
   ]);
 
-  const BRAND_PURPLE = "#5833e6";
+  const BRAND_PURPLE = "#8267f0"; // Site's official --color-primary
+  const BRAND_PURPLE_DEEP = "#6b4fdd"; // Site's official --color-primary-deep for text on white
   const WHITE = "#ffffff";
   const WHITE_SUBTLE = "rgba(255, 255, 255, 0.85)";
-  const WHITE_GLASS_LIGHT = "rgba(255, 255, 255, 0.14)";
-  const WHITE_BORDER_FAINT = "rgba(255, 255, 255, 0.22)";
-  const WHITE_BORDER_MED = "rgba(255, 255, 255, 0.40)";
+  const WHITE_GLASS_LIGHT = "rgba(255, 255, 255, 0.16)";
+  const WHITE_BORDER_FAINT = "rgba(255, 255, 255, 0.25)";
+  const WHITE_BORDER_MED = "rgba(255, 255, 255, 0.45)";
 
   // 1. Pure Flat Brand Purple Background (NO GRADIENTS)
   ctx.fillStyle = BRAND_PURPLE;
@@ -1110,8 +1111,8 @@ export async function generateItemSquareBanner(payload: PublishItemPayload): Pro
   ctx.fill();
 
   if (payload.type === "news") {
-    // News Summary Box in Brand Purple
-    ctx.fillStyle = BRAND_PURPLE;
+    // News Summary Box in Brand Purple Deep
+    ctx.fillStyle = BRAND_PURPLE_DEEP;
     ctx.font = "bold 19px 'Vazirmatn', sans-serif";
     ctx.direction = "rtl";
     ctx.textAlign = "center";
@@ -1119,7 +1120,7 @@ export async function generateItemSquareBanner(payload: PublishItemPayload): Pro
     ctx.fillText(`«${excerptText}»`, 540, cardY + 52);
 
     // Meta row
-    ctx.fillStyle = "rgba(88, 51, 230, 0.75)";
+    ctx.fillStyle = "rgba(107, 79, 221, 0.75)";
     ctx.font = "normal 16px 'Vazirmatn', sans-serif";
     ctx.fillText(
       `دسته‌بندی: ${payload.tag || "عمومی"}  •  نویسنده: ${payload.details || "تحریریه استودیو"}  •  وضعیت: تایید شده ✓`,
@@ -1127,33 +1128,33 @@ export async function generateItemSquareBanner(payload: PublishItemPayload): Pro
       cardY + 102,
     );
   } else {
-    // 3 Crisp Columns in Brand Purple
+    // 3 Crisp Columns in Brand Purple Deep
     // Column 1 (Right): Primary Attribute
     ctx.direction = "rtl";
     ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(88, 51, 230, 0.72)";
+    ctx.fillStyle = "rgba(107, 79, 221, 0.72)";
     ctx.font = "16px 'Vazirmatn', sans-serif";
     ctx.fillText(payload.metaCol1Label || "هنرمند", cardX + 750, cardY + 52);
 
-    ctx.fillStyle = BRAND_PURPLE;
+    ctx.fillStyle = BRAND_PURPLE_DEEP;
     ctx.font = "900 24px 'Vazirmatn', sans-serif";
     ctx.fillText(payload.metaCol1Value || payload.subtitle, cardX + 750, cardY + 98);
 
     // Column 2 (Center): Secondary Attribute
-    ctx.fillStyle = "rgba(88, 51, 230, 0.72)";
+    ctx.fillStyle = "rgba(107, 79, 221, 0.72)";
     ctx.font = "16px 'Vazirmatn', sans-serif";
     ctx.fillText(payload.metaCol2Label || "مشخصات", cardX + 460, cardY + 52);
 
-    ctx.fillStyle = BRAND_PURPLE;
+    ctx.fillStyle = BRAND_PURPLE_DEEP;
     ctx.font = "900 24px 'Vazirmatn', sans-serif";
     ctx.fillText(payload.metaCol2Value || "استودیو", cardX + 460, cardY + 98);
 
     // Column 3 (Left): Status / Quality
-    ctx.fillStyle = "rgba(88, 51, 230, 0.72)";
+    ctx.fillStyle = "rgba(107, 79, 221, 0.72)";
     ctx.font = "16px 'Vazirmatn', sans-serif";
     ctx.fillText(payload.metaCol3Label || "وضعیت", cardX + 170, cardY + 52);
 
-    ctx.fillStyle = BRAND_PURPLE;
+    ctx.fillStyle = BRAND_PURPLE_DEEP;
     ctx.font = "900 24px 'Vazirmatn', sans-serif";
     ctx.fillText(payload.metaCol3Value || "پخش رسمی ✓", cardX + 170, cardY + 98);
   }
