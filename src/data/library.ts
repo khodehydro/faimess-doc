@@ -45,6 +45,7 @@ export type Artist = {
   kind: ArtistKind;
   genre: string;
   listeners: string;
+  followers: string;
   following: boolean;
   /** a brand-new release → shows the live pulse on the avatar */
   newRelease?: boolean;
@@ -83,6 +84,7 @@ export const artists: Artist[] = [
     kind: "Boy group",
     genre: "Electro pop",
     listeners: "4.8M monthly",
+    followers: "2.4M followers",
     following: true,
     newRelease: true,
     verified: true,
@@ -96,6 +98,7 @@ export const artists: Artist[] = [
     kind: "Soloist",
     genre: "Alt R&B",
     listeners: "3.1M monthly",
+    followers: "1.8M followers",
     following: true,
     newRelease: true,
     verified: true,
@@ -109,6 +112,7 @@ export const artists: Artist[] = [
     kind: "Boy group",
     genre: "Hip-hop",
     listeners: "5.6M monthly",
+    followers: "3.2M followers",
     following: true,
     verified: true,
     seed: 4,
@@ -121,6 +125,7 @@ export const artists: Artist[] = [
     kind: "Boy group",
     genre: "Synth pop",
     listeners: "2.7M monthly",
+    followers: "1.5M followers",
     following: true,
     verified: true,
     seed: 1,
@@ -133,6 +138,7 @@ export const artists: Artist[] = [
     kind: "Girl group",
     genre: "Dance pop",
     listeners: "6.4M monthly",
+    followers: "4.1M followers",
     following: true,
     newRelease: true,
     verified: true,
@@ -146,6 +152,7 @@ export const artists: Artist[] = [
     kind: "Duo",
     genre: "City pop",
     listeners: "1.4M monthly",
+    followers: "890K followers",
     following: true,
     seed: 7,
     photo: velvetMoonPhoto,
@@ -157,6 +164,7 @@ export const artists: Artist[] = [
     kind: "Soloist",
     genre: "Ballad",
     listeners: "2.2M monthly",
+    followers: "1.2M followers",
     following: true,
     verified: true,
     seed: 6,
@@ -169,6 +177,7 @@ export const artists: Artist[] = [
     kind: "Boy group",
     genre: "Alt R&B",
     listeners: "3.9M monthly",
+    followers: "2.1M followers",
     following: true,
     verified: true,
     seed: 5,

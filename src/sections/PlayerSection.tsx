@@ -597,9 +597,10 @@ function TrackPanel({
           prev/play/next group stays optically centred whatever sits in them */}
       <div className="flex w-full items-center">
         {/* keep it … */}
-        <div className="flex min-w-0 flex-1 items-center">
+        <div className="flex min-w-0 flex-1 items-center gap-0.5">
           <LikeButton player={player} />
           <AddToPlaylistButton />
+          <RepeatButton player={player} />
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
@@ -827,6 +828,66 @@ function LikeButton({ player }: { player: PlayerApi }) {
       {/* the pack's solid heart, not a `fill` on the stroke one: the
           generated body carries its own `fill`, so the shape has to swap */}
       <Icon name={on ? "heartFill" : "heart"} size={17} strokeWidth={on ? 1.6 : 2} />
+    </motion.button>
+  );
+}
+
+function RepeatButton({ player }: { player: PlayerApi }) {
+  const { lang } = usePreferences();
+  const mode = player.repeat;
+  const label =
+    mode === "one"
+      ? (lang === "fa" ? "تکرار تک‌آهنگ فعال است" : "Repeat one track")
+      : mode === "all"
+        ? (lang === "fa" ? "تکرار کل فهرست فعال است" : "Repeat whole queue")
+        : (lang === "fa" ? "تکرار خاموش است" : "Repeat off");
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.9 }}
+      transition={spring}
+      onClick={player.toggleRepeat}
+      title={label}
+      aria-label={label}
+      className={cn(
+        "relative flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
+        mode !== "off"
+          ? "bg-primary-soft text-primary-deep"
+          : "text-ink-muted hover:bg-subtle hover:text-ink",
+      )}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        width={16}
+        height={16}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={mode !== "off" ? 2.2 : 1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m17 2 4 4-4 4" />
+        <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+        <path d="m7 22-4-4 4-4" />
+        <path d="M21 13v1a4 4 0 0 1-4 4H3" />
+        {mode === "one" && (
+          <text
+            x="12"
+            y="14.5"
+            fontSize="8"
+            fontWeight="bold"
+            fill="currentColor"
+            stroke="none"
+            textAnchor="middle"
+          >
+            1
+          </text>
+        )}
+      </svg>
+      {mode !== "off" && (
+        <span className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-primary-deep" />
+      )}
     </motion.button>
   );
 }

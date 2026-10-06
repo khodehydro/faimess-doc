@@ -5,6 +5,8 @@ import { PlaylistsPage } from "../pages/PlaylistsPage";
 import { ShopPage } from "../pages/ShopPage";
 import { NewsPage } from "../pages/NewsPage";
 import { DownloadPage } from "../pages/DownloadPage";
+import { AdminPage } from "../pages/AdminPage";
+import { ProfilePage } from "../pages/ProfilePage";
 
 /**
  * Route id → page component. Lives on its own so both shells (the desktop
@@ -19,4 +21,6 @@ export const PAGES = {
   shop: ShopPage,
   news: NewsPage,
   download: DownloadPage,
+  admin: AdminPage,
+  profile: ProfilePage,
 } as const;

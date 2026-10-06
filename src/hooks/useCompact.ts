@@ -10,17 +10,19 @@ import { useEffect, useState } from "react";
 export const COMPACT_QUERY = "(max-width: 1023px)";
 
 /**
- * True on phones and tablets. Starts `false` (desktop) so the first paint
- * — and any render without a `window`, like the SSR checks — matches the
- * art-board, then corrects itself on mount.
+ * True on phones and tablets. Evaluated synchronously so the first paint
+ * matches the device's actual viewport immediately — eliminating any
+ * flash of desktop layout or shift on mobile/tablet load.
+ * Falls back to `false` (desktop) during SSR where `window` is absent.
  */
 export function useCompact() {
-  const [compact, setCompact] = useState(false);
+  const [compact, setCompact] = useState<boolean>(
+    () => typeof window !== "undefined" && window.matchMedia(COMPACT_QUERY).matches,
+  );
 
   useEffect(() => {
     const mql = window.matchMedia(COMPACT_QUERY);
     const update = () => setCompact(mql.matches);
-    update();
     mql.addEventListener("change", update);
     return () => mql.removeEventListener("change", update);
   }, []);
