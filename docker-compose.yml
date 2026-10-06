@@ -1,0 +1,16 @@
+services:
+  faimess-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: faimess-app
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
