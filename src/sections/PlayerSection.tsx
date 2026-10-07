@@ -20,6 +20,7 @@ import { CommentsSheet } from "./player/CommentsSheet";
 import { SubmitLyrics } from "./player/SubmitLyrics";
 import { LyricStoryModal } from "../ui/LyricStoryModal";
 import { LyricLearningModal } from "../ui/LyricLearningModal";
+import { downloadFapPackage, pickFapPackageFile } from "../lib/fapSecurity";
 import { socialApi } from "../api/socialApi";
 import { LYRIC_REWARD } from "../data/lyrics";
 import { me } from "../data/account";
@@ -201,7 +202,11 @@ export function PlayerSection({
         </AnimatePresence>
       </div>
 
-      <DownloadDialog open={downloadOpen} onClose={() => setDownloadOpen(false)} />
+      <DownloadDialog
+        open={downloadOpen}
+        onClose={() => setDownloadOpen(false)}
+        track={track}
+      />
 
       {track && <SubmitLyrics track={track} open={lyricsOpen} onClose={() => setLyricsOpen(false)} />}
 
@@ -901,9 +906,72 @@ function DownloadButton({ onOpen }: { onOpen: () => void }) {
 
 /* ------------------------------ download note --------------------------- */
 
-function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t, dir } = usePreferences();
-  const { navigate } = useApp();
+function DownloadDialog({
+  open,
+  onClose,
+  track,
+}: {
+  open: boolean;
+  onClose: () => void;
+  track: PlayerTrack | null;
+}) {
+  const { t, dir, lang } = usePreferences();
+  const { navigate, notify } = useApp();
+  const player = usePlayer();
+  const [downloadingFap, setDownloadingFap] = useState(false);
+  const [fapStatus, setFapStatus] = useState<string | null>(null);
+
+  const handleDownloadFap = async () => {
+    if (!track) return;
+    setDownloadingFap(true);
+    setFapStatus(
+      lang === "fa"
+        ? "در حال آماده‌سازی و رمزنگاری پکیج FAP..."
+        : "Packaging and encrypting .fap container...",
+    );
+    try {
+      const res = await downloadFapPackage(track, (step) => {
+        setFapStatus(step);
+      });
+      notify(
+        lang === "fa"
+          ? `بسته اختصاصی «${res.filename}» با موفقیت دانلود شد.`
+          : `Downloaded secure package "${res.filename}".`,
+        "mint",
+      );
+      setFapStatus(
+        lang === "fa"
+          ? "فایل صوتی با فرمت اختصاصی .fap دانلود شد و منحصراً در پلتفرم FAIMESS قابل اجراست."
+          : "Saved as .fap package. Playable exclusively in FAIMESS.",
+      );
+    } catch {
+      notify(
+        lang === "fa" ? "خطا در بسته‌بندی فایل صوتی .fap" : "Failed to package .fap file",
+        "primary",
+      );
+      setFapStatus(null);
+    } finally {
+      setDownloadingFap(false);
+    }
+  };
+
+  const handleTestPlayFap = () => {
+    pickFapPackageFile(
+      (result) => {
+        player.play(result.track);
+        notify(
+          lang === "fa"
+            ? `پکیج «${result.metadata.title}» با موفقیت رمزگشایی شد و در حال پخش است.`
+            : `Decrypted and playing "${result.metadata.title}" (.fap).`,
+          "mint",
+        );
+        onClose();
+      },
+      (err) => {
+        notify(err, "primary");
+      },
+    );
+  };
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -914,7 +982,72 @@ function DownloadDialog({ open, onClose }: { open: boolean; onClose: () => void 
       <h2 className="font-display mt-3 text-[17.5px] font-bold leading-snug text-ink">
         {t("player.downloadTitle")}
       </h2>
-      <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-muted">{t("player.downloadBody")}</p>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-muted">
+        {t("player.downloadBody")}
+      </p>
+
+      {/* Proprietary FAIMESS Package (.fap) Download Card */}
+      {track && (
+        <div className="mt-4 rounded-[18px] border-2 border-primary/25 bg-primary-faint/40 p-3.5 sm:p-4 text-start">
+          <div className="flex items-start justify-between gap-2.5">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="rounded-full bg-primary px-2 py-0.5 text-[12px] font-black text-white">
+                  FAIMESS Package (.fap)
+                </span>
+                <span className="rounded-full bg-surface/80 px-2 py-0.5 text-[12px] font-bold text-primary-deep border border-line">
+                  DRM Protected
+                </span>
+              </div>
+              <p className="mt-1 text-[13.5px] font-extrabold text-ink">
+                {track.title} • {track.artist}
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-2 text-[12px] leading-relaxed text-ink-muted">
+            {t("fap.description")}
+          </p>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <motion.button
+              whileHover={{ y: -1.5 }}
+              whileTap={{ scale: 0.97 }}
+              transition={spring}
+              disabled={downloadingFap}
+              onClick={handleDownloadFap}
+              className="flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-[12px] font-black text-white shadow-primary transition hover:bg-primary-deep disabled:opacity-50"
+            >
+              <Icon name="download" size={15} strokeWidth={2.4} />
+              <span>
+                {downloadingFap
+                  ? lang === "fa"
+                    ? "در حال رمزنگاری..."
+                    : "Encrypting..."
+                  : t("fap.downloadButton")}
+              </span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ y: -1.5 }}
+              whileTap={{ scale: 0.97 }}
+              transition={spring}
+              type="button"
+              onClick={handleTestPlayFap}
+              className="flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-[12px] font-bold text-ink-muted transition hover:border-primary/40 hover:text-ink"
+            >
+              <Icon name="play" size={14} strokeWidth={2.2} />
+              <span>{t("fap.testButton")}</span>
+            </motion.button>
+          </div>
+
+          {fapStatus && (
+            <p className="mt-2 rounded-lg bg-surface/80 px-2.5 py-1.5 text-[12px] font-semibold text-primary-deep border border-primary/20">
+              {fapStatus}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="mt-4 flex items-center gap-2">
         <motion.button

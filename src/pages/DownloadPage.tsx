@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Icon } from "../ui/Icon";
 import { Logo } from "../ui/Logo";
@@ -6,6 +7,9 @@ import { spring, staggerParent, popChild } from "../lib/motion";
 import { forwardIcon } from "../lib/rtl";
 import { usePreferences } from "../app/PreferencesContext";
 import { usePwaInstall } from "../lib/pwa";
+import { usePlayer } from "../app/PlayerContext";
+import { QUEUE } from "../data/player";
+import { downloadFapPackage, pickFapPackageFile } from "../lib/fapSecurity";
 
 /* ------------------------------------------------------------------ *
  *  Get the app (#/download) — where the player's download button sends
@@ -38,8 +42,49 @@ const FEATURES = [
 
 export function DownloadPage() {
   const { notify, navigate } = useApp();
-  const { t, dir } = usePreferences();
+  const { t, dir, lang } = usePreferences();
+  const player = usePlayer();
   const { canInstall, isInstalled, isIOS, isAndroid, isSecure, install } = usePwaInstall();
+  const [downloadingDemo, setDownloadingDemo] = useState(false);
+
+  const handleTestFapFile = () => {
+    pickFapPackageFile(
+      (result) => {
+        player.play(result.track);
+        notify(
+          lang === "fa"
+            ? `پکیج «${result.metadata.title}» با موفقیت رمزگشایی شد و در حال پخش است.`
+            : `Decrypted and playing "${result.metadata.title}" (.fap).`,
+          "mint",
+        );
+      },
+      (err) => {
+        notify(err, "primary");
+      },
+    );
+  };
+
+  const handleDownloadLeadFap = async () => {
+    const lead = QUEUE[0];
+    if (!lead) return;
+    setDownloadingDemo(true);
+    try {
+      const res = await downloadFapPackage(lead);
+      notify(
+        lang === "fa"
+          ? `پکیج رمزنگاری‌شده «${res.filename}» دانلود شد.`
+          : `Downloaded secure package "${res.filename}".`,
+        "mint",
+      );
+    } catch {
+      notify(
+        lang === "fa" ? "خطا در دانلود پکیج .fap" : "Failed to download .fap",
+        "primary",
+      );
+    } finally {
+      setDownloadingDemo(false);
+    }
+  };
 
   const handlePwaInstall = async () => {
     if (isInstalled) {
@@ -164,6 +209,69 @@ export function DownloadPage() {
             </motion.li>
           ))}
         </motion.ul>
+      </div>
+
+      {/* FAIMESS Package (.fap) Proprietary DRM Container Section */}
+      <div className="mt-5 rounded-panel border-2 border-primary/20 bg-surface p-4 sm:p-5 lg:mt-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-primary">
+              <Icon name="sparkle" size={20} strokeWidth={2.4} />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-[15.5px] font-black text-ink lg:text-[17px]">
+                  {lang === "fa"
+                    ? "فرمت اختصاصی پلتفرم: FAIMESS Package (.fap)"
+                    : "Proprietary Format: FAIMESS Package (.fap)"}
+                </h3>
+                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[12px] font-black text-emerald-600">
+                  DRM 2.0
+                </span>
+              </div>
+              <p className="mt-0.5 text-[12.5px] text-ink-muted">
+                {lang === "fa"
+                  ? "رمزنگاری چندلایه‌ای قطعات برای جلوگیری از سرقت و بازپخش غیرمجاز؛ پخش منحصراً درون موتور پلتفرم فیمس"
+                  : "Multi-layered encrypted audio container; unplayable by external third-party software."}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <motion.button
+              whileHover={{ y: -1.5 }}
+              whileTap={{ scale: 0.97 }}
+              transition={spring}
+              type="button"
+              onClick={handleTestFapFile}
+              className="flex items-center gap-1.5 rounded-xl border border-line bg-subtle px-3 py-2 text-[12px] font-bold text-ink transition hover:border-primary/40 hover:bg-surface"
+            >
+              <Icon name="play" size={14} strokeWidth={2.2} />
+              <span>{t("fap.testButton")}</span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ y: -1.5 }}
+              whileTap={{ scale: 0.97 }}
+              transition={spring}
+              type="button"
+              onClick={handleDownloadLeadFap}
+              disabled={downloadingDemo}
+              className="flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-[12px] font-bold text-white shadow-primary transition hover:bg-primary-deep disabled:opacity-50"
+            >
+              <Icon name="download" size={14} strokeWidth={2.2} />
+              <span>
+                {downloadingDemo
+                  ? lang === "fa"
+                    ? "در حال رمزنگاری..."
+                    : "Encrypting..."
+                  : lang === "fa"
+                    ? "دانلود نمونه .fap"
+                    : "Sample .fap"}
+              </span>
+            </motion.button>
+          </div>
+        </div>
       </div>
     </div>
   );

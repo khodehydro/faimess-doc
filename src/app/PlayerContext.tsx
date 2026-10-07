@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { QUEUE, trackById, type PlayerTrack } from "../data/player";
+import { isEncryptedStreamUrl, decryptTrackStreamUrl } from "../lib/fapSecurity";
 
 /* ------------------------------------------------------------------ *
  *  Playback state for the right-hand player card.
@@ -277,9 +278,13 @@ export function PlayerProvider({
       from ?? (prev.trackIds.includes(next.id) ? prev : PAGE_SOURCE),
     );
 
+    const resolvedAudio = isEncryptedStreamUrl(next.audio)
+      ? decryptTrackStreamUrl(next.audio)
+      : next.audio;
+
     if (element) {
-      if (changed && element.getAttribute("src") !== next.audio) {
-        element.src = next.audio;
+      if (changed && element.getAttribute("src") !== resolvedAudio) {
+        element.src = resolvedAudio;
         element.load();
         setMediaDuration(0);
       }
@@ -306,7 +311,9 @@ export function PlayerProvider({
       const first = activeQueue.current[0] ?? QUEUE[0];
       if (!first) return;
       if (element) {
-        element.src = first.audio;
+        element.src = isEncryptedStreamUrl(first.audio)
+          ? decryptTrackStreamUrl(first.audio)
+          : first.audio;
         void element.play().catch(() => setPlaying(false));
       }
       current.current = first;

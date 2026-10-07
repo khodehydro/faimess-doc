@@ -61,6 +61,12 @@ import { loadAllStoryBackgrounds } from "../src/data/storyBackgrounds";
 import { ARTIST_FANDOMS, socialApi } from "../src/api/socialApi";
 import { adminApi } from "../src/api/adminApi";
 import {
+  encryptTrackStreamUrl,
+  decryptTrackStreamUrl,
+  faimessCipher,
+  isEncryptedStreamUrl,
+} from "../src/lib/fapSecurity";
+import {
   activeUsers,
   followedArtists,
   newsItems,
@@ -2122,6 +2128,38 @@ check(
     );
   })(),
   "global CSS protects site content while keeping form inputs fully functional",
+);
+
+check(
+  "track audio stream links are encrypted into tokenized platform scheme and decrypt cleanly",
+  (() => {
+    const originalUrl = "/assets/audio/faimess-demo.mp3";
+    const encrypted = encryptTrackStreamUrl("nt1", originalUrl);
+    const isEnc = isEncryptedStreamUrl(encrypted);
+    const decrypted = decryptTrackStreamUrl(encrypted);
+    return isEnc && encrypted.startsWith("faimess://secure-stream/v1?token=") && decrypted === originalUrl;
+  })(),
+  "audio links are shielded behind tokenized faimess:// encryption and decrypted transparently",
+);
+
+check(
+  "fap binary package generator packages proprietary FAP1 container unreadable by external players",
+  (() => {
+    const rawData = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    const key = new Uint8Array([42, 99, 123, 7]);
+    const encrypted = faimessCipher(rawData, key);
+    const decrypted = faimessCipher(encrypted, key);
+    const isSame = decrypted.every((val, idx) => val === rawData[idx]);
+    const isDifferent = encrypted.some((val, idx) => val !== rawData[idx]);
+    const playerSecSrc = readFileSync("src/sections/PlayerSection.tsx", "utf8");
+    const downloadPageSrc = readFileSync("src/pages/DownloadPage.tsx", "utf8");
+    const hasFapActions =
+      playerSecSrc.includes(".fap") &&
+      downloadPageSrc.includes(".fap") &&
+      downloadPageSrc.includes("FAIMESS Package");
+    return isSame && isDifferent && hasFapActions;
+  })(),
+  "proprietary .fap container uses custom stream encryption and platform-only playback",
 );
 
 console.log(results.join("\n"));

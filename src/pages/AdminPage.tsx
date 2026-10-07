@@ -63,6 +63,7 @@ import {
   deleteStoryBackground,
   type StoryBackground,
 } from "../data/storyBackgrounds";
+import { encryptTrackStreamUrl, downloadFapPackage } from "../lib/fapSecurity";
 import { ARTIST_FANDOMS } from "../api/socialApi";
 
 export function AdminPage() {
@@ -1351,6 +1352,37 @@ export function AdminPage() {
                           title="Edit Track"
                         >
                           <Icon name="edit" size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            notify(
+                              lang === "fa"
+                                ? "در حال تولید بسته رمزنگاری‌شده FAIMESS Package (.fap)..."
+                                : "Building encrypted .fap package...",
+                              "mint",
+                            );
+                            try {
+                              const res = await downloadFapPackage(tr);
+                              notify(
+                                lang === "fa"
+                                  ? `پکیج اختصاصی «${res.filename}» دانلود شد.`
+                                  : `Downloaded secure ${res.filename}`,
+                                "mint",
+                              );
+                            } catch {
+                              notify(
+                                lang === "fa"
+                                  ? "خطا در تولید پکیج .fap"
+                                  : "Failed to build .fap",
+                                "primary",
+                              );
+                            }
+                          }}
+                          className="rounded-lg p-1.5 text-ink-faint transition hover:bg-emerald-500/10 hover:text-emerald-600"
+                          title={lang === "fa" ? "دانلود پکیج رمزنگاری‌شده (.fap)" : "Download .fap package"}
+                        >
+                          <Icon name="download" size={14} />
                         </button>
                         <button
                           type="button"
@@ -4998,9 +5030,14 @@ export function AdminPage() {
 
               {/* Direct Stream Audio Link from Download Host */}
               <div className="rounded-[16px] border border-line bg-subtle/30 p-3.5 space-y-1.5">
-                <label className="block text-[12px] font-bold text-ink">
-                  {lang === "fa" ? "لینک مستقیم پخش صوتی (هاست دانلود / CDN)" : "Audio Stream URL (Direct Host / CDN)"}
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-[12px] font-bold text-ink">
+                    {lang === "fa" ? "لینک پخش صوتی و توکن امنیتی (FAIMESS DRM)" : "Audio Stream URL & Security Token"}
+                  </label>
+                  <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[12px] font-black text-emerald-600">
+                    DRM Encrypted
+                  </span>
+                </div>
                 <input
                   type="text"
                   value={trackAudio}
@@ -5008,10 +5045,27 @@ export function AdminPage() {
                   placeholder="https://dl.example.com/tracks/song-master.mp3"
                   className="w-full rounded-[12px] border border-line bg-surface px-3 py-2 text-[12px] font-mono text-ink outline-none focus:border-primary-deep"
                 />
+                <div className="flex items-center justify-between gap-2 pt-1 text-[12px]">
+                  <span className="text-ink-faint truncate font-mono text-[12px]">
+                    {encryptTrackStreamUrl(editingTrackId || "nt1", trackAudio)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof navigator !== "undefined") {
+                        navigator.clipboard?.writeText(encryptTrackStreamUrl(editingTrackId || "nt1", trackAudio));
+                        notify(lang === "fa" ? "توکن رمزنگاری‌شده استریم کپی شد." : "Encrypted stream token copied.", "mint");
+                      }
+                    }}
+                    className="shrink-0 rounded-lg border border-line bg-surface px-2.5 py-1 text-primary-deep font-bold hover:bg-primary/10 transition"
+                  >
+                    {lang === "fa" ? "کپی لینک رمزنگاری‌شده" : "Copy Token"}
+                  </button>
+                </div>
                 <p className="text-[12px] text-ink-faint">
                   {lang === "fa"
-                    ? "فایل صوتی نیازی به آپلود در سرور سایت ندارد؛ لینک مستقیم MP3 از هاست دانلود یا کلود در اینجا قرار می‌گیرد."
-                    : "No upload required: enter direct MP3 stream URL from your download host or CDN."}
+                    ? "لینک‌ها در شبکه و حافظه کلاینت به صورت خودکار رمزنگاری شده و دانلود در کانتینر اختصاصی FAIMESS Package (.fap) انجام می‌پذیرد."
+                    : "Stream URLs are encrypted with FAIMESS tokenization; downloads are packaged as proprietary .fap DRM containers."}
                 </p>
               </div>
 

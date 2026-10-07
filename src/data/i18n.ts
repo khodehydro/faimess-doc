@@ -279,6 +279,26 @@ export const STRINGS: Record<string, Entry> = {
   },
   "player.androidPage": { en: "Android download page", fa: "صفحهٔ دانلود اندروید", ko: "안드로이드 다운로드 페이지" },
   "player.notNow": { en: "Not now", fa: "الان نه", ko: "나중에" },
+  "fap.downloadButton": {
+    en: "Download Encrypted FAIMESS Package (.fap)",
+    fa: "دانلود بسته رمزنگاری‌شده FAIMESS Package (.fap)",
+    ko: "암호화된 FAIMESS 패키지 다운로드 (.fap)",
+  },
+  "fap.description": {
+    en: "Protected proprietary audio package. Scrambled and encrypted with FAIMESS-DRM so unauthorized third-party players cannot play it. Decryptable and playable exclusively by the FAIMESS platform engine.",
+    fa: "بسته اختصاصی رمزنگاری‌شده FAIMESS-DRM. داده‌های صوتی قفل شده‌اند و سایر برنامه‌ها (مانند VLC یا MX Player) امکان پخش آن را ندارند؛ پخش آنلاین و آفلاین صرفاً از طریق موتور صوتی پلتفرم فیمس ممکن است.",
+    ko: "FAIMESS-DRM으로 보호된 전용 오디오 패키지입니다. 외부 플레이어에서는 재생할 수 없으며 오직 FAIMESS 플랫폼 엔진에서만 복호화되어 재생됩니다.",
+  },
+  "fap.testButton": {
+    en: "Test & Play .fap in FAIMESS Player",
+    fa: "تست و پخش فایل .fap در پلیر پلتفرم",
+    ko: "FAIMESS 플레이어에서 .fap 복호화 재생 테스트",
+  },
+  "fap.streamEncrypted": {
+    en: "Encrypted Stream Scheme",
+    fa: "لینک رمزنگاری‌شده استریم",
+    ko: "암호화된 스트리밍 링크",
+  },
   "player.likeOn": { en: "Remove from Liked songs", fa: "حذف از لایک‌ها", ko: "좋아요 취소" },
   "player.likeOff": { en: "Save to Liked songs", fa: "ذخیره در لایک‌ها", ko: "좋아요에 저장" },
   "player.likedToast": { en: "Saved to Liked songs", fa: "به لایک‌ها اضافه شد", ko: "좋아요에 저장했어요" },
