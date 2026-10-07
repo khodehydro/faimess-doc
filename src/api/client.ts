@@ -54,6 +54,7 @@ export class ApiClient {
         const storedToken = window.localStorage.getItem("faimess.auth_token");
         if (storedToken) this.authToken = storedToken;
       } catch {}
+      this.baseUrl = "/api";
     }
   }
 
@@ -162,7 +163,11 @@ export class ApiClient {
           headers["Authorization"] = `Bearer ${this.authToken}`;
         }
 
-        const res = await fetch(`${this.baseUrl}${endpoint}`, {
+        const url = endpoint.startsWith("/api")
+          ? endpoint
+          : `${this.baseUrl}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
+
+        const res = await fetch(url, {
           method: options?.method || "GET",
           headers,
           body: options?.body ? JSON.stringify(options.body) : undefined,
@@ -171,8 +176,9 @@ export class ApiClient {
         if (res.ok) {
           const json = await res.json();
           const duration = Math.round(performance.now() - start);
-          if (cacheKey) this.setCached(cacheKey, json, options?.ttlMs);
-          return this.wrapResponse(json, false, duration);
+          const data = (json && typeof json === "object" && "data" in json) ? json.data : json;
+          if (cacheKey) this.setCached(cacheKey, data, options?.ttlMs);
+          return this.wrapResponse(data, false, duration);
         }
       } catch (networkError) {
         // Silently fallback to ultra-fast local store on network failure

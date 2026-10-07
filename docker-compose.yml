@@ -10,8 +10,16 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=4000
+      - FAIMESS_JWT_SECRET=${FAIMESS_JWT_SECRET:-faimess_jwt_secret_production_random_key_change_me}
+      - FAIMESS_DRM_SECRET=${FAIMESS_DRM_SECRET:-faimess_drm_secret_production_random_key_change_me}
     volumes:
       - faimess-db-data:/app/server/data
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:4000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     logging:
       driver: "json-file"
       options:
@@ -29,7 +37,8 @@ services:
     environment:
       - NODE_ENV=production
     depends_on:
-      - faimess-backend
+      faimess-backend:
+        condition: service_healthy
     logging:
       driver: "json-file"
       options:

@@ -5,7 +5,7 @@
  * ------------------------------------------------------------------ */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { initDatabase } from "./db.ts";
+import { initDatabase, closeDatabase } from "./db.ts";
 import {
   applySecurityHeaders,
   checkRateLimit,
@@ -331,4 +331,21 @@ if (process.env.NODE_ENV !== "test") {
   server.listen(PORT, HOST, () => {
     console.log(`FAIMESS Security Backend Server listening on http://${HOST}:${PORT}`);
   });
+
+  // Graceful shutdown handling for Docker & orchestrators
+  const gracefulShutdown = (signal: string) => {
+    console.log(`[FAIMESS Server] Received ${signal}. Closing server connections...`);
+    server.close(() => {
+      closeDatabase();
+      console.log("[FAIMESS Server] Shutdown complete.");
+      process.exit(0);
+    });
+    setTimeout(() => {
+      console.error("[FAIMESS Server] Forced exit after timeout.");
+      process.exit(1);
+    }, 5000).unref();
+  };
+
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 }

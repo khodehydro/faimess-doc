@@ -11,7 +11,21 @@ import { join } from "node:path";
 import { existsSync, statSync, createReadStream, readFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-const DEMO_AUDIO_PATH = join(process.cwd(), "src", "assets", "audio", "faimess-demo.mp3");
+function getAudioMasterPath(): string {
+  const candidates = [
+    join(process.cwd(), "src", "assets", "audio", "faimess-demo.mp3"),
+    join(process.cwd(), "assets", "audio", "faimess-demo.mp3"),
+    join(process.cwd(), "..", "src", "assets", "audio", "faimess-demo.mp3"),
+    "/app/src/assets/audio/faimess-demo.mp3",
+    "/app/assets/audio/faimess-demo.mp3",
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  return candidates[0];
+}
+
+const DEMO_AUDIO_PATH = getAudioMasterPath();
 
 export const trackRoutes = {
   async list(query: any, _ctx: RequestContext) {

@@ -9,18 +9,40 @@ import { join } from "node:path";
 import { existsSync, mkdirSync } from "node:fs";
 import { hashPassword } from "./security.ts";
 
-const DB_DIR = join(process.cwd(), "server", "data");
-if (!existsSync(DB_DIR)) {
-  mkdirSync(DB_DIR, { recursive: true });
+function getDatabaseFilePath(): string {
+  if (process.env.DATABASE_PATH) {
+    const customDir = join(process.env.DATABASE_PATH, "..");
+    if (!existsSync(customDir)) mkdirSync(customDir, { recursive: true });
+    return process.env.DATABASE_PATH;
+  }
+  const baseDir = process.env.DATA_DIR || (
+    existsSync(join(process.cwd(), "server"))
+      ? join(process.cwd(), "server", "data")
+      : join(process.cwd(), "data")
+  );
+  if (!existsSync(baseDir)) {
+    mkdirSync(baseDir, { recursive: true });
+  }
+  return join(baseDir, "faimess.db");
 }
 
-const DB_FILE = join(DB_DIR, "faimess.db");
+const DB_FILE = getDatabaseFilePath();
 export const db = new DatabaseSync(DB_FILE);
 
 // Enable WAL mode for high concurrency read/writes
 db.exec("PRAGMA journal_mode = WAL;");
 db.exec("PRAGMA foreign_keys = ON;");
 db.exec("PRAGMA synchronous = NORMAL;");
+
+export function closeDatabase() {
+  try {
+    db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+    db.close();
+    console.log("[FAIMESS DB] Database connection closed cleanly.");
+  } catch (err) {
+    console.error("[FAIMESS DB] Error closing database:", err);
+  }
+}
 
 export function initDatabase() {
   db.exec(`
