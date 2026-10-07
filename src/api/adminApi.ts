@@ -845,7 +845,7 @@ function seedContentRequests(): ContentRequest[] {
 /* ---------------- In-Memory Store & Persistence -------------------- */
 
 function loadStoredState(): AdminDbState {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || !window.localStorage) {
     return createInitialState();
   }
   try {
@@ -884,7 +884,7 @@ type ChangeListener = () => void;
 const listeners = new Set<ChangeListener>();
 
 function notifyChanges() {
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && window.localStorage) {
     try {
       window.localStorage.setItem(DB_KEY, JSON.stringify(state));
     } catch (err) {
@@ -930,7 +930,7 @@ export const adminApi = {
   },
 
   resetDatabase() {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && window.localStorage) {
       window.localStorage.removeItem(DB_KEY);
     }
     state = createInitialState();
@@ -1828,7 +1828,7 @@ export const adminApi = {
   /* ---------------- Users & RBAC API ---------------- */
 
   syncRegisteredAccounts() {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !window.localStorage) return;
     try {
       const raw = window.localStorage.getItem("faimess.accounts");
       if (!raw) return;

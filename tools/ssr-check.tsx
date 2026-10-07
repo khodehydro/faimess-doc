@@ -48,6 +48,18 @@ import { NewsPage } from "../src/pages/NewsPage";
 import { albums, artists, playlists } from "../src/data/library";
 import { banners } from "../src/data/banners";
 import { DEMO_ACCOUNT, checkCredential, checkNewAccount } from "../src/data/auth";
+import { LyricLearningModal } from "../src/ui/LyricLearningModal";
+import { FandomInsignia } from "../src/ui/FandomInsignia";
+import {
+  romanizeHangul,
+  getLyricEducationForLine,
+  loadEducationSettings,
+  saveEducationSettings,
+  loadAcademyAd,
+} from "../src/data/lyricLearning";
+import { loadAllStoryBackgrounds } from "../src/data/storyBackgrounds";
+import { ARTIST_FANDOMS, socialApi } from "../src/api/socialApi";
+import { adminApi } from "../src/api/adminApi";
 import {
   activeUsers,
   followedArtists,
@@ -2008,6 +2020,108 @@ check(
     return ids.length === 2 && ids[0] !== ids[1] && html.includes(`url(#${ids[1]})`);
   })(),
   "useId() gives each render its own mask",
+);
+
+check(
+  "lyric education provides 3 free preview lines and English romanization for all lines",
+  (() => {
+    const settings = loadEducationSettings();
+    const romTest = romanizeHangul("사랑해");
+    const edu = getLyricEducationForLine("nt1", 0, "빛나는 밤하늘 아래서", "زیر آسمان درخشان شب");
+    return (
+      settings.freeLinesCount === 3 &&
+      romTest === "Saranghae" &&
+      Boolean(edu.romanization && edu.romanization.length > 5) &&
+      edu.words.length > 0 &&
+      edu.words.every((w) => Boolean(w.pronunciationEn || w.pronunciation))
+    );
+  })(),
+  "lyric learning delivers 3-line free tier, English phonetic guides, and vocabulary breakdown",
+);
+
+check(
+  "lyric learning modal has desktop brand purple sidebar and mobile capsule tabs",
+  (() => {
+    const src = readFileSync("src/ui/LyricLearningModal.tsx", "utf8");
+    return (
+      src.includes("lg:w-[240px]") &&
+      src.includes("bg-primary") &&
+      src.includes("scroll-rail") &&
+      src.includes("Phonetic")
+    );
+  })(),
+  "modal layout uses brand purple desktop sidebar and mobile horizontal capsule navigation",
+);
+
+check(
+  "advanced lyric education lines enforce fan points unlock threshold",
+  (() => {
+    const settings = loadEducationSettings();
+    return settings.freeLinesCount === 3 && settings.requiredPoints >= 50;
+  })(),
+  "education settings reserve free preview for first 3 lines and require points threshold for advanced lines",
+);
+
+check(
+  "story backgrounds catalog provides tailored themes for BTS, Blackpink, SKZ, and groups with point thresholds",
+  (() => {
+    const bgs = loadAllStoryBackgrounds();
+    const groups = ["bts", "blackpink", "stray-kids", "newjeans", "twice", "aespa", "seventeen", "txt"];
+    const hasAllGroups = groups.every((g) => bgs.some((b) => b.artistId === g));
+    const hasFree = bgs.some((b) => b.requiredPoints === 0);
+    const hasPointsLocked = bgs.some((b) => b.requiredPoints >= 100);
+    return bgs.length >= 10 && hasAllGroups && hasFree && hasPointsLocked;
+  })(),
+  "story card background themes cover top K-pop groups with point tiers",
+);
+
+check(
+  "12 official K-pop group fandom insignias render clean vector emblems",
+  (() => {
+    const groups = Object.keys(ARTIST_FANDOMS);
+    if (groups.length < 12) return false;
+    for (const g of groups) {
+      const html = renderToString(<FandomInsignia artistId={g} size={20} />);
+      if (!html.includes("<svg") || !html.includes('width="20"')) return false;
+    }
+    return true;
+  })(),
+  "all 12 artist fandoms have vector insignia emblems that render without SVG collision",
+);
+
+check(
+  "profile anthem can be pinned and persists in user profile state",
+  (() => {
+    socialApi.setProfileAnthem("nt1");
+    const active = socialApi.getProfile().anthemTrackId;
+    return active === "nt1";
+  })(),
+  "social API tracks active profile anthem",
+);
+
+check(
+  "admin tracks API and editor support lyrics original, translation, and English romanization",
+  (() => {
+    adminApi.saveTrackLyrics("nt1", "[00:00] Korean", "[00:00] Persian", "[00:00] Romanization");
+    const saved = adminApi.getTrackLyrics("nt1");
+    return saved?.romanization === "[00:00] Romanization";
+  })(),
+  "admin API persists English romanization alongside original and translated lyrics",
+);
+
+check(
+  "site stylesheet enforces complete content protection against text copy and image dragging",
+  (() => {
+    const css = readFileSync("src/index.css", "utf8");
+    return (
+      css.includes("user-select: none") &&
+      css.includes("-webkit-user-select: none") &&
+      css.includes("input,") &&
+      css.includes("textarea") &&
+      css.includes("user-select: text")
+    );
+  })(),
+  "global CSS protects site content while keeping form inputs fully functional",
 );
 
 console.log(results.join("\n"));

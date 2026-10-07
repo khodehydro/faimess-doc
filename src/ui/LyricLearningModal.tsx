@@ -89,7 +89,9 @@ export function LyricLearningModal({
   const { notify } = useApp();
 
   const [activeTab, setActiveTab] = useState<LearningTab>("overview");
-  const [education, setEducation] = useState<LyricEducation | null>(null);
+  const [education, setEducation] = useState<LyricEducation | null>(() =>
+    track ? getLyricEducationForLine(track.id, lineIndex, koreanLine, persianLine) : null
+  );
   const [ad, setAd] = useState<AcademyAd>(() => loadAcademyAd());
   const [settings, setSettings] = useState<EducationSettings>(() => loadEducationSettings());
   const [copiedCode, setCopiedCode] = useState(false);
@@ -122,7 +124,7 @@ export function LyricLearningModal({
     };
   }, [open]);
 
-  if (!open || !track || !education) return null;
+  if (!open || !track || !education || typeof document === "undefined" || !document.body) return null;
 
   const handleCopyDiscount = () => {
     if (ad.discountCode && typeof navigator !== "undefined") {
