@@ -44,6 +44,12 @@ export default defineConfig({
     // Allow the Arena preview proxy host(s) to load the dev server.
     allowedHosts: true,
     hmr: HMR_PORT ? { clientPort: Number(HMR_PORT) } : undefined,
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:4000",
+        changeOrigin: true,
+      },
+    },
   },
   /* `npm run preview` gets the same treatment, so the production bundle can
      be tested from the phone too */

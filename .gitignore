@@ -34,6 +34,9 @@ pnpm-debug.log*
 # local ssr check
 .ssrcheck/
 
+# local database files
+server/data/*.db*
+
 # raw image-search candidates (working files, not shipped)
 image-search/
 

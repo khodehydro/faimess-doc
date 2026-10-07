@@ -1,0 +1,18 @@
+# -------------------------------------------------------------
+# Production Dockerfile for FAIMESS Backend API Server
+# -------------------------------------------------------------
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Copy server code and assets
+COPY package*.json ./
+COPY server ./server
+COPY src/assets/audio ./src/assets/audio
+
+EXPOSE 4000
+
+ENV NODE_ENV=production
+ENV PORT=4000
+
+CMD ["node", "--experimental-strip-types", "server/server.ts"]
